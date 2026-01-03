@@ -9,7 +9,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { auth: authenticateToken } = require('../middleware/auth');
+const { auth: auth } = require('../middleware/auth');
 const UserDocuments = require('../models/UserDocuments');
 const { User } = require('../config/database');
 const { Op } = require('sequelize');
@@ -18,7 +18,7 @@ const { Op } = require('sequelize');
  * GET /api/v1/users/:userId/documents
  * Obtener todos los documentos de un usuario
  */
-router.get('/users/:userId/documents', authenticateToken, async (req, res) => {
+router.get('/users/:userId/documents', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const { companyId } = req.user;
@@ -60,7 +60,7 @@ router.get('/users/:userId/documents', authenticateToken, async (req, res) => {
  * GET /api/v1/users/:userId/documents/:documentId
  * Obtener un documento específico
  */
-router.get('/users/:userId/documents/:documentId', authenticateToken, async (req, res) => {
+router.get('/users/:userId/documents/:documentId', auth, async (req, res) => {
     try {
         const { userId, documentId } = req.params;
         const { companyId } = req.user;
@@ -94,7 +94,7 @@ router.get('/users/:userId/documents/:documentId', authenticateToken, async (req
  * POST /api/v1/users/:userId/documents
  * Crear nuevo documento
  */
-router.post('/users/:userId/documents', authenticateToken, async (req, res) => {
+router.post('/users/:userId/documents', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const { companyId } = req.user;
@@ -152,7 +152,7 @@ router.post('/users/:userId/documents', authenticateToken, async (req, res) => {
  * PUT /api/v1/users/:userId/documents/:documentId
  * Actualizar documento existente
  */
-router.put('/users/:userId/documents/:documentId', authenticateToken, async (req, res) => {
+router.put('/users/:userId/documents/:documentId', auth, async (req, res) => {
     try {
         const { userId, documentId } = req.params;
         const { companyId } = req.user;
@@ -202,7 +202,7 @@ router.put('/users/:userId/documents/:documentId', authenticateToken, async (req
  * DELETE /api/v1/users/:userId/documents/:documentId
  * Eliminar documento
  */
-router.delete('/users/:userId/documents/:documentId', authenticateToken, async (req, res) => {
+router.delete('/users/:userId/documents/:documentId', auth, async (req, res) => {
     try {
         const { userId, documentId } = req.params;
         const { companyId } = req.user;
@@ -243,7 +243,7 @@ router.delete('/users/:userId/documents/:documentId', authenticateToken, async (
  * GET /api/v1/documents/expiring
  * Obtener documentos que vencen pronto (para dashboard)
  */
-router.get('/documents/expiring', authenticateToken, async (req, res) => {
+router.get('/documents/expiring', auth, async (req, res) => {
     try {
         const { companyId } = req.user;
         const days = parseInt(req.query.days) || 30;

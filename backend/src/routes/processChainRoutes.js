@@ -18,7 +18,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { auth: authenticateToken } = require('../middleware/auth');
+const { auth: auth } = require('../middleware/auth');
 const { database } = require('../config/database');
 const ProcessChainGenerator = require('../services/ProcessChainGenerator');
 const ContextValidatorService = require('../services/ContextValidatorService');
@@ -56,7 +56,7 @@ function initializeServices(sequelize, brainService = null) {
  *   "chain": { action, userContext, processSteps, prerequisiteSteps, ... }
  * }
  */
-router.post('/generate', authenticateToken, async (req, res) => {
+router.post('/generate', auth, async (req, res) => {
   try {
     const { actionKey, userId, companyId } = req.body;
 
@@ -123,7 +123,7 @@ router.post('/generate', authenticateToken, async (req, res) => {
  *   ]
  * }
  */
-router.get('/available/:userId', authenticateToken, async (req, res) => {
+router.get('/available/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
     const { companyId } = req.query;
@@ -190,7 +190,7 @@ router.get('/available/:userId', authenticateToken, async (req, res) => {
  *   }
  * }
  */
-router.post('/validate', authenticateToken, async (req, res) => {
+router.post('/validate', auth, async (req, res) => {
   try {
     const { actionKey, userId, companyId } = req.body;
 
@@ -247,7 +247,7 @@ router.post('/validate', authenticateToken, async (req, res) => {
  *   "total": 108
  * }
  */
-router.get('/actions', authenticateToken, async (req, res) => {
+router.get('/actions', auth, async (req, res) => {
   try {
     if (!contextValidator) {
       return res.status(503).json({
@@ -292,7 +292,7 @@ router.get('/actions', authenticateToken, async (req, res) => {
  * POST /api/process-chains/analytics/track
  * Track generation de un process chain (llamado automáticamente por /generate)
  */
-router.post('/analytics/track', authenticateToken, async (req, res) => {
+router.post('/analytics/track', auth, async (req, res) => {
   try {
     const {
       companyId,
@@ -344,7 +344,7 @@ router.post('/analytics/track', authenticateToken, async (req, res) => {
  * PATCH /api/process-chains/analytics/:id/start
  * Track cuando usuario EMPIEZA un process chain
  */
-router.patch('/analytics/:id/start', authenticateToken, async (req, res) => {
+router.patch('/analytics/:id/start', auth, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -375,7 +375,7 @@ router.patch('/analytics/:id/start', authenticateToken, async (req, res) => {
  * PATCH /api/process-chains/analytics/:id/complete
  * Track cuando usuario COMPLETA un process chain
  */
-router.patch('/analytics/:id/complete', authenticateToken, async (req, res) => {
+router.patch('/analytics/:id/complete', auth, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -406,7 +406,7 @@ router.patch('/analytics/:id/complete', authenticateToken, async (req, res) => {
  * PATCH /api/process-chains/analytics/:id/abandon
  * Track cuando usuario ABANDONA un process chain
  */
-router.patch('/analytics/:id/abandon', authenticateToken, async (req, res) => {
+router.patch('/analytics/:id/abandon', auth, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -437,7 +437,7 @@ router.patch('/analytics/:id/abandon', authenticateToken, async (req, res) => {
  * POST /api/process-chains/analytics/:id/feedback
  * Submit user feedback (rating + comment)
  */
-router.post('/analytics/:id/feedback', authenticateToken, async (req, res) => {
+router.post('/analytics/:id/feedback', auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { rating, comment } = req.body;
@@ -477,7 +477,7 @@ router.post('/analytics/:id/feedback', authenticateToken, async (req, res) => {
  * Obtiene TODA la data del dashboard de analytics
  * Query params: days (default: 30)
  */
-router.get('/analytics/dashboard', authenticateToken, async (req, res) => {
+router.get('/analytics/dashboard', auth, async (req, res) => {
   try {
     const companyId = parseInt(req.query.companyId);
     const days = parseInt(req.query.days) || 30;
@@ -517,7 +517,7 @@ router.get('/analytics/dashboard', authenticateToken, async (req, res) => {
  * Top N acciones más solicitadas
  * Query params: companyId, limit (default: 10), days (default: 30)
  */
-router.get('/analytics/top-actions', authenticateToken, async (req, res) => {
+router.get('/analytics/top-actions', auth, async (req, res) => {
   try {
     const companyId = parseInt(req.query.companyId);
     const limit = parseInt(req.query.limit) || 10;
@@ -563,7 +563,7 @@ router.get('/analytics/top-actions', authenticateToken, async (req, res) => {
  * Estadísticas por módulo
  * Query params: companyId, days (default: 30)
  */
-router.get('/analytics/module-stats', authenticateToken, async (req, res) => {
+router.get('/analytics/module-stats', auth, async (req, res) => {
   try {
     const companyId = parseInt(req.query.companyId);
     const days = parseInt(req.query.days) || 30;
@@ -607,7 +607,7 @@ router.get('/analytics/module-stats', authenticateToken, async (req, res) => {
  * Identifica bottlenecks (acciones problemáticas)
  * Query params: companyId, minRequests (default: 5), days (default: 30)
  */
-router.get('/analytics/bottlenecks', authenticateToken, async (req, res) => {
+router.get('/analytics/bottlenecks', auth, async (req, res) => {
   try {
     const companyId = parseInt(req.query.companyId);
     const minRequests = parseInt(req.query.minRequests) || 5;
@@ -653,7 +653,7 @@ router.get('/analytics/bottlenecks', authenticateToken, async (req, res) => {
  * Tendencias temporales (por día)
  * Query params: companyId, days (default: 30)
  */
-router.get('/analytics/trends', authenticateToken, async (req, res) => {
+router.get('/analytics/trends', auth, async (req, res) => {
   try {
     const companyId = parseInt(req.query.companyId);
     const days = parseInt(req.query.days) || 30;

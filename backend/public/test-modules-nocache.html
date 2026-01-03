@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>TEST - Verificar kiosks-apk NO aparece</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .module { padding: 10px; margin: 5px 0; background: white; border-left: 4px solid #4CAF50; }
+        .apk { border-left-color: red !important; background: #ffe0e0; }
+        h1 { color: #333; }
+        pre { background: #f9f9f9; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 TEST - Verificar Filtros SSOT</h1>
+    <p><strong>Objetivo:</strong> Verificar que kiosks-apk NO aparece en la API</p>
+
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>⏳ Consultando API...</p>';
+
+            try {
+                const response = await fetch('/api/v1/company-modules/11', {
+                    cache: 'no-cache',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    resultDiv.innerHTML = `<p class="error">❌ Error: ${data.error || 'API falló'}</p>`;
+                    return;
+                }
+
+                const modules = data.modules || [];
+                const total = modules.length;
+
+                // Buscar kiosks-apk
+                const kioskApk = modules.find(m => m.module_key === 'kiosks-apk');
+                const kiosks = modules.find(m => m.module_key === 'kiosks');
+
+                let html = '<h2>📊 Resultados:</h2>';
+                html += `<p><strong>Total módulos:</strong> ${total}</p>`;
+
+                if (kioskApk) {
+                    html += '<p class="error">❌ ERROR: kiosks-apk APARECE en la API (NO DEBERÍA)</p>';
+                    html += '<div class="module apk">⚠️ kiosks-apk encontrado: ' + JSON.stringify(kioskApk) + '</div>';
+                } else {
+                    html += '<p class="success">✅ CORRECTO: kiosks-apk NO aparece en la API</p>';
+                }
+
+                if (kiosks) {
+                    html += '<p class="success">✅ CORRECTO: kiosks SÍ aparece (módulo padre)</p>';
+                    html += '<div class="module">📟 kiosks: ' + kiosks.name + '</div>';
+                } else {
+                    html += '<p class="error">❌ ERROR: kiosks NO aparece (DEBERÍA)</p>';
+                }
+
+                html += '<h3>📋 Lista de módulos:</h3>';
+                html += '<pre>' + modules.map(m => `- ${m.module_key} (${m.name})`).join('\\n') + '</pre>';
+
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Error consultando API: ${error.message}</p>`;
+            }
+        }
+
+        // Ejecutar al cargar
+        testAPI();
+
+        // Agregar botón para refrescar
+        setTimeout(() => {
+            const btn = document.createElement('button');
+            btn.textContent = '🔄 Refrescar Test';
+            btn.style.cssText = 'padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 20px;';
+            btn.onclick = testAPI;
+            document.body.appendChild(btn);
+        }, 1000);
+    </script>
+</body>
+</html>

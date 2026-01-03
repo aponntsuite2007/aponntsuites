@@ -1,0 +1,79 @@
+{
+  "module": "sla-tracking",
+  "discoveredAt": "2025-12-30T17:47:36.256Z",
+  "entryPoint": {
+    "text": "⏱️\n                            Seguimiento de SLA\n                            [COMMERCIAL] Seguimiento de acuerdos de nivel de servicio",
+    "onclick": "showTab('sla-tracking', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "IMPORT",
+      "text": "Cargar Período",
+      "id": "loadSLAData",
+      "className": "btn btn-primary",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Actualizar",
+      "id": "refreshSLA",
+      "className": "btn btn-info",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "⚡ Más Rápidos",
+      "id": null,
+      "className": "tab-btn active",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🐌 Más Lentos",
+      "id": null,
+      "className": "tab-btn",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📊 Todos",
+      "id": null,
+      "className": "tab-btn",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Comparar con Período Anterior",
+      "id": "loadComparison",
+      "className": "btn btn-secondary",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

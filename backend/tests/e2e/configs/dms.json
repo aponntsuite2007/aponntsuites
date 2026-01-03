@@ -1,0 +1,22 @@
+{
+  "moduleKey": "dms",
+  "moduleName": "Gestión Documental (DMS)",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-28T23:03:19.606Z",
+  "discoveryDate": "2025-12-28T21:07:11.921Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"dms\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 2,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  }
+}

@@ -14,7 +14,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { auth: authenticateToken } = require('../middleware/auth');
+const { auth: auth } = require('../middleware/auth');
 const { sequelize } = require('../config/database');
 
 // =====================================================
@@ -25,7 +25,7 @@ const { sequelize } = require('../config/database');
  * GET /api/v1/work-arrangements/types
  * Lista todas las modalidades de trabajo disponibles
  */
-router.get('/types', authenticateToken, async (req, res) => {
+router.get('/types', auth, async (req, res) => {
   try {
     const [types] = await sequelize.query(`
       SELECT
@@ -65,7 +65,7 @@ router.get('/types', authenticateToken, async (req, res) => {
  * GET /api/v1/work-arrangements/policies/:companyId
  * Lista políticas de modalidades de una empresa
  */
-router.get('/policies/:companyId', authenticateToken, async (req, res) => {
+router.get('/policies/:companyId', auth, async (req, res) => {
   try {
     const { companyId } = req.params;
 
@@ -97,7 +97,7 @@ router.get('/policies/:companyId', authenticateToken, async (req, res) => {
  * POST /api/v1/work-arrangements/policies
  * Crear política de modalidad para empresa
  */
-router.post('/policies', authenticateToken, async (req, res) => {
+router.post('/policies', auth, async (req, res) => {
   try {
     const {
       company_id,
@@ -192,7 +192,7 @@ router.post('/policies', authenticateToken, async (req, res) => {
  * GET /api/v1/work-arrangements/users/:userId
  * Obtener modalidad de trabajo de un usuario
  */
-router.get('/users/:userId', authenticateToken, async (req, res) => {
+router.get('/users/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -253,7 +253,7 @@ router.get('/users/:userId', authenticateToken, async (req, res) => {
  * GET /api/v1/work-arrangements/company/:companyId/users
  * Lista usuarios con sus modalidades de trabajo
  */
-router.get('/company/:companyId/users', authenticateToken, async (req, res) => {
+router.get('/company/:companyId/users', auth, async (req, res) => {
   try {
     const { companyId } = req.params;
 
@@ -313,7 +313,7 @@ router.get('/company/:companyId/users', authenticateToken, async (req, res) => {
  * POST /api/v1/work-arrangements/users/:userId/assign
  * Asignar modalidad de trabajo a usuario
  */
-router.post('/users/:userId/assign', authenticateToken, async (req, res) => {
+router.post('/users/:userId/assign', auth, async (req, res) => {
   try {
     const { userId } = req.params;
     const {
@@ -397,7 +397,7 @@ router.post('/users/:userId/assign', authenticateToken, async (req, res) => {
  * POST /api/v1/work-arrangements/users/bulk-assign
  * Asignar modalidad a múltiples usuarios
  */
-router.post('/users/bulk-assign', authenticateToken, async (req, res) => {
+router.post('/users/bulk-assign', auth, async (req, res) => {
   try {
     const { user_ids, company_id, work_arrangement_type_id, effective_from, office_days, remote_days } = req.body;
     const approvedBy = req.user?.user_id || req.user?.id;
@@ -451,7 +451,7 @@ router.post('/users/bulk-assign', authenticateToken, async (req, res) => {
  * GET /api/v1/work-arrangements/consents/:userId
  * Obtener estado de consentimiento de webcam
  */
-router.get('/consents/:userId', authenticateToken, async (req, res) => {
+router.get('/consents/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -478,7 +478,7 @@ router.get('/consents/:userId', authenticateToken, async (req, res) => {
  * POST /api/v1/work-arrangements/consents
  * Registrar consentimiento de webcam
  */
-router.post('/consents', authenticateToken, async (req, res) => {
+router.post('/consents', auth, async (req, res) => {
   try {
     const {
       user_id,
@@ -541,7 +541,7 @@ router.post('/consents', authenticateToken, async (req, res) => {
  * POST /api/v1/work-arrangements/consents/:consentId/revoke
  * Revocar consentimiento
  */
-router.post('/consents/:consentId/revoke', authenticateToken, async (req, res) => {
+router.post('/consents/:consentId/revoke', auth, async (req, res) => {
   try {
     const { consentId } = req.params;
     const { revoke_reason } = req.body;
@@ -572,7 +572,7 @@ router.post('/consents/:consentId/revoke', authenticateToken, async (req, res) =
  * POST /api/v1/work-arrangements/presence/detect
  * Registrar detección de presencia (llamado por APK/Web)
  */
-router.post('/presence/detect', authenticateToken, async (req, res) => {
+router.post('/presence/detect', auth, async (req, res) => {
   try {
     const {
       user_id,
@@ -660,7 +660,7 @@ router.post('/presence/detect', authenticateToken, async (req, res) => {
  * GET /api/v1/work-arrangements/presence/:userId/today
  * Estadísticas de presencia del día
  */
-router.get('/presence/:userId/today', authenticateToken, async (req, res) => {
+router.get('/presence/:userId/today', auth, async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -691,7 +691,7 @@ router.get('/presence/:userId/today', authenticateToken, async (req, res) => {
  * GET /api/v1/work-arrangements/violations/:companyId
  * Lista violaciones de presencia de la empresa
  */
-router.get('/violations/:companyId', authenticateToken, async (req, res) => {
+router.get('/violations/:companyId', auth, async (req, res) => {
   try {
     const { companyId } = req.params;
     const { status, date_from, date_to } = req.query;
@@ -736,7 +736,7 @@ router.get('/violations/:companyId', authenticateToken, async (req, res) => {
  * POST /api/v1/work-arrangements/violations/:violationId/justify
  * Justificar violación
  */
-router.post('/violations/:violationId/justify', authenticateToken, async (req, res) => {
+router.post('/violations/:violationId/justify', auth, async (req, res) => {
   try {
     const { violationId } = req.params;
     const { justification_reason } = req.body;
@@ -776,7 +776,7 @@ router.post('/violations/:violationId/justify', authenticateToken, async (req, r
  * GET /api/v1/work-arrangements/contingency/:companyId
  * Lista planes de contingencia
  */
-router.get('/contingency/:companyId', authenticateToken, async (req, res) => {
+router.get('/contingency/:companyId', auth, async (req, res) => {
   try {
     const { companyId } = req.params;
 
@@ -806,7 +806,7 @@ router.get('/contingency/:companyId', authenticateToken, async (req, res) => {
  * POST /api/v1/work-arrangements/contingency/:planId/activate
  * Activar plan de contingencia
  */
-router.post('/contingency/:planId/activate', authenticateToken, async (req, res) => {
+router.post('/contingency/:planId/activate', auth, async (req, res) => {
   try {
     const { planId } = req.params;
     const activatedBy = req.user?.user_id || req.user?.id;
@@ -875,7 +875,7 @@ router.post('/contingency/:planId/activate', authenticateToken, async (req, res)
  * GET /api/v1/work-arrangements/dashboard/:companyId
  * Dashboard de modalidades de trabajo
  */
-router.get('/dashboard/:companyId', authenticateToken, async (req, res) => {
+router.get('/dashboard/:companyId', auth, async (req, res) => {
   try {
     const { companyId } = req.params;
 
@@ -936,7 +936,7 @@ router.get('/dashboard/:companyId', authenticateToken, async (req, res) => {
  * GET /api/v1/work-arrangements/history/:userId
  * Historial de cambios de modalidad de un usuario
  */
-router.get('/history/:userId', authenticateToken, async (req, res) => {
+router.get('/history/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -973,7 +973,7 @@ router.get('/history/:userId', authenticateToken, async (req, res) => {
  * GET /api/v1/work-arrangements/check-remote/:userId/:date
  * Verificar si usuario trabaja remoto en fecha específica
  */
-router.get('/check-remote/:userId/:date', authenticateToken, async (req, res) => {
+router.get('/check-remote/:userId/:date', auth, async (req, res) => {
   try {
     const { userId, date } = req.params;
 

@@ -8,7 +8,7 @@ const router = express.Router();
 const { WarehouseService, PickingService, RouteService, ShipmentService } = require('../services/logistics');
 
 // Middleware de autenticación (debe estar configurado globalmente)
-// const { authenticateToken } = require('../middleware/auth');
+// const { auth } = require('../middleware/auth');
 
 // Helper para manejar errores
 const asyncHandler = fn => (req, res, next) => {

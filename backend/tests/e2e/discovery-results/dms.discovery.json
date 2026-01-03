@@ -1,0 +1,72 @@
+{
+  "module": "dms",
+  "discoveredAt": "2025-12-28T21:07:11.921Z",
+  "entryPoint": {
+    "text": "📁\n                            Gestión Documental (DMS)\n                            Sistema de Gestión Documental - Fuente Única de Verdad",
+    "onclick": "showTab('dms-dashboard', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📄\n            Mis Documentos",
+      "id": null,
+      "className": "dms-tab ",
+      "onclick": "DMS.switchTab('my-docs')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📬\n            Mis Solicitudes",
+      "id": null,
+      "className": "dms-tab ",
+      "onclick": "DMS.switchTab('requests')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "⚠️\n            Por Vencer",
+      "id": null,
+      "className": "dms-tab ",
+      "onclick": "DMS.switchTab('expiring')"
+    },
+    {
+      "type": "EXPORT",
+      "text": "📥 Descargar PDF",
+      "id": null,
+      "className": "dms-export-btn pdf",
+      "onclick": "DMS.exportToPDF()"
+    },
+    {
+      "type": "VIEW",
+      "text": "❓ Ayuda",
+      "id": null,
+      "className": "dms-export-btn",
+      "onclick": "DMS.showHelp()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

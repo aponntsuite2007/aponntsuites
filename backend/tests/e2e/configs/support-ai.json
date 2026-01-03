@@ -1,0 +1,23 @@
+{
+  "moduleKey": "support-ai",
+  "moduleName": "Soporte con IA",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T17:54:48.711Z",
+  "discoveryDate": "2025-12-30T17:54:03.187Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"support-ai\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 1,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

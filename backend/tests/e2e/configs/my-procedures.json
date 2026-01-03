@@ -1,0 +1,23 @@
+{
+  "moduleKey": "my-procedures",
+  "moduleName": "Mis Procedimientos",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T17:07:29.491Z",
+  "discoveryDate": "2025-12-30T17:06:39.932Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"my-procedures\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 0,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

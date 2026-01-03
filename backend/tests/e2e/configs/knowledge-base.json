@@ -1,0 +1,99 @@
+{
+  "moduleKey": "knowledge-base",
+  "moduleName": "Gestión de Usuarios",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T02:28:10.840Z",
+  "discoveryDate": "2025-12-30T02:23:37.454Z",
+  "entryPoint": {
+    "selector": "button:has-text(\"Gestión de Usuarios\")",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {
+    "create": {
+      "enabled": true,
+      "trigger": {
+        "selector": ".btn-add-user",
+        "click": true
+      },
+      "modal": {
+        "waitForSelector": "#Modal, .modal.show",
+        "fields": [
+          {
+            "label": "👤 Nombre completo:",
+            "selector": "input[placeholder*=\"Ej: Juan Pérez\"]",
+            "type": "text",
+            "required": true,
+            "testValue": "TEST_Nombre 1767061690840"
+          },
+          {
+            "label": "📧 Email:",
+            "selector": "input[placeholder*=\"juan.perez@empresa.c\"]",
+            "type": "email",
+            "required": true,
+            "testValue": "TEST_knowledge-base_1767061690840@test.com"
+          },
+          {
+            "label": "🏷️ Legajo/ID Empleado:",
+            "selector": "input[placeholder*=\"EMP001\"]",
+            "type": "text",
+            "required": true,
+            "testValue": "TEST_1767061690840"
+          },
+          {
+            "label": "🔑 Contraseña (para APK):",
+            "selector": "input[placeholder*=\"Contraseña para logi\"]",
+            "type": "password",
+            "required": false,
+            "testValue": "Test1234!"
+          },
+          {
+            "label": "👑 Rol:",
+            "selector": "select[type=\"select\"]:nth-of-type(5)",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "🏢 Departamento:",
+            "selector": "select[type=\"select\"]:nth-of-type(6)",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "📋 Convenio Colectivo de Trabajo:",
+            "selector": "select[type=\"select\"]:nth-of-type(7)",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "🌍 Permi",
+            "selector": "input[type=\"checkbox\"]:nth-of-type(8)",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          }
+        ],
+        "tabs": [],
+        "submitButton": "button:has-text(\"Guardar\"), button:has-text(\"Crear\"), .btn-submit, [onclick*=\"save\"]",
+        "cancelButton": "button:has-text(\"Cancelar\"), button:has-text(\"Cerrar\"), .btn-cancel, [data-dismiss=\"modal\"]"
+      },
+      "validation": {
+        "successMessage": "creado exitosamente, agregado correctamente, guardado con éxito",
+        "listShouldUpdate": true,
+        "checkNewRow": true
+      }
+    }
+  },
+  "validation": {
+    "expectedModals": 1,
+    "expectedActions": 1,
+    "hasCreateAction": true,
+    "hasViewAction": false,
+    "totalFields": 8,
+    "totalTabs": 0
+  }
+}

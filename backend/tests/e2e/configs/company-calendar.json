@@ -1,0 +1,286 @@
+{
+  "moduleKey": "company-calendar",
+  "moduleName": "Gestión de Usuarios",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-28T23:03:19.600Z",
+  "discoveryDate": "2025-12-28T20:55:07.937Z",
+  "entryPoint": {
+    "selector": "button:has-text(\"Gestión de Usuarios\")",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {
+    "view": {
+      "enabled": true,
+      "trigger": {
+        "selector": "table tbody tr:first-child button:has-text(\"Ver\"), table tbody tr:first-child .btn-view, table tbody tr:first-child [onclick*=\"view\"]",
+        "click": true
+      },
+      "modal": {
+        "waitForSelector": "#ViewModal, .modal.show, [data-version*=\"FULLSCREEN\"]",
+        "tabs": [
+          {
+            "text": "⚙️ Administración",
+            "selector": "button[onclick=\"showFileTab('admin', this)\"]",
+            "sections": [
+              "📋 Expediente Digital: Sistema Testing",
+              "⚙️ Configuración Administrativa",
+              "🔐 Acceso y Seguridad",
+              "🔄 Workflow de Alta y Baja",
+              "📋 Requisitos de Alta (Validaciones):"
+            ],
+            "buttons": [
+              "✕",
+              "⚙️ Configurar Proceso de Alta",
+              "✏️ Cambiar Rol"
+            ],
+            "fieldsCount": 0
+          },
+          {
+            "text": "👤 Datos Personales",
+            "selector": "button[onclick=\"showFileTab('personal', this)\"]",
+            "sections": [
+              "📋 Expediente Digital: Sistema Testing",
+              "⚙️ Configuración Administrativa",
+              "🔐 Acceso y Seguridad",
+              "🔄 Workflow de Alta y Baja",
+              "📋 Requisitos de Alta (Validaciones):"
+            ],
+            "buttons": [
+              "✕",
+              "⚙️ Configurar Proceso de Alta",
+              "✏️ Editar"
+            ],
+            "fieldsCount": 0
+          },
+          {
+            "text": "💼 Antecedentes Laborales",
+            "selector": "button[onclick=\"showFileTab('work', this)\"]",
+            "sections": [
+              "📋 Expediente Digital: Sistema Testing",
+              "⚙️ Configuración Administrativa",
+              "🔐 Acceso y Seguridad",
+              "🔄 Workflow de Alta y Baja",
+              "📋 Requisitos de Alta (Validaciones):"
+            ],
+            "buttons": [
+              "✕",
+              "⚙️ Configurar Proceso de Alta",
+              "✏️ Editar Configuración"
+            ],
+            "fieldsCount": 0
+          },
+          {
+            "text": "👨‍👩‍👧‍👦 Grupo Familiar",
+            "selector": "button[onclick=\"showFileTab('family', this)\"]",
+            "sections": [
+              "📋 Expediente Digital: Sistema Testing",
+              "⚙️ Configuración Administrativa",
+              "🔐 Acceso y Seguridad",
+              "🔄 Workflow de Alta y Baja",
+              "📋 Requisitos de Alta (Validaciones):"
+            ],
+            "buttons": [
+              "✕",
+              "⚙️ Configurar Proceso de Alta",
+              "✏️ Editar"
+            ],
+            "fieldsCount": 0
+          },
+          {
+            "text": "🏥 Antecedentes Médicos",
+            "selector": "button[onclick=\"showFileTab('medical', this)\"]",
+            "sections": [
+              "📋 Expediente Digital: Sistema Testing",
+              "⚙️ Configuración Administrativa",
+              "🔐 Acceso y Seguridad",
+              "🔄 Workflow de Alta y Baja",
+              "📋 Requisitos de Alta (Validaciones):"
+            ],
+            "buttons": [
+              "✕",
+              "⚙️ Configurar Proceso de Alta",
+              "✏️ Editar"
+            ],
+            "fieldsCount": 0
+          },
+          {
+            "text": "📅 Asistencias/Permisos",
+            "selector": "button[onclick=\"showFileTab('attendance', this)\"]",
+            "sections": [
+              "📋 Expediente Digital: Sistema Testing",
+              "⚙️ Configuración Administrativa",
+              "🔐 Acceso y Seguridad",
+              "🔄 Workflow de Alta y Baja",
+              "📋 Requisitos de Alta (Validaciones):"
+            ],
+            "buttons": [
+              "✕",
+              "⚙️ Configurar Proceso de Alta",
+              "🔄 Actualizar"
+            ],
+            "fieldsCount": 0
+          },
+          {
+            "text": "📆 Calendario",
+            "selector": "button[onclick=\"showFileTab('calendar', this)\"]",
+            "sections": [
+              "📋 Expediente Digital: Sistema Testing",
+              "⚙️ Configuración Administrativa",
+              "🔐 Acceso y Seguridad",
+              "🔄 Workflow de Alta y Baja",
+              "📋 Requisitos de Alta (Validaciones):"
+            ],
+            "buttons": [
+              "✕",
+              "⚙️ Configurar Proceso de Alta",
+              "← Anterior"
+            ],
+            "fieldsCount": 0
+          },
+          {
+            "text": "⚖️ Disciplinarios",
+            "selector": "button[onclick=\"showFileTab('disciplinary', this)\"]",
+            "sections": [
+              "📋 Expediente Digital: Sistema Testing",
+              "⚙️ Configuración Administrativa",
+              "🔐 Acceso y Seguridad",
+              "🔄 Workflow de Alta y Baja",
+              "📋 Requisitos de Alta (Validaciones):"
+            ],
+            "buttons": [
+              "✕",
+              "⚙️ Configurar Proceso de Alta",
+              "+ Acción Disciplinaria"
+            ],
+            "fieldsCount": 0
+          },
+          {
+            "text": "📸 Registro Biométrico",
+            "selector": "button[onclick=\"showFileTab('biometric', this)\"]",
+            "sections": [
+              "📋 Expediente Digital: Sistema Testing",
+              "⚙️ Configuración Administrativa",
+              "🔐 Acceso y Seguridad",
+              "🔄 Workflow de Alta y Baja",
+              "📋 Requisitos de Alta (Validaciones):"
+            ],
+            "buttons": [
+              "✕",
+              "⚙️ Configurar Proceso de Alta",
+              "📷 Capturar Foto Biométrica"
+            ],
+            "fieldsCount": 0
+          },
+          {
+            "text": "🔔 Notificaciones",
+            "selector": "button[onclick=\"showFileTab('notifications', this)\"]",
+            "sections": [
+              "📋 Expediente Digital: Sistema Testing",
+              "⚙️ Configuración Administrativa",
+              "🔐 Acceso y Seguridad",
+              "🔄 Workflow de Alta y Baja",
+              "📋 Requisitos de Alta (Validaciones):"
+            ],
+            "buttons": [
+              "✕",
+              "⚙️ Configurar Proceso de Alta",
+              "🔄 Actualizar"
+            ],
+            "fieldsCount": 0
+          }
+        ],
+        "closeButton": "[onclick*=\"close\"], button:has-text(\"Cerrar\"), .btn-close, [data-dismiss=\"modal\"]"
+      },
+      "validation": {
+        "allTabsVisible": true,
+        "minTabsExpected": 10
+      }
+    },
+    "create": {
+      "enabled": true,
+      "trigger": {
+        "selector": ".btn-add-user",
+        "click": true
+      },
+      "modal": {
+        "waitForSelector": "#Modal, .modal.show",
+        "fields": [
+          {
+            "label": "👤 Nombre completo:",
+            "selector": "input[placeholder*=\"Ej: Juan Pérez\"]",
+            "type": "text",
+            "required": true,
+            "testValue": "TEST_Nombre 1766962999600"
+          },
+          {
+            "label": "📧 Email:",
+            "selector": "input[placeholder*=\"juan.perez@empresa.c\"]",
+            "type": "email",
+            "required": true,
+            "testValue": "TEST_company-calendar_1766962999600@test.com"
+          },
+          {
+            "label": "🏷️ Legajo/ID Empleado:",
+            "selector": "input[placeholder*=\"EMP001\"]",
+            "type": "text",
+            "required": true,
+            "testValue": "TEST_1766962999600"
+          },
+          {
+            "label": "🔑 Contraseña (para APK):",
+            "selector": "input[placeholder*=\"Contraseña para logi\"]",
+            "type": "password",
+            "required": false,
+            "testValue": "Test1234!"
+          },
+          {
+            "label": "👑 Rol:",
+            "selector": "select[type=\"select\"]:nth-of-type(5)",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "🏢 Departamento:",
+            "selector": "select[type=\"select\"]:nth-of-type(6)",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "📋 Convenio Colectivo de Trabajo:",
+            "selector": "select[type=\"select\"]:nth-of-type(7)",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "🌍 Permi",
+            "selector": "input[type=\"checkbox\"]:nth-of-type(8)",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          }
+        ],
+        "tabs": [],
+        "submitButton": "button:has-text(\"Guardar\"), button:has-text(\"Crear\"), .btn-submit, [onclick*=\"save\"]",
+        "cancelButton": "button:has-text(\"Cancelar\"), button:has-text(\"Cerrar\"), .btn-cancel, [data-dismiss=\"modal\"]"
+      },
+      "validation": {
+        "successMessage": "creado exitosamente, agregado correctamente, guardado con éxito",
+        "listShouldUpdate": true,
+        "checkNewRow": true
+      }
+    }
+  },
+  "validation": {
+    "expectedModals": 2,
+    "expectedActions": 1,
+    "hasCreateAction": true,
+    "hasViewAction": true,
+    "totalFields": 8,
+    "totalTabs": 10
+  }
+}

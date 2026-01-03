@@ -1,0 +1,23 @@
+{
+  "moduleKey": "employee-360",
+  "moduleName": "Expediente 360°",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T16:25:17.531Z",
+  "discoveryDate": "2025-12-30T16:24:27.578Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"employee-360\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 1,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

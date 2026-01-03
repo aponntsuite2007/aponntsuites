@@ -1,0 +1,23 @@
+{
+  "moduleKey": "company-email-process",
+  "moduleName": "Asignación de Emails a Procesos",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T13:18:17.424Z",
+  "discoveryDate": "2025-12-30T13:17:18.890Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"company-email-process\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 1,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

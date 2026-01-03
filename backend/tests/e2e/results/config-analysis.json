@@ -1,0 +1,35 @@
+{
+  "modules": [
+    {
+      "moduleKey": "companies",
+      "sourceCode": null,
+      "model": null,
+      "status": "analyzed"
+    },
+    {
+      "moduleKey": "inbox",
+      "sourceCode": {},
+      "model": null,
+      "status": "analyzed"
+    },
+    {
+      "moduleKey": "mi-espacio",
+      "sourceCode": {},
+      "model": null,
+      "status": "analyzed"
+    },
+    {
+      "moduleKey": "notification-center",
+      "sourceCode": {},
+      "model": null,
+      "status": "analyzed"
+    },
+    {
+      "moduleKey": "notifications",
+      "sourceCode": null,
+      "model": null,
+      "status": "analyzed"
+    }
+  ],
+  "total": 5
+}

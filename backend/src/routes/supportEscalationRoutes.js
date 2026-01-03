@@ -8,13 +8,13 @@
 const express = require('express');
 const router = express.Router();
 const supportTicketEscalationService = require('../services/SupportTicketEscalationService');
-const { auth: authenticateToken } = require('../middleware/auth');
+const { auth: auth } = require('../middleware/auth');
 
 /**
  * POST /api/v1/support/escalate
  * Escalamiento voluntario de ticket por soporte
  */
-router.post('/escalate', authenticateToken, async (req, res) => {
+router.post('/escalate', auth, async (req, res) => {
     try {
         const { ticketId, reason } = req.body;
         const staffId = req.user.id;
@@ -63,7 +63,7 @@ router.post('/escalate', authenticateToken, async (req, res) => {
  * GET /api/v1/support/escalation/history/:ticketId
  * Obtener historial de escalamientos de un ticket
  */
-router.get('/escalation/history/:ticketId', authenticateToken, async (req, res) => {
+router.get('/escalation/history/:ticketId', auth, async (req, res) => {
     try {
         const { ticketId } = req.params;
 
@@ -87,7 +87,7 @@ router.get('/escalation/history/:ticketId', authenticateToken, async (req, res) 
  * GET /api/v1/support/escalation/stats
  * Obtener estadísticas de escalamiento
  */
-router.get('/escalation/stats', authenticateToken, async (req, res) => {
+router.get('/escalation/stats', auth, async (req, res) => {
     try {
         const { dateFrom, dateTo } = req.query;
 
@@ -111,7 +111,7 @@ router.get('/escalation/stats', authenticateToken, async (req, res) => {
  * GET /api/v1/support/escalation/status
  * Obtener estado del servicio de escalamiento
  */
-router.get('/escalation/status', authenticateToken, async (req, res) => {
+router.get('/escalation/status', auth, async (req, res) => {
     try {
         const status = supportTicketEscalationService.getStatus();
 
@@ -133,7 +133,7 @@ router.get('/escalation/status', authenticateToken, async (req, res) => {
  * POST /api/v1/support/escalation/run-cycle
  * Ejecutar ciclo de escalamiento manualmente (solo admin)
  */
-router.post('/escalation/run-cycle', authenticateToken, async (req, res) => {
+router.post('/escalation/run-cycle', auth, async (req, res) => {
     try {
         // Solo admin puede ejecutar manualmente
         if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {

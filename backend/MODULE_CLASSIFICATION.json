@@ -1,0 +1,538 @@
+{
+  "admin-consent-management": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 1,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 2
+    },
+    "confidence": "MEDIUM"
+  },
+  "ai-assistant": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "art-management": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "associate-marketplace": {
+    "type": "CRUD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 0,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "LOW"
+  },
+  "associate-workflow-panel": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "attendance": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "audit-reports": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "auditor": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "auto-healing-dashboard": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "benefits-management": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 2,
+      "DASHBOARD": 3,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "HIGH"
+  },
+  "biometric-consent": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "companies": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "company-account": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 1,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "company-email-process": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "compliance-dashboard": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "configurador-modulos": {
+    "type": "CRUD",
+    "scores": {
+      "CRUD": 2,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "dashboard": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "database-sync": {
+    "type": "CRUD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 0,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "LOW"
+  },
+  "deploy-manager-3stages": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "deployment-sync": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "dms-dashboard": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "emotional-analysis": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "employee-360": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 3,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "HIGH"
+  },
+  "employee-map": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "engineering-dashboard": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 3,
+      "WORKFLOW": 1,
+      "READONLY": 2
+    },
+    "confidence": "HIGH"
+  },
+  "hour-bank": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "hours-cube-dashboard": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 3,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "HIGH"
+  },
+  "hse-management": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "inbox": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 1,
+      "DASHBOARD": 2,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "job-postings": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "kiosks-apk": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "kiosks": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 1,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "knowledge-base": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "legal-dashboard": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 3,
+      "WORKFLOW": 1,
+      "READONLY": 2
+    },
+    "confidence": "HIGH"
+  },
+  "medical-associates": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "medical": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "mi-espacio": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 2,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "my-procedures": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "notification-center": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 1,
+      "READONLY": 1
+    },
+    "confidence": "MEDIUM"
+  },
+  "notifications": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "organizational-structure": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 1
+    },
+    "confidence": "MEDIUM"
+  },
+  "partner-scoring-system": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "partners": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "payroll-liquidation": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 2,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "phase4-integrated-manager": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "positions-management": {
+    "type": "CRUD",
+    "scores": {
+      "CRUD": 1,
+      "DASHBOARD": 0,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "predictive-workforce-dashboard": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "procedures-manual": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 3,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "HIGH"
+  },
+  "roles-permissions": {
+    "type": "CRUD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 0,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "LOW"
+  },
+  "sanctions-management": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "siac-commercial-dashboard": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 1,
+      "WORKFLOW": 0,
+      "READONLY": 1
+    },
+    "confidence": "MEDIUM"
+  },
+  "sla-tracking": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 2,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "support-ai": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "temporary-access": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "testing-metrics-dashboard": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "training-management": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 2,
+      "DASHBOARD": 3,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "HIGH"
+  },
+  "user-support": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "users": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 1,
+      "DASHBOARD": 2,
+      "WORKFLOW": 1,
+      "READONLY": 1
+    },
+    "confidence": "MEDIUM"
+  },
+  "vacation-management": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 0,
+      "DASHBOARD": 3,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "HIGH"
+  },
+  "vendors": {
+    "type": "NO_FRONTEND",
+    "reason": "Archivo no existe"
+  },
+  "visitors": {
+    "type": "CRUD",
+    "scores": {
+      "CRUD": 1,
+      "DASHBOARD": 0,
+      "WORKFLOW": 0,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  },
+  "voice-platform": {
+    "type": "DASHBOARD",
+    "scores": {
+      "CRUD": 1,
+      "DASHBOARD": 2,
+      "WORKFLOW": 1,
+      "READONLY": 0
+    },
+    "confidence": "MEDIUM"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "module": "support-ai",
+  "discoveredAt": "2025-12-30T17:54:03.187Z",
+  "entryPoint": {
+    "text": "🤖\n                            Soporte con IA\n                            [COMMERCIAL] Dashboard Brain con auto-aprendizaje, tutoriales auto-generados, retroalimentación del sistema",
+    "onclick": "showTab('support-ai', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "IMPORT",
+      "text": "🔄 Recargar Página",
+      "id": null,
+      "className": null,
+      "onclick": "location.reload()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

@@ -1,0 +1,135 @@
+{
+  "module": "training-management",
+  "discoveredAt": "2025-12-30T17:17:30.311Z",
+  "entryPoint": {
+    "text": "📚\n                            Gestión de Capacitaciones\n                            [COMMERCIAL] Cursos, certificaciones, seguimiento de formación",
+    "onclick": "showTab('training-management', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "VIEW",
+      "text": "📊 Dashboard",
+      "id": null,
+      "className": "training-nav-btn active",
+      "onclick": "switchTrainingView('dashboard')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📚 Capacitaciones",
+      "id": null,
+      "className": "training-nav-btn",
+      "onclick": "switchTrainingView('trainings')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📋 Evaluaciones (Capacitaciones)",
+      "id": null,
+      "className": "training-nav-btn",
+      "onclick": "switchTrainingView('evaluations')"
+    },
+    {
+      "type": "VIEW",
+      "text": "🎯 Evaluaciones Independientes",
+      "id": null,
+      "className": "training-nav-btn",
+      "onclick": "switchTrainingView('independent-evaluations')"
+    },
+    {
+      "type": "VIEW",
+      "text": "👥 Seguimiento Empleados",
+      "id": null,
+      "className": "training-nav-btn",
+      "onclick": "switchTrainingView('employees')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📈 Reportes",
+      "id": null,
+      "className": "training-nav-btn",
+      "onclick": "switchTrainingView('reports')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📅 Calendario",
+      "id": null,
+      "className": "training-nav-btn",
+      "onclick": "switchTrainingView('calendar')"
+    },
+    {
+      "type": "VIEW",
+      "text": "➕ Nueva Capacitación",
+      "id": null,
+      "className": "btn btn-primary",
+      "onclick": "showModal('trainingModal')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📋 Nueva Evaluación",
+      "id": null,
+      "className": "btn btn-info",
+      "onclick": "showModal('evaluationModal')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📢 Enviar Recordatorios",
+      "id": null,
+      "className": "btn btn-warning",
+      "onclick": "sendTrainingReminders()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📊 Reporte Cumplimiento",
+      "id": null,
+      "className": "btn btn-success",
+      "onclick": "generateComplianceReport()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "💾 Guardar Datos",
+      "id": null,
+      "className": "btn btn-primary",
+      "onclick": "saveAllTrainingData()"
+    },
+    {
+      "type": "EXPORT",
+      "text": "📤 Exportar Datos",
+      "id": null,
+      "className": "btn btn-info",
+      "onclick": "exportTrainingData()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🗑️ Limpiar Todo",
+      "id": null,
+      "className": "btn btn-danger",
+      "onclick": "clearAllTrainingData()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

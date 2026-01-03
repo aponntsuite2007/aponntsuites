@@ -1,0 +1,99 @@
+{
+  "module": "voice-platform",
+  "discoveredAt": "2025-12-30T18:10:49.087Z",
+  "entryPoint": {
+    "text": "🎤\n                            Voice Platform 🎤\n                            Sistema de Experiencias del Empleado con IA - Captura sugerencias, problemas y soluciones. Clustering semántico, gamificación y analytics.",
+    "onclick": "showTab('voice-platform', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯 A MI ME PASO",
+      "id": "btnAMiMePaso",
+      "className": "btn btn-warning",
+      "onclick": null
+    },
+    {
+      "type": "CREATE",
+      "text": "Nueva Experiencia",
+      "id": "btnCreateExperience",
+      "className": "btn btn-primary",
+      "onclick": null
+    },
+    {
+      "type": "VIEW",
+      "text": "Mis Stats",
+      "id": "btnViewStats",
+      "className": "btn btn-info",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Leaderboard",
+      "id": "btnLeaderboard",
+      "className": "btn btn-success",
+      "onclick": null
+    },
+    {
+      "type": "SEARCH",
+      "text": "Limpiar",
+      "id": "btnClearFilters",
+      "className": "btn btn-secondary",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [
+    {
+      "type": "CREATE",
+      "triggerAction": "Nueva Experiencia",
+      "fields": [],
+      "tabs": [],
+      "tabContents": {
+        "main": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "Siguiente",
+              "onclick": null
+            }
+          ],
+          "sections": [
+            "Crear Nueva Experiencia\n                \n                  Paso 1 de 4",
+            "¿Qué tipo de experiencia deseas compartir?",
+            "Sugerencia",
+            "Problema",
+            "Solución"
+          ],
+          "tables": []
+        }
+      },
+      "relationships": []
+    }
+  ],
+  "relationships": [],
+  "validations": []
+}

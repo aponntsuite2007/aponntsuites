@@ -1,0 +1,58 @@
+{
+  "module": "mi-espacio",
+  "discoveredAt": "2025-12-30T14:25:00.405Z",
+  "entryPoint": {
+    "text": "🧑‍💼\n                            Mi Espacio\n                            [CORE] Portal del empleado para ver su información personal, recibos, etc.",
+    "onclick": "showTab('mi-espacio', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Subir Documento",
+      "id": null,
+      "className": "mi-espacio-quick-btn btn-documents",
+      "onclick": "window.MiEspacio.openSubmodule('dms-dashboard', 'Subir Documento')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Solicitar Vacaciones",
+      "id": null,
+      "className": "mi-espacio-quick-btn btn-vacation",
+      "onclick": "window.MiEspacio.openSubmodule('vacation-management', 'Solicitar Vacaciones')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Notificaciones",
+      "id": null,
+      "className": "mi-espacio-quick-btn btn-notifications",
+      "onclick": "window.MiEspacio.openSubmodule('inbox', 'Ver Notificaciones')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

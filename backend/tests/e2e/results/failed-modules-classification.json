@@ -1,0 +1,45 @@
+{
+  "withFrontend": [
+    "notification-center",
+    "art-management",
+    "audit-reports",
+    "benefits-management",
+    "compliance-dashboard",
+    "emotional-analysis",
+    "employee-360",
+    "employee-map",
+    "hour-bank",
+    "hse-management",
+    "job-postings",
+    "kiosks",
+    "legal-dashboard",
+    "my-procedures",
+    "payroll-liquidation",
+    "positions-management",
+    "predictive-workforce-dashboard",
+    "procedures-manual",
+    "sanctions-management",
+    "siac-commercial-dashboard",
+    "sla-tracking",
+    "training-management",
+    "vacation-management",
+    "visitors",
+    "voice-platform"
+  ],
+  "noFrontend": [
+    "departments",
+    "shifts",
+    "ai-assistant",
+    "auditor",
+    "kiosks-apk",
+    "knowledge-base",
+    "medical",
+    "support-ai",
+    "temporary-access"
+  ],
+  "summary": {
+    "total": 34,
+    "toRepair": 25,
+    "toDelegate": 9
+  }
+}

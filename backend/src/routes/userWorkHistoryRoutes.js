@@ -9,7 +9,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { auth: authenticateToken } = require('../middleware/auth');
+const { auth: auth } = require('../middleware/auth');
 const UserWorkHistory = require('../models/UserWorkHistory');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
@@ -19,7 +19,7 @@ const User = require('../models/User-postgresql')(sequelize);
  * GET /api/v1/users/:userId/work-history
  * Obtener todo el historial laboral de un usuario
  */
-router.get('/users/:userId/work-history', authenticateToken, async (req, res) => {
+router.get('/users/:userId/work-history', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const { companyId } = req.user;
@@ -64,7 +64,7 @@ router.get('/users/:userId/work-history', authenticateToken, async (req, res) =>
  * GET /api/v1/users/:userId/work-history/:jobId
  * Obtener un trabajo específico con todos sus detalles
  */
-router.get('/users/:userId/work-history/:jobId', authenticateToken, async (req, res) => {
+router.get('/users/:userId/work-history/:jobId', auth, async (req, res) => {
     try {
         const { userId, jobId } = req.params;
         const { companyId } = req.user;
@@ -98,7 +98,7 @@ router.get('/users/:userId/work-history/:jobId', authenticateToken, async (req, 
  * POST /api/v1/users/:userId/work-history
  * Crear nuevo registro de historial laboral
  */
-router.post('/users/:userId/work-history', authenticateToken, async (req, res) => {
+router.post('/users/:userId/work-history', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const { companyId } = req.user;
@@ -157,7 +157,7 @@ router.post('/users/:userId/work-history', authenticateToken, async (req, res) =
  * PUT /api/v1/users/:userId/work-history/:jobId
  * Actualizar registro de historial laboral
  */
-router.put('/users/:userId/work-history/:jobId', authenticateToken, async (req, res) => {
+router.put('/users/:userId/work-history/:jobId', auth, async (req, res) => {
     try {
         const { userId, jobId } = req.params;
         const { companyId } = req.user;
@@ -237,7 +237,7 @@ router.put('/users/:userId/work-history/:jobId', authenticateToken, async (req, 
  * DELETE /api/v1/users/:userId/work-history/:jobId
  * Eliminar registro de historial laboral
  */
-router.delete('/users/:userId/work-history/:jobId', authenticateToken, async (req, res) => {
+router.delete('/users/:userId/work-history/:jobId', auth, async (req, res) => {
     try {
         const { userId, jobId } = req.params;
         const { companyId } = req.user;
@@ -278,7 +278,7 @@ router.delete('/users/:userId/work-history/:jobId', authenticateToken, async (re
  * GET /api/v1/work-history/active-litigations
  * Obtener litigios activos de la empresa
  */
-router.get('/work-history/active-litigations', authenticateToken, async (req, res) => {
+router.get('/work-history/active-litigations', auth, async (req, res) => {
     try {
         const { companyId } = req.user;
 
@@ -304,7 +304,7 @@ router.get('/work-history/active-litigations', authenticateToken, async (req, re
  * GET /api/v1/work-history/termination-stats
  * Obtener estadísticas de desvinculación de la empresa
  */
-router.get('/work-history/termination-stats', authenticateToken, async (req, res) => {
+router.get('/work-history/termination-stats', auth, async (req, res) => {
     try {
         const { companyId } = req.user;
 
@@ -330,7 +330,7 @@ router.get('/work-history/termination-stats', authenticateToken, async (req, res
  * GET /api/v1/work-history/with-severance
  * Obtener empleados que recibieron indemnización
  */
-router.get('/work-history/with-severance', authenticateToken, async (req, res) => {
+router.get('/work-history/with-severance', auth, async (req, res) => {
     try {
         const { companyId } = req.user;
 
@@ -362,7 +362,7 @@ router.get('/work-history/with-severance', authenticateToken, async (req, res) =
  * GET /api/v1/work-history/not-eligible-for-rehire
  * Obtener ex-empleados no elegibles para recontratación
  */
-router.get('/work-history/not-eligible-for-rehire', authenticateToken, async (req, res) => {
+router.get('/work-history/not-eligible-for-rehire', auth, async (req, res) => {
     try {
         const { companyId } = req.user;
 

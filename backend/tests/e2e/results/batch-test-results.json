@@ -1,0 +1,57 @@
+{
+  "startTime": "2026-01-01T16:02:37.970Z",
+  "modules": [
+    {
+      "moduleKey": "admin-consent-management",
+      "duration": 8715,
+      "durationMin": "0.1 min",
+      "exitCode": 0,
+      "status": "PASSED",
+      "killedByHardTimeout": false,
+      "total": 5,
+      "passing": 0,
+      "failing": 0,
+      "skipped": 5,
+      "brainErrors": 0,
+      "chaosTimeout": false,
+      "timestamp": "2026-01-01T16:02:46.777Z"
+    },
+    {
+      "moduleKey": "associate-marketplace",
+      "duration": 6406,
+      "durationMin": "0.1 min",
+      "exitCode": 0,
+      "status": "PASSED",
+      "killedByHardTimeout": false,
+      "total": 5,
+      "passing": 0,
+      "failing": 0,
+      "skipped": 5,
+      "brainErrors": 0,
+      "chaosTimeout": false,
+      "timestamp": "2026-01-01T16:02:55.188Z"
+    },
+    {
+      "moduleKey": "associate-workflow-panel",
+      "duration": 6417,
+      "durationMin": "0.1 min",
+      "exitCode": 0,
+      "status": "PASSED",
+      "killedByHardTimeout": false,
+      "total": 5,
+      "passing": 0,
+      "failing": 0,
+      "skipped": 5,
+      "brainErrors": 0,
+      "chaosTimeout": false,
+      "timestamp": "2026-01-01T16:03:03.618Z"
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  }
+}

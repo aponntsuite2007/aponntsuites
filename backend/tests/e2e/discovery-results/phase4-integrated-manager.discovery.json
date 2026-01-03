@@ -1,0 +1,37 @@
+{
+  "module": "phase4-integrated-manager",
+  "discoveredAt": "2025-12-29T20:00:39.797Z",
+  "entryPoint": {
+    "text": "📦\n                            Manager de Phase4\n                            [ADMINISTRATIVE] Gestor integrado de testing Phase4 y orquestación",
+    "onclick": "showTab('phase4-integrated-manager', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

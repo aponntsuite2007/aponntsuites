@@ -6,22 +6,22 @@
  * Este archivo se auto-actualiza cada 5 minutos con metadata EN VIVO del sistema.
  * NO editar manualmente - los cambios se sobrescribirán.
  *
- * Generado: 2025-12-22T04:35:30.723Z
- * Módulos: 192
- * Última actualización: 15
+ * Generado: 2026-01-03T20:41:02.261Z
+ * Módulos: 209
+ * Última actualización: 56
  *
  * ============================================================================
  */
 
 const engineeringMetadata = {
-  "generatedAt": "2025-12-22T04:34:06.420Z",
+  "generatedAt": "2026-01-03T20:40:36.825Z",
   "source": "live-introspection",
   "generator": "EcosystemBrainService",
   "version": "2.0.0-live",
   "modules": {
     "absence": {
       "name": "absence",
-      "generatedAt": "2025-12-22T04:34:06.426Z",
+      "generatedAt": "2026-01-03T20:40:36.832Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -51,7 +51,7 @@ const engineeringMetadata = {
     },
     "accessControl": {
       "name": "accessControl",
-      "generatedAt": "2025-12-22T04:34:06.750Z",
+      "generatedAt": "2026-01-03T20:40:36.966Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -146,7 +146,7 @@ const engineeringMetadata = {
     },
     "admin-migrations": {
       "name": "admin-migrations",
-      "generatedAt": "2025-12-22T04:34:06.851Z",
+      "generatedAt": "2026-01-03T20:40:37.079Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -198,7 +198,7 @@ const engineeringMetadata = {
     },
     "admin": {
       "name": "admin",
-      "generatedAt": "2025-12-22T04:34:06.904Z",
+      "generatedAt": "2026-01-03T20:40:37.192Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -258,12 +258,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 1521,
-      "lastModified": "2025-12-18T15:40:23.274Z",
+      "lastModified": "2026-01-03T20:40:34.239Z",
       "complexity": "complex"
     },
     "afip": {
       "name": "afip",
-      "generatedAt": "2025-12-22T04:34:06.988Z",
+      "generatedAt": "2026-01-03T20:40:37.386Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -357,7 +357,7 @@ const engineeringMetadata = {
     },
     "ai-analysis-api": {
       "name": "ai-analysis-api",
-      "generatedAt": "2025-12-22T04:34:07.084Z",
+      "generatedAt": "2026-01-03T20:40:37.508Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -422,9 +422,63 @@ const engineeringMetadata = {
       "lastModified": "2025-09-26T14:04:56.431Z",
       "complexity": "moderate"
     },
+    "aMiMePaso": {
+      "name": "aMiMePaso",
+      "generatedAt": "2026-01-03T20:40:37.606Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\aMiMePasoRoutes.js",
+          "src\\services\\AMiMePasoService.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "AMiMePasoService",
+          "auth"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "POST",
+          "path": "/api/aMiMePaso/search",
+          "file": "aMiMePasoRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/aMiMePaso/popular-searches",
+          "file": "aMiMePasoRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/aMiMePaso/knowledge-gaps",
+          "file": "aMiMePasoRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/aMiMePaso/feedback",
+          "file": "aMiMePasoRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/aMiMePaso/autocomplete",
+          "file": "aMiMePasoRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 754,
+      "lastModified": "2025-12-24T03:21:43.644Z",
+      "complexity": "complex"
+    },
     "apk": {
       "name": "apk",
-      "generatedAt": "2025-12-22T04:34:07.157Z",
+      "generatedAt": "2026-01-03T20:40:37.705Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -491,7 +545,7 @@ const engineeringMetadata = {
     },
     "aponntAuth": {
       "name": "aponntAuth",
-      "generatedAt": "2025-12-22T04:34:07.227Z",
+      "generatedAt": "2026-01-03T20:40:37.815Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -548,7 +602,7 @@ const engineeringMetadata = {
     },
     "aponntBilling": {
       "name": "aponntBilling",
-      "generatedAt": "2025-12-22T04:34:07.355Z",
+      "generatedAt": "2026-01-03T20:40:37.909Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -636,7 +690,7 @@ const engineeringMetadata = {
     },
     "aponntDashboard": {
       "name": "aponntDashboard",
-      "generatedAt": "2025-12-22T04:34:07.467Z",
+      "generatedAt": "2026-01-03T20:40:38.026Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1022,12 +1076,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 4274,
-      "lastModified": "2025-12-19T14:32:39.346Z",
+      "lastModified": "2026-01-03T18:13:06.055Z",
       "complexity": "complex"
     },
     "aponntStaffAuth": {
       "name": "aponntStaffAuth",
-      "generatedAt": "2025-12-22T04:34:07.570Z",
+      "generatedAt": "2026-01-03T20:40:38.141Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1075,7 +1129,7 @@ const engineeringMetadata = {
     },
     "aponntStaff": {
       "name": "aponntStaff",
-      "generatedAt": "2025-12-22T04:34:07.667Z",
+      "generatedAt": "2026-01-03T20:40:38.258Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1155,12 +1209,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 1553,
-      "lastModified": "2025-12-19T15:05:41.324Z",
+      "lastModified": "2026-01-03T18:13:06.057Z",
       "complexity": "complex"
     },
     "assistant": {
       "name": "assistant",
-      "generatedAt": "2025-12-22T04:34:07.830Z",
+      "generatedAt": "2026-01-03T20:40:38.349Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1245,12 +1299,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 2399,
-      "lastModified": "2025-12-21T03:11:57.397Z",
+      "lastModified": "2026-01-03T18:13:06.099Z",
       "complexity": "complex"
     },
     "associate": {
       "name": "associate",
-      "generatedAt": "2025-12-22T04:34:07.941Z",
+      "generatedAt": "2026-01-03T20:40:38.479Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1381,7 +1435,7 @@ const engineeringMetadata = {
     },
     "associateWorkflow": {
       "name": "associateWorkflow",
-      "generatedAt": "2025-12-22T04:34:08.041Z",
+      "generatedAt": "2026-01-03T20:40:38.576Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1433,7 +1487,7 @@ const engineeringMetadata = {
     },
     "attendanceAdvancedStats": {
       "name": "attendanceAdvancedStats",
-      "generatedAt": "2025-12-22T04:34:08.125Z",
+      "generatedAt": "2026-01-03T20:40:38.762Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1517,7 +1571,7 @@ const engineeringMetadata = {
     },
     "attendanceAnalytics": {
       "name": "attendanceAnalytics",
-      "generatedAt": "2025-12-22T04:34:08.314Z",
+      "generatedAt": "2026-01-03T20:40:38.849Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1635,12 +1689,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 1349,
-      "lastModified": "2025-12-20T17:46:00.893Z",
+      "lastModified": "2026-01-03T18:13:06.057Z",
       "complexity": "complex"
     },
     "attendance": {
       "name": "attendance",
-      "generatedAt": "2025-12-22T04:34:08.431Z",
+      "generatedAt": "2026-01-03T20:40:38.948Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1795,12 +1849,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 13818,
-      "lastModified": "2025-12-22T03:21:01.124Z",
+      "lastModified": "2026-01-03T18:13:12.016Z",
       "complexity": "complex"
     },
     "attendance_stats_advanced": {
       "name": "attendance_stats_advanced",
-      "generatedAt": "2025-12-22T04:34:08.906Z",
+      "generatedAt": "2026-01-03T20:40:39.058Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1834,7 +1888,7 @@ const engineeringMetadata = {
     },
     "auditorPhase4": {
       "name": "auditorPhase4",
-      "generatedAt": "2025-12-22T04:34:09.016Z",
+      "generatedAt": "2026-01-03T20:40:39.268Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1907,12 +1961,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 743,
-      "lastModified": "2025-12-20T16:45:59.735Z",
+      "lastModified": "2026-01-03T18:13:06.058Z",
       "complexity": "complex"
     },
     "auditor": {
       "name": "auditor",
-      "generatedAt": "2025-12-22T04:34:09.108Z",
+      "generatedAt": "2026-01-03T20:40:39.379Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2140,12 +2194,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 4626,
-      "lastModified": "2025-12-20T16:45:59.735Z",
+      "lastModified": "2026-01-03T18:13:06.058Z",
       "complexity": "complex"
     },
     "auditReports": {
       "name": "auditReports",
-      "generatedAt": "2025-12-22T04:34:09.253Z",
+      "generatedAt": "2026-01-03T20:40:39.505Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2213,15 +2267,18 @@ const engineeringMetadata = {
     },
     "authorization": {
       "name": "authorization",
-      "generatedAt": "2025-12-22T04:34:09.370Z",
+      "generatedAt": "2026-01-03T20:40:39.761Z",
       "source": "live-introspection",
       "files": {
         "backend": [
+          "src\\models\\FinanceAuthorizationLog.js",
           "src\\models\\LegalEditAuthorization.js",
           "src\\models\\MedicalEditAuthorization.js",
           "src\\routes\\authorizationRoutes.js",
           "src\\routes\\medicalAuthorizationsRoutes.js",
-          "src\\services\\LateArrivalAuthorizationService.js"
+          "src\\services\\CashAuthorizationService.js",
+          "src\\services\\LateArrivalAuthorizationService.js",
+          "src\\services\\WMSAuthorizationService.js"
         ],
         "frontend": []
       },
@@ -2270,6 +2327,11 @@ const engineeringMetadata = {
       ],
       "databaseTables": [
         {
+          "table": "finance_authorization_logs",
+          "model": "FinanceAuthorizationLog",
+          "file": "FinanceAuthorizationLog.js"
+        },
+        {
           "table": "legal_edit_authorizations",
           "model": "LegalEditAuthorization",
           "file": "LegalEditAuthorization.js"
@@ -2282,19 +2344,20 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 4387,
-      "lastModified": "2025-12-16T13:34:18.922Z",
+      "linesOfCode": 5911,
+      "lastModified": "2026-01-03T14:51:19.638Z",
       "complexity": "complex"
     },
     "auth": {
       "name": "auth",
-      "generatedAt": "2025-12-22T04:34:09.530Z",
+      "generatedAt": "2026-01-03T20:40:39.911Z",
       "source": "live-introspection",
       "files": {
         "backend": [
           "src\\microservices\\auth-service.js",
           "src\\middleware\\auth.js",
           "src\\middleware\\multiTenantAuth.js",
+          "src\\models\\FinanceAuthorizationLog.js",
           "src\\models\\LegalEditAuthorization.js",
           "src\\models\\MedicalEditAuthorization.js",
           "src\\routes\\aponntAuthRoutes.js",
@@ -2304,7 +2367,9 @@ const engineeringMetadata = {
           "src\\routes\\faceAuthRoutes.js",
           "src\\routes\\medicalAuthorizationsRoutes.js",
           "src\\services\\afip\\AfipAuthService.js",
-          "src\\services\\LateArrivalAuthorizationService.js"
+          "src\\services\\CashAuthorizationService.js",
+          "src\\services\\LateArrivalAuthorizationService.js",
+          "src\\services\\WMSAuthorizationService.js"
         ],
         "frontend": []
       },
@@ -2360,6 +2425,11 @@ const engineeringMetadata = {
       ],
       "databaseTables": [
         {
+          "table": "finance_authorization_logs",
+          "model": "FinanceAuthorizationLog",
+          "file": "FinanceAuthorizationLog.js"
+        },
+        {
           "table": "legal_edit_authorizations",
           "model": "LegalEditAuthorization",
           "file": "LegalEditAuthorization.js"
@@ -2372,13 +2442,13 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 8027,
-      "lastModified": "2025-12-16T13:34:18.988Z",
+      "linesOfCode": 9551,
+      "lastModified": "2026-01-03T17:23:31.133Z",
       "complexity": "complex"
     },
     "autoHealing": {
       "name": "autoHealing",
-      "generatedAt": "2025-12-22T04:34:09.792Z",
+      "generatedAt": "2026-01-03T20:40:40.005Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2426,12 +2496,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 459,
-      "lastModified": "2025-12-16T13:34:18.723Z",
+      "lastModified": "2026-01-02T13:05:15.449Z",
       "complexity": "moderate"
     },
     "autoRepair": {
       "name": "autoRepair",
-      "generatedAt": "2025-12-22T04:34:09.881Z",
+      "generatedAt": "2026-01-03T20:40:40.106Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2508,7 +2578,7 @@ const engineeringMetadata = {
     },
     "benefits": {
       "name": "benefits",
-      "generatedAt": "2025-12-22T04:34:09.964Z",
+      "generatedAt": "2026-01-03T20:40:40.195Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2606,7 +2676,7 @@ const engineeringMetadata = {
     },
     "billing": {
       "name": "billing",
-      "generatedAt": "2025-12-22T04:34:10.075Z",
+      "generatedAt": "2026-01-03T20:40:40.280Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2706,7 +2776,7 @@ const engineeringMetadata = {
     },
     "biometric-attendance-api": {
       "name": "biometric-attendance-api",
-      "generatedAt": "2025-12-22T04:34:10.253Z",
+      "generatedAt": "2026-01-03T20:40:40.376Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2779,7 +2849,7 @@ const engineeringMetadata = {
     },
     "biometric-enterprise-": {
       "name": "biometric-enterprise-",
-      "generatedAt": "2025-12-22T04:34:10.318Z",
+      "generatedAt": "2026-01-03T20:40:40.467Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2830,7 +2900,7 @@ const engineeringMetadata = {
     },
     "biometricConsent": {
       "name": "biometricConsent",
-      "generatedAt": "2025-12-22T04:34:10.392Z",
+      "generatedAt": "2026-01-03T20:40:40.559Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2926,12 +2996,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 3153,
-      "lastModified": "2025-12-19T15:16:49.539Z",
+      "lastModified": "2026-01-03T18:13:06.059Z",
       "complexity": "complex"
     },
     "biometric": {
       "name": "biometric",
-      "generatedAt": "2025-12-22T04:34:10.575Z",
+      "generatedAt": "2026-01-03T20:40:40.699Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3011,12 +3081,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 12842,
-      "lastModified": "2025-12-19T15:16:49.539Z",
+      "lastModified": "2026-01-03T18:13:06.065Z",
       "complexity": "complex"
     },
     "brainAnalyzer": {
       "name": "brainAnalyzer",
-      "generatedAt": "2025-12-22T04:34:11.193Z",
+      "generatedAt": "2026-01-03T20:40:40.824Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3123,7 +3193,7 @@ const engineeringMetadata = {
     },
     "brainEcosystem": {
       "name": "brainEcosystem",
-      "generatedAt": "2025-12-22T04:34:11.266Z",
+      "generatedAt": "2026-01-03T20:40:40.926Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3229,7 +3299,7 @@ const engineeringMetadata = {
     },
     "brainNervous": {
       "name": "brainNervous",
-      "generatedAt": "2025-12-22T04:34:11.413Z",
+      "generatedAt": "2026-01-03T20:40:41.027Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3308,12 +3378,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 996,
-      "lastModified": "2025-12-20T19:06:05.784Z",
+      "lastModified": "2026-01-03T18:13:06.059Z",
       "complexity": "complex"
     },
     "brainReactive": {
       "name": "brainReactive",
-      "generatedAt": "2025-12-22T04:34:11.531Z",
+      "generatedAt": "2026-01-03T20:40:41.129Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3381,7 +3451,7 @@ const engineeringMetadata = {
     },
     "brain": {
       "name": "brain",
-      "generatedAt": "2025-12-22T04:34:11.631Z",
+      "generatedAt": "2026-01-03T20:40:41.216Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3399,7 +3469,6 @@ const engineeringMetadata = {
           "src\\routes\\brainNervousRoutes.js",
           "src\\routes\\brainReactiveRoutes.js",
           "src\\routes\\brainRoutes.js",
-          "src\\routes\\brainTestingRoutes.js",
           "src\\routes\\brainTourRoutes.js",
           "src\\routes\\brainV2Routes.js",
           "src\\services\\BrainAdvancedAnalyzer.js",
@@ -3553,95 +3622,13 @@ const engineeringMetadata = {
       "databaseTables": [],
       "progress": 50,
       "uxTestResults": null,
-      "linesOfCode": 19097,
-      "lastModified": "2025-12-22T03:52:36.098Z",
+      "linesOfCode": 18872,
+      "lastModified": "2026-01-03T18:13:06.105Z",
       "complexity": "complex"
-    },
-    "brainTesting": {
-      "name": "brainTesting",
-      "generatedAt": "2025-12-22T04:34:40.770Z",
-      "source": "live-introspection",
-      "files": {
-        "backend": [
-          "src\\routes\\brainTestingRoutes.js"
-        ],
-        "frontend": []
-      },
-      "dependencies": {
-        "required": [
-          "BrainIntelligentTestService"
-        ],
-        "optional": [],
-        "integrates_with": [],
-        "provides_to": []
-      },
-      "apiEndpoints": [
-        {
-          "method": "GET",
-          "path": "/api/brainTesting/status",
-          "file": "brainTestingRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/brainTesting/forms",
-          "file": "brainTestingRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/brainTesting/forms/:moduleKey",
-          "file": "brainTestingRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/brainTesting/plan/:moduleKey",
-          "file": "brainTestingRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/brainTesting/plan",
-          "file": "brainTestingRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/brainTesting/capabilities",
-          "file": "brainTestingRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/brainTesting/execute/:moduleKey",
-          "file": "brainTestingRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/brainTesting/execute-all",
-          "file": "brainTestingRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/brainTesting/fields/:moduleKey",
-          "file": "brainTestingRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/brainTesting/generate-data/:moduleKey",
-          "file": "brainTestingRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/brainTesting/health",
-          "file": "brainTestingRoutes.js"
-        }
-      ],
-      "databaseTables": [],
-      "progress": 50,
-      "uxTestResults": null,
-      "linesOfCode": 453,
-      "lastModified": "2025-12-16T13:34:18.734Z",
-      "complexity": "moderate"
     },
     "brainTour": {
       "name": "brainTour",
-      "generatedAt": "2025-12-22T04:34:40.834Z",
+      "generatedAt": "2026-01-03T20:40:41.323Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3757,12 +3744,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 1360,
-      "lastModified": "2025-12-21T00:16:03.737Z",
+      "lastModified": "2026-01-03T18:13:06.061Z",
       "complexity": "complex"
     },
     "brainV2": {
       "name": "brainV2",
-      "generatedAt": "2025-12-22T04:35:13.240Z",
+      "generatedAt": "2026-01-03T20:40:41.438Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3852,7 +3839,7 @@ const engineeringMetadata = {
     },
     "branch": {
       "name": "branch",
-      "generatedAt": "2025-12-22T04:35:13.364Z",
+      "generatedAt": "2026-01-03T20:40:41.551Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3933,7 +3920,7 @@ const engineeringMetadata = {
     },
     "budgetOnboarding": {
       "name": "budgetOnboarding",
-      "generatedAt": "2025-12-22T04:35:13.493Z",
+      "generatedAt": "2026-01-03T20:40:41.660Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3992,14 +3979,20 @@ const engineeringMetadata = {
     },
     "budget": {
       "name": "budget",
-      "generatedAt": "2025-12-22T04:35:13.593Z",
+      "generatedAt": "2026-01-03T20:40:41.807Z",
       "source": "live-introspection",
       "files": {
         "backend": [
           "src\\models\\Budget.js",
+          "src\\models\\FinanceBudget.js",
+          "src\\models\\FinanceBudgetExecution.js",
+          "src\\models\\FinanceBudgetInvestment.js",
+          "src\\models\\FinanceBudgetLine.js",
           "src\\routes\\budgetOnboardingRoutes.js",
           "src\\routes\\budgetRoutes.js",
-          "src\\services\\BudgetService.js"
+          "src\\routes\\financeBudgetRoutes.js",
+          "src\\services\\BudgetService.js",
+          "src\\services\\FinanceBudgetService.js"
         ],
         "frontend": []
       },
@@ -4081,17 +4074,37 @@ const engineeringMetadata = {
           "table": "budgets",
           "model": "Budget",
           "file": "Budget.js"
+        },
+        {
+          "table": "finance_budgets",
+          "model": "FinanceBudget",
+          "file": "FinanceBudget.js"
+        },
+        {
+          "table": "finance_budget_execution",
+          "model": "FinanceBudgetExecution",
+          "file": "FinanceBudgetExecution.js"
+        },
+        {
+          "table": "finance_budget_investments",
+          "model": "FinanceBudgetInvestment",
+          "file": "FinanceBudgetInvestment.js"
+        },
+        {
+          "table": "finance_budget_lines",
+          "model": "FinanceBudgetLine",
+          "file": "FinanceBudgetLine.js"
         }
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 1437,
-      "lastModified": "2025-12-18T15:40:23.346Z",
+      "linesOfCode": 3924,
+      "lastModified": "2026-01-03T20:33:58.703Z",
       "complexity": "complex"
     },
     "calendarioLaboral": {
       "name": "calendarioLaboral",
-      "generatedAt": "2025-12-22T04:35:13.711Z",
+      "generatedAt": "2026-01-03T20:40:41.964Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4166,9 +4179,375 @@ const engineeringMetadata = {
       "lastModified": "2025-12-16T13:34:18.888Z",
       "complexity": "complex"
     },
+    "cashManagement": {
+      "name": "cashManagement",
+      "generatedAt": "2026-01-03T20:40:42.108Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\cashManagementRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "auth",
+          "database",
+          "CashRegisterService",
+          "PettyCashService",
+          "CashAuthorizationService"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/payment-methods",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/payment-methods",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/cashManagement/payment-methods/:id",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/cash-registers",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/cash-registers/my-register",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/cash-registers",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/cashManagement/cash-registers/:id",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/cash-registers/:id/assign-user",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/cash-registers/:id/summary",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/cash-sessions/open",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/cash-sessions/:id/can-close",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/cash-sessions/:id/close",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/cash-sessions/:id/movements",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/cash-movements",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/cash-transfers/pending",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/cash-transfers",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/cash-transfers/:id/confirm",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/cash-transfers/:id/reject",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/cash-transfers/:id/cancel",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/cash-counts",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/petty-cash/funds",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/petty-cash/funds/:id",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/petty-cash/funds/:id/summary",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/petty-cash/funds",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/cashManagement/petty-cash/funds/:id",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/petty-cash/funds/:id/expenses",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/petty-cash/funds/:id/expenses",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/petty-cash/expenses/:id/approve",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/petty-cash/expenses/:id/reject",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/petty-cash/funds/:id/replenishments",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/petty-cash/funds/:id/replenishments",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/petty-cash/replenishments/:id/approve",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/petty-cash/replenishments/:id/pay",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/integration-config/:module",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/integration-config",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/currencies",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/currencies",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/cashManagement/currencies/:id/exchange-rate",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/egress-requests",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/egress-requests/pending-approval",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/egress-requests",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/egress-requests/:id/supervisor-approve",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/egress-requests/:id/finance-approve",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/egress-requests/:id/execute",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/egress-requests/:id/reject",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/adjustments",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/adjustments/pending",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/adjustments",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/adjustments/:id/approve",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/adjustments/:id/reject",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/responsible-config",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/responsible-config",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/authorization-logs",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/executive-dashboard",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/executive-dashboard/registers-status",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/executive-dashboard/financial-summary",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/exchange-rates",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/exchange-rates",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/exchange-rates/current",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/currency-exchanges",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/currency-exchanges",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/balance-carryovers",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/balance-carryovers/pending/:registerId",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/balance-carryovers/create-from-close",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cashManagement/balance-carryovers/apply-to-session",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cashManagement/session-balances/:sessionId",
+          "file": "cashManagementRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/cashManagement/session-balances/:id/reconcile",
+          "file": "cashManagementRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 2123,
+      "lastModified": "2026-01-03T20:40:33.943Z",
+      "complexity": "complex"
+    },
     "circuit": {
       "name": "circuit",
-      "generatedAt": "2025-12-22T04:35:13.789Z",
+      "generatedAt": "2026-01-03T20:40:42.227Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4293,12 +4672,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 3448,
-      "lastModified": "2025-12-20T14:03:24.001Z",
+      "lastModified": "2026-01-03T18:13:06.063Z",
       "complexity": "complex"
     },
     "commissionOnboarding": {
       "name": "commissionOnboarding",
-      "generatedAt": "2025-12-22T04:35:13.910Z",
+      "generatedAt": "2026-01-03T20:40:42.336Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4351,7 +4730,7 @@ const engineeringMetadata = {
     },
     "commission": {
       "name": "commission",
-      "generatedAt": "2025-12-22T04:35:14.010Z",
+      "generatedAt": "2026-01-03T20:40:42.485Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4461,7 +4840,7 @@ const engineeringMetadata = {
     },
     "companyAccount": {
       "name": "companyAccount",
-      "generatedAt": "2025-12-22T04:35:14.185Z",
+      "generatedAt": "2026-01-03T20:40:42.611Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4571,12 +4950,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 2165,
-      "lastModified": "2025-12-18T15:40:23.293Z",
+      "lastModified": "2026-01-02T13:05:15.353Z",
       "complexity": "complex"
     },
     "companyEmailProcess": {
       "name": "companyEmailProcess",
-      "generatedAt": "2025-12-22T04:35:14.273Z",
+      "generatedAt": "2026-01-03T20:40:42.719Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4641,12 +5020,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 559,
-      "lastModified": "2025-12-21T21:21:33.950Z",
+      "lastModified": "2026-01-03T18:13:06.101Z",
       "complexity": "complex"
     },
     "companyEmail": {
       "name": "companyEmail",
-      "generatedAt": "2025-12-22T04:35:14.351Z",
+      "generatedAt": "2026-01-03T20:40:42.825Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4733,12 +5112,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 1698,
-      "lastModified": "2025-12-21T21:21:33.950Z",
+      "lastModified": "2026-01-03T18:13:06.101Z",
       "complexity": "complex"
     },
     "companyModule": {
       "name": "companyModule",
-      "generatedAt": "2025-12-22T04:35:14.458Z",
+      "generatedAt": "2026-01-03T20:40:42.954Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4800,12 +5179,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 750,
-      "lastModified": "2025-12-16T13:34:18.746Z",
+      "lastModified": "2026-01-03T17:23:31.138Z",
       "complexity": "complex"
     },
     "companyPanel": {
       "name": "companyPanel",
-      "generatedAt": "2025-12-22T04:35:14.541Z",
+      "generatedAt": "2026-01-03T20:40:43.060Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4883,7 +5262,7 @@ const engineeringMetadata = {
     },
     "companyPricing": {
       "name": "companyPricing",
-      "generatedAt": "2025-12-22T04:35:14.609Z",
+      "generatedAt": "2026-01-03T20:40:43.173Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4941,7 +5320,7 @@ const engineeringMetadata = {
     },
     "company": {
       "name": "company",
-      "generatedAt": "2025-12-22T04:35:14.680Z",
+      "generatedAt": "2026-01-03T20:40:43.285Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5077,12 +5456,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 8377,
-      "lastModified": "2025-12-21T21:21:33.950Z",
+      "lastModified": "2026-01-03T18:13:06.101Z",
       "complexity": "complex"
     },
     "companyTask": {
       "name": "companyTask",
-      "generatedAt": "2025-12-22T04:35:14.939Z",
+      "generatedAt": "2026-01-03T20:40:43.434Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5144,7 +5523,7 @@ const engineeringMetadata = {
     },
     "compliance": {
       "name": "compliance",
-      "generatedAt": "2025-12-22T04:35:15.017Z",
+      "generatedAt": "2026-01-03T20:40:43.538Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5311,7 +5690,7 @@ const engineeringMetadata = {
     },
     "conceptDependencies": {
       "name": "conceptDependencies",
-      "generatedAt": "2025-12-22T04:35:15.108Z",
+      "generatedAt": "2026-01-03T20:40:43.645Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5423,14 +5802,18 @@ const engineeringMetadata = {
     },
     "config": {
       "name": "config",
-      "generatedAt": "2025-12-22T04:35:15.191Z",
+      "generatedAt": "2026-01-03T20:40:43.753Z",
       "source": "live-introspection",
       "files": {
         "backend": [
           "src\\models\\ARTConfiguration.js",
           "src\\models\\CompanyRiskConfig.js",
+          "src\\models\\FinanceCashIntegrationConfig.js",
+          "src\\models\\FinanceResponsibleConfig.js",
           "src\\models\\HseCompanyConfig.js",
           "src\\models\\MultipleARTConfiguration.js",
+          "src\\models\\ProcurementAccountingConfig.js",
+          "src\\models\\ProcurementApprovalConfig.js",
           "src\\models\\siac\\ConfiguracionEmpresa.js",
           "src\\models\\SystemConfig.js",
           "src\\models\\UserSalaryConfig.js",
@@ -5440,6 +5823,7 @@ const engineeringMetadata = {
           "src\\routes\\siac\\configurador.js",
           "src\\routes\\userSalaryConfigRoutes.js",
           "src\\services\\EmailConfigService.js",
+          "src\\synapse\\config-generator.js",
           "src\\utils\\workflowConfigHelper.js"
         ],
         "frontend": []
@@ -5534,6 +5918,16 @@ const engineeringMetadata = {
           "file": "CompanyRiskConfig.js"
         },
         {
+          "table": "finance_cash_integration_config",
+          "model": "FinanceCashIntegrationConfig",
+          "file": "FinanceCashIntegrationConfig.js"
+        },
+        {
+          "table": "finance_responsible_config",
+          "model": "FinanceResponsibleConfig",
+          "file": "FinanceResponsibleConfig.js"
+        },
+        {
           "table": "hse_company_config",
           "model": "HseCompanyConfig",
           "file": "HseCompanyConfig.js"
@@ -5542,6 +5936,16 @@ const engineeringMetadata = {
           "table": "multiple_art_configurations",
           "model": "MultipleARTConfiguration",
           "file": "MultipleARTConfiguration.js"
+        },
+        {
+          "table": "procurement_accounting_config",
+          "model": "ProcurementAccountingConfig",
+          "file": "ProcurementAccountingConfig.js"
+        },
+        {
+          "table": "procurement_approval_config",
+          "model": "ProcurementApprovalConfig",
+          "file": "ProcurementApprovalConfig.js"
         },
         {
           "table": "system_config",
@@ -5561,13 +5965,13 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 4726,
-      "lastModified": "2025-12-21T21:26:08.551Z",
+      "linesOfCode": 5768,
+      "lastModified": "2026-01-03T18:13:06.107Z",
       "complexity": "complex"
     },
     "contactForm": {
       "name": "contactForm",
-      "generatedAt": "2025-12-22T04:35:15.358Z",
+      "generatedAt": "2026-01-03T20:40:43.870Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5600,7 +6004,7 @@ const engineeringMetadata = {
     },
     "contact": {
       "name": "contact",
-      "generatedAt": "2025-12-22T04:35:15.422Z",
+      "generatedAt": "2026-01-03T20:40:43.978Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5634,7 +6038,7 @@ const engineeringMetadata = {
     },
     "contextualHelp": {
       "name": "contextualHelp",
-      "generatedAt": "2025-12-22T04:35:15.484Z",
+      "generatedAt": "2026-01-03T20:40:44.103Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5708,7 +6112,7 @@ const engineeringMetadata = {
     },
     "contractOnboarding": {
       "name": "contractOnboarding",
-      "generatedAt": "2025-12-22T04:35:15.558Z",
+      "generatedAt": "2026-01-03T20:40:44.214Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5765,13 +6169,15 @@ const engineeringMetadata = {
     },
     "contract": {
       "name": "contract",
-      "generatedAt": "2025-12-22T04:35:15.644Z",
+      "generatedAt": "2026-01-03T20:40:44.322Z",
       "source": "live-introspection",
       "files": {
         "backend": [
           "src\\cron\\contractRenewalCronJobs.js",
           "src\\models\\Contract.js",
           "src\\models\\ContractOnboarding.js",
+          "src\\models\\ProcurementContract.js",
+          "src\\models\\ProcurementContractItem.js",
           "src\\routes\\contractOnboardingRoutes.js",
           "src\\routes\\contractRoutes.js",
           "src\\routes\\contractsRoutes.js",
@@ -5871,17 +6277,27 @@ const engineeringMetadata = {
           "table": "contracts",
           "model": "ContractOnboarding",
           "file": "ContractOnboarding.js"
+        },
+        {
+          "table": "procurement_contracts",
+          "model": "ProcurementContract",
+          "file": "ProcurementContract.js"
+        },
+        {
+          "table": "procurement_contract_items",
+          "model": "ProcurementContractItem",
+          "file": "ProcurementContractItem.js"
         }
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 4127,
-      "lastModified": "2025-12-18T15:40:23.352Z",
+      "linesOfCode": 4477,
+      "lastModified": "2025-12-31T02:08:04.579Z",
       "complexity": "complex"
     },
     "contracts": {
       "name": "contracts",
-      "generatedAt": "2025-12-22T04:35:15.872Z",
+      "generatedAt": "2026-01-03T20:40:44.439Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5971,7 +6387,7 @@ const engineeringMetadata = {
     },
     "coordination": {
       "name": "coordination",
-      "generatedAt": "2025-12-22T04:35:15.951Z",
+      "generatedAt": "2026-01-03T20:40:44.556Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6063,7 +6479,7 @@ const engineeringMetadata = {
     },
     "criticalPath": {
       "name": "criticalPath",
-      "generatedAt": "2025-12-22T04:35:16.092Z",
+      "generatedAt": "2026-01-03T20:40:44.671Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6116,7 +6532,7 @@ const engineeringMetadata = {
     },
     "databaseSchema": {
       "name": "databaseSchema",
-      "generatedAt": "2025-12-22T04:35:16.178Z",
+      "generatedAt": "2026-01-03T20:40:44.787Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6173,7 +6589,7 @@ const engineeringMetadata = {
     },
     "databaseSync": {
       "name": "databaseSync",
-      "generatedAt": "2025-12-22T04:35:16.300Z",
+      "generatedAt": "2026-01-03T20:40:44.892Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6230,7 +6646,7 @@ const engineeringMetadata = {
     },
     "debug-company-modules": {
       "name": "debug-company-modules",
-      "generatedAt": "2025-12-22T04:35:16.381Z",
+      "generatedAt": "2026-01-03T20:40:45.015Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6268,7 +6684,7 @@ const engineeringMetadata = {
     },
     "debug-db": {
       "name": "debug-db",
-      "generatedAt": "2025-12-22T04:35:16.490Z",
+      "generatedAt": "2026-01-03T20:40:45.235Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6298,7 +6714,7 @@ const engineeringMetadata = {
     },
     "department": {
       "name": "department",
-      "generatedAt": "2025-12-22T04:35:16.557Z",
+      "generatedAt": "2026-01-03T20:40:45.392Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6363,7 +6779,7 @@ const engineeringMetadata = {
     },
     "deploymentSync": {
       "name": "deploymentSync",
-      "generatedAt": "2025-12-22T04:35:16.692Z",
+      "generatedAt": "2026-01-03T20:40:45.527Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6415,7 +6831,7 @@ const engineeringMetadata = {
     },
     "deploy": {
       "name": "deploy",
-      "generatedAt": "2025-12-22T04:35:16.770Z",
+      "generatedAt": "2026-01-03T20:40:45.670Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6493,7 +6909,7 @@ const engineeringMetadata = {
     },
     "diagnostic": {
       "name": "diagnostic",
-      "generatedAt": "2025-12-22T04:35:16.854Z",
+      "generatedAt": "2026-01-03T20:40:45.852Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6540,7 +6956,7 @@ const engineeringMetadata = {
     },
     "dms": {
       "name": "dms",
-      "generatedAt": "2025-12-22T04:35:16.932Z",
+      "generatedAt": "2026-01-03T20:40:45.965Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6584,12 +7000,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 2948,
-      "lastModified": "2025-12-18T15:40:23.396Z",
+      "lastModified": "2026-01-02T13:05:15.356Z",
       "complexity": "complex"
     },
     "documentExpiration": {
       "name": "documentExpiration",
-      "generatedAt": "2025-12-22T04:35:17.041Z",
+      "generatedAt": "2026-01-03T20:40:46.178Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6651,7 +7067,7 @@ const engineeringMetadata = {
     },
     "document": {
       "name": "document",
-      "generatedAt": "2025-12-22T04:35:17.127Z",
+      "generatedAt": "2026-01-03T20:40:46.315Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6680,7 +7096,8 @@ const engineeringMetadata = {
           "src\\services\\dms\\DocumentService.js",
           "src\\services\\dms\\DocumentStorageService.js",
           "src\\services\\DocumentExpirationNotificationService.js",
-          "src\\services\\DocumentExpirationScheduler.js"
+          "src\\services\\DocumentExpirationScheduler.js",
+          "src\\services\\WMSDocumentService.js"
         ],
         "frontend": []
       },
@@ -6771,13 +7188,180 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 8883,
-      "lastModified": "2025-12-16T13:34:19.020Z",
+      "linesOfCode": 9353,
+      "lastModified": "2026-01-03T20:40:34.273Z",
+      "complexity": "complex"
+    },
+    "e2eAdvanced": {
+      "name": "e2eAdvanced",
+      "generatedAt": "2026-01-03T20:40:46.444Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\e2eAdvancedRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "MasterTestOrchestrator"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "POST",
+          "path": "/api/e2eAdvanced/run",
+          "file": "e2eAdvancedRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/e2eAdvanced/run/:layer",
+          "file": "e2eAdvancedRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/e2eAdvanced/status/:executionId",
+          "file": "e2eAdvancedRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/e2eAdvanced/results/:executionId",
+          "file": "e2eAdvancedRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/e2eAdvanced/layers",
+          "file": "e2eAdvancedRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/e2eAdvanced/executions",
+          "file": "e2eAdvancedRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/e2eAdvanced/executions/:executionId",
+          "file": "e2eAdvancedRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 347,
+      "lastModified": "2025-12-25T23:09:37.921Z",
+      "complexity": "moderate"
+    },
+    "e2eTestingAdvanced": {
+      "name": "e2eTestingAdvanced",
+      "generatedAt": "2026-01-03T20:40:46.561Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\e2eTestingAdvancedRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "MasterTestOrchestrator"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "POST",
+          "path": "/api/e2eTestingAdvanced/run",
+          "file": "e2eTestingAdvancedRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/e2eTestingAdvanced/run/:layer",
+          "file": "e2eTestingAdvancedRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/e2eTestingAdvanced/status/:executionId",
+          "file": "e2eTestingAdvancedRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/e2eTestingAdvanced/results/:executionId",
+          "file": "e2eTestingAdvancedRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/e2eTestingAdvanced/layers",
+          "file": "e2eTestingAdvancedRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/e2eTestingAdvanced/executions",
+          "file": "e2eTestingAdvancedRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/e2eTestingAdvanced/executions/:executionId",
+          "file": "e2eTestingAdvancedRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 349,
+      "lastModified": "2025-12-25T23:28:31.633Z",
+      "complexity": "moderate"
+    },
+    "e2eTesting": {
+      "name": "e2eTesting",
+      "generatedAt": "2026-01-03T20:40:46.662Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\e2eTestingAdvancedRoutes.js",
+          "src\\routes\\e2eTestingRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "MasterTestOrchestrator"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/e2eTesting/live-stats",
+          "file": "e2eTestingRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/e2eTesting/modules-status",
+          "file": "e2eTestingRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/e2eTesting/execution/:executionId",
+          "file": "e2eTestingRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 534,
+      "lastModified": "2025-12-25T23:28:31.633Z",
       "complexity": "complex"
     },
     "emailConfig": {
       "name": "emailConfig",
-      "generatedAt": "2025-12-22T04:35:17.358Z",
+      "generatedAt": "2026-01-03T20:40:46.774Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6865,12 +7449,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 1324,
-      "lastModified": "2025-12-21T21:26:08.551Z",
+      "lastModified": "2026-01-03T18:13:06.107Z",
       "complexity": "complex"
     },
     "email": {
       "name": "email",
-      "generatedAt": "2025-12-22T04:35:17.437Z",
+      "generatedAt": "2026-01-03T20:40:46.861Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6888,6 +7472,7 @@ const engineeringMetadata = {
           "src\\services\\EmailService.js",
           "src\\services\\EmailVerificationService.js",
           "src\\services\\InboundEmailService.js",
+          "src\\services\\SupplierEmailService.js",
           "src\\utils\\EmailTemplateRenderer.js",
           "src\\workers\\EmailWorker.js"
         ],
@@ -6947,13 +7532,13 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 7540,
-      "lastModified": "2025-12-21T21:26:08.551Z",
+      "linesOfCode": 8345,
+      "lastModified": "2026-01-03T18:13:06.107Z",
       "complexity": "complex"
     },
     "emailVerification": {
       "name": "emailVerification",
-      "generatedAt": "2025-12-22T04:35:17.670Z",
+      "generatedAt": "2026-01-03T20:40:46.965Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7021,7 +7606,7 @@ const engineeringMetadata = {
     },
     "emotionalAnalysis": {
       "name": "emotionalAnalysis",
-      "generatedAt": "2025-12-22T04:35:17.739Z",
+      "generatedAt": "2026-01-03T20:40:47.069Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7075,7 +7660,7 @@ const engineeringMetadata = {
     },
     "employee360": {
       "name": "employee360",
-      "generatedAt": "2025-12-22T04:35:17.894Z",
+      "generatedAt": "2026-01-03T20:40:47.180Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7151,7 +7736,7 @@ const engineeringMetadata = {
     },
     "employeeDocument": {
       "name": "employeeDocument",
-      "generatedAt": "2025-12-22T04:35:17.990Z",
+      "generatedAt": "2026-01-03T20:40:47.287Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7239,7 +7824,7 @@ const engineeringMetadata = {
     },
     "engineeringMetadata": {
       "name": "engineeringMetadata",
-      "generatedAt": "2025-12-22T04:35:18.095Z",
+      "generatedAt": "2026-01-03T20:40:47.425Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7302,7 +7887,7 @@ const engineeringMetadata = {
     },
     "engineering": {
       "name": "engineering",
-      "generatedAt": "2025-12-22T04:35:18.167Z",
+      "generatedAt": "2026-01-03T20:40:47.519Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7451,12 +8036,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 1991,
-      "lastModified": "2025-12-22T03:53:07.247Z",
+      "lastModified": "2026-01-03T18:13:06.065Z",
       "complexity": "complex"
     },
     "enterprise-scalability-api": {
       "name": "enterprise-scalability-api",
-      "generatedAt": "2025-12-22T04:35:18.239Z",
+      "generatedAt": "2026-01-03T20:40:47.620Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7528,7 +8113,7 @@ const engineeringMetadata = {
     },
     "faceAuth": {
       "name": "faceAuth",
-      "generatedAt": "2025-12-22T04:35:18.305Z",
+      "generatedAt": "2026-01-03T20:40:47.706Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7576,7 +8161,7 @@ const engineeringMetadata = {
     },
     "facialBiometric": {
       "name": "facialBiometric",
-      "generatedAt": "2025-12-22T04:35:18.365Z",
+      "generatedAt": "2026-01-03T20:40:47.793Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7633,12 +8218,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 450,
-      "lastModified": "2025-12-19T15:14:36.868Z",
+      "lastModified": "2026-01-03T18:13:06.065Z",
       "complexity": "moderate"
     },
     "fastAttendance": {
       "name": "fastAttendance",
-      "generatedAt": "2025-12-22T04:35:18.425Z",
+      "generatedAt": "2026-01-03T20:40:47.881Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7696,12 +8281,914 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 262,
-      "lastModified": "2025-12-16T13:34:18.781Z",
+      "lastModified": "2026-01-02T13:05:15.455Z",
       "complexity": "moderate"
+    },
+    "financeAccounts": {
+      "name": "financeAccounts",
+      "generatedAt": "2026-01-03T20:40:47.969Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\financeAccountsRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "database",
+          "FinanceAutoPostingService",
+          "auth"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/chart",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/chart/tree",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/chart/:id",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeAccounts/chart",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/financeAccounts/chart/:id",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/financeAccounts/chart/:id",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/cost-centers",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/cost-centers/tree",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeAccounts/cost-centers",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/financeAccounts/cost-centers/:id",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/fiscal-periods",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/fiscal-periods/current",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeAccounts/fiscal-periods/create-year",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/financeAccounts/fiscal-periods/:id/status",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/journal-entries",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/journal-entries/:id",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeAccounts/journal-entries",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeAccounts/journal-entries/:id/post",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeAccounts/journal-entries/:id/reverse",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/dimensions",
+          "file": "financeAccountsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeAccounts/dimensions/:dimension/values",
+          "file": "financeAccountsRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 937,
+      "lastModified": "2026-01-03T20:30:13.892Z",
+      "complexity": "complex"
+    },
+    "financeBudget": {
+      "name": "financeBudget",
+      "generatedAt": "2026-01-03T20:40:48.067Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\models\\FinanceBudget.js",
+          "src\\models\\FinanceBudgetExecution.js",
+          "src\\models\\FinanceBudgetInvestment.js",
+          "src\\models\\FinanceBudgetLine.js",
+          "src\\routes\\financeBudgetRoutes.js",
+          "src\\services\\FinanceBudgetService.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/financeBudget/list",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeBudget/:id",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeBudget/",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeBudget/generate-from-historical",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/financeBudget/:id",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/financeBudget/:id/status",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeBudget/:id/lines",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeBudget/:id/lines",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/financeBudget/lines/:lineId",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/financeBudget/lines/:lineId",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeBudget/:id/investments",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeBudget/:id/investments",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/financeBudget/investments/:investmentId",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/financeBudget/investments/:investmentId/status",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeBudget/:id/execution",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeBudget/:id/projection",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeBudget/inflation-rates",
+          "file": "financeBudgetRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeBudget/inflation-rates",
+          "file": "financeBudgetRoutes.js"
+        }
+      ],
+      "databaseTables": [
+        {
+          "table": "budgets",
+          "model": "Budget",
+          "file": "Budget.js"
+        },
+        {
+          "table": "finance_budgets",
+          "model": "FinanceBudget",
+          "file": "FinanceBudget.js"
+        },
+        {
+          "table": "finance_budget_execution",
+          "model": "FinanceBudgetExecution",
+          "file": "FinanceBudgetExecution.js"
+        },
+        {
+          "table": "finance_budget_investments",
+          "model": "FinanceBudgetInvestment",
+          "file": "FinanceBudgetInvestment.js"
+        },
+        {
+          "table": "finance_budget_lines",
+          "model": "FinanceBudgetLine",
+          "file": "FinanceBudgetLine.js"
+        }
+      ],
+      "progress": 75,
+      "uxTestResults": null,
+      "linesOfCode": 2487,
+      "lastModified": "2026-01-03T20:33:58.703Z",
+      "complexity": "complex"
+    },
+    "financeDashboard": {
+      "name": "financeDashboard",
+      "generatedAt": "2026-01-03T20:40:48.159Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\financeDashboardRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "database",
+          "FinanceKPIService",
+          "FinanceBudgetService",
+          "FinanceCashFlowService",
+          "auth"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/kpis/liquidity",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/kpis/profitability",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/kpis/budget",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/kpis/cash-flow",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/kpis/operational",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/projections/year-end",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/projections/cash-flow",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/projections/budget",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/alerts",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/widgets/revenue-expense",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/widgets/budget-gauge",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/widgets/cash-position",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/widgets/top-expenses",
+          "file": "financeDashboardRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeDashboard/widgets/ratios-summary",
+          "file": "financeDashboardRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 590,
+      "lastModified": "2026-01-03T20:33:58.778Z",
+      "complexity": "complex"
+    },
+    "financeReports": {
+      "name": "financeReports",
+      "generatedAt": "2026-01-03T20:40:48.255Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\financeReportsRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "database",
+          "FinanceReportingService",
+          "auth"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/financeReports/balance-sheet",
+          "file": "financeReportsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeReports/income-statement",
+          "file": "financeReportsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeReports/cash-flow-statement",
+          "file": "financeReportsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeReports/trial-balance",
+          "file": "financeReportsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeReports/account-ledger/:accountId",
+          "file": "financeReportsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeReports/cost-center/:costCenterId",
+          "file": "financeReportsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeReports/variance-analysis",
+          "file": "financeReportsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeReports/dimensional-analysis",
+          "file": "financeReportsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeReports/export/:reportType",
+          "file": "financeReportsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeReports/financial-ratios",
+          "file": "financeReportsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeReports/trends",
+          "file": "financeReportsRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 550,
+      "lastModified": "2026-01-03T20:33:58.840Z",
+      "complexity": "complex"
+    },
+    "finance": {
+      "name": "finance",
+      "generatedAt": "2026-01-03T20:40:48.353Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\models\\FinanceAccountBalance.js",
+          "src\\models\\FinanceAuthorizationLog.js",
+          "src\\models\\FinanceBalanceCarryover.js",
+          "src\\models\\FinanceBankAccount.js",
+          "src\\models\\FinanceBankTransaction.js",
+          "src\\models\\FinanceBudget.js",
+          "src\\models\\FinanceBudgetExecution.js",
+          "src\\models\\FinanceBudgetInvestment.js",
+          "src\\models\\FinanceBudgetLine.js",
+          "src\\models\\FinanceCashAdjustment.js",
+          "src\\models\\FinanceCashCount.js",
+          "src\\models\\FinanceCashEgressRequest.js",
+          "src\\models\\FinanceCashFlowForecast.js",
+          "src\\models\\FinanceCashIntegrationConfig.js",
+          "src\\models\\FinanceCashMovement.js",
+          "src\\models\\FinanceCashRegister.js",
+          "src\\models\\FinanceCashRegisterAssignment.js",
+          "src\\models\\FinanceCashRegisterSession.js",
+          "src\\models\\FinanceCashSessionBalance.js",
+          "src\\models\\FinanceCashTransfer.js",
+          "src\\models\\FinanceChartOfAccounts.js",
+          "src\\models\\FinanceCheckBook.js",
+          "src\\models\\FinanceCostCenter.js",
+          "src\\models\\FinanceCurrency.js",
+          "src\\models\\FinanceCurrencyExchange.js",
+          "src\\models\\FinanceDimension.js",
+          "src\\models\\FinanceExchangeRate.js",
+          "src\\models\\FinanceFiscalPeriod.js",
+          "src\\models\\FinanceInflationRate.js",
+          "src\\models\\FinanceIssuedCheck.js",
+          "src\\models\\FinanceJournalEntry.js",
+          "src\\models\\FinanceJournalEntryLine.js",
+          "src\\models\\FinancePaymentMethod.js",
+          "src\\models\\FinancePaymentOrder.js",
+          "src\\models\\FinancePaymentOrderItem.js",
+          "src\\models\\FinancePettyCashExpense.js",
+          "src\\models\\FinancePettyCashFund.js",
+          "src\\models\\FinancePettyCashReplenishment.js",
+          "src\\models\\FinanceResponsibleConfig.js",
+          "src\\routes\\financeAccountsRoutes.js",
+          "src\\routes\\financeBudgetRoutes.js",
+          "src\\routes\\financeDashboardRoutes.js",
+          "src\\routes\\financeReportsRoutes.js",
+          "src\\routes\\financeRoutes.js",
+          "src\\routes\\financeTreasuryRoutes.js",
+          "src\\services\\FinanceAutoPostingService.js",
+          "src\\services\\FinanceBudgetService.js",
+          "src\\services\\FinanceCashFlowService.js",
+          "src\\services\\FinanceKPIService.js",
+          "src\\services\\FinanceModuleIntegration.js",
+          "src\\services\\FinanceReconciliationService.js",
+          "src\\services\\FinanceReportingService.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/finance/status",
+          "file": "financeRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/finance/initialize",
+          "file": "financeRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/finance/integrations",
+          "file": "financeRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/finance/integrations/:integration/auto-posting",
+          "file": "financeRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/finance/bundles",
+          "file": "financeRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/finance/deactivation-impact/:module",
+          "file": "financeRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/finance/sync-cost-centers",
+          "file": "financeRoutes.js"
+        }
+      ],
+      "databaseTables": [
+        {
+          "table": "finance_account_balances",
+          "model": "FinanceAccountBalance",
+          "file": "FinanceAccountBalance.js"
+        },
+        {
+          "table": "finance_authorization_logs",
+          "model": "FinanceAuthorizationLog",
+          "file": "FinanceAuthorizationLog.js"
+        },
+        {
+          "table": "finance_cash_balance_carryover",
+          "model": "FinanceBalanceCarryover",
+          "file": "FinanceBalanceCarryover.js"
+        },
+        {
+          "table": "finance_bank_accounts",
+          "model": "FinanceBankAccount",
+          "file": "FinanceBankAccount.js"
+        },
+        {
+          "table": "finance_bank_transactions",
+          "model": "FinanceBankTransaction",
+          "file": "FinanceBankTransaction.js"
+        },
+        {
+          "table": "finance_budgets",
+          "model": "FinanceBudget",
+          "file": "FinanceBudget.js"
+        },
+        {
+          "table": "finance_budget_execution",
+          "model": "FinanceBudgetExecution",
+          "file": "FinanceBudgetExecution.js"
+        },
+        {
+          "table": "finance_budget_investments",
+          "model": "FinanceBudgetInvestment",
+          "file": "FinanceBudgetInvestment.js"
+        },
+        {
+          "table": "finance_budget_lines",
+          "model": "FinanceBudgetLine",
+          "file": "FinanceBudgetLine.js"
+        },
+        {
+          "table": "finance_cash_adjustments",
+          "model": "FinanceCashAdjustment",
+          "file": "FinanceCashAdjustment.js"
+        },
+        {
+          "table": "finance_cash_counts",
+          "model": "FinanceCashCount",
+          "file": "FinanceCashCount.js"
+        },
+        {
+          "table": "finance_cash_egress_requests",
+          "model": "FinanceCashEgressRequest",
+          "file": "FinanceCashEgressRequest.js"
+        },
+        {
+          "table": "finance_cash_flow_forecast",
+          "model": "FinanceCashFlowForecast",
+          "file": "FinanceCashFlowForecast.js"
+        },
+        {
+          "table": "finance_cash_integration_config",
+          "model": "FinanceCashIntegrationConfig",
+          "file": "FinanceCashIntegrationConfig.js"
+        },
+        {
+          "table": "finance_cash_movements",
+          "model": "FinanceCashMovement",
+          "file": "FinanceCashMovement.js"
+        },
+        {
+          "table": "finance_cash_registers",
+          "model": "FinanceCashRegister",
+          "file": "FinanceCashRegister.js"
+        },
+        {
+          "table": "finance_cash_register_assignments",
+          "model": "FinanceCashRegisterAssignment",
+          "file": "FinanceCashRegisterAssignment.js"
+        },
+        {
+          "table": "finance_cash_register_sessions",
+          "model": "FinanceCashRegisterSession",
+          "file": "FinanceCashRegisterSession.js"
+        },
+        {
+          "table": "finance_cash_session_balances",
+          "model": "FinanceCashSessionBalance",
+          "file": "FinanceCashSessionBalance.js"
+        },
+        {
+          "table": "finance_cash_transfers",
+          "model": "FinanceCashTransfer",
+          "file": "FinanceCashTransfer.js"
+        },
+        {
+          "table": "finance_chart_of_accounts",
+          "model": "FinanceChartOfAccounts",
+          "file": "FinanceChartOfAccounts.js"
+        },
+        {
+          "table": "finance_checkbooks",
+          "model": "FinanceCheckBook",
+          "file": "FinanceCheckBook.js"
+        },
+        {
+          "table": "finance_cost_centers",
+          "model": "FinanceCostCenter",
+          "file": "FinanceCostCenter.js"
+        },
+        {
+          "table": "finance_currencies",
+          "model": "FinanceCurrency",
+          "file": "FinanceCurrency.js"
+        },
+        {
+          "table": "finance_currency_exchanges",
+          "model": "FinanceCurrencyExchange",
+          "file": "FinanceCurrencyExchange.js"
+        },
+        {
+          "table": "finance_dimensions",
+          "model": "FinanceDimension",
+          "file": "FinanceDimension.js"
+        },
+        {
+          "table": "finance_exchange_rates",
+          "model": "FinanceExchangeRate",
+          "file": "FinanceExchangeRate.js"
+        },
+        {
+          "table": "finance_fiscal_periods",
+          "model": "FinanceFiscalPeriod",
+          "file": "FinanceFiscalPeriod.js"
+        },
+        {
+          "table": "finance_inflation_rates",
+          "model": "FinanceInflationRate",
+          "file": "FinanceInflationRate.js"
+        },
+        {
+          "table": "finance_issued_checks",
+          "model": "FinanceIssuedCheck",
+          "file": "FinanceIssuedCheck.js"
+        },
+        {
+          "table": "finance_journal_entries",
+          "model": "FinanceJournalEntry",
+          "file": "FinanceJournalEntry.js"
+        },
+        {
+          "table": "finance_journal_entry_lines",
+          "model": "FinanceJournalEntryLine",
+          "file": "FinanceJournalEntryLine.js"
+        },
+        {
+          "table": "finance_payment_methods",
+          "model": "FinancePaymentMethod",
+          "file": "FinancePaymentMethod.js"
+        },
+        {
+          "table": "finance_payment_orders",
+          "model": "FinancePaymentOrder",
+          "file": "FinancePaymentOrder.js"
+        },
+        {
+          "table": "finance_payment_order_items",
+          "model": "FinancePaymentOrderItem",
+          "file": "FinancePaymentOrderItem.js"
+        },
+        {
+          "table": "finance_petty_cash_expenses",
+          "model": "FinancePettyCashExpense",
+          "file": "FinancePettyCashExpense.js"
+        },
+        {
+          "table": "finance_petty_cash_funds",
+          "model": "FinancePettyCashFund",
+          "file": "FinancePettyCashFund.js"
+        },
+        {
+          "table": "finance_petty_cash_replenishments",
+          "model": "FinancePettyCashReplenishment",
+          "file": "FinancePettyCashReplenishment.js"
+        },
+        {
+          "table": "finance_responsible_config",
+          "model": "FinanceResponsibleConfig",
+          "file": "FinanceResponsibleConfig.js"
+        }
+      ],
+      "progress": 75,
+      "uxTestResults": null,
+      "linesOfCode": 15696,
+      "lastModified": "2026-01-03T20:33:58.992Z",
+      "complexity": "complex"
+    },
+    "financeTreasury": {
+      "name": "financeTreasury",
+      "generatedAt": "2026-01-03T20:40:48.570Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\financeTreasuryRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "database",
+          "FinanceCashFlowService",
+          "FinanceReconciliationService",
+          "auth"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/bank-accounts",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/bank-accounts/dashboard",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/bank-accounts/:id",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeTreasury/bank-accounts",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/financeTreasury/bank-accounts/:id",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/financeTreasury/bank-accounts/:id/balance",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/transactions",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeTreasury/transactions",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeTreasury/transactions/import",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/reconciliation/pending",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/reconciliation/suggestions/:bankAccountId",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeTreasury/reconciliation/reconcile",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeTreasury/reconciliation/auto/:bankAccountId",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/financeTreasury/reconciliation/unreconcile/:transactionId",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/reconciliation/summary/:bankAccountId",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/cash-flow/forecast",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/cash-flow/scenarios",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/cash-flow/alerts",
+          "file": "financeTreasuryRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/financeTreasury/dashboard",
+          "file": "financeTreasuryRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 684,
+      "lastModified": "2026-01-03T20:33:58.992Z",
+      "complexity": "complex"
     },
     "holidayApi": {
       "name": "holidayApi",
-      "generatedAt": "2025-12-22T04:35:18.477Z",
+      "generatedAt": "2026-01-03T20:40:48.682Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7797,7 +9284,7 @@ const engineeringMetadata = {
     },
     "hourBank": {
       "name": "hourBank",
-      "generatedAt": "2025-12-22T04:35:18.540Z",
+      "generatedAt": "2026-01-03T20:40:48.781Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8093,7 +9580,7 @@ const engineeringMetadata = {
     },
     "hoursCube": {
       "name": "hoursCube",
-      "generatedAt": "2025-12-22T04:35:18.607Z",
+      "generatedAt": "2026-01-03T20:40:48.872Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8175,12 +9662,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 2053,
-      "lastModified": "2025-12-19T15:22:00.956Z",
+      "lastModified": "2026-01-03T18:13:06.067Z",
       "complexity": "complex"
     },
     "hsePPEDetection": {
       "name": "hsePPEDetection",
-      "generatedAt": "2025-12-22T04:35:18.679Z",
+      "generatedAt": "2026-01-03T20:40:48.957Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8322,18 +9809,20 @@ const engineeringMetadata = {
     },
     "hse": {
       "name": "hse",
-      "generatedAt": "2025-12-22T04:35:18.858Z",
+      "generatedAt": "2026-01-03T20:40:49.050Z",
       "source": "live-introspection",
       "files": {
         "backend": [
           "src\\auditor\\collectors\\HSEModuleCollector.js",
+          "src\\models\\FinanceCashSessionBalance.js",
           "src\\models\\HseCompanyConfig.js",
           "src\\routes\\hsePPEDetectionRoutes.js",
           "src\\routes\\hseRoutes.js",
           "src\\services\\afip\\AfipAuthService.js",
           "src\\services\\hse\\HSECaseService.js",
           "src\\services\\hse\\HSEViolationCatalogService.js",
-          "src\\services\\HseService.js"
+          "src\\services\\HseService.js",
+          "src\\services\\PettyCashService.js"
         ],
         "frontend": []
       },
@@ -8489,6 +9978,11 @@ const engineeringMetadata = {
       ],
       "databaseTables": [
         {
+          "table": "finance_cash_session_balances",
+          "model": "FinanceCashSessionBalance",
+          "file": "FinanceCashSessionBalance.js"
+        },
+        {
           "table": "hse_company_config",
           "model": "HseCompanyConfig",
           "file": "HseCompanyConfig.js"
@@ -8496,13 +9990,13 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 3873,
-      "lastModified": "2025-12-18T15:40:23.402Z",
+      "linesOfCode": 4501,
+      "lastModified": "2026-01-02T13:05:15.363Z",
       "complexity": "complex"
     },
     "inboundEmail": {
       "name": "inboundEmail",
-      "generatedAt": "2025-12-22T04:35:18.988Z",
+      "generatedAt": "2026-01-03T20:40:49.146Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8571,7 +10065,7 @@ const engineeringMetadata = {
     },
     "inbox": {
       "name": "inbox",
-      "generatedAt": "2025-12-22T04:35:19.082Z",
+      "generatedAt": "2026-01-03T20:40:49.236Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8726,12 +10220,13 @@ const engineeringMetadata = {
     },
     "invoice": {
       "name": "invoice",
-      "generatedAt": "2025-12-22T04:35:19.202Z",
+      "generatedAt": "2026-01-03T20:40:49.338Z",
       "source": "live-introspection",
       "files": {
         "backend": [
           "src\\models\\Invoice.js",
           "src\\models\\InvoiceItem.js",
+          "src\\models\\ProcurementInvoice.js",
           "src\\routes\\invoiceRoutes.js",
           "src\\services\\billing\\ManualInvoiceService.js",
           "src\\services\\InvoiceGenerationService.js"
@@ -8813,17 +10308,22 @@ const engineeringMetadata = {
           "table": "invoice_items",
           "model": "InvoiceItem",
           "file": "InvoiceItem.js"
+        },
+        {
+          "table": "procurement_invoices",
+          "model": "ProcurementInvoice",
+          "file": "ProcurementInvoice.js"
         }
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 1388,
-      "lastModified": "2025-12-16T13:34:19.006Z",
+      "linesOfCode": 1798,
+      "lastModified": "2025-12-31T02:18:05.251Z",
       "complexity": "complex"
     },
     "invoicing": {
       "name": "invoicing",
-      "generatedAt": "2025-12-22T04:35:19.457Z",
+      "generatedAt": "2026-01-03T20:40:49.432Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8898,7 +10398,7 @@ const engineeringMetadata = {
     },
     "jobPostings": {
       "name": "jobPostings",
-      "generatedAt": "2025-12-22T04:35:19.583Z",
+      "generatedAt": "2026-01-03T20:40:49.534Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8934,6 +10434,61 @@ const engineeringMetadata = {
         {
           "method": "GET",
           "path": "/api/jobPostings/public/companies",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/jobPostings/public/candidates/register",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/jobPostings/public/candidates/verify",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/jobPostings/public/candidates/login",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/jobPostings/public/candidates/me",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/jobPostings/public/candidates/profile",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/jobPostings/public/candidates/pool",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/jobPostings/public/candidates/pool/stats",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/jobPostings/candidates/pool",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/jobPostings/candidates/pool/:id",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/jobPostings/candidates/pool/:id/cv",
+          "file": "jobPostingsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/jobPostings/candidates/pool/:id/import",
           "file": "jobPostingsRoutes.js"
         },
         {
@@ -9076,13 +10631,13 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 3221,
-      "lastModified": "2025-12-22T04:35:02.596Z",
+      "linesOfCode": 3921,
+      "lastModified": "2026-01-03T18:13:06.069Z",
       "complexity": "complex"
     },
     "kiosk-enterprise": {
       "name": "kiosk-enterprise",
-      "generatedAt": "2025-12-22T04:35:19.704Z",
+      "generatedAt": "2026-01-03T20:40:49.658Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9134,64 +10689,9 @@ const engineeringMetadata = {
       "lastModified": "2025-09-29T03:44:00.830Z",
       "complexity": "moderate"
     },
-    "kiosk-test-bypass": {
-      "name": "kiosk-test-bypass",
-      "generatedAt": "2025-12-22T04:35:19.798Z",
-      "source": "live-introspection",
-      "files": {
-        "backend": [
-          "src\\routes\\kiosk-test-bypass.js"
-        ],
-        "frontend": []
-      },
-      "dependencies": {
-        "required": [],
-        "optional": [],
-        "integrates_with": [],
-        "provides_to": []
-      },
-      "apiEndpoints": [
-        {
-          "method": "POST",
-          "path": "/api/kiosk-test-bypass/check-in",
-          "file": "kiosk-test-bypass.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/kiosk-test-bypass/check-out",
-          "file": "kiosk-test-bypass.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/kiosk-test-bypass/auto-detect",
-          "file": "kiosk-test-bypass.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/kiosk-test-bypass/status/:user_identifier",
-          "file": "kiosk-test-bypass.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/kiosk-test-bypass/authorize-late",
-          "file": "kiosk-test-bypass.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/kiosk-test-bypass/pending-authorizations",
-          "file": "kiosk-test-bypass.js"
-        }
-      ],
-      "databaseTables": [],
-      "progress": 50,
-      "uxTestResults": null,
-      "linesOfCode": 865,
-      "lastModified": "2025-12-16T13:34:18.790Z",
-      "complexity": "complex"
-    },
     "kiosk": {
       "name": "kiosk",
-      "generatedAt": "2025-12-22T04:35:19.888Z",
+      "generatedAt": "2026-01-03T20:40:49.780Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9199,7 +10699,6 @@ const engineeringMetadata = {
           "src\\auditor\\collectors\\KiosksModuleCollector.js",
           "src\\models\\Kiosk-postgresql.js",
           "src\\routes\\kiosk-enterprise.js",
-          "src\\routes\\kiosk-test-bypass.js",
           "src\\routes\\kioskRoutes.js",
           "src\\routes\\kiosks.js",
           "src\\services\\kiosk-websocket-server.js"
@@ -9293,13 +10792,13 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 4708,
+      "linesOfCode": 3843,
       "lastModified": "2025-12-18T15:40:23.303Z",
       "complexity": "complex"
     },
     "kiosks": {
       "name": "kiosks",
-      "generatedAt": "2025-12-22T04:35:20.150Z",
+      "generatedAt": "2026-01-03T20:40:49.881Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9357,7 +10856,7 @@ const engineeringMetadata = {
     },
     "lead": {
       "name": "lead",
-      "generatedAt": "2025-12-22T04:35:20.240Z",
+      "generatedAt": "2026-01-03T20:40:49.968Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9456,12 +10955,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 1319,
-      "lastModified": "2025-12-19T04:04:14.007Z",
+      "lastModified": "2026-01-03T18:13:06.109Z",
       "complexity": "complex"
     },
     "legal": {
       "name": "legal",
-      "generatedAt": "2025-12-22T04:35:20.299Z",
+      "generatedAt": "2026-01-03T20:40:50.060Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9778,12 +11277,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 9502,
-      "lastModified": "2025-12-22T03:21:01.139Z",
+      "lastModified": "2026-01-03T20:40:34.007Z",
       "complexity": "complex"
     },
     "location": {
       "name": "location",
-      "generatedAt": "2025-12-22T04:35:20.449Z",
+      "generatedAt": "2026-01-03T20:40:50.156Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9863,9 +11362,407 @@ const engineeringMetadata = {
       "lastModified": "2025-12-16T13:34:18.797Z",
       "complexity": "complex"
     },
+    "logistics": {
+      "name": "logistics",
+      "generatedAt": "2026-01-03T20:40:50.361Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\logisticsRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "logistics",
+          "auth"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/logistics/warehouses",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/warehouses/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/warehouses",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/logistics/warehouses/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/logistics/warehouses/:id/config",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/warehouses/:id/kpis",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/warehouses/:warehouseId/locations",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/locations/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/locations",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/warehouses/:warehouseId/locations/bulk",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/location-types",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/location-types",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/warehouses/:warehouseId/stock",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/stock/product/:productId",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/stock/adjust",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/stock/transfer",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/warehouses/:warehouseId/movements",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/warehouses/:warehouseId/waves",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/waves/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/waves",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/waves/generate",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/waves/:id/start",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/waves/:id/complete",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/warehouses/:warehouseId/pick-lists",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/pick-lists/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/pick-list-lines/:lineId/confirm",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/picking/kpis",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/warehouses/:warehouseId/pack-orders",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/pack-orders",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/packages",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/packages/:id/items",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/packages/:id/close",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/pack-orders/:id/complete",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/package-types",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/package-types",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/carriers",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/carriers/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/carriers",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/logistics/carriers/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/vehicles",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/vehicles",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/logistics/vehicles/:id/availability",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/drivers",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/drivers",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/delivery-zones",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/delivery-zones/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/delivery-zones",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/logistics/delivery-zones/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/delivery-zones/customer-config",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/delivery-zones/:zoneId/customer/:customerId",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/routes",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/routes/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/routes",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/routes/:id/stops",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/logistics/route-stops/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/routes/:id/start",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/routes/:id/optimize",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/routes/kpis",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/shipments",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/shipments/:id",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/shipments/track/:trackingNumber",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/shipments",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/shipments/bulk",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/logistics/shipments/:id/status",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/shipments/:id/tracking",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/logistics/shipments/:id/assign-carrier",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/shipments/:id/in-transit",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/shipments/:id/deliver",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/shipments/:id/issue",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/logistics/shipments/:id/cancel",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/shipments/:id/pod",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/shipments/:id/label",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/shipments/pending",
+          "file": "logisticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logistics/shipments/kpis",
+          "file": "logisticsRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 924,
+      "lastModified": "2026-01-03T20:40:34.056Z",
+      "complexity": "complex"
+    },
     "marketing": {
       "name": "marketing",
-      "generatedAt": "2025-12-22T04:35:20.538Z",
+      "generatedAt": "2026-01-03T20:40:50.453Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9956,12 +11853,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 1865,
-      "lastModified": "2025-12-19T13:53:43.640Z",
+      "lastModified": "2026-01-03T18:13:06.075Z",
       "complexity": "complex"
     },
     "medicalAdvanced": {
       "name": "medicalAdvanced",
-      "generatedAt": "2025-12-22T04:35:20.629Z",
+      "generatedAt": "2026-01-03T20:40:50.543Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10118,12 +12015,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 999,
-      "lastModified": "2025-12-19T15:20:46.504Z",
+      "lastModified": "2026-01-03T18:13:06.075Z",
       "complexity": "complex"
     },
     "medicalAuthorizations": {
       "name": "medicalAuthorizations",
-      "generatedAt": "2025-12-22T04:35:20.710Z",
+      "generatedAt": "2026-01-03T20:40:50.651Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10192,7 +12089,7 @@ const engineeringMetadata = {
     },
     "medicalCase": {
       "name": "medicalCase",
-      "generatedAt": "2025-12-22T04:35:20.786Z",
+      "generatedAt": "2026-01-03T20:40:50.757Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10285,12 +12182,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 1758,
-      "lastModified": "2025-12-19T15:22:49.237Z",
+      "lastModified": "2026-01-03T18:13:06.077Z",
       "complexity": "complex"
     },
     "medicalDoctor": {
       "name": "medicalDoctor",
-      "generatedAt": "2025-12-22T04:35:20.862Z",
+      "generatedAt": "2026-01-03T20:40:50.867Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10352,7 +12249,7 @@ const engineeringMetadata = {
     },
     "medicalRecords": {
       "name": "medicalRecords",
-      "generatedAt": "2025-12-22T04:35:20.951Z",
+      "generatedAt": "2026-01-03T20:40:50.983Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10452,7 +12349,7 @@ const engineeringMetadata = {
     },
     "medicalRoutes-basic": {
       "name": "medicalRoutes-basic",
-      "generatedAt": "2025-12-22T04:35:21.024Z",
+      "generatedAt": "2026-01-03T20:40:51.082Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10487,7 +12384,7 @@ const engineeringMetadata = {
     },
     "medical": {
       "name": "medical",
-      "generatedAt": "2025-12-22T04:35:21.097Z",
+      "generatedAt": "2026-01-03T20:40:51.166Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10743,12 +12640,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 15993,
-      "lastModified": "2025-12-19T15:22:49.237Z",
+      "lastModified": "2026-01-03T20:40:34.325Z",
       "complexity": "complex"
     },
     "medicalTemplates": {
       "name": "medicalTemplates",
-      "generatedAt": "2025-12-22T04:35:21.509Z",
+      "generatedAt": "2026-01-03T20:40:51.281Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10821,7 +12718,7 @@ const engineeringMetadata = {
     },
     "message": {
       "name": "message",
-      "generatedAt": "2025-12-22T04:35:21.581Z",
+      "generatedAt": "2026-01-03T20:40:51.373Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10899,7 +12796,7 @@ const engineeringMetadata = {
     },
     "military-security-api": {
       "name": "military-security-api",
-      "generatedAt": "2025-12-22T04:35:21.702Z",
+      "generatedAt": "2026-01-03T20:40:51.480Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10971,7 +12868,7 @@ const engineeringMetadata = {
     },
     "mobile": {
       "name": "mobile",
-      "generatedAt": "2025-12-22T04:35:21.831Z",
+      "generatedAt": "2026-01-03T20:40:51.571Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11087,18 +12984,19 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 1628,
-      "lastModified": "2025-12-20T14:00:22.081Z",
+      "lastModified": "2026-01-03T18:13:06.028Z",
       "complexity": "complex"
     },
     "modules": {
       "name": "modules",
-      "generatedAt": "2025-12-22T04:35:21.945Z",
+      "generatedAt": "2026-01-03T20:40:51.668Z",
       "source": "live-introspection",
       "files": {
         "backend": [
           "src\\auditor\\core\\ModuleScanner.js",
           "src\\routes\\debug-company-modules.js",
           "src\\routes\\modulesRoutes.js",
+          "src\\routes\\modulesRoutes_SIMPLIFIED.js",
           "src\\seeds\\seedSystemModules.js",
           "src\\services\\moduleService.js"
         ],
@@ -11175,13 +13073,46 @@ const engineeringMetadata = {
       "databaseTables": [],
       "progress": 50,
       "uxTestResults": null,
-      "linesOfCode": 2041,
-      "lastModified": "2025-12-18T15:40:23.297Z",
+      "linesOfCode": 2168,
+      "lastModified": "2026-01-03T20:40:34.102Z",
       "complexity": "complex"
+    },
+    "modulesRoutes_SIMPLIFIED": {
+      "name": "modulesRoutes_SIMPLIFIED",
+      "generatedAt": "2026-01-03T20:40:51.793Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\modulesRoutes_SIMPLIFIED.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "database",
+          "auth"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/modulesRoutes_SIMPLIFIED/active",
+          "file": "modulesRoutes_SIMPLIFIED.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 127,
+      "lastModified": "2026-01-03T20:40:34.102Z",
+      "complexity": "simple"
     },
     "multipleART": {
       "name": "multipleART",
-      "generatedAt": "2025-12-22T04:35:22.073Z",
+      "generatedAt": "2026-01-03T20:40:51.886Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11253,7 +13184,7 @@ const engineeringMetadata = {
     },
     "notification": {
       "name": "notification",
-      "generatedAt": "2025-12-22T04:35:22.282Z",
+      "generatedAt": "2026-01-03T20:40:51.999Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11389,12 +13320,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 19768,
-      "lastModified": "2025-12-22T03:21:01.163Z",
+      "lastModified": "2026-01-03T18:13:12.044Z",
       "complexity": "complex"
     },
     "notificationsEnterprise": {
       "name": "notificationsEnterprise",
-      "generatedAt": "2025-12-22T04:35:22.665Z",
+      "generatedAt": "2026-01-03T20:40:52.117Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11508,7 +13439,7 @@ const engineeringMetadata = {
     },
     "notificationUnified": {
       "name": "notificationUnified",
-      "generatedAt": "2025-12-22T04:35:22.726Z",
+      "generatedAt": "2026-01-03T20:40:52.220Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11643,12 +13574,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 1901,
-      "lastModified": "2025-12-19T04:11:22.311Z",
+      "lastModified": "2026-01-03T18:13:06.111Z",
       "complexity": "complex"
     },
     "notificationWorkflow": {
       "name": "notificationWorkflow",
-      "generatedAt": "2025-12-22T04:35:22.934Z",
+      "generatedAt": "2026-01-03T20:40:52.331Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11732,12 +13663,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 2292,
-      "lastModified": "2025-12-22T03:21:01.163Z",
+      "lastModified": "2026-01-03T18:13:12.044Z",
       "complexity": "complex"
     },
     "offlineSync": {
       "name": "offlineSync",
-      "generatedAt": "2025-12-22T04:35:23.039Z",
+      "generatedAt": "2026-01-03T20:40:52.420Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11796,7 +13727,7 @@ const engineeringMetadata = {
     },
     "onboarding": {
       "name": "onboarding",
-      "generatedAt": "2025-12-22T04:35:23.153Z",
+      "generatedAt": "2026-01-03T20:40:52.509Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11893,12 +13824,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 3868,
-      "lastModified": "2025-12-18T15:40:28.880Z",
+      "lastModified": "2026-01-03T18:13:06.122Z",
       "complexity": "complex"
     },
     "organizational": {
       "name": "organizational",
-      "generatedAt": "2025-12-22T04:35:23.351Z",
+      "generatedAt": "2026-01-03T20:40:52.600Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12146,12 +14077,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 4883,
-      "lastModified": "2025-12-16T13:34:18.941Z",
+      "lastModified": "2026-01-02T13:05:15.377Z",
       "complexity": "complex"
     },
     "partnerCommission": {
       "name": "partnerCommission",
-      "generatedAt": "2025-12-22T04:35:23.453Z",
+      "generatedAt": "2026-01-03T20:40:52.693Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12233,7 +14164,7 @@ const engineeringMetadata = {
     },
     "partner": {
       "name": "partner",
-      "generatedAt": "2025-12-22T04:35:23.548Z",
+      "generatedAt": "2026-01-03T20:40:52.779Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12392,12 +14323,296 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 3028,
-      "lastModified": "2025-12-16T13:34:18.943Z",
+      "lastModified": "2026-01-02T13:05:15.462Z",
+      "complexity": "complex"
+    },
+    "paymentOrder": {
+      "name": "paymentOrder",
+      "generatedAt": "2026-01-03T20:40:52.903Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\models\\FinancePaymentOrder.js",
+          "src\\models\\FinancePaymentOrderItem.js",
+          "src\\routes\\paymentOrderRoutes.js",
+          "src\\services\\PaymentOrderService.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/pending-invoices",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/pending-approval",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/upcoming",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/stats",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/:id",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/:id/submit",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/:id/approve",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/:id/schedule",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/:id/execute",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/:id/cancel",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/:id/notify",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/forecast/refresh",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/forecast/summary",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/forecast/cube",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/forecast/drilldown",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/forecast/kpis",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/forecast/timeline",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/forecast/supplier-concentration",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/forecast/seasonality",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/forecast/yoy",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/checkbooks",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checkbooks",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checkbooks/available",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checkbooks/stats",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checkbooks/:id",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/checkbooks/:id/cancel",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/checks",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/portfolio",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/portfolio/summary",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/maturity",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/bounced",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/upcoming",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/stats",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/timeline",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/by-beneficiary",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/dashboard",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/search",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/:id",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/paymentOrder/checks/:id/history",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/checks/:id/deliver",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/checks/:id/cash",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/checks/:id/bounce",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/checks/:id/void",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/checks/:id/cancel",
+          "file": "paymentOrderRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/paymentOrder/checks/:id/replace",
+          "file": "paymentOrderRoutes.js"
+        }
+      ],
+      "databaseTables": [
+        {
+          "table": "finance_payment_orders",
+          "model": "FinancePaymentOrder",
+          "file": "FinancePaymentOrder.js"
+        },
+        {
+          "table": "finance_payment_order_items",
+          "model": "FinancePaymentOrderItem",
+          "file": "FinancePaymentOrderItem.js"
+        },
+        {
+          "table": "payments",
+          "model": "Payment",
+          "file": "Payment.js"
+        }
+      ],
+      "progress": 75,
+      "uxTestResults": null,
+      "linesOfCode": 2560,
+      "lastModified": "2026-01-03T14:51:19.705Z",
       "complexity": "complex"
     },
     "payroll": {
       "name": "payroll",
-      "generatedAt": "2025-12-22T04:35:23.747Z",
+      "generatedAt": "2026-01-03T20:40:53.006Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12781,61 +14996,6 @@ const engineeringMetadata = {
         },
         {
           "method": "GET",
-          "path": "/api/payroll/positions",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/payroll/positions/:id",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/payroll/positions",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "PUT",
-          "path": "/api/payroll/positions/:id",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/payroll/positions/:id/impact",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/payroll/positions/:id/reassign-all",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "DELETE",
-          "path": "/api/payroll/positions/:id",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/payroll/positions/:id/assign-user",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/payroll/positions/:id/assign-users",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "DELETE",
-          "path": "/api/payroll/positions/:id/unassign-user/:userId",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/payroll/positions-hierarchy",
-          "file": "payrollRoutes.js"
-        },
-        {
-          "method": "GET",
           "path": "/api/payroll/user/:userId/position",
           "file": "payrollRoutes.js"
         }
@@ -12924,13 +15084,13 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 10747,
-      "lastModified": "2025-12-19T15:24:15.815Z",
+      "linesOfCode": 10080,
+      "lastModified": "2026-01-03T18:13:06.088Z",
       "complexity": "complex"
     },
     "payrollTemplates": {
       "name": "payrollTemplates",
-      "generatedAt": "2025-12-22T04:35:24.138Z",
+      "generatedAt": "2026-01-03T20:40:53.124Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13008,7 +15168,7 @@ const engineeringMetadata = {
     },
     "permissions": {
       "name": "permissions",
-      "generatedAt": "2025-12-22T04:35:24.268Z",
+      "generatedAt": "2026-01-03T20:40:53.216Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13082,7 +15242,7 @@ const engineeringMetadata = {
     },
     "phase4": {
       "name": "phase4",
-      "generatedAt": "2025-12-22T04:35:24.396Z",
+      "generatedAt": "2026-01-03T20:40:53.319Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13109,10 +15269,12 @@ const engineeringMetadata = {
           "IntelligentTestingOrchestrator",
           "OvertimeCalculatorService",
           "NotificationWorkflowService",
-          "HourBankService"
+          "HourBankService",
+          "BrainNervousSystem"
         ],
         "optional": [
-          "HourBankService"
+          "HourBankService",
+          "BrainNervousSystem"
         ],
         "integrates_with": [],
         "provides_to": []
@@ -13127,13 +15289,13 @@ const engineeringMetadata = {
       "databaseTables": [],
       "progress": 50,
       "uxTestResults": null,
-      "linesOfCode": 10745,
-      "lastModified": "2025-12-20T16:45:59.735Z",
+      "linesOfCode": 11148,
+      "lastModified": "2026-01-03T18:13:06.058Z",
       "complexity": "complex"
     },
     "postgresql-partitioning": {
       "name": "postgresql-partitioning",
-      "generatedAt": "2025-12-22T04:35:24.496Z",
+      "generatedAt": "2026-01-03T20:40:53.481Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13199,7 +15361,7 @@ const engineeringMetadata = {
     },
     "predictiveWorkforce": {
       "name": "predictiveWorkforce",
-      "generatedAt": "2025-12-22T04:35:24.583Z",
+      "generatedAt": "2026-01-03T20:40:53.640Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13264,7 +15426,7 @@ const engineeringMetadata = {
     },
     "pricing": {
       "name": "pricing",
-      "generatedAt": "2025-12-22T04:35:24.686Z",
+      "generatedAt": "2026-01-03T20:40:53.861Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13302,7 +15464,7 @@ const engineeringMetadata = {
     },
     "privacyRegulation": {
       "name": "privacyRegulation",
-      "generatedAt": "2025-12-22T04:35:24.772Z",
+      "generatedAt": "2026-01-03T20:40:53.999Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13386,7 +15548,7 @@ const engineeringMetadata = {
     },
     "proactive": {
       "name": "proactive",
-      "generatedAt": "2025-12-22T04:35:24.844Z",
+      "generatedAt": "2026-01-03T20:40:54.097Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13454,7 +15616,7 @@ const engineeringMetadata = {
     },
     "procedures": {
       "name": "procedures",
-      "generatedAt": "2025-12-22T04:35:24.927Z",
+      "generatedAt": "2026-01-03T20:40:54.192Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13685,12 +15847,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 3617,
-      "lastModified": "2025-12-16T13:34:19.053Z",
+      "lastModified": "2026-01-02T13:05:15.381Z",
       "complexity": "complex"
     },
     "processChain": {
       "name": "processChain",
-      "generatedAt": "2025-12-22T04:35:25.015Z",
+      "generatedAt": "2026-01-03T20:40:54.293Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13794,12 +15956,488 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 2019,
-      "lastModified": "2025-12-16T13:34:18.959Z",
+      "lastModified": "2026-01-03T20:40:34.134Z",
+      "complexity": "complex"
+    },
+    "procurement": {
+      "name": "procurement",
+      "generatedAt": "2026-01-03T20:40:54.383Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\models\\ProcurementAccountingConfig.js",
+          "src\\models\\ProcurementApprovalConfig.js",
+          "src\\models\\ProcurementCategory.js",
+          "src\\models\\ProcurementContract.js",
+          "src\\models\\ProcurementContractItem.js",
+          "src\\models\\ProcurementExchangeRate.js",
+          "src\\models\\ProcurementInternalReceipt.js",
+          "src\\models\\ProcurementInternalReceiptItem.js",
+          "src\\models\\ProcurementInvoice.js",
+          "src\\models\\ProcurementItem.js",
+          "src\\models\\ProcurementOrder.js",
+          "src\\models\\ProcurementOrderItem.js",
+          "src\\models\\ProcurementPayment.js",
+          "src\\models\\ProcurementReceipt.js",
+          "src\\models\\ProcurementReceiptItem.js",
+          "src\\models\\ProcurementRequisition.js",
+          "src\\models\\ProcurementRequisitionItem.js",
+          "src\\models\\ProcurementRfq.js",
+          "src\\models\\ProcurementRfqItem.js",
+          "src\\models\\ProcurementRfqQuote.js",
+          "src\\models\\ProcurementRfqSupplier.js",
+          "src\\models\\ProcurementSector.js",
+          "src\\models\\ProcurementSupplier.js",
+          "src\\models\\ProcurementSupplierItemMapping.js",
+          "src\\routes\\procurementRoutes.js",
+          "src\\services\\ProcurementService.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/procurement/dashboard",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/dashboard/pending",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/requisitions",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/requisitions",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/requisitions/:id",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/procurement/requisitions/:id",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/requisitions/:id/submit",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/requisitions/:id/approve",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/requisitions/:id/reject",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/procurement/requisitions/:id",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/orders",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/orders",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/orders/:id",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/orders/:id/approve",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/orders/:id/send",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/orders/:id/cancel",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/receipts",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/receipts",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/receipts/:id",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/receipts/:id/confirm",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/receipts/:id/quality",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/internal-receipts",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/internal-receipts",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/invoices",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/invoices",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/invoices/:id",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/invoices/:id/three-way-match",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/invoices/:id/verify",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/invoices/:id/dispute",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/invoices/pending-payment",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/suppliers",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/suppliers",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/suppliers/:id",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/procurement/suppliers/:id",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/suppliers/:id/enable-portal",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/suppliers/:id/disable-portal",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/suppliers/:id/reset-portal-password",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/suppliers/:id/history",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/suppliers/suggested",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/item-mappings",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/item-mappings",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/item-mappings/resolve",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/item-mappings/bulk-import",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/item-mappings/stats",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/item-mappings/unmapped/:supplierId",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/procurement/item-mappings/:id",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/categories",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/categories",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/sectors",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/sectors",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/approval-config",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/approval-config",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/accounting-config",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/procurement/accounting-config",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/finance/cost-centers",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/finance/accounts",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/warehouse/list",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/warehouse/products",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/reports/by-supplier",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/reports/by-category",
+          "file": "procurementRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/procurement/reports/pending-deliveries",
+          "file": "procurementRoutes.js"
+        }
+      ],
+      "databaseTables": [
+        {
+          "table": "procurement_accounting_config",
+          "model": "ProcurementAccountingConfig",
+          "file": "ProcurementAccountingConfig.js"
+        },
+        {
+          "table": "procurement_approval_config",
+          "model": "ProcurementApprovalConfig",
+          "file": "ProcurementApprovalConfig.js"
+        },
+        {
+          "table": "procurement_categories",
+          "model": "ProcurementCategory",
+          "file": "ProcurementCategory.js"
+        },
+        {
+          "table": "procurement_contracts",
+          "model": "ProcurementContract",
+          "file": "ProcurementContract.js"
+        },
+        {
+          "table": "procurement_contract_items",
+          "model": "ProcurementContractItem",
+          "file": "ProcurementContractItem.js"
+        },
+        {
+          "table": "procurement_exchange_rates",
+          "model": "ProcurementExchangeRate",
+          "file": "ProcurementExchangeRate.js"
+        },
+        {
+          "table": "procurement_internal_receipts",
+          "model": "ProcurementInternalReceipt",
+          "file": "ProcurementInternalReceipt.js"
+        },
+        {
+          "table": "procurement_internal_receipt_items",
+          "model": "ProcurementInternalReceiptItem",
+          "file": "ProcurementInternalReceiptItem.js"
+        },
+        {
+          "table": "procurement_invoices",
+          "model": "ProcurementInvoice",
+          "file": "ProcurementInvoice.js"
+        },
+        {
+          "table": "procurement_items",
+          "model": "ProcurementItem",
+          "file": "ProcurementItem.js"
+        },
+        {
+          "table": "procurement_orders",
+          "model": "ProcurementOrder",
+          "file": "ProcurementOrder.js"
+        },
+        {
+          "table": "procurement_order_items",
+          "model": "ProcurementOrderItem",
+          "file": "ProcurementOrderItem.js"
+        },
+        {
+          "table": "procurement_payments",
+          "model": "ProcurementPayment",
+          "file": "ProcurementPayment.js"
+        },
+        {
+          "table": "procurement_receipts",
+          "model": "ProcurementReceipt",
+          "file": "ProcurementReceipt.js"
+        },
+        {
+          "table": "procurement_receipt_items",
+          "model": "ProcurementReceiptItem",
+          "file": "ProcurementReceiptItem.js"
+        },
+        {
+          "table": "procurement_requisitions",
+          "model": "ProcurementRequisition",
+          "file": "ProcurementRequisition.js"
+        },
+        {
+          "table": "procurement_requisition_items",
+          "model": "ProcurementRequisitionItem",
+          "file": "ProcurementRequisitionItem.js"
+        },
+        {
+          "table": "procurement_rfqs",
+          "model": "ProcurementRfq",
+          "file": "ProcurementRfq.js"
+        },
+        {
+          "table": "procurement_rfq_items",
+          "model": "ProcurementRfqItem",
+          "file": "ProcurementRfqItem.js"
+        },
+        {
+          "table": "procurement_rfq_quotes",
+          "model": "ProcurementRfqQuote",
+          "file": "ProcurementRfqQuote.js"
+        },
+        {
+          "table": "procurement_rfq_suppliers",
+          "model": "ProcurementRfqSupplier",
+          "file": "ProcurementRfqSupplier.js"
+        },
+        {
+          "table": "procurement_sectors",
+          "model": "ProcurementSector",
+          "file": "ProcurementSector.js"
+        },
+        {
+          "table": "wms_suppliers",
+          "model": "ProcurementSupplier",
+          "file": "ProcurementSupplier.js"
+        },
+        {
+          "table": "procurement_supplier_item_mappings",
+          "model": "ProcurementSupplierItemMapping",
+          "file": "ProcurementSupplierItemMapping.js"
+        }
+      ],
+      "progress": 75,
+      "uxTestResults": null,
+      "linesOfCode": 8397,
+      "lastModified": "2026-01-03T04:30:20.720Z",
       "complexity": "complex"
     },
     "quotes": {
       "name": "quotes",
-      "generatedAt": "2025-12-22T04:35:25.101Z",
+      "generatedAt": "2026-01-03T20:40:54.494Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13873,7 +16511,7 @@ const engineeringMetadata = {
     },
     "report": {
       "name": "report",
-      "generatedAt": "2025-12-22T04:35:25.210Z",
+      "generatedAt": "2026-01-03T20:40:54.591Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13884,8 +16522,10 @@ const engineeringMetadata = {
           "src\\auditor\\reporters\\TechnicalArchitectureReporter.js",
           "src\\auditor\\reporters\\TechnicalReportGenerator.js",
           "src\\routes\\auditReports.js",
+          "src\\routes\\financeReportsRoutes.js",
           "src\\routes\\reportRoutes.js",
           "src\\services\\auditReportService.js",
+          "src\\services\\FinanceReportingService.js",
           "src\\services\\RiskReportService.js"
         ],
         "frontend": []
@@ -13918,13 +16558,13 @@ const engineeringMetadata = {
       "databaseTables": [],
       "progress": 50,
       "uxTestResults": null,
-      "linesOfCode": 5644,
-      "lastModified": "2025-12-16T13:34:18.996Z",
+      "linesOfCode": 6687,
+      "lastModified": "2026-01-03T20:33:58.840Z",
       "complexity": "complex"
     },
     "resourceCenter": {
       "name": "resourceCenter",
-      "generatedAt": "2025-12-22T04:35:25.299Z",
+      "generatedAt": "2026-01-03T20:40:54.696Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14000,9 +16640,144 @@ const engineeringMetadata = {
       "lastModified": "2025-12-16T13:34:19.039Z",
       "complexity": "complex"
     },
+    "retailAnalytics": {
+      "name": "retailAnalytics",
+      "generatedAt": "2026-01-03T20:40:54.804Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\retailAnalyticsRoutes.js",
+          "src\\services\\RetailAnalyticsService.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "auth",
+          "RetailAnalyticsService",
+          "database"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/retailAnalytics/dashboard",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/retailAnalytics/sync-transactions",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/retailAnalytics/basket-analysis/run",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/retailAnalytics/basket-analysis/rules",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/retailAnalytics/basket-analysis/product/:productId",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/retailAnalytics/forecast/generate",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/retailAnalytics/forecast/bulk",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/retailAnalytics/rfm/calculate",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/retailAnalytics/rfm/segments",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/retailAnalytics/rfm/customers/:segment",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/retailAnalytics/abc-xyz/calculate",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/retailAnalytics/abc-xyz/products",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/retailAnalytics/reorder/generate",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/retailAnalytics/reorder/suggestions",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/retailAnalytics/reorder/approve",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/retailAnalytics/centralized/pending",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/retailAnalytics/centralized/consolidate",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/retailAnalytics/centralized/distribute",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/retailAnalytics/centralized/network-stock",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/retailAnalytics/config",
+          "file": "retailAnalyticsRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/retailAnalytics/config",
+          "file": "retailAnalyticsRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 1933,
+      "lastModified": "2026-01-03T20:40:34.170Z",
+      "complexity": "complex"
+    },
     "riskIntelligence": {
       "name": "riskIntelligence",
-      "generatedAt": "2025-12-22T04:35:25.436Z",
+      "generatedAt": "2026-01-03T20:40:54.901Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14146,12 +16921,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 2258,
-      "lastModified": "2025-12-16T13:34:18.964Z",
+      "lastModified": "2026-01-02T13:05:15.382Z",
       "complexity": "complex"
     },
     "salaryAdvanced": {
       "name": "salaryAdvanced",
-      "generatedAt": "2025-12-22T04:35:25.535Z",
+      "generatedAt": "2026-01-03T20:40:54.999Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14253,12 +17028,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 815,
-      "lastModified": "2025-12-19T15:18:19.785Z",
+      "lastModified": "2026-01-03T18:13:06.091Z",
       "complexity": "complex"
     },
     "salesOrchestration": {
       "name": "salesOrchestration",
-      "generatedAt": "2025-12-22T04:35:25.621Z",
+      "generatedAt": "2026-01-03T20:40:55.103Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14457,12 +17232,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 4380,
-      "lastModified": "2025-12-19T14:30:44.321Z",
+      "lastModified": "2026-01-03T18:13:06.113Z",
       "complexity": "complex"
     },
     "sanction": {
       "name": "sanction",
-      "generatedAt": "2025-12-22T04:35:25.712Z",
+      "generatedAt": "2026-01-03T20:40:55.213Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14621,12 +17396,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 3670,
-      "lastModified": "2025-12-16T13:34:19.055Z",
+      "lastModified": "2026-01-02T13:05:15.382Z",
       "complexity": "complex"
     },
     "seedDemo": {
       "name": "seedDemo",
-      "generatedAt": "2025-12-22T04:35:25.808Z",
+      "generatedAt": "2026-01-03T20:40:55.310Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14652,7 +17427,7 @@ const engineeringMetadata = {
     },
     "shift-calendar-": {
       "name": "shift-calendar-",
-      "generatedAt": "2025-12-22T04:35:25.883Z",
+      "generatedAt": "2026-01-03T20:40:55.389Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14686,7 +17461,7 @@ const engineeringMetadata = {
     },
     "shift": {
       "name": "shift",
-      "generatedAt": "2025-12-22T04:35:25.948Z",
+      "generatedAt": "2026-01-03T20:40:55.476Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14769,7 +17544,7 @@ const engineeringMetadata = {
     },
     "sla": {
       "name": "sla",
-      "generatedAt": "2025-12-22T04:35:26.061Z",
+      "generatedAt": "2026-01-03T20:40:55.566Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14843,12 +17618,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 2064,
-      "lastModified": "2025-12-19T04:20:34.640Z",
+      "lastModified": "2026-01-03T18:13:06.111Z",
       "complexity": "complex"
     },
     "staffCommissions": {
       "name": "staffCommissions",
-      "generatedAt": "2025-12-22T04:35:26.190Z",
+      "generatedAt": "2026-01-03T20:40:55.666Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14920,9 +17695,177 @@ const engineeringMetadata = {
       "lastModified": "2025-12-16T13:34:18.972Z",
       "complexity": "complex"
     },
+    "supplierPortal": {
+      "name": "supplierPortal",
+      "generatedAt": "2026-01-03T20:40:55.756Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\supplierPortalRoutes.js",
+          "src\\services\\SupplierPortalService.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "SupplierPortalService"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/auth/login",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/auth/register",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/auth/verify",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/dashboard",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/rfqs",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/rfqs/:id",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/rfqs/:id/quote",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/rfqs/:id/decline",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/orders",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/orders/:id",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/orders/:id/confirm",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/invoices",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/invoices/:id",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/claims",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/claims/:id",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/claims/:id/acknowledge",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/claims/:id/respond",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/claims/:id/credit-note",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/payments",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/payments/:id",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/offers",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/offers",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/supplierPortal/offers/:id",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/supplierPortal/offers/:id",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/statistics",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortal/notifications",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/notifications/:id/read",
+          "file": "supplierPortalRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortal/notifications/read-all",
+          "file": "supplierPortalRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 1692,
+      "lastModified": "2026-01-01T15:57:13.699Z",
+      "complexity": "complex"
+    },
     "supportEscalation": {
       "name": "supportEscalation",
-      "generatedAt": "2025-12-22T04:35:26.262Z",
+      "generatedAt": "2026-01-03T20:40:55.849Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14974,12 +17917,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 279,
-      "lastModified": "2025-12-16T13:34:18.836Z",
+      "lastModified": "2026-01-03T20:40:34.214Z",
       "complexity": "moderate"
     },
     "supportRoutesV2": {
       "name": "supportRoutesV2",
-      "generatedAt": "2025-12-22T04:35:26.366Z",
+      "generatedAt": "2026-01-03T20:40:55.966Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15090,12 +18033,100 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 1331,
-      "lastModified": "2025-12-19T13:50:23.969Z",
+      "lastModified": "2026-01-03T18:13:06.091Z",
+      "complexity": "complex"
+    },
+    "synapseCentral": {
+      "name": "synapseCentral",
+      "generatedAt": "2026-01-03T20:40:56.094Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\synapseCentralRoutes.js",
+          "src\\synapse\\SynapseCentralHub.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "SynapseCentralHub"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/synapseCentral/status",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/synapseCentral/history",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/synapseCentral/modules",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/synapseCentral/categories",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/synapseCentral/dependencies",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/synapseCentral/run",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/synapseCentral/assign-rubro",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/synapseCentral/chart-data/:id",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/synapseCentral/test-types",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/synapseCentral/panels",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/synapseCentral/tipos",
+          "file": "synapseCentralRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/synapseCentral/rubros",
+          "file": "synapseCentralRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 1142,
+      "lastModified": "2026-01-01T22:06:10.312Z",
       "complexity": "complex"
     },
     "taskIntelligence": {
       "name": "taskIntelligence",
-      "generatedAt": "2025-12-22T04:35:26.434Z",
+      "generatedAt": "2026-01-03T20:40:56.223Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15161,7 +18192,7 @@ const engineeringMetadata = {
     },
     "technologyStack": {
       "name": "technologyStack",
-      "generatedAt": "2025-12-22T04:35:26.502Z",
+      "generatedAt": "2026-01-03T20:40:56.361Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15199,9 +18230,133 @@ const engineeringMetadata = {
       "lastModified": "2025-12-16T13:34:18.837Z",
       "complexity": "simple"
     },
+    "temporaryAccess": {
+      "name": "temporaryAccess",
+      "generatedAt": "2026-01-03T20:40:56.461Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\models\\TemporaryAccessActivityLog.js",
+          "src\\models\\TemporaryAccessGrant.js",
+          "src\\routes\\temporaryAccessRoutes.js",
+          "src\\services\\TemporaryAccessService.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "POST",
+          "path": "/api/temporaryAccess/auth/login",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/temporaryAccess/auth/change-password",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/temporaryAccess/templates",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/temporaryAccess/create",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/temporaryAccess/list",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/temporaryAccess/:grantId",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/temporaryAccess/:grantId/activate",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/temporaryAccess/:grantId/revoke",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/temporaryAccess/company/stats",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/temporaryAccess/company/activity",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/temporaryAccess/:grantId/activity",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/temporaryAccess/:grantId/extend",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/temporaryAccess/:grantId/suspend",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/temporaryAccess/:grantId/reactivate",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/temporaryAccess/:grantId",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/temporaryAccess/cron/auto-expire",
+          "file": "temporaryAccessRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/temporaryAccess/cron/expiry-warnings",
+          "file": "temporaryAccessRoutes.js"
+        }
+      ],
+      "databaseTables": [
+        {
+          "table": "temporary_access_activity_log",
+          "model": "TemporaryAccessActivityLog",
+          "file": "TemporaryAccessActivityLog.js"
+        },
+        {
+          "table": "temporary_access_grants",
+          "model": "TemporaryAccessGrant",
+          "file": "TemporaryAccessGrant.js"
+        }
+      ],
+      "progress": 75,
+      "uxTestResults": null,
+      "linesOfCode": 2370,
+      "lastModified": "2026-01-02T22:31:35.762Z",
+      "complexity": "complex"
+    },
     "tempRegisterOHModule": {
       "name": "tempRegisterOHModule",
-      "generatedAt": "2025-12-22T04:35:26.563Z",
+      "generatedAt": "2026-01-03T20:40:56.562Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15229,20 +18384,23 @@ const engineeringMetadata = {
       "lastModified": "2025-12-16T13:34:18.840Z",
       "complexity": "simple"
     },
-    "testing-realtime": {
-      "name": "testing-realtime",
-      "generatedAt": "2025-12-22T04:35:26.617Z",
+    "testing": {
+      "name": "testing",
+      "generatedAt": "2026-01-03T20:40:56.694Z",
       "source": "live-introspection",
       "files": {
         "backend": [
-          "src\\routes\\testing-realtime.js"
+          "src\\auditor\\ai\\AITestingEngine.js",
+          "src\\auditor\\core\\IntelligentTestingOrchestrator.js",
+          "src\\routes\\e2eTestingAdvancedRoutes.js",
+          "src\\routes\\e2eTestingRoutes.js",
+          "src\\routes\\testingRoutes.js"
         ],
         "frontend": []
       },
       "dependencies": {
         "required": [
-          "auth",
-          "database"
+          "UIElementDiscoveryEngine"
         ],
         "optional": [],
         "integrates_with": [],
@@ -15251,40 +18409,25 @@ const engineeringMetadata = {
       "apiEndpoints": [
         {
           "method": "POST",
-          "path": "/api/testing-realtime/simulate-attendance",
-          "file": "testing-realtime.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/testing-realtime/simulate-detection",
-          "file": "testing-realtime.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/testing-realtime/simulate-kiosk-status",
-          "file": "testing-realtime.js"
+          "path": "/api/testing/run-e2e-advanced",
+          "file": "testingRoutes.js"
         },
         {
           "method": "GET",
-          "path": "/api/testing-realtime/employees",
-          "file": "testing-realtime.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/testing-realtime/status",
-          "file": "testing-realtime.js"
+          "path": "/api/testing/test-status/:executionId",
+          "file": "testingRoutes.js"
         }
       ],
       "databaseTables": [],
       "progress": 50,
       "uxTestResults": null,
-      "linesOfCode": 339,
-      "lastModified": "2025-12-16T13:34:18.840Z",
-      "complexity": "moderate"
+      "linesOfCode": 2509,
+      "lastModified": "2026-01-03T18:13:05.975Z",
+      "complexity": "complex"
     },
     "trainingKnowledge": {
       "name": "trainingKnowledge",
-      "generatedAt": "2025-12-22T04:35:26.713Z",
+      "generatedAt": "2026-01-03T20:40:56.828Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15382,7 +18525,7 @@ const engineeringMetadata = {
     },
     "training": {
       "name": "training",
-      "generatedAt": "2025-12-22T04:35:26.796Z",
+      "generatedAt": "2026-01-03T20:40:56.950Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15459,7 +18602,7 @@ const engineeringMetadata = {
     },
     "transportFleet": {
       "name": "transportFleet",
-      "generatedAt": "2025-12-22T04:35:26.959Z",
+      "generatedAt": "2026-01-03T20:40:57.084Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15509,7 +18652,7 @@ const engineeringMetadata = {
     },
     "transport": {
       "name": "transport",
-      "generatedAt": "2025-12-22T04:35:27.029Z",
+      "generatedAt": "2026-01-03T20:40:57.309Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15556,7 +18699,7 @@ const engineeringMetadata = {
     },
     "transportTrips": {
       "name": "transportTrips",
-      "generatedAt": "2025-12-22T04:35:27.103Z",
+      "generatedAt": "2026-01-03T20:40:57.453Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15606,7 +18749,7 @@ const engineeringMetadata = {
     },
     "trials": {
       "name": "trials",
-      "generatedAt": "2025-12-22T04:35:27.181Z",
+      "generatedAt": "2026-01-03T20:40:57.579Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15675,7 +18818,7 @@ const engineeringMetadata = {
     },
     "tutorial": {
       "name": "tutorial",
-      "generatedAt": "2025-12-22T04:35:27.265Z",
+      "generatedAt": "2026-01-03T20:40:57.697Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15726,12 +18869,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 844,
-      "lastModified": "2025-12-18T15:40:23.315Z",
+      "lastModified": "2026-01-03T18:13:06.003Z",
       "complexity": "complex"
     },
     "unifiedHelp": {
       "name": "unifiedHelp",
-      "generatedAt": "2025-12-22T04:35:27.382Z",
+      "generatedAt": "2026-01-03T20:40:57.882Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15814,80 +18957,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 1538,
-      "lastModified": "2025-12-19T15:25:47.670Z",
-      "complexity": "complex"
-    },
-    "unifiedTest": {
-      "name": "unifiedTest",
-      "generatedAt": "2025-12-22T04:35:27.510Z",
-      "source": "live-introspection",
-      "files": {
-        "backend": [
-          "src\\auditor\\core\\UnifiedTestEngine.js",
-          "src\\routes\\unifiedTestRoutes.js"
-        ],
-        "frontend": []
-      },
-      "dependencies": {
-        "required": [
-          "BrainIntegrationHub",
-          "BrainNervousSystem",
-          "database"
-        ],
-        "optional": [
-          "BrainIntegrationHub",
-          "BrainNervousSystem"
-        ],
-        "integrates_with": [],
-        "provides_to": []
-      },
-      "apiEndpoints": [
-        {
-          "method": "POST",
-          "path": "/api/unifiedTest/run",
-          "file": "unifiedTestRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/unifiedTest/module/:moduleName",
-          "file": "unifiedTestRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/unifiedTest/user-modal",
-          "file": "unifiedTestRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/unifiedTest/ssot",
-          "file": "unifiedTestRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/unifiedTest/brain-modules",
-          "file": "unifiedTestRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/unifiedTest/tutorial/:moduleName",
-          "file": "unifiedTestRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/unifiedTest/status",
-          "file": "unifiedTestRoutes.js"
-        }
-      ],
-      "databaseTables": [],
-      "progress": 50,
-      "uxTestResults": null,
-      "linesOfCode": 1226,
-      "lastModified": "2025-12-20T22:27:50.664Z",
+      "lastModified": "2026-01-03T18:13:06.091Z",
       "complexity": "complex"
     },
     "upload": {
       "name": "upload",
-      "generatedAt": "2025-12-22T04:35:27.617Z",
+      "generatedAt": "2026-01-03T20:40:58.004Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15933,7 +19008,7 @@ const engineeringMetadata = {
     },
     "user-calendar-": {
       "name": "user-calendar-",
-      "generatedAt": "2025-12-22T04:35:27.690Z",
+      "generatedAt": "2026-01-03T20:40:58.123Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15972,7 +19047,7 @@ const engineeringMetadata = {
     },
     "userAdmin": {
       "name": "userAdmin",
-      "generatedAt": "2025-12-22T04:35:27.889Z",
+      "generatedAt": "2026-01-03T20:40:58.263Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16066,12 +19141,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 341,
-      "lastModified": "2025-12-16T13:34:18.846Z",
+      "lastModified": "2026-01-03T20:40:34.239Z",
       "complexity": "moderate"
     },
     "userAssignedTask": {
       "name": "userAssignedTask",
-      "generatedAt": "2025-12-22T04:35:27.968Z",
+      "generatedAt": "2026-01-03T20:40:58.422Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16133,7 +19208,7 @@ const engineeringMetadata = {
     },
     "userDocuments": {
       "name": "userDocuments",
-      "generatedAt": "2025-12-22T04:35:28.049Z",
+      "generatedAt": "2026-01-03T20:40:58.589Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16192,12 +19267,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 354,
-      "lastModified": "2025-12-16T13:34:18.848Z",
+      "lastModified": "2026-01-03T20:40:34.273Z",
       "complexity": "moderate"
     },
     "userDriverLicense": {
       "name": "userDriverLicense",
-      "generatedAt": "2025-12-22T04:35:28.148Z",
+      "generatedAt": "2026-01-03T20:40:58.752Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16254,7 +19329,7 @@ const engineeringMetadata = {
     },
     "userLegalIssue": {
       "name": "userLegalIssue",
-      "generatedAt": "2025-12-22T04:35:28.231Z",
+      "generatedAt": "2026-01-03T20:40:58.910Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16311,7 +19386,7 @@ const engineeringMetadata = {
     },
     "userMedicalExams": {
       "name": "userMedicalExams",
-      "generatedAt": "2025-12-22T04:35:28.367Z",
+      "generatedAt": "2026-01-03T20:40:59.042Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16375,12 +19450,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 405,
-      "lastModified": "2025-12-16T13:34:18.850Z",
+      "lastModified": "2026-01-03T20:40:34.300Z",
       "complexity": "moderate"
     },
     "userMedical": {
       "name": "userMedical",
-      "generatedAt": "2025-12-22T04:35:28.464Z",
+      "generatedAt": "2026-01-03T20:40:59.178Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16590,12 +19665,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 1665,
-      "lastModified": "2025-12-16T13:34:18.851Z",
+      "lastModified": "2026-01-03T20:40:34.325Z",
       "complexity": "complex"
     },
     "userProfessionalLicense": {
       "name": "userProfessionalLicense",
-      "generatedAt": "2025-12-22T04:35:28.544Z",
+      "generatedAt": "2026-01-03T20:40:59.317Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16652,7 +19727,7 @@ const engineeringMetadata = {
     },
     "userProfile": {
       "name": "userProfile",
-      "generatedAt": "2025-12-22T04:35:28.615Z",
+      "generatedAt": "2026-01-03T20:40:59.447Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16768,12 +19843,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 430,
-      "lastModified": "2025-12-16T13:34:18.855Z",
+      "lastModified": "2026-01-03T20:40:34.359Z",
       "complexity": "moderate"
     },
     "user": {
       "name": "user",
-      "generatedAt": "2025-12-22T04:35:28.695Z",
+      "generatedAt": "2026-01-03T20:40:59.600Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16831,7 +19906,8 @@ const engineeringMetadata = {
           "src\\routes\\userSocioEnvironmentalRoutes.js",
           "src\\routes\\usersSimple.js",
           "src\\routes\\userUnionAffiliationRoutes.js",
-          "src\\routes\\userWorkHistoryRoutes.js"
+          "src\\routes\\userWorkHistoryRoutes.js",
+          "src\\routes\\warehouseRoutes.js"
         ],
         "frontend": []
       },
@@ -17107,13 +20183,13 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 19258,
-      "lastModified": "2025-12-20T23:59:16.931Z",
+      "linesOfCode": 20927,
+      "lastModified": "2026-01-03T20:40:34.418Z",
       "complexity": "complex"
     },
     "userSalaryConfig": {
       "name": "userSalaryConfig",
-      "generatedAt": "2025-12-22T04:35:29.432Z",
+      "generatedAt": "2026-01-03T20:40:59.773Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17165,7 +20241,7 @@ const engineeringMetadata = {
     },
     "userSocioEnvironmental": {
       "name": "userSocioEnvironmental",
-      "generatedAt": "2025-12-22T04:35:29.514Z",
+      "generatedAt": "2026-01-03T20:40:59.992Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17233,12 +20309,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 492,
-      "lastModified": "2025-12-18T15:40:23.315Z",
+      "lastModified": "2026-01-03T20:40:34.389Z",
       "complexity": "moderate"
     },
     "usersSimple": {
       "name": "usersSimple",
-      "generatedAt": "2025-12-22T04:35:29.576Z",
+      "generatedAt": "2026-01-03T20:41:00.162Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17273,7 +20349,7 @@ const engineeringMetadata = {
     },
     "userUnionAffiliation": {
       "name": "userUnionAffiliation",
-      "generatedAt": "2025-12-22T04:35:29.657Z",
+      "generatedAt": "2026-01-03T20:41:00.317Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17330,7 +20406,7 @@ const engineeringMetadata = {
     },
     "userWorkHistory": {
       "name": "userWorkHistory",
-      "generatedAt": "2025-12-22T04:35:29.723Z",
+      "generatedAt": "2026-01-03T20:41:00.539Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17404,12 +20480,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 682,
-      "lastModified": "2025-12-16T13:34:18.859Z",
+      "lastModified": "2026-01-03T20:40:34.418Z",
       "complexity": "complex"
     },
     "vacation": {
       "name": "vacation",
-      "generatedAt": "2025-12-22T04:35:29.796Z",
+      "generatedAt": "2026-01-03T20:41:00.718Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17541,7 +20617,7 @@ const engineeringMetadata = {
     },
     "vendorAutomation": {
       "name": "vendorAutomation",
-      "generatedAt": "2025-12-22T04:35:29.880Z",
+      "generatedAt": "2026-01-03T20:41:00.871Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17720,7 +20796,7 @@ const engineeringMetadata = {
     },
     "vendorCommissions": {
       "name": "vendorCommissions",
-      "generatedAt": "2025-12-22T04:35:29.978Z",
+      "generatedAt": "2026-01-03T20:41:00.998Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17844,7 +20920,7 @@ const engineeringMetadata = {
     },
     "vendor": {
       "name": "vendor",
-      "generatedAt": "2025-12-22T04:35:30.059Z",
+      "generatedAt": "2026-01-03T20:41:01.112Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17932,76 +21008,9 @@ const engineeringMetadata = {
       "lastModified": "2025-12-16T13:34:18.984Z",
       "complexity": "complex"
     },
-    "visibleTesting": {
-      "name": "visibleTesting",
-      "generatedAt": "2025-12-22T04:35:30.213Z",
-      "source": "live-introspection",
-      "files": {
-        "backend": [
-          "src\\routes\\visibleTestingRoutes.js"
-        ],
-        "frontend": []
-      },
-      "dependencies": {
-        "required": [
-          "Phase4TestOrchestrator",
-          "database",
-          "auth",
-          "TestExecution"
-        ],
-        "optional": [
-          "TestExecution"
-        ],
-        "integrates_with": [],
-        "provides_to": []
-      },
-      "apiEndpoints": [
-        {
-          "method": "POST",
-          "path": "/api/visibleTesting/run-visible",
-          "file": "visibleTestingRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/visibleTesting/execution-status/:executionId",
-          "file": "visibleTestingRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/visibleTesting/active-executions",
-          "file": "visibleTestingRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/visibleTesting/kill-execution/:executionId",
-          "file": "visibleTestingRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/visibleTesting/metrics",
-          "file": "visibleTestingRoutes.js"
-        },
-        {
-          "method": "GET",
-          "path": "/api/visibleTesting/history",
-          "file": "visibleTestingRoutes.js"
-        },
-        {
-          "method": "POST",
-          "path": "/api/visibleTesting/run-consent-ssot",
-          "file": "visibleTestingRoutes.js"
-        }
-      ],
-      "databaseTables": [],
-      "progress": 50,
-      "uxTestResults": null,
-      "linesOfCode": 736,
-      "lastModified": "2025-12-16T13:34:18.866Z",
-      "complexity": "complex"
-    },
     "visitor": {
       "name": "visitor",
-      "generatedAt": "2025-12-22T04:35:30.291Z",
+      "generatedAt": "2026-01-03T20:41:01.307Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18078,13 +21087,723 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 1456,
-      "lastModified": "2025-10-03T00:03:34.140Z",
+      "linesOfCode": 1609,
+      "lastModified": "2026-01-03T18:13:06.097Z",
+      "complexity": "complex"
+    },
+    "voicePlatform": {
+      "name": "voicePlatform",
+      "generatedAt": "2026-01-03T20:41:01.453Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\voicePlatformRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "auth",
+          "VoiceDeduplicationService",
+          "VoiceGamificationService",
+          "database"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "POST",
+          "path": "/api/voicePlatform/experiences",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/experiences",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/experiences/:id",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/voicePlatform/experiences/:id/status",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/experiences/my",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/voicePlatform/experiences/:id/vote",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/voicePlatform/experiences/:id/vote",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/voicePlatform/experiences/:id/comments",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/experiences/:id/comments",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/gamification/leaderboard",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/gamification/my-stats",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/analytics/overview",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/analytics/sentiment-trends",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/clusters",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/clusters/:id",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/news",
+          "file": "voicePlatformRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voicePlatform/news/:id",
+          "file": "voicePlatformRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 880,
+      "lastModified": "2025-12-24T11:04:16.739Z",
+      "complexity": "complex"
+    },
+    "warehouse": {
+      "name": "warehouse",
+      "generatedAt": "2026-01-03T20:41:01.647Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\warehouseRoutes.js",
+          "src\\services\\logistics\\WarehouseService.js",
+          "src\\services\\WarehouseService.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "auth",
+          "WarehouseService",
+          "WMSAuthorizationService",
+          "WMSDocumentService",
+          "WMSRecallService",
+          "WMSTransferService",
+          "WMSExpiryMonitorService"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "GET",
+          "path": "/api/warehouse/branches",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/branches",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/warehouse/branches/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/warehouse/branches/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/warehouses",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/warehouses",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/warehouse/warehouses/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/warehouse/warehouses/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/categories",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/categories",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/warehouse/categories/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/warehouse/categories/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/brands",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/brands",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/warehouse/brands/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/warehouse/brands/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/suppliers",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/suppliers",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/warehouse/suppliers/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/warehouse/suppliers/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/products",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/products/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/products",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/warehouse/products/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/warehouse/products/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/products/barcode/:barcode",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/products/:productId/barcodes",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/products/:productId/barcodes",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/warehouse/products/:productId/barcodes/:barcodeId",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/price-lists",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/price-lists/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/price-lists",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/warehouse/price-lists/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/warehouse/price-lists/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/price-lists/:id/sync-mirror",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/products/:productId/prices",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/products/:productId/prices",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/price-lists/:listId/bulk-update",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/promotions",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/promotions/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/promotions",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/warehouse/promotions/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/warehouse/promotions/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/promotions/calculate",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/products/:productId/stock",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/warehouses/:warehouseId/stock",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/stock/movement",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/stock/movements",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/stock/alerts",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/stock/expiry-alerts",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/products/:productId/batches",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/batches",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/warehouses/:warehouseId/zones",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/warehouses/:warehouseId/zones",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/zones/:zoneId/locations",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/zones/:zoneId/locations",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/locations/:locationId/assign",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/warehouses/:warehouseId/planogram",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/fiscal-templates",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/fiscal-templates/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/currencies",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/currencies/exchange-rate",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/barcode-config",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/warehouse/barcode-config",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/barcode/parse",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/reports/stock-valuation",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/export/products",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/import/products",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/dashboard/stats",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/transfers",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/transfers/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/transfers",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/transfers/:id/approve",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/transfers/:id/ignore-fifo",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/transfers/:id/dispatch",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/transfers/:id/receive",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/transfers/:id/confirm",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/transfers/:id/cancel",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/stock/batches/:productId/:warehouseId",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/stock/availability/:warehouseId",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/expiry/alerts",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/expiry/alerts/:id/acknowledge",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/expiry/alerts/:id/resolve",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/expiry/report",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/traceability/:productId",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/sales/fifo",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/returns",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/expiry/check",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/authorizations",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/authorizations/pending",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/authorizations/can-approve",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/authorizations/:id/approve",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/authorizations/:id/reject",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/authorizations/:id/escalate",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/authorizations/:id/history",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/signatures/verify/:entityType/:entityId",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/authorizations/delegations",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/authorizations/delegations/:id/revoke",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/documents/types",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/documents",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/documents/link",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/documents/entity/:entityType/:entityId",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/documents/expiring",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/documents/search",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/documents/:id/version",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/documents/:id/archive",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/recalls",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/recalls",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/warehouse/recalls/:id",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/recalls/:id/status",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/recalls/tracking/:trackingId/recover",
+          "file": "warehouseRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/warehouse/recalls/:id/analysis",
+          "file": "warehouseRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 4790,
+      "lastModified": "2026-01-03T18:13:06.118Z",
       "complexity": "complex"
     },
     "workArrangement": {
       "name": "workArrangement",
-      "generatedAt": "2025-12-22T04:35:30.408Z",
+      "generatedAt": "2026-01-03T20:41:01.838Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18202,12 +21921,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 996,
-      "lastModified": "2025-12-18T15:40:23.315Z",
+      "lastModified": "2026-01-03T20:40:34.451Z",
       "complexity": "complex"
     },
     "workflowIntrospection": {
       "name": "workflowIntrospection",
-      "generatedAt": "2025-12-22T04:35:30.637Z",
+      "generatedAt": "2026-01-03T20:41:02.086Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18285,22 +22004,22 @@ const engineeringMetadata = {
     }
   },
   "stats": {
-    "totalModules": 192,
+    "totalModules": 209,
     "averageProgress": 61,
-    "totalLinesOfCode": 405468,
-    "totalEndpoints": 2235,
-    "totalTables": 230,
+    "totalLinesOfCode": 465802,
+    "totalEndpoints": 2772,
+    "totalTables": 317,
     "modulesByComplexity": {
-      "simple": 8,
+      "simple": 9,
       "moderate": 42,
-      "complex": 142
+      "complex": 158
     }
   }
 };
 
 // Agregar timestamp de generación
-engineeringMetadata.generated_at = '2025-12-22T04:35:30.723Z';
+engineeringMetadata.generated_at = '2026-01-03T20:41:02.261Z';
 engineeringMetadata.auto_generated = true;
-engineeringMetadata.update_count = 15;
+engineeringMetadata.update_count = 56;
 
 module.exports = engineeringMetadata;

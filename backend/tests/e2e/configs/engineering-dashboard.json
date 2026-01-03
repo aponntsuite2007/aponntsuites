@@ -1,0 +1,23 @@
+{
+  "moduleKey": "engineering-dashboard",
+  "moduleName": "Dashboard de Ingeniería",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T14:03:53.571Z",
+  "discoveryDate": "2025-12-30T14:03:08.671Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"engineering-dashboard\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 1,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

@@ -1,0 +1,23 @@
+{
+  "moduleKey": "phase4-integrated-manager",
+  "moduleName": "Manager de Phase4",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-29T20:01:25.431Z",
+  "discoveryDate": "2025-12-29T20:00:39.797Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"phase4-integrated-manager\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 0,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

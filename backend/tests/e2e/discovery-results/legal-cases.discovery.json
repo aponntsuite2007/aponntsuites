@@ -1,0 +1,1529 @@
+{
+  "module": "legal-cases",
+  "discoveredAt": "2025-12-28T21:34:41.167Z",
+  "entryPoint": {
+    "text": "Gestión de Usuarios",
+    "method": "variation",
+    "searchTerm": "usuarios"
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "CREATE",
+      "text": "Agregar Usuario",
+      "id": null,
+      "className": "btn-add-user",
+      "onclick": "showAddUser()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [
+    {
+      "type": "VIEW",
+      "triggerAction": "",
+      "fields": [],
+      "tabs": [
+        {
+          "index": 0,
+          "text": "⚙️ Administración",
+          "id": null,
+          "onclick": "showFileTab('admin', this)",
+          "type": "custom"
+        },
+        {
+          "index": 1,
+          "text": "👤 Datos Personales",
+          "id": null,
+          "onclick": "showFileTab('personal', this)",
+          "type": "custom"
+        },
+        {
+          "index": 2,
+          "text": "💼 Antecedentes Laborales",
+          "id": null,
+          "onclick": "showFileTab('work', this)",
+          "type": "custom"
+        },
+        {
+          "index": 3,
+          "text": "👨‍👩‍👧‍👦 Grupo Familiar",
+          "id": null,
+          "onclick": "showFileTab('family', this)",
+          "type": "custom"
+        },
+        {
+          "index": 4,
+          "text": "🏥 Antecedentes Médicos",
+          "id": null,
+          "onclick": "showFileTab('medical', this)",
+          "type": "custom"
+        },
+        {
+          "index": 5,
+          "text": "📅 Asistencias/Permisos",
+          "id": null,
+          "onclick": "showFileTab('attendance', this)",
+          "type": "custom"
+        },
+        {
+          "index": 6,
+          "text": "📆 Calendario",
+          "id": null,
+          "onclick": "showFileTab('calendar', this)",
+          "type": "custom"
+        },
+        {
+          "index": 7,
+          "text": "⚖️ Disciplinarios",
+          "id": null,
+          "onclick": "showFileTab('disciplinary', this)",
+          "type": "custom"
+        },
+        {
+          "index": 8,
+          "text": "📸 Registro Biométrico",
+          "id": null,
+          "onclick": "showFileTab('biometric', this)",
+          "type": "custom"
+        },
+        {
+          "index": 9,
+          "text": "🔔 Notificaciones",
+          "id": null,
+          "onclick": "showFileTab('notifications', this)",
+          "type": "custom"
+        }
+      ],
+      "tabContents": {
+        "⚙️ Administración": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "✕",
+              "onclick": "closeEmployeeFile()"
+            },
+            {
+              "text": "⚙️ Configurar Proceso de Alta",
+              "onclick": "manageHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Cambiar Rol",
+              "onclick": "editUserRole('48cda7f5-3680-4610-be1a-2bfdcbdb62cb', 'admin')"
+            },
+            {
+              "text": "🔒 Desactivar",
+              "onclick": "toggleUserStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🔄 Actualizar",
+              "onclick": "refreshHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Gestionar",
+              "onclick": "manageCertificadoConducta('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Gestionar",
+              "onclick": "manageEvaluacionAmbiental('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "⚙️ Configurar Requisitos",
+              "onclick": "configureHiringRequirements('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "📋 Gestionar Baja de Empleado",
+              "onclick": "initiateOffboarding('48cda7f5-3680-4610-be1a-2bfdcbdb62cb', 'Sistema Testing')"
+            },
+            {
+              "text": "📍 Restringir GPS",
+              "onclick": "toggleGPSRadius('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🏢 Gestionar Sucursales",
+              "onclick": "manageBranches('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🕐 Asignar Turnos",
+              "onclick": "assignUserShifts('48cda7f5-3680-4610-be1a-2bfdcbdb62cb', 'Sistema Testing')"
+            },
+            {
+              "text": "🔄 Cambiar Departamento",
+              "onclick": "changeDepartment('48cda7f5-3680-4610-be1a-2bfdcbdb62cb', '')"
+            },
+            {
+              "text": "✏️ Editar Posición",
+              "onclick": "editPosition('48cda7f5-3680-4610-be1a-2bfdcbdb62cb', '')"
+            },
+            {
+              "text": "🔑 Resetear Contraseña",
+              "onclick": "resetPassword('48cda7f5-3680-4610-be1a-2bfdcbdb62cb', 'Sistema Testing')"
+            },
+            {
+              "text": "📊 Generar Reporte",
+              "onclick": "generateUserReport('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "📋 Historial de Cambios",
+              "onclick": "auditUserHistory('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            }
+          ],
+          "sections": [
+            "📋 Expediente Digital: Sistema Testing",
+            "⚙️ Configuración Administrativa",
+            "🔐 Acceso y Seguridad",
+            "🔄 Workflow de Alta y Baja",
+            "📋 Requisitos de Alta (Validaciones):",
+            "📄 Condiciones Adicionales de Alta:",
+            "⚠️ Proceso de Baja:",
+            "🌍 Configuración GPS y Ubicación",
+            "🔐 Consentimiento Biométrico (Análisis Emocional)",
+            "🏢 Departamento y Organización",
+            "📟 Acceso a Kioscos",
+            "⏰ Configuración de Horario",
+            "🔐 Permisos Especiales",
+            "⚡ Acciones Administrativas",
+            "👤 Información Personal",
+            "Datos Básicos",
+            "📞 Contactos",
+            "🏥 Obra Social / Prepaga",
+            "🎓 Formación Académica",
+            "📄 Documentación Personal",
+            "🚗 Licencias de Conducción",
+            "🚛 Licencias Profesionales",
+            "Sistema Testing",
+            "⚙️ Configuraciones",
+            "⭐ Scoring del Empleado",
+            "💼 Antecedentes Laborales",
+            "📌 Posición Actual (Resumen - editar desde ⚙️ Administración)",
+            "💰 Configuración Salarial",
+            "📋 Convenio y Categoría",
+            "💵 Salario Actual",
+            "📈 Historial de Aumentos",
+            "📊 Historial de Liquidaciones",
+            "🏦 Banco de Horas",
+            "⚖️ Juicios y Mediaciones",
+            "🏭 Afiliación Gremial",
+            "📜 Historial de Posiciones",
+            "👨‍👩‍👧‍👦 Grupo Familiar",
+            "💑 Estado Civil y Cónyuge",
+            "Datos del Cónyuge",
+            "👶 Hijos",
+            "👥 Otros Miembros del Grupo Familiar",
+            "📄 Documentos / Certificados Familiares",
+            "🏥 Historia Clínica y Antecedentes Médicos",
+            "👨‍⚕️ Médico de Cabecera",
+            "🚨 Contacto de Emergencia Médica",
+            "📊 Datos Antropométricos",
+            "🔪 Historial de Cirugías",
+            "🏥 Enfermedades/Discapacidades Crónicas",
+            "💊 Medicación Frecuente",
+            "🚫 Alergias",
+            "🚷 Restricciones de Actividad",
+            "⚠️ Restricciones Laborales",
+            "🧠 Salud Mental y Tratamientos Psiquiátricos",
+            "⚽ Actividades Deportivas",
+            "🌿 Hábitos Saludables",
+            "💉 Calendario de Vacunación",
+            "✅ Exámenes y Estudios",
+            "📁 Historia Clínica Digital",
+            "📋 Historial de Eventos",
+            "📎 Documentos Médicos",
+            "📅 Asistencias, Inasistencias y Permisos",
+            "--",
+            "--",
+            "--",
+            "⏱️ Métricas de Horas Trabajadas\n                                        (Último mes)",
+            "📊 Registro de Asistencias",
+            "📆 Calendario de Trabajo Personal",
+            "⚖️ Acciones Disciplinarias y Suspensiones",
+            "📊 Resumen Disciplinario",
+            "📋 Historial Disciplinario",
+            "📸 Registro Biométrico de Empleado",
+            "🔐 Captura de Template Biométrico",
+            "📋 Información",
+            "⚠️ Importante",
+            "📊 Estado del Registro Biométrico",
+            "🆔 Documentos de Identidad",
+            "🔔 Notificaciones del Empleado",
+            "📬 Bandeja de Notificaciones",
+            "📊 Resumen de Notificaciones"
+          ],
+          "tables": []
+        },
+        "👤 Datos Personales": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "✕",
+              "onclick": "closeEmployeeFile()"
+            },
+            {
+              "text": "⚙️ Configurar Proceso de Alta",
+              "onclick": "manageHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Editar",
+              "onclick": "editBasicData('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Editar",
+              "onclick": "editContactInfo('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "⚙️ Configurar",
+              "onclick": "editHealthInsurance('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "addEducation('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "⚙️ Gestionar",
+              "onclick": "managePersonalDocuments('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "📷 Fotos",
+              "onclick": "uploadDNIPhotos('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "⚙️ Editar",
+              "onclick": "managePassport('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "manageWorkVisa('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "⚙️ Gestionar",
+              "onclick": "manageDrivingLicenses('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️",
+              "onclick": "editNationalLicense('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️",
+              "onclick": "editInternationalLicense('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "manageProfessionalLicenses('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🔄 Recalcular",
+              "onclick": "recalculateScore('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            }
+          ],
+          "sections": [
+            "📋 Expediente Digital: Sistema Testing",
+            "⚙️ Configuración Administrativa",
+            "🔐 Acceso y Seguridad",
+            "🔄 Workflow de Alta y Baja",
+            "📋 Requisitos de Alta (Validaciones):",
+            "📄 Condiciones Adicionales de Alta:",
+            "⚠️ Proceso de Baja:",
+            "🌍 Configuración GPS y Ubicación",
+            "🔐 Consentimiento Biométrico (Análisis Emocional)",
+            "🏢 Departamento y Organización",
+            "📟 Acceso a Kioscos",
+            "⏰ Configuración de Horario",
+            "🔐 Permisos Especiales",
+            "⚡ Acciones Administrativas",
+            "👤 Información Personal",
+            "Datos Básicos",
+            "📞 Contactos",
+            "🏥 Obra Social / Prepaga",
+            "🎓 Formación Académica",
+            "📄 Documentación Personal",
+            "🚗 Licencias de Conducción",
+            "🚛 Licencias Profesionales",
+            "Sistema Testing",
+            "⚙️ Configuraciones",
+            "⭐ Scoring del Empleado",
+            "💼 Antecedentes Laborales",
+            "📌 Posición Actual (Resumen - editar desde ⚙️ Administración)",
+            "💰 Configuración Salarial",
+            "📋 Convenio y Categoría",
+            "💵 Salario Actual",
+            "📈 Historial de Aumentos",
+            "📊 Historial de Liquidaciones",
+            "🏦 Banco de Horas",
+            "⚖️ Juicios y Mediaciones",
+            "🏭 Afiliación Gremial",
+            "📜 Historial de Posiciones",
+            "👨‍👩‍👧‍👦 Grupo Familiar",
+            "💑 Estado Civil y Cónyuge",
+            "Datos del Cónyuge",
+            "👶 Hijos",
+            "👥 Otros Miembros del Grupo Familiar",
+            "📄 Documentos / Certificados Familiares",
+            "🏥 Historia Clínica y Antecedentes Médicos",
+            "👨‍⚕️ Médico de Cabecera",
+            "🚨 Contacto de Emergencia Médica",
+            "📊 Datos Antropométricos",
+            "🔪 Historial de Cirugías",
+            "🏥 Enfermedades/Discapacidades Crónicas",
+            "💊 Medicación Frecuente",
+            "🚫 Alergias",
+            "🚷 Restricciones de Actividad",
+            "⚠️ Restricciones Laborales",
+            "🧠 Salud Mental y Tratamientos Psiquiátricos",
+            "⚽ Actividades Deportivas",
+            "🌿 Hábitos Saludables",
+            "💉 Calendario de Vacunación",
+            "✅ Exámenes y Estudios",
+            "📁 Historia Clínica Digital",
+            "📋 Historial de Eventos",
+            "📎 Documentos Médicos",
+            "📅 Asistencias, Inasistencias y Permisos",
+            "--",
+            "--",
+            "--",
+            "⏱️ Métricas de Horas Trabajadas\n                                        (Último mes)",
+            "📊 Registro de Asistencias",
+            "📆 Calendario de Trabajo Personal",
+            "⚖️ Acciones Disciplinarias y Suspensiones",
+            "📊 Resumen Disciplinario",
+            "📋 Historial Disciplinario",
+            "📸 Registro Biométrico de Empleado",
+            "🔐 Captura de Template Biométrico",
+            "📋 Información",
+            "⚠️ Importante",
+            "📊 Estado del Registro Biométrico",
+            "🆔 Documentos de Identidad",
+            "🔔 Notificaciones del Empleado",
+            "📬 Bandeja de Notificaciones",
+            "📊 Resumen de Notificaciones"
+          ],
+          "tables": []
+        },
+        "💼 Antecedentes Laborales": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "✕",
+              "onclick": "closeEmployeeFile()"
+            },
+            {
+              "text": "⚙️ Configurar Proceso de Alta",
+              "onclick": "manageHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Editar Configuración",
+              "onclick": "editSalaryConfig('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Registrar Aumento",
+              "onclick": "addSalaryIncrease('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🔄 Actualizar",
+              "onclick": "loadUserPayrollHistory('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "Reintentar",
+              "onclick": "loadUserPayrollHistory('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🔄 Actualizar",
+              "onclick": "loadUserHourBank('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "addLegalIssue('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Editar",
+              "onclick": "addUnionAffiliation('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "addWorkHistory('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            }
+          ],
+          "sections": [
+            "📋 Expediente Digital: Sistema Testing",
+            "⚙️ Configuración Administrativa",
+            "🔐 Acceso y Seguridad",
+            "🔄 Workflow de Alta y Baja",
+            "📋 Requisitos de Alta (Validaciones):",
+            "📄 Condiciones Adicionales de Alta:",
+            "⚠️ Proceso de Baja:",
+            "🌍 Configuración GPS y Ubicación",
+            "🔐 Consentimiento Biométrico (Análisis Emocional)",
+            "🏢 Departamento y Organización",
+            "📟 Acceso a Kioscos",
+            "⏰ Configuración de Horario",
+            "🔐 Permisos Especiales",
+            "⚡ Acciones Administrativas",
+            "👤 Información Personal",
+            "Datos Básicos",
+            "📞 Contactos",
+            "🏥 Obra Social / Prepaga",
+            "🎓 Formación Académica",
+            "📄 Documentación Personal",
+            "🚗 Licencias de Conducción",
+            "🚛 Licencias Profesionales",
+            "Sistema Testing",
+            "⚙️ Configuraciones",
+            "⭐ Scoring del Empleado",
+            "💼 Antecedentes Laborales",
+            "📌 Posición Actual (Resumen - editar desde ⚙️ Administración)",
+            "💰 Configuración Salarial",
+            "📋 Convenio y Categoría",
+            "💵 Salario Actual",
+            "📈 Historial de Aumentos",
+            "📊 Historial de Liquidaciones",
+            "🏦 Banco de Horas",
+            "⚖️ Juicios y Mediaciones",
+            "🏭 Afiliación Gremial",
+            "📜 Historial de Posiciones",
+            "👨‍👩‍👧‍👦 Grupo Familiar",
+            "💑 Estado Civil y Cónyuge",
+            "Datos del Cónyuge",
+            "👶 Hijos",
+            "👥 Otros Miembros del Grupo Familiar",
+            "📄 Documentos / Certificados Familiares",
+            "🏥 Historia Clínica y Antecedentes Médicos",
+            "👨‍⚕️ Médico de Cabecera",
+            "🚨 Contacto de Emergencia Médica",
+            "📊 Datos Antropométricos",
+            "🔪 Historial de Cirugías",
+            "🏥 Enfermedades/Discapacidades Crónicas",
+            "💊 Medicación Frecuente",
+            "🚫 Alergias",
+            "🚷 Restricciones de Actividad",
+            "⚠️ Restricciones Laborales",
+            "🧠 Salud Mental y Tratamientos Psiquiátricos",
+            "⚽ Actividades Deportivas",
+            "🌿 Hábitos Saludables",
+            "💉 Calendario de Vacunación",
+            "✅ Exámenes y Estudios",
+            "📁 Historia Clínica Digital",
+            "📋 Historial de Eventos",
+            "📎 Documentos Médicos",
+            "📅 Asistencias, Inasistencias y Permisos",
+            "--",
+            "--",
+            "--",
+            "⏱️ Métricas de Horas Trabajadas\n                                        (Último mes)",
+            "📊 Registro de Asistencias",
+            "📆 Calendario de Trabajo Personal",
+            "⚖️ Acciones Disciplinarias y Suspensiones",
+            "📊 Resumen Disciplinario",
+            "📋 Historial Disciplinario",
+            "📸 Registro Biométrico de Empleado",
+            "🔐 Captura de Template Biométrico",
+            "📋 Información",
+            "⚠️ Importante",
+            "📊 Estado del Registro Biométrico",
+            "🆔 Documentos de Identidad",
+            "🔔 Notificaciones del Empleado",
+            "📬 Bandeja de Notificaciones",
+            "📊 Resumen de Notificaciones"
+          ],
+          "tables": []
+        },
+        "👨‍👩‍👧‍👦 Grupo Familiar": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "✕",
+              "onclick": "closeEmployeeFile()"
+            },
+            {
+              "text": "⚙️ Configurar Proceso de Alta",
+              "onclick": "manageHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Editar",
+              "onclick": "editMaritalStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar Hijo",
+              "onclick": "addChild('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar Familiar",
+              "onclick": "addFamilyMember('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Cargar Documento",
+              "onclick": "addFamilyDocument('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            }
+          ],
+          "sections": [
+            "📋 Expediente Digital: Sistema Testing",
+            "⚙️ Configuración Administrativa",
+            "🔐 Acceso y Seguridad",
+            "🔄 Workflow de Alta y Baja",
+            "📋 Requisitos de Alta (Validaciones):",
+            "📄 Condiciones Adicionales de Alta:",
+            "⚠️ Proceso de Baja:",
+            "🌍 Configuración GPS y Ubicación",
+            "🔐 Consentimiento Biométrico (Análisis Emocional)",
+            "🏢 Departamento y Organización",
+            "📟 Acceso a Kioscos",
+            "⏰ Configuración de Horario",
+            "🔐 Permisos Especiales",
+            "⚡ Acciones Administrativas",
+            "👤 Información Personal",
+            "Datos Básicos",
+            "📞 Contactos",
+            "🏥 Obra Social / Prepaga",
+            "🎓 Formación Académica",
+            "📄 Documentación Personal",
+            "🚗 Licencias de Conducción",
+            "🚛 Licencias Profesionales",
+            "Sistema Testing",
+            "⚙️ Configuraciones",
+            "⭐ Scoring del Empleado",
+            "💼 Antecedentes Laborales",
+            "📌 Posición Actual (Resumen - editar desde ⚙️ Administración)",
+            "💰 Configuración Salarial",
+            "📋 Convenio y Categoría",
+            "💵 Salario Actual",
+            "📈 Historial de Aumentos",
+            "📊 Historial de Liquidaciones",
+            "🏦 Banco de Horas",
+            "⚖️ Juicios y Mediaciones",
+            "🏭 Afiliación Gremial",
+            "📜 Historial de Posiciones",
+            "👨‍👩‍👧‍👦 Grupo Familiar",
+            "💑 Estado Civil y Cónyuge",
+            "Datos del Cónyuge",
+            "👶 Hijos",
+            "👥 Otros Miembros del Grupo Familiar",
+            "📄 Documentos / Certificados Familiares",
+            "🏥 Historia Clínica y Antecedentes Médicos",
+            "👨‍⚕️ Médico de Cabecera",
+            "🚨 Contacto de Emergencia Médica",
+            "📊 Datos Antropométricos",
+            "🔪 Historial de Cirugías",
+            "🏥 Enfermedades/Discapacidades Crónicas",
+            "💊 Medicación Frecuente",
+            "🚫 Alergias",
+            "🚷 Restricciones de Actividad",
+            "⚠️ Restricciones Laborales",
+            "🧠 Salud Mental y Tratamientos Psiquiátricos",
+            "⚽ Actividades Deportivas",
+            "🌿 Hábitos Saludables",
+            "💉 Calendario de Vacunación",
+            "✅ Exámenes y Estudios",
+            "📁 Historia Clínica Digital",
+            "📋 Historial de Eventos",
+            "📎 Documentos Médicos",
+            "📅 Asistencias, Inasistencias y Permisos",
+            "--",
+            "--",
+            "--",
+            "⏱️ Métricas de Horas Trabajadas\n                                        (Último mes)",
+            "📊 Registro de Asistencias",
+            "📆 Calendario de Trabajo Personal",
+            "⚖️ Acciones Disciplinarias y Suspensiones",
+            "📊 Resumen Disciplinario",
+            "📋 Historial Disciplinario",
+            "📸 Registro Biométrico de Empleado",
+            "🔐 Captura de Template Biométrico",
+            "📋 Información",
+            "⚠️ Importante",
+            "📊 Estado del Registro Biométrico",
+            "🆔 Documentos de Identidad",
+            "🔔 Notificaciones del Empleado",
+            "📬 Bandeja de Notificaciones",
+            "📊 Resumen de Notificaciones"
+          ],
+          "tables": []
+        },
+        "🏥 Antecedentes Médicos": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "✕",
+              "onclick": "closeEmployeeFile()"
+            },
+            {
+              "text": "⚙️ Configurar Proceso de Alta",
+              "onclick": "manageHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Editar",
+              "onclick": "editPrimaryCarePhysician('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Editar",
+              "onclick": "editMedicalEmergencyContact('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Actualizar",
+              "onclick": "editAnthropometricData('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "addSurgery('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "addChronicCondition('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "addMedication('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "addAllergy('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "addActivityRestriction('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "addWorkRestriction('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Tratamiento",
+              "onclick": "addPsychiatricTreatment('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar",
+              "onclick": "addSportsActivity('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "✏️ Editar",
+              "onclick": "editHealthyHabits('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar Vacuna",
+              "onclick": "addVaccination('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Agregar Examen",
+              "onclick": "addMedicalExam('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "📤 Subir Documento",
+              "onclick": "uploadMedicalDocument('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Evento Médico",
+              "onclick": "addMedicalEvent('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            }
+          ],
+          "sections": [
+            "📋 Expediente Digital: Sistema Testing",
+            "⚙️ Configuración Administrativa",
+            "🔐 Acceso y Seguridad",
+            "🔄 Workflow de Alta y Baja",
+            "📋 Requisitos de Alta (Validaciones):",
+            "📄 Condiciones Adicionales de Alta:",
+            "⚠️ Proceso de Baja:",
+            "🌍 Configuración GPS y Ubicación",
+            "🔐 Consentimiento Biométrico (Análisis Emocional)",
+            "🏢 Departamento y Organización",
+            "📟 Acceso a Kioscos",
+            "⏰ Configuración de Horario",
+            "🔐 Permisos Especiales",
+            "⚡ Acciones Administrativas",
+            "👤 Información Personal",
+            "Datos Básicos",
+            "📞 Contactos",
+            "🏥 Obra Social / Prepaga",
+            "🎓 Formación Académica",
+            "📄 Documentación Personal",
+            "🚗 Licencias de Conducción",
+            "🚛 Licencias Profesionales",
+            "Sistema Testing",
+            "⚙️ Configuraciones",
+            "⭐ Scoring del Empleado",
+            "💼 Antecedentes Laborales",
+            "📌 Posición Actual (Resumen - editar desde ⚙️ Administración)",
+            "💰 Configuración Salarial",
+            "📋 Convenio y Categoría",
+            "💵 Salario Actual",
+            "📈 Historial de Aumentos",
+            "📊 Historial de Liquidaciones",
+            "🏦 Banco de Horas",
+            "⚖️ Juicios y Mediaciones",
+            "🏭 Afiliación Gremial",
+            "📜 Historial de Posiciones",
+            "👨‍👩‍👧‍👦 Grupo Familiar",
+            "💑 Estado Civil y Cónyuge",
+            "Datos del Cónyuge",
+            "👶 Hijos",
+            "👥 Otros Miembros del Grupo Familiar",
+            "📄 Documentos / Certificados Familiares",
+            "🏥 Historia Clínica y Antecedentes Médicos",
+            "👨‍⚕️ Médico de Cabecera",
+            "🚨 Contacto de Emergencia Médica",
+            "📊 Datos Antropométricos",
+            "🔪 Historial de Cirugías",
+            "🏥 Enfermedades/Discapacidades Crónicas",
+            "💊 Medicación Frecuente",
+            "🚫 Alergias",
+            "🚷 Restricciones de Actividad",
+            "⚠️ Restricciones Laborales",
+            "🧠 Salud Mental y Tratamientos Psiquiátricos",
+            "⚽ Actividades Deportivas",
+            "🌿 Hábitos Saludables",
+            "💉 Calendario de Vacunación",
+            "✅ Exámenes y Estudios",
+            "📁 Historia Clínica Digital",
+            "📋 Historial de Eventos",
+            "📎 Documentos Médicos",
+            "📅 Asistencias, Inasistencias y Permisos",
+            "--",
+            "--",
+            "--",
+            "⏱️ Métricas de Horas Trabajadas\n                                        (Último mes)",
+            "📊 Registro de Asistencias",
+            "📆 Calendario de Trabajo Personal",
+            "⚖️ Acciones Disciplinarias y Suspensiones",
+            "📊 Resumen Disciplinario",
+            "📋 Historial Disciplinario",
+            "📸 Registro Biométrico de Empleado",
+            "🔐 Captura de Template Biométrico",
+            "📋 Información",
+            "⚠️ Importante",
+            "📊 Estado del Registro Biométrico",
+            "🆔 Documentos de Identidad",
+            "🔔 Notificaciones del Empleado",
+            "📬 Bandeja de Notificaciones",
+            "📊 Resumen de Notificaciones"
+          ],
+          "tables": []
+        },
+        "📅 Asistencias/Permisos": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "✕",
+              "onclick": "closeEmployeeFile()"
+            },
+            {
+              "text": "⚙️ Configurar Proceso de Alta",
+              "onclick": "manageHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🔄 Actualizar",
+              "onclick": "loadEmployeeHoursMetrics('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🔄 Reintentar",
+              "onclick": "loadEmployeeHoursMetrics('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🔄 Actualizar",
+              "onclick": "loadAttendanceHistory('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Permiso",
+              "onclick": "addPermissionRequest('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            }
+          ],
+          "sections": [
+            "📋 Expediente Digital: Sistema Testing",
+            "⚙️ Configuración Administrativa",
+            "🔐 Acceso y Seguridad",
+            "🔄 Workflow de Alta y Baja",
+            "📋 Requisitos de Alta (Validaciones):",
+            "📄 Condiciones Adicionales de Alta:",
+            "⚠️ Proceso de Baja:",
+            "🌍 Configuración GPS y Ubicación",
+            "🔐 Consentimiento Biométrico (Análisis Emocional)",
+            "🏢 Departamento y Organización",
+            "📟 Acceso a Kioscos",
+            "⏰ Configuración de Horario",
+            "🔐 Permisos Especiales",
+            "⚡ Acciones Administrativas",
+            "👤 Información Personal",
+            "Datos Básicos",
+            "📞 Contactos",
+            "🏥 Obra Social / Prepaga",
+            "🎓 Formación Académica",
+            "📄 Documentación Personal",
+            "🚗 Licencias de Conducción",
+            "🚛 Licencias Profesionales",
+            "Sistema Testing",
+            "⚙️ Configuraciones",
+            "⭐ Scoring del Empleado",
+            "💼 Antecedentes Laborales",
+            "📌 Posición Actual (Resumen - editar desde ⚙️ Administración)",
+            "💰 Configuración Salarial",
+            "📋 Convenio y Categoría",
+            "💵 Salario Actual",
+            "📈 Historial de Aumentos",
+            "📊 Historial de Liquidaciones",
+            "🏦 Banco de Horas",
+            "⚖️ Juicios y Mediaciones",
+            "🏭 Afiliación Gremial",
+            "📜 Historial de Posiciones",
+            "👨‍👩‍👧‍👦 Grupo Familiar",
+            "💑 Estado Civil y Cónyuge",
+            "Datos del Cónyuge",
+            "👶 Hijos",
+            "👥 Otros Miembros del Grupo Familiar",
+            "📄 Documentos / Certificados Familiares",
+            "🏥 Historia Clínica y Antecedentes Médicos",
+            "👨‍⚕️ Médico de Cabecera",
+            "🚨 Contacto de Emergencia Médica",
+            "📊 Datos Antropométricos",
+            "🔪 Historial de Cirugías",
+            "🏥 Enfermedades/Discapacidades Crónicas",
+            "💊 Medicación Frecuente",
+            "🚫 Alergias",
+            "🚷 Restricciones de Actividad",
+            "⚠️ Restricciones Laborales",
+            "🧠 Salud Mental y Tratamientos Psiquiátricos",
+            "⚽ Actividades Deportivas",
+            "🌿 Hábitos Saludables",
+            "💉 Calendario de Vacunación",
+            "✅ Exámenes y Estudios",
+            "📁 Historia Clínica Digital",
+            "📋 Historial de Eventos",
+            "📎 Documentos Médicos",
+            "📅 Asistencias, Inasistencias y Permisos",
+            "--",
+            "--",
+            "--",
+            "⏱️ Métricas de Horas Trabajadas\n                                        (Último mes)",
+            "📊 Registro de Asistencias",
+            "📆 Calendario de Trabajo Personal",
+            "⚖️ Acciones Disciplinarias y Suspensiones",
+            "📊 Resumen Disciplinario",
+            "📋 Historial Disciplinario",
+            "📸 Registro Biométrico de Empleado",
+            "🔐 Captura de Template Biométrico",
+            "📋 Información",
+            "⚠️ Importante",
+            "📊 Estado del Registro Biométrico",
+            "🆔 Documentos de Identidad",
+            "🔔 Notificaciones del Empleado",
+            "📬 Bandeja de Notificaciones",
+            "📊 Resumen de Notificaciones"
+          ],
+          "tables": []
+        },
+        "📆 Calendario": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "✕",
+              "onclick": "closeEmployeeFile()"
+            },
+            {
+              "text": "⚙️ Configurar Proceso de Alta",
+              "onclick": "manageHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "← Anterior",
+              "onclick": "userCalendarTab.previousMonth()"
+            },
+            {
+              "text": "Siguiente →",
+              "onclick": "userCalendarTab.nextMonth()"
+            },
+            {
+              "text": "📅 Hoy",
+              "onclick": "userCalendarTab.goToToday()"
+            }
+          ],
+          "sections": [
+            "📋 Expediente Digital: Sistema Testing",
+            "⚙️ Configuración Administrativa",
+            "🔐 Acceso y Seguridad",
+            "🔄 Workflow de Alta y Baja",
+            "📋 Requisitos de Alta (Validaciones):",
+            "📄 Condiciones Adicionales de Alta:",
+            "⚠️ Proceso de Baja:",
+            "🌍 Configuración GPS y Ubicación",
+            "🔐 Consentimiento Biométrico (Análisis Emocional)",
+            "🏢 Departamento y Organización",
+            "📟 Acceso a Kioscos",
+            "⏰ Configuración de Horario",
+            "🔐 Permisos Especiales",
+            "⚡ Acciones Administrativas",
+            "👤 Información Personal",
+            "Datos Básicos",
+            "📞 Contactos",
+            "🏥 Obra Social / Prepaga",
+            "🎓 Formación Académica",
+            "📄 Documentación Personal",
+            "🚗 Licencias de Conducción",
+            "🚛 Licencias Profesionales",
+            "Sistema Testing",
+            "⚙️ Configuraciones",
+            "⭐ Scoring del Empleado",
+            "💼 Antecedentes Laborales",
+            "📌 Posición Actual (Resumen - editar desde ⚙️ Administración)",
+            "💰 Configuración Salarial",
+            "📋 Convenio y Categoría",
+            "💵 Salario Actual",
+            "📈 Historial de Aumentos",
+            "📊 Historial de Liquidaciones",
+            "🏦 Banco de Horas",
+            "⚖️ Juicios y Mediaciones",
+            "🏭 Afiliación Gremial",
+            "📜 Historial de Posiciones",
+            "👨‍👩‍👧‍👦 Grupo Familiar",
+            "💑 Estado Civil y Cónyuge",
+            "Datos del Cónyuge",
+            "👶 Hijos",
+            "👥 Otros Miembros del Grupo Familiar",
+            "📄 Documentos / Certificados Familiares",
+            "🏥 Historia Clínica y Antecedentes Médicos",
+            "👨‍⚕️ Médico de Cabecera",
+            "🚨 Contacto de Emergencia Médica",
+            "📊 Datos Antropométricos",
+            "🔪 Historial de Cirugías",
+            "🏥 Enfermedades/Discapacidades Crónicas",
+            "💊 Medicación Frecuente",
+            "🚫 Alergias",
+            "🚷 Restricciones de Actividad",
+            "⚠️ Restricciones Laborales",
+            "🧠 Salud Mental y Tratamientos Psiquiátricos",
+            "⚽ Actividades Deportivas",
+            "🌿 Hábitos Saludables",
+            "💉 Calendario de Vacunación",
+            "✅ Exámenes y Estudios",
+            "📁 Historia Clínica Digital",
+            "📋 Historial de Eventos",
+            "📎 Documentos Médicos",
+            "📅 Asistencias, Inasistencias y Permisos",
+            "--",
+            "--",
+            "--",
+            "⏱️ Métricas de Horas Trabajadas\n                                        (Último mes)",
+            "📊 Registro de Asistencias",
+            "📆 Calendario de Trabajo Personal",
+            "Diciembre 2025",
+            "⚖️ Acciones Disciplinarias y Suspensiones",
+            "📊 Resumen Disciplinario",
+            "📋 Historial Disciplinario",
+            "📸 Registro Biométrico de Empleado",
+            "🔐 Captura de Template Biométrico",
+            "📋 Información",
+            "⚠️ Importante",
+            "📊 Estado del Registro Biométrico",
+            "🆔 Documentos de Identidad",
+            "🔔 Notificaciones del Empleado",
+            "📬 Bandeja de Notificaciones",
+            "📊 Resumen de Notificaciones"
+          ],
+          "tables": []
+        },
+        "⚖️ Disciplinarios": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "✕",
+              "onclick": "closeEmployeeFile()"
+            },
+            {
+              "text": "⚙️ Configurar Proceso de Alta",
+              "onclick": "manageHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "+ Acción Disciplinaria",
+              "onclick": "addDisciplinaryAction('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            }
+          ],
+          "sections": [
+            "📋 Expediente Digital: Sistema Testing",
+            "⚙️ Configuración Administrativa",
+            "🔐 Acceso y Seguridad",
+            "🔄 Workflow de Alta y Baja",
+            "📋 Requisitos de Alta (Validaciones):",
+            "📄 Condiciones Adicionales de Alta:",
+            "⚠️ Proceso de Baja:",
+            "🌍 Configuración GPS y Ubicación",
+            "🔐 Consentimiento Biométrico (Análisis Emocional)",
+            "🏢 Departamento y Organización",
+            "📟 Acceso a Kioscos",
+            "⏰ Configuración de Horario",
+            "🔐 Permisos Especiales",
+            "⚡ Acciones Administrativas",
+            "👤 Información Personal",
+            "Datos Básicos",
+            "📞 Contactos",
+            "🏥 Obra Social / Prepaga",
+            "🎓 Formación Académica",
+            "📄 Documentación Personal",
+            "🚗 Licencias de Conducción",
+            "🚛 Licencias Profesionales",
+            "Sistema Testing",
+            "⚙️ Configuraciones",
+            "⭐ Scoring del Empleado",
+            "💼 Antecedentes Laborales",
+            "📌 Posición Actual (Resumen - editar desde ⚙️ Administración)",
+            "💰 Configuración Salarial",
+            "📋 Convenio y Categoría",
+            "💵 Salario Actual",
+            "📈 Historial de Aumentos",
+            "📊 Historial de Liquidaciones",
+            "🏦 Banco de Horas",
+            "⚖️ Juicios y Mediaciones",
+            "🏭 Afiliación Gremial",
+            "📜 Historial de Posiciones",
+            "👨‍👩‍👧‍👦 Grupo Familiar",
+            "💑 Estado Civil y Cónyuge",
+            "Datos del Cónyuge",
+            "👶 Hijos",
+            "👥 Otros Miembros del Grupo Familiar",
+            "📄 Documentos / Certificados Familiares",
+            "🏥 Historia Clínica y Antecedentes Médicos",
+            "👨‍⚕️ Médico de Cabecera",
+            "🚨 Contacto de Emergencia Médica",
+            "📊 Datos Antropométricos",
+            "🔪 Historial de Cirugías",
+            "🏥 Enfermedades/Discapacidades Crónicas",
+            "💊 Medicación Frecuente",
+            "🚫 Alergias",
+            "🚷 Restricciones de Actividad",
+            "⚠️ Restricciones Laborales",
+            "🧠 Salud Mental y Tratamientos Psiquiátricos",
+            "⚽ Actividades Deportivas",
+            "🌿 Hábitos Saludables",
+            "💉 Calendario de Vacunación",
+            "✅ Exámenes y Estudios",
+            "📁 Historia Clínica Digital",
+            "📋 Historial de Eventos",
+            "📎 Documentos Médicos",
+            "📅 Asistencias, Inasistencias y Permisos",
+            "--",
+            "--",
+            "--",
+            "⏱️ Métricas de Horas Trabajadas\n                                        (Último mes)",
+            "📊 Registro de Asistencias",
+            "📆 Calendario de Trabajo Personal",
+            "Diciembre 2025",
+            "⚖️ Acciones Disciplinarias y Suspensiones",
+            "📊 Resumen Disciplinario",
+            "📋 Historial Disciplinario",
+            "📸 Registro Biométrico de Empleado",
+            "🔐 Captura de Template Biométrico",
+            "📋 Información",
+            "⚠️ Importante",
+            "📊 Estado del Registro Biométrico",
+            "🆔 Documentos de Identidad",
+            "🔔 Notificaciones del Empleado",
+            "📬 Bandeja de Notificaciones",
+            "📊 Resumen de Notificaciones"
+          ],
+          "tables": []
+        },
+        "📸 Registro Biométrico": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "✕",
+              "onclick": "closeEmployeeFile()"
+            },
+            {
+              "text": "⚙️ Configurar Proceso de Alta",
+              "onclick": "manageHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "📷 Capturar Foto Biométrica",
+              "onclick": "startBiometricCapture('48cda7f5-3680-4610-be1a-2bfdcbdb62cb', 'SOP-11')"
+            },
+            {
+              "text": "📄 DNI (Frente y Dorso)",
+              "onclick": "openDniPhotosModal('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🛂 Pasaporte",
+              "onclick": "openPassportModal('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🌍 Visa de Trabajo",
+              "onclick": "openWorkVisaModal('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🚗 Licencia de Conducir",
+              "onclick": "openNationalLicenseModal('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            }
+          ],
+          "sections": [
+            "📋 Expediente Digital: Sistema Testing",
+            "⚙️ Configuración Administrativa",
+            "🔐 Acceso y Seguridad",
+            "🔄 Workflow de Alta y Baja",
+            "📋 Requisitos de Alta (Validaciones):",
+            "📄 Condiciones Adicionales de Alta:",
+            "⚠️ Proceso de Baja:",
+            "🌍 Configuración GPS y Ubicación",
+            "🔐 Consentimiento Biométrico (Análisis Emocional)",
+            "🏢 Departamento y Organización",
+            "📟 Acceso a Kioscos",
+            "⏰ Configuración de Horario",
+            "🔐 Permisos Especiales",
+            "⚡ Acciones Administrativas",
+            "👤 Información Personal",
+            "Datos Básicos",
+            "📞 Contactos",
+            "🏥 Obra Social / Prepaga",
+            "🎓 Formación Académica",
+            "📄 Documentación Personal",
+            "🚗 Licencias de Conducción",
+            "🚛 Licencias Profesionales",
+            "Sistema Testing",
+            "⚙️ Configuraciones",
+            "⭐ Scoring del Empleado",
+            "💼 Antecedentes Laborales",
+            "📌 Posición Actual (Resumen - editar desde ⚙️ Administración)",
+            "💰 Configuración Salarial",
+            "📋 Convenio y Categoría",
+            "💵 Salario Actual",
+            "📈 Historial de Aumentos",
+            "📊 Historial de Liquidaciones",
+            "🏦 Banco de Horas",
+            "⚖️ Juicios y Mediaciones",
+            "🏭 Afiliación Gremial",
+            "📜 Historial de Posiciones",
+            "👨‍👩‍👧‍👦 Grupo Familiar",
+            "💑 Estado Civil y Cónyuge",
+            "Datos del Cónyuge",
+            "👶 Hijos",
+            "👥 Otros Miembros del Grupo Familiar",
+            "📄 Documentos / Certificados Familiares",
+            "🏥 Historia Clínica y Antecedentes Médicos",
+            "👨‍⚕️ Médico de Cabecera",
+            "🚨 Contacto de Emergencia Médica",
+            "📊 Datos Antropométricos",
+            "🔪 Historial de Cirugías",
+            "🏥 Enfermedades/Discapacidades Crónicas",
+            "💊 Medicación Frecuente",
+            "🚫 Alergias",
+            "🚷 Restricciones de Actividad",
+            "⚠️ Restricciones Laborales",
+            "🧠 Salud Mental y Tratamientos Psiquiátricos",
+            "⚽ Actividades Deportivas",
+            "🌿 Hábitos Saludables",
+            "💉 Calendario de Vacunación",
+            "✅ Exámenes y Estudios",
+            "📁 Historia Clínica Digital",
+            "📋 Historial de Eventos",
+            "📎 Documentos Médicos",
+            "📅 Asistencias, Inasistencias y Permisos",
+            "--",
+            "--",
+            "--",
+            "⏱️ Métricas de Horas Trabajadas\n                                        (Último mes)",
+            "📊 Registro de Asistencias",
+            "📆 Calendario de Trabajo Personal",
+            "Diciembre 2025",
+            "⚖️ Acciones Disciplinarias y Suspensiones",
+            "📊 Resumen Disciplinario",
+            "📋 Historial Disciplinario",
+            "📸 Registro Biométrico de Empleado",
+            "🔐 Captura de Template Biométrico",
+            "📋 Información",
+            "⚠️ Importante",
+            "📊 Estado del Registro Biométrico",
+            "🆔 Documentos de Identidad",
+            "🔔 Notificaciones del Empleado",
+            "📬 Bandeja de Notificaciones",
+            "📊 Resumen de Notificaciones"
+          ],
+          "tables": []
+        },
+        "🔔 Notificaciones": {
+          "fields": [],
+          "buttons": [
+            {
+              "text": "✕",
+              "onclick": "closeEmployeeFile()"
+            },
+            {
+              "text": "⚙️ Configurar Proceso de Alta",
+              "onclick": "manageHiringStatus('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            },
+            {
+              "text": "🔄 Actualizar",
+              "onclick": "loadEmployeeNotifications('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+            }
+          ],
+          "sections": [
+            "📋 Expediente Digital: Sistema Testing",
+            "⚙️ Configuración Administrativa",
+            "🔐 Acceso y Seguridad",
+            "🔄 Workflow de Alta y Baja",
+            "📋 Requisitos de Alta (Validaciones):",
+            "📄 Condiciones Adicionales de Alta:",
+            "⚠️ Proceso de Baja:",
+            "🌍 Configuración GPS y Ubicación",
+            "🔐 Consentimiento Biométrico (Análisis Emocional)",
+            "🏢 Departamento y Organización",
+            "📟 Acceso a Kioscos",
+            "⏰ Configuración de Horario",
+            "🔐 Permisos Especiales",
+            "⚡ Acciones Administrativas",
+            "👤 Información Personal",
+            "Datos Básicos",
+            "📞 Contactos",
+            "🏥 Obra Social / Prepaga",
+            "🎓 Formación Académica",
+            "📄 Documentación Personal",
+            "🚗 Licencias de Conducción",
+            "🚛 Licencias Profesionales",
+            "Sistema Testing",
+            "⚙️ Configuraciones",
+            "⭐ Scoring del Empleado",
+            "💼 Antecedentes Laborales",
+            "📌 Posición Actual (Resumen - editar desde ⚙️ Administración)",
+            "💰 Configuración Salarial",
+            "📋 Convenio y Categoría",
+            "💵 Salario Actual",
+            "📈 Historial de Aumentos",
+            "📊 Historial de Liquidaciones",
+            "🏦 Banco de Horas",
+            "⚖️ Juicios y Mediaciones",
+            "🏭 Afiliación Gremial",
+            "📜 Historial de Posiciones",
+            "👨‍👩‍👧‍👦 Grupo Familiar",
+            "💑 Estado Civil y Cónyuge",
+            "Datos del Cónyuge",
+            "👶 Hijos",
+            "👥 Otros Miembros del Grupo Familiar",
+            "📄 Documentos / Certificados Familiares",
+            "🏥 Historia Clínica y Antecedentes Médicos",
+            "👨‍⚕️ Médico de Cabecera",
+            "🚨 Contacto de Emergencia Médica",
+            "📊 Datos Antropométricos",
+            "🔪 Historial de Cirugías",
+            "🏥 Enfermedades/Discapacidades Crónicas",
+            "💊 Medicación Frecuente",
+            "🚫 Alergias",
+            "🚷 Restricciones de Actividad",
+            "⚠️ Restricciones Laborales",
+            "🧠 Salud Mental y Tratamientos Psiquiátricos",
+            "⚽ Actividades Deportivas",
+            "🌿 Hábitos Saludables",
+            "💉 Calendario de Vacunación",
+            "✅ Exámenes y Estudios",
+            "📁 Historia Clínica Digital",
+            "📋 Historial de Eventos",
+            "📎 Documentos Médicos",
+            "📅 Asistencias, Inasistencias y Permisos",
+            "--",
+            "--",
+            "--",
+            "⏱️ Métricas de Horas Trabajadas\n                                        (Último mes)",
+            "📊 Registro de Asistencias",
+            "📆 Calendario de Trabajo Personal",
+            "Diciembre 2025",
+            "⚖️ Acciones Disciplinarias y Suspensiones",
+            "📊 Resumen Disciplinario",
+            "📋 Historial Disciplinario",
+            "📸 Registro Biométrico de Empleado",
+            "🔐 Captura de Template Biométrico",
+            "📋 Información",
+            "⚠️ Importante",
+            "📊 Estado del Registro Biométrico",
+            "🆔 Documentos de Identidad",
+            "🔔 Notificaciones del Empleado",
+            "📬 Bandeja de Notificaciones",
+            "📊 Resumen de Notificaciones"
+          ],
+          "tables": []
+        }
+      },
+      "relationships": []
+    },
+    {
+      "type": "CREATE",
+      "triggerAction": "Agregar Usuario",
+      "fields": [
+        {
+          "name": null,
+          "label": "👤 Nombre completo:",
+          "type": "text",
+          "tagName": "input",
+          "required": true,
+          "readonly": false,
+          "placeholder": "Ej: Juan Pérez"
+        },
+        {
+          "name": null,
+          "label": "📧 Email:",
+          "type": "email",
+          "tagName": "input",
+          "required": true,
+          "readonly": false,
+          "placeholder": "juan.perez@empresa.com"
+        },
+        {
+          "name": null,
+          "label": "🏷️ Legajo/ID Empleado:",
+          "type": "text",
+          "tagName": "input",
+          "required": true,
+          "readonly": false,
+          "placeholder": "EMP001"
+        },
+        {
+          "name": null,
+          "label": "🔑 Contraseña (para APK):",
+          "type": "password",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Contraseña para login APK"
+        },
+        {
+          "name": null,
+          "label": "👑 Rol:",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": null,
+          "label": "🏢 Departamento:",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": null,
+          "label": "📋 Convenio Colectivo de Trabajo:",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": null,
+          "label": "🌍 Permi",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        }
+      ],
+      "tabs": [],
+      "tabContents": {
+        "main": {
+          "fields": [
+            {
+              "name": null,
+              "label": "👤 Nombre completo:",
+              "type": "text",
+              "tagName": "input",
+              "required": true,
+              "readonly": false,
+              "placeholder": "Ej: Juan Pérez"
+            },
+            {
+              "name": null,
+              "label": "📧 Email:",
+              "type": "email",
+              "tagName": "input",
+              "required": true,
+              "readonly": false,
+              "placeholder": "juan.perez@empresa.com"
+            },
+            {
+              "name": null,
+              "label": "🏷️ Legajo/ID Empleado:",
+              "type": "text",
+              "tagName": "input",
+              "required": true,
+              "readonly": false,
+              "placeholder": "EMP001"
+            },
+            {
+              "name": null,
+              "label": "🔑 Contraseña (para APK):",
+              "type": "password",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Contraseña para login APK"
+            },
+            {
+              "name": null,
+              "label": "👑 Rol:",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": null,
+              "label": "🏢 Departamento:",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": null,
+              "label": "📋 Convenio Colectivo de Trabajo:",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": null,
+              "label": "🌍 Permi",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            }
+          ],
+          "buttons": [
+            {
+              "text": "💾 Guardar",
+              "onclick": "saveNewUser()"
+            },
+            {
+              "text": "❌ Cancelar",
+              "onclick": "closeUserModal()"
+            }
+          ],
+          "sections": [
+            "➕ Agregar Nuevo Usuario"
+          ],
+          "tables": []
+        }
+      },
+      "relationships": []
+    }
+  ],
+  "relationships": [],
+  "validations": []
+}

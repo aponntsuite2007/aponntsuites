@@ -1,0 +1,79 @@
+{
+  "module": "employee-map",
+  "discoveredAt": "2025-12-30T01:43:51.310Z",
+  "entryPoint": {
+    "text": "🗺️\n                            Mapa de Empleados\n                            [COMMERCIAL] Geolocalización de empleados, distribución geográfica",
+    "onclick": "showTab('employee-map', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "VIEW",
+      "text": "Geofence",
+      "id": "em-btn-geofence",
+      "className": "em-btn em-btn-sm em-btn-active",
+      "onclick": "EmployeeMapEngine.toggleFeature('showGeofence')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Heatmap",
+      "id": "em-btn-heatmap",
+      "className": "em-btn em-btn-sm",
+      "onclick": "EmployeeMapEngine.toggleFeature('showHeatmap')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Multi-Sucursal",
+      "id": "em-btn-branches",
+      "className": "em-btn em-btn-sm",
+      "onclick": "EmployeeMapEngine.toggleFeature('showAllBranches')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Cluster",
+      "id": "em-btn-cluster",
+      "className": "em-btn em-btn-sm em-btn-active",
+      "onclick": "EmployeeMapEngine.toggleFeature('showClustering')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Visitantes",
+      "id": "em-btn-visitors",
+      "className": "em-btn em-btn-sm em-btn-active",
+      "onclick": "EmployeeMapEngine.toggleFeature('showVisitors')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Actualizar",
+      "id": null,
+      "className": "em-btn em-btn-primary",
+      "onclick": "EmployeeMapEngine.refresh()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

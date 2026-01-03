@@ -1,0 +1,789 @@
+{
+  "startTime": "2025-12-28T19:37:58.466Z",
+  "totalModules": 50,
+  "modules": [
+    {
+      "module": "users",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T19:42:58.524Z"
+    },
+    {
+      "module": "users",
+      "success": false,
+      "duration": "300.1s",
+      "timestamp": "2025-12-28T19:42:58.577Z",
+      "error": ""
+    },
+    {
+      "module": "attendance",
+      "success": true,
+      "duration": "23.1s",
+      "timestamp": "2025-12-28T19:43:23.583Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "attendance",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T19:48:00.560Z"
+    },
+    {
+      "module": "shifts",
+      "success": true,
+      "duration": "296.8s",
+      "timestamp": "2025-12-28T19:48:22.388Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "shifts",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T19:48:25.652Z"
+    },
+    {
+      "module": "departments",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T19:53:24.434Z"
+    },
+    {
+      "module": "departments",
+      "success": false,
+      "duration": "300.2s",
+      "timestamp": "2025-12-28T19:53:24.635Z",
+      "error": ""
+    },
+    {
+      "module": "kiosks",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T19:58:26.471Z"
+    },
+    {
+      "module": "kiosks",
+      "success": false,
+      "duration": "300.1s",
+      "timestamp": "2025-12-28T19:58:26.505Z",
+      "error": ""
+    },
+    {
+      "module": "roles-and-permissions",
+      "success": true,
+      "duration": "285.6s",
+      "timestamp": "2025-12-28T20:03:14.083Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "roles-and-permissions",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:03:28.509Z"
+    },
+    {
+      "module": "admin-panel-controller",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:08:16.102Z"
+    },
+    {
+      "module": "admin-panel-controller",
+      "success": false,
+      "duration": "300.0s",
+      "timestamp": "2025-12-28T20:08:16.136Z",
+      "error": ""
+    },
+    {
+      "module": "ai-assistant-chat",
+      "success": true,
+      "duration": "289.8s",
+      "timestamp": "2025-12-28T20:13:07.911Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "ai-assistant-chat",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:13:18.124Z"
+    },
+    {
+      "module": "alerts-dashboard",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:18:09.942Z"
+    },
+    {
+      "module": "alerts-dashboard",
+      "success": false,
+      "duration": "300.1s",
+      "timestamp": "2025-12-28T20:18:10.024Z",
+      "error": ""
+    },
+    {
+      "module": "api-request-logger",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:23:11.961Z"
+    },
+    {
+      "module": "api-request-logger",
+      "success": false,
+      "duration": "300.0s",
+      "timestamp": "2025-12-28T20:23:11.990Z",
+      "error": ""
+    },
+    {
+      "module": "attendance-analytics",
+      "success": true,
+      "duration": "284.9s",
+      "timestamp": "2025-12-28T20:27:58.838Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "attendance-analytics",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:28:13.982Z"
+    },
+    {
+      "module": "attendance-requests",
+      "success": true,
+      "duration": "297.2s",
+      "timestamp": "2025-12-28T20:32:58.035Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "attendance-requests",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:33:00.869Z"
+    },
+    {
+      "module": "audit-logs-viewer",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:38:00.059Z"
+    },
+    {
+      "module": "audit-logs-viewer",
+      "success": false,
+      "duration": "300.1s",
+      "timestamp": "2025-12-28T20:38:00.094Z",
+      "error": ""
+    },
+    {
+      "module": "auto-healing-dashboard",
+      "success": true,
+      "duration": "48.7s",
+      "timestamp": "2025-12-28T20:38:50.806Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "benefits-management",
+      "success": true,
+      "duration": "49.5s",
+      "timestamp": "2025-12-28T20:39:42.298Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "auto-healing-dashboard",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:43:02.082Z"
+    },
+    {
+      "module": "benefits-management",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:43:52.813Z"
+    },
+    {
+      "module": "biometric-capture",
+      "success": true,
+      "duration": "296.9s",
+      "timestamp": "2025-12-28T20:44:41.232Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "biometric-capture",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:44:44.329Z"
+    },
+    {
+      "module": "branches",
+      "success": true,
+      "duration": "285.1s",
+      "timestamp": "2025-12-28T20:49:28.347Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "branches",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:49:43.252Z"
+    },
+    {
+      "module": "collective-bargaining-agreements",
+      "success": true,
+      "duration": "285.0s",
+      "timestamp": "2025-12-28T20:54:15.385Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "collective-bargaining-agreements",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:54:30.379Z"
+    },
+    {
+      "module": "company-account",
+      "success": true,
+      "duration": "47.2s",
+      "timestamp": "2025-12-28T20:55:04.600Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "company-account",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T20:59:17.426Z"
+    },
+    {
+      "module": "company-calendar",
+      "success": true,
+      "duration": "285.1s",
+      "timestamp": "2025-12-28T20:59:51.681Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "company-calendar",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:00:06.625Z"
+    },
+    {
+      "module": "company-news",
+      "success": true,
+      "duration": "285.3s",
+      "timestamp": "2025-12-28T21:04:39.007Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "company-news",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:04:53.704Z"
+    },
+    {
+      "module": "compliance-dashboard",
+      "success": true,
+      "duration": "51.6s",
+      "timestamp": "2025-12-28T21:05:32.571Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "contracts-management",
+      "success": true,
+      "duration": "43.5s",
+      "timestamp": "2025-12-28T21:06:18.083Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "dms-dashboard",
+      "success": true,
+      "duration": "48.2s",
+      "timestamp": "2025-12-28T21:07:08.292Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "dms",
+      "success": true,
+      "duration": "48.0s",
+      "timestamp": "2025-12-28T21:07:58.313Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "compliance-dashboard",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:09:41.027Z"
+    },
+    {
+      "module": "contracts-management",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:10:34.600Z"
+    },
+    {
+      "module": "dms-dashboard",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:11:20.096Z"
+    },
+    {
+      "module": "dms",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:12:10.317Z"
+    },
+    {
+      "module": "e2e-testing-control",
+      "success": true,
+      "duration": "288.6s",
+      "timestamp": "2025-12-28T21:12:48.949Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "e2e-testing-control",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:13:00.332Z"
+    },
+    {
+      "module": "employee-map",
+      "success": true,
+      "duration": "47.4s",
+      "timestamp": "2025-12-28T21:13:38.375Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "engineering-dashboard",
+      "success": true,
+      "duration": "47.8s",
+      "timestamp": "2025-12-28T21:14:28.151Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "employee-map",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:17:50.966Z"
+    },
+    {
+      "module": "engineering-dashboard",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:18:40.413Z"
+    },
+    {
+      "module": "enterprise-companies-grid",
+      "success": true,
+      "duration": "285.2s",
+      "timestamp": "2025-12-28T21:19:15.354Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "enterprise-companies-grid",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:19:30.162Z"
+    },
+    {
+      "module": "gps-geofencing",
+      "success": true,
+      "duration": "284.9s",
+      "timestamp": "2025-12-28T21:24:02.238Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "gps-geofencing",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:24:17.380Z"
+    },
+    {
+      "module": "historical-sync",
+      "success": true,
+      "duration": "287.3s",
+      "timestamp": "2025-12-28T21:28:51.500Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "historical-sync",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:29:04.258Z"
+    },
+    {
+      "module": "integration-logs",
+      "success": true,
+      "duration": "289.7s",
+      "timestamp": "2025-12-28T21:33:43.177Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "integration-logs",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:33:53.517Z"
+    },
+    {
+      "module": "job-postings",
+      "success": true,
+      "duration": "52.7s",
+      "timestamp": "2025-12-28T21:34:37.881Z",
+      "modalsFound": 1,
+      "tabsFound": 0,
+      "fieldsFound": 14
+    },
+    {
+      "module": "job-postings",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:38:45.214Z"
+    },
+    {
+      "module": "legal-cases",
+      "success": true,
+      "duration": "284.8s",
+      "timestamp": "2025-12-28T21:39:24.714Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "legal-cases",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:39:39.901Z"
+    },
+    {
+      "module": "medical-dashboard-professional",
+      "success": true,
+      "duration": "284.8s",
+      "timestamp": "2025-12-28T21:44:11.556Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "medical-dashboard-professional",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:44:26.745Z"
+    },
+    {
+      "module": "mi-espacio",
+      "success": true,
+      "duration": "46.7s",
+      "timestamp": "2025-12-28T21:45:00.297Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "mi-espacio",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:49:13.576Z"
+    },
+    {
+      "module": "module-activation",
+      "success": true,
+      "duration": "285.0s",
+      "timestamp": "2025-12-28T21:49:47.260Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "module-activation",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:50:02.329Z"
+    },
+    {
+      "module": "notifications",
+      "success": true,
+      "duration": "46.9s",
+      "timestamp": "2025-12-28T21:50:36.130Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "organizational-structure",
+      "success": true,
+      "duration": "83.3s",
+      "timestamp": "2025-12-28T21:52:01.450Z",
+      "modalsFound": 1,
+      "tabsFound": 0,
+      "fieldsFound": 36
+    },
+    {
+      "module": "payroll-liquidation",
+      "success": true,
+      "duration": "49.7s",
+      "timestamp": "2025-12-28T21:52:53.155Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "notifications",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:54:49.275Z"
+    },
+    {
+      "module": "organizational-structure",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:55:38.146Z"
+    },
+    {
+      "module": "payroll-liquidation",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:57:03.471Z"
+    },
+    {
+      "module": "performance-management",
+      "success": true,
+      "duration": "284.9s",
+      "timestamp": "2025-12-28T21:57:40.069Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "performance-management",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T21:57:55.170Z"
+    },
+    {
+      "module": "procedures",
+      "success": true,
+      "duration": "82.5s",
+      "timestamp": "2025-12-28T21:59:04.538Z",
+      "modalsFound": 1,
+      "tabsFound": 0,
+      "fieldsFound": 13
+    },
+    {
+      "module": "procedures",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T22:02:42.091Z"
+    },
+    {
+      "module": "recruitment",
+      "success": true,
+      "duration": "293.1s",
+      "timestamp": "2025-12-28T22:03:59.657Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "recruitment",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T22:04:06.553Z"
+    },
+    {
+      "module": "risk-intelligence",
+      "success": true,
+      "duration": "285.2s",
+      "timestamp": "2025-12-28T22:08:46.820Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "risk-intelligence",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T22:09:01.677Z"
+    },
+    {
+      "module": "sanctions",
+      "success": true,
+      "duration": "171.8s",
+      "timestamp": "2025-12-28T22:11:40.612Z",
+      "modalsFound": 1,
+      "tabsFound": 0,
+      "fieldsFound": 8
+    },
+    {
+      "module": "sanctions",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T22:13:48.868Z"
+    },
+    {
+      "module": "shift-calendar",
+      "success": true,
+      "duration": "285.7s",
+      "timestamp": "2025-12-28T22:16:28.292Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "shift-calendar",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T22:16:42.650Z"
+    },
+    {
+      "module": "training-management",
+      "success": true,
+      "duration": "17.3s",
+      "timestamp": "2025-12-28T22:16:47.599Z",
+      "modalsFound": 0,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    },
+    {
+      "module": "training-management",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T22:21:30.311Z"
+    },
+    {
+      "module": "user-calendar",
+      "success": true,
+      "duration": "285.2s",
+      "timestamp": "2025-12-28T22:21:34.846Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "user-calendar",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T22:21:49.633Z"
+    },
+    {
+      "module": "vacations",
+      "success": true,
+      "duration": "284.9s",
+      "timestamp": "2025-12-28T22:26:21.806Z",
+      "modalsFound": 2,
+      "tabsFound": 10,
+      "fieldsFound": 8
+    },
+    {
+      "module": "vacations",
+      "success": false,
+      "duration": ">5min",
+      "error": "Timeout",
+      "timestamp": "2025-12-28T22:26:36.875Z"
+    },
+    {
+      "module": "voice-platform",
+      "success": true,
+      "duration": "51.4s",
+      "timestamp": "2025-12-28T22:27:15.233Z",
+      "modalsFound": 1,
+      "tabsFound": 0,
+      "fieldsFound": 0
+    }
+  ],
+  "endTime": "2025-12-28T22:27:17.247Z",
+  "completed": 43,
+  "failed": 7,
+  "skipped": 49
+}

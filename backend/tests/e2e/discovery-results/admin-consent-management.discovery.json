@@ -1,0 +1,44 @@
+{
+  "module": "admin-consent-management",
+  "discoveredAt": "2025-12-30T11:37:19.305Z",
+  "entryPoint": {
+    "text": "📦\n                            Gestión de Consentimientos (Admin)\n                            [ADMINISTRATIVE] Vista administrativa de consentimientos biométricos",
+    "onclick": "showTab('admin-consent-management', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "IMPORT",
+      "text": "🔄 Recargar Página",
+      "id": null,
+      "className": null,
+      "onclick": "location.reload()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

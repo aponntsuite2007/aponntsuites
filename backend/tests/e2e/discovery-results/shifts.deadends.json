@@ -1,0 +1,24 @@
+{
+  "status": "INFO",
+  "message": "⚠️  1 problemas detectados (0 críticos)",
+  "deadends": [
+    {
+      "type": "DATA_CIRCUIT",
+      "severity": "INFO",
+      "module": "shifts",
+      "modal": "CREATE",
+      "requiredDataFrom": [
+        "users"
+      ],
+      "reason": "Módulo requiere datos de: users",
+      "suggestedFix": "Orden de ejecución de tests:\n1. users\n2. shifts",
+      "impact": "Si se ejecuta sin dependencias, test fallará"
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "critical": 0,
+    "warnings": 0,
+    "info": 1
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "moduleKey": "sla-tracking",
+  "moduleName": "⏱️",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T17:48:21.918Z",
+  "discoveryDate": "2025-12-30T17:47:36.256Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"sla-tracking\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 1,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

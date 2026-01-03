@@ -1,0 +1,31 @@
+{
+  "moduleKey": "associate-workflow-panel",
+  "moduleName": "Panel de Workflow de Asociados",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T12:34:12.081Z",
+  "discoveryDate": "2025-12-30T12:32:41.428Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"associate-workflow-panel\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 0,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent",
+  "type": "dashboard",
+  "isDashboard": true,
+  "chaosConfig": {
+    "enabled": false
+  },
+  "skipE2ETesting": true,
+  "isDelegated": true,
+  "delegationReason": "Dashboard sin CRUD - Solo visualización"
+}

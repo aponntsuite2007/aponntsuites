@@ -1,0 +1,121 @@
+{
+  "module": "attendance",
+  "discoveredAt": "2025-12-30T12:39:52.639Z",
+  "entryPoint": {
+    "text": "📋\n                            Control de Asistencia\n                            [CORE] Registro de marcaciones, horas trabajadas, reportes de asistencia",
+    "onclick": "showTab('attendance', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "CREATE",
+      "text": "Crear Nuevo",
+      "id": null,
+      "className": "btn btn-primary btn-create",
+      "onclick": null
+    },
+    {
+      "type": "VIEW",
+      "text": "Dashboard",
+      "id": null,
+      "className": "att-nav-item active",
+      "onclick": "AttendanceEngine.showView('dashboard')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Registros",
+      "id": null,
+      "className": "att-nav-item",
+      "onclick": "AttendanceEngine.showView('records')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Analytics",
+      "id": null,
+      "className": "att-nav-item",
+      "onclick": "AttendanceEngine.showView('analytics')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Alertas",
+      "id": null,
+      "className": "att-nav-item",
+      "onclick": "AttendanceEngine.showView('patterns')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Insights",
+      "id": null,
+      "className": "att-nav-item",
+      "onclick": "AttendanceEngine.showView('insights')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Panel Ejecutivo",
+      "id": null,
+      "className": "att-nav-item",
+      "onclick": "AttendanceEngine.showView('cubo')"
+    },
+    {
+      "type": "CREATE",
+      "text": "Nuevo Registro",
+      "id": null,
+      "className": "att-action-btn",
+      "onclick": "AttendanceEngine.showAddModal()"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Registros",
+      "id": null,
+      "className": "att-action-btn",
+      "onclick": "AttendanceEngine.showView('records')"
+    },
+    {
+      "type": "EXPORT",
+      "text": "Exportar CSV",
+      "id": null,
+      "className": "att-action-btn",
+      "onclick": "AttendanceEngine.exportData()"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Alertas",
+      "id": null,
+      "className": "att-action-btn",
+      "onclick": "AttendanceEngine.showView('patterns')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver todos →",
+      "id": null,
+      "className": "att-link-btn",
+      "onclick": "AttendanceEngine.showView('records')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

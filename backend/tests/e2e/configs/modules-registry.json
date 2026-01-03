@@ -1,0 +1,225 @@
+{
+  "categories": [
+    {
+      "id": "panel-administrativo",
+      "name": "📊 Panel Administrativo (Aponnt)",
+      "description": "Módulos de gestión interna de Aponnt",
+      "priority": "HIGH",
+      "modules": [
+        {
+          "key": "aponnt-dashboard",
+          "name": "Dashboard Aponnt",
+          "hasConfig": false,
+          "estimatedTime": "30s"
+        },
+        {
+          "key": "aponnt-companies",
+          "name": "Gestión de Empresas",
+          "hasConfig": false,
+          "estimatedTime": "45s"
+        },
+        {
+          "key": "aponnt-staff",
+          "name": "Staff Aponnt",
+          "hasConfig": false,
+          "estimatedTime": "40s"
+        },
+        {
+          "key": "aponnt-commissions",
+          "name": "Comisiones Piramidales",
+          "hasConfig": false,
+          "estimatedTime": "35s"
+        }
+      ]
+    },
+    {
+      "id": "panel-empresa-core",
+      "name": "🏢 Panel Empresa - Módulos CORE",
+      "description": "Módulos base incluidos en todas las empresas",
+      "priority": "CRITICAL",
+      "modules": [
+        {
+          "key": "users",
+          "name": "Gestión de Usuarios",
+          "hasConfig": true,
+          "estimatedTime": "90s"
+        },
+        {
+          "key": "departments",
+          "name": "Departamentos",
+          "hasConfig": true,
+          "estimatedTime": "60s"
+        },
+        {
+          "key": "attendance",
+          "name": "Asistencias",
+          "hasConfig": true,
+          "estimatedTime": "75s"
+        },
+        {
+          "key": "shifts",
+          "name": "Turnos",
+          "hasConfig": true,
+          "estimatedTime": "65s"
+        },
+        {
+          "key": "visitors",
+          "name": "Visitantes",
+          "hasConfig": true,
+          "estimatedTime": "50s"
+        },
+        {
+          "key": "notifications",
+          "name": "Notificaciones",
+          "hasConfig": false,
+          "estimatedTime": "40s"
+        },
+        {
+          "key": "settings",
+          "name": "Configuración",
+          "hasConfig": false,
+          "estimatedTime": "30s"
+        }
+      ]
+    },
+    {
+      "id": "panel-empresa-premium",
+      "name": "💎 Panel Empresa - Módulos PREMIUM",
+      "description": "Módulos opcionales/premium contratables",
+      "priority": "MEDIUM",
+      "modules": [
+        {
+          "key": "payroll",
+          "name": "Liquidación de Sueldos",
+          "hasConfig": false,
+          "estimatedTime": "120s"
+        },
+        {
+          "key": "hour-bank",
+          "name": "Banco de Horas",
+          "hasConfig": false,
+          "estimatedTime": "80s"
+        },
+        {
+          "key": "medical-dashboard",
+          "name": "Dashboard Médico Profesional",
+          "hasConfig": false,
+          "estimatedTime": "90s"
+        },
+        {
+          "key": "psychological-assessment",
+          "name": "Evaluaciones Psicológicas",
+          "hasConfig": false,
+          "estimatedTime": "70s"
+        },
+        {
+          "key": "training-management",
+          "name": "Gestión de Capacitaciones",
+          "hasConfig": false,
+          "estimatedTime": "65s"
+        },
+        {
+          "key": "sanctions-management",
+          "name": "Gestión de Sanciones",
+          "hasConfig": false,
+          "estimatedTime": "55s"
+        },
+        {
+          "key": "vacation-management",
+          "name": "Gestión de Vacaciones",
+          "hasConfig": false,
+          "estimatedTime": "60s"
+        },
+        {
+          "key": "emotional-analysis",
+          "name": "Análisis Emocional",
+          "hasConfig": false,
+          "estimatedTime": "45s"
+        }
+      ]
+    },
+    {
+      "id": "panel-asociados",
+      "name": "🤝 Panel Asociados",
+      "description": "Módulos para marketplace de asociados",
+      "priority": "MEDIUM",
+      "modules": [
+        {
+          "key": "associate-marketplace",
+          "name": "Marketplace de Asociados",
+          "hasConfig": false,
+          "estimatedTime": "50s"
+        },
+        {
+          "key": "associate-dashboard",
+          "name": "Dashboard Asociado",
+          "hasConfig": false,
+          "estimatedTime": "40s"
+        }
+      ]
+    },
+    {
+      "id": "marketplace-externo",
+      "name": "🌐 Marketplace Externo",
+      "description": "Módulos para partners externos",
+      "priority": "LOW",
+      "modules": [
+        {
+          "key": "partners",
+          "name": "Gestión de Partners",
+          "hasConfig": false,
+          "estimatedTime": "45s"
+        },
+        {
+          "key": "partner-commissions",
+          "name": "Comisiones Partners",
+          "hasConfig": false,
+          "estimatedTime": "40s"
+        }
+      ]
+    },
+    {
+      "id": "apks",
+      "name": "📱 APKs Móviles",
+      "description": "Aplicaciones móviles (4 apps)",
+      "priority": "HIGH",
+      "modules": [
+        {
+          "key": "apk-kiosk",
+          "name": "APK Kiosko Biométrico",
+          "hasConfig": false,
+          "estimatedTime": "180s",
+          "note": "Requiere emulador Android"
+        },
+        {
+          "key": "apk-employee",
+          "name": "APK Empleado",
+          "hasConfig": false,
+          "estimatedTime": "150s",
+          "note": "Requiere emulador Android"
+        },
+        {
+          "key": "apk-medical",
+          "name": "APK Médico",
+          "hasConfig": false,
+          "estimatedTime": "160s",
+          "note": "Requiere emulador Android"
+        },
+        {
+          "key": "apk-vendor",
+          "name": "APK Vendedor/Soporte",
+          "hasConfig": false,
+          "estimatedTime": "140s",
+          "note": "En desarrollo"
+        }
+      ]
+    }
+  ],
+
+  "statistics": {
+    "totalModules": 37,
+    "withConfig": 5,
+    "withoutConfig": 32,
+    "categories": 6
+  }
+}

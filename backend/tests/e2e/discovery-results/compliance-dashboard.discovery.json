@@ -1,0 +1,65 @@
+{
+  "module": "compliance-dashboard",
+  "discoveredAt": "2025-12-30T15:40:25.305Z",
+  "entryPoint": {
+    "text": "⚖️\n                            Risk Intelligence Dashboard\n                            [COMMERCIAL] Cumplimiento normativo, auditorías, riesgos",
+    "onclick": "showTab('compliance-dashboard', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🔍 Analizar Todo",
+      "id": null,
+      "className": "ri-btn ri-btn-primary",
+      "onclick": "RiskIntelligence.runFullAnalysis()"
+    },
+    {
+      "type": "CREATE",
+      "text": "🔄 Actualizar",
+      "id": null,
+      "className": "ri-btn ri-btn-secondary",
+      "onclick": "RiskIntelligence.loadDashboard()"
+    },
+    {
+      "type": "VIEW",
+      "text": "⚙️ Configurar",
+      "id": null,
+      "className": "ri-btn ri-btn-secondary",
+      "onclick": "RiskIntelligence.showConfigModal()"
+    },
+    {
+      "type": "EXPORT",
+      "text": "📥 Exportar ▾",
+      "id": null,
+      "className": "ri-btn ri-btn-export",
+      "onclick": "RiskIntelligence.toggleExportMenu()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

@@ -1,0 +1,31 @@
+{
+  "module": "kiosks-apk",
+  "discoveredAt": "2025-12-30T02:20:55.669Z",
+  "entryPoint": {},
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "⏳ Ingresando...",
+      "id": "loginButton",
+      "className": "btn-primary",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

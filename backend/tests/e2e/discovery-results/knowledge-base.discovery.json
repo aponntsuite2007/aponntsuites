@@ -1,0 +1,215 @@
+{
+  "module": "knowledge-base",
+  "discoveredAt": "2025-12-30T02:23:37.454Z",
+  "entryPoint": {
+    "text": "Gestión de Usuarios",
+    "method": "variation",
+    "searchTerm": "usuarios"
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "CREATE",
+      "text": "Agregar Usuario",
+      "id": null,
+      "className": "btn-add-user",
+      "onclick": "showAddUser()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [
+    {
+      "type": "CREATE",
+      "triggerAction": "Agregar Usuario",
+      "fields": [
+        {
+          "name": null,
+          "label": "👤 Nombre completo:",
+          "type": "text",
+          "tagName": "input",
+          "required": true,
+          "readonly": false,
+          "placeholder": "Ej: Juan Pérez"
+        },
+        {
+          "name": null,
+          "label": "📧 Email:",
+          "type": "email",
+          "tagName": "input",
+          "required": true,
+          "readonly": false,
+          "placeholder": "juan.perez@empresa.com"
+        },
+        {
+          "name": null,
+          "label": "🏷️ Legajo/ID Empleado:",
+          "type": "text",
+          "tagName": "input",
+          "required": true,
+          "readonly": false,
+          "placeholder": "EMP001"
+        },
+        {
+          "name": null,
+          "label": "🔑 Contraseña (para APK):",
+          "type": "password",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Contraseña para login APK"
+        },
+        {
+          "name": null,
+          "label": "👑 Rol:",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": null,
+          "label": "🏢 Departamento:",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": null,
+          "label": "📋 Convenio Colectivo de Trabajo:",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": null,
+          "label": "🌍 Permi",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        }
+      ],
+      "tabs": [],
+      "tabContents": {
+        "main": {
+          "fields": [
+            {
+              "name": null,
+              "label": "👤 Nombre completo:",
+              "type": "text",
+              "tagName": "input",
+              "required": true,
+              "readonly": false,
+              "placeholder": "Ej: Juan Pérez"
+            },
+            {
+              "name": null,
+              "label": "📧 Email:",
+              "type": "email",
+              "tagName": "input",
+              "required": true,
+              "readonly": false,
+              "placeholder": "juan.perez@empresa.com"
+            },
+            {
+              "name": null,
+              "label": "🏷️ Legajo/ID Empleado:",
+              "type": "text",
+              "tagName": "input",
+              "required": true,
+              "readonly": false,
+              "placeholder": "EMP001"
+            },
+            {
+              "name": null,
+              "label": "🔑 Contraseña (para APK):",
+              "type": "password",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Contraseña para login APK"
+            },
+            {
+              "name": null,
+              "label": "👑 Rol:",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": null,
+              "label": "🏢 Departamento:",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": null,
+              "label": "📋 Convenio Colectivo de Trabajo:",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": null,
+              "label": "🌍 Permi",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            }
+          ],
+          "buttons": [
+            {
+              "text": "💾 Guardar",
+              "onclick": "saveNewUser()"
+            },
+            {
+              "text": "❌ Cancelar",
+              "onclick": "closeUserModal()"
+            }
+          ],
+          "sections": [
+            "➕ Agregar Nuevo Usuario"
+          ],
+          "tables": []
+        }
+      },
+      "relationships": []
+    }
+  ],
+  "relationships": [],
+  "validations": []
+}

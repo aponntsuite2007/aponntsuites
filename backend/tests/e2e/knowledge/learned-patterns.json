@@ -1,0 +1,131 @@
+{
+  "version": "1.0.0",
+  "lastUpdate": "2025-12-23T19:00:00.000Z",
+  "description": "Base de conocimiento de patterns aprendidos del E2E Testing. Se actualiza automáticamente cada ejecución.",
+  "patterns": [
+    {
+      "id": "timeout-30s",
+      "name": "Timeout de 30s insuficiente",
+      "errorPattern": "Timeout 30000ms exceeded",
+      "description": "Selectores no aparecen en 30s porque módulo carga dinámicamente después de fetch() API",
+      "fix": {
+        "type": "config-adjustment",
+        "action": "increase-timeout",
+        "from": 30000,
+        "to": 60000,
+        "confidence": 0.95
+      },
+      "occurrences": 0,
+      "successRate": 0,
+      "appliedCount": 0,
+      "improvedCount": 0,
+      "firstSeen": "2025-12-23",
+      "lastSeen": null,
+      "status": "active"
+    },
+    {
+      "id": "selector-not-found",
+      "name": "Selector no encontrado",
+      "errorPattern": "Selector .+ no encontrado|not found|Cannot find element",
+      "description": "Selector del config no existe en el DOM (config incorrecto o módulo roto)",
+      "fix": {
+        "type": "fallback",
+        "action": "use-mainContent-fallback",
+        "fallbackSelector": "#mainContent",
+        "confidence": 0.90
+      },
+      "occurrences": 0,
+      "successRate": 0,
+      "appliedCount": 0,
+      "improvedCount": 0,
+      "firstSeen": "2025-12-23",
+      "lastSeen": null,
+      "status": "active"
+    },
+    {
+      "id": "click-after-fallback",
+      "name": "Click en selector después de fallback",
+      "errorPattern": "Timeout.*exceeded.*waiting for locator",
+      "description": "Intenta click en selector que no existe porque usó fallback",
+      "fix": {
+        "type": "skip-action",
+        "action": "skip-click-if-fallback",
+        "condition": "usedFallback === true",
+        "confidence": 1.0
+      },
+      "occurrences": 0,
+      "successRate": 0,
+      "appliedCount": 0,
+      "improvedCount": 0,
+      "firstSeen": "2025-12-23",
+      "lastSeen": null,
+      "status": "active"
+    },
+    {
+      "id": "dependency-timeout-fields",
+      "name": "Dependency test timeout en campos inexistentes",
+      "errorPattern": "page\\.fill: Timeout.*exceeded",
+      "description": "DEPENDENCY test intenta llenar campos que no existen (usó fallback)",
+      "fix": {
+        "type": "skip-test",
+        "action": "skip-dependency-if-fallback",
+        "condition": "usedFallback === true",
+        "confidence": 1.0
+      },
+      "occurrences": 0,
+      "successRate": 0,
+      "appliedCount": 0,
+      "improvedCount": 0,
+      "firstSeen": "2025-12-23",
+      "lastSeen": null,
+      "status": "active"
+    },
+    {
+      "id": "ssot-no-fields",
+      "name": "SSOT test sin campos para analizar",
+      "errorPattern": "Total campos: 0",
+      "description": "SSOT test no encuentra campos porque usó fallback",
+      "fix": {
+        "type": "skip-test",
+        "action": "skip-ssot-if-fallback",
+        "condition": "usedFallback === true",
+        "confidence": 1.0
+      },
+      "occurrences": 0,
+      "successRate": 0,
+      "appliedCount": 0,
+      "improvedCount": 0,
+      "firstSeen": "2025-12-23",
+      "lastSeen": null,
+      "status": "active"
+    },
+    {
+      "id": "brain-401-error",
+      "name": "Brain API retorna 401 Unauthorized",
+      "errorPattern": "Request failed with status code 401",
+      "description": "Token de autenticación inválido o expirado para Brain API",
+      "fix": {
+        "type": "skip-test",
+        "action": "skip-brain-if-401",
+        "condition": "brainAuthFailed === true",
+        "confidence": 0.80
+      },
+      "occurrences": 0,
+      "successRate": 0,
+      "appliedCount": 0,
+      "improvedCount": 0,
+      "firstSeen": "2025-12-23",
+      "lastSeen": null,
+      "status": "active"
+    }
+  ],
+  "moduleSpecific": {},
+  "statistics": {
+    "totalPatternsLearned": 6,
+    "activePatternsCount": 6,
+    "totalOccurrences": 0,
+    "totalFixesApplied": 0,
+    "totalImprovements": 0,
+    "overallSuccessRate": 0
+  }
+}

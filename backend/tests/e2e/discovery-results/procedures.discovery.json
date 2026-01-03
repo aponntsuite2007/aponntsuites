@@ -1,0 +1,378 @@
+{
+  "module": "procedures",
+  "discoveredAt": "2025-12-28T21:57:43.654Z",
+  "entryPoint": {
+    "text": "📋\n                            Manual de Procedimientos\n                            [COMMERCIAL] Documentación de procesos internos de la empresa",
+    "onclick": "showTab('procedures-manual', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "CREATE",
+      "text": "Nuevo",
+      "id": null,
+      "className": "pm-btn pm-btn-primary",
+      "onclick": "ProceduresEngine.showCreateModal()"
+    },
+    {
+      "type": "VIEW",
+      "text": "Dashboard",
+      "id": null,
+      "className": "pm-nav-item active",
+      "onclick": "ProceduresEngine.showView('dashboard')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Procedimientos",
+      "id": null,
+      "className": "pm-nav-item",
+      "onclick": "ProceduresEngine.showView('list')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Pendientes",
+      "id": null,
+      "className": "pm-nav-item",
+      "onclick": "ProceduresEngine.showView('pending')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Publicados",
+      "id": null,
+      "className": "pm-nav-item",
+      "onclick": "ProceduresEngine.showView('published')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Árbol Completo →",
+      "id": null,
+      "className": "pm-hierarchy-guide-btn",
+      "onclick": "ProceduresEngine.showView('hierarchy')"
+    },
+    {
+      "type": "CREATE",
+      "text": "Nuevo Documento",
+      "id": null,
+      "className": "pm-action-card",
+      "onclick": "ProceduresEngine.showCreateModal()"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Árbol Jerárquico",
+      "id": null,
+      "className": "pm-action-card",
+      "onclick": "ProceduresEngine.showView('hierarchy')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Pendientes",
+      "id": null,
+      "className": "pm-action-card",
+      "onclick": "ProceduresEngine.showView('pending')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Todos",
+      "id": null,
+      "className": "pm-action-card",
+      "onclick": "ProceduresEngine.showView('list')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [
+    {
+      "type": "CREATE",
+      "triggerAction": "Nuevo",
+      "fields": [
+        {
+          "name": "code",
+          "label": "Código",
+          "type": "text",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": "PRO-PROD-001"
+        },
+        {
+          "name": "type",
+          "label": "Tipo de Documento *",
+          "type": "select",
+          "tagName": "select",
+          "required": true,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "parent_id",
+          "label": "Seleccionar Procedimiento",
+          "type": "select",
+          "tagName": "select",
+          "required": true,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "title",
+          "label": "Título *",
+          "type": "text",
+          "tagName": "input",
+          "required": true,
+          "readonly": false,
+          "placeholder": "Ej: Procedimiento de Control de Calidad"
+        },
+        {
+          "name": "objective",
+          "label": "Objetivo",
+          "type": "textarea",
+          "tagName": "textarea",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Describe el propósito de este procedimiento..."
+        },
+        {
+          "name": "scope",
+          "label": "Alcance",
+          "type": "textarea",
+          "tagName": "textarea",
+          "required": false,
+          "readonly": false,
+          "placeholder": "A qué áreas, procesos o actividades aplica..."
+        },
+        {
+          "name": "definitions",
+          "label": "Definiciones y Terminología",
+          "type": "textarea",
+          "tagName": "textarea",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Define términos técnicos o específicos del sector utilizados en este documento..."
+        },
+        {
+          "name": "responsibilities",
+          "label": "Responsabilidades",
+          "type": "textarea",
+          "tagName": "textarea",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Quiénes son responsables y de qué..."
+        },
+        {
+          "name": "procedure_content",
+          "label": "Descripción del Procedimiento",
+          "type": "textarea",
+          "tagName": "textarea",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Detalla paso a paso el procedimiento o instructivo..."
+        },
+        {
+          "name": "effective_date",
+          "label": "Fecha de Vigencia",
+          "type": "date",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "expiry_date",
+          "label": "Fecha de Caducidad (opcio",
+          "type": "date",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "scope_type",
+          "label": "Tipo de Alcance",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "is_critical",
+          "label": "is_critical",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        }
+      ],
+      "tabs": [],
+      "tabContents": {
+        "main": {
+          "fields": [
+            {
+              "name": "code",
+              "label": "Código",
+              "type": "text",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": "PRO-PROD-001"
+            },
+            {
+              "name": "type",
+              "label": "Tipo de Documento *",
+              "type": "select",
+              "tagName": "select",
+              "required": true,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "parent_id",
+              "label": "Seleccionar Procedimiento",
+              "type": "select",
+              "tagName": "select",
+              "required": true,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "title",
+              "label": "Título *",
+              "type": "text",
+              "tagName": "input",
+              "required": true,
+              "readonly": false,
+              "placeholder": "Ej: Procedimiento de Control de Calidad"
+            },
+            {
+              "name": "objective",
+              "label": "Objetivo",
+              "type": "textarea",
+              "tagName": "textarea",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Describe el propósito de este procedimiento..."
+            },
+            {
+              "name": "scope",
+              "label": "Alcance",
+              "type": "textarea",
+              "tagName": "textarea",
+              "required": false,
+              "readonly": false,
+              "placeholder": "A qué áreas, procesos o actividades aplica..."
+            },
+            {
+              "name": "definitions",
+              "label": "Definiciones y Terminología",
+              "type": "textarea",
+              "tagName": "textarea",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Define términos técnicos o específicos del sector utilizados en este documento..."
+            },
+            {
+              "name": "responsibilities",
+              "label": "Responsabilidades",
+              "type": "textarea",
+              "tagName": "textarea",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Quiénes son responsables y de qué..."
+            },
+            {
+              "name": "procedure_content",
+              "label": "Descripción del Procedimiento",
+              "type": "textarea",
+              "tagName": "textarea",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Detalla paso a paso el procedimiento o instructivo..."
+            },
+            {
+              "name": "effective_date",
+              "label": "Fecha de Vigencia",
+              "type": "date",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "expiry_date",
+              "label": "Fecha de Caducidad (opcio",
+              "type": "date",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "scope_type",
+              "label": "Tipo de Alcance",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "is_critical",
+              "label": "is_critical",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            }
+          ],
+          "buttons": [
+            {
+              "text": "×",
+              "onclick": "ProceduresEngine.closeModal()"
+            },
+            {
+              "text": "Actualizar",
+              "onclick": "ProceduresEngine.updateScopePreview()"
+            },
+            {
+              "text": "Cancelar",
+              "onclick": "ProceduresEngine.closeModal()"
+            },
+            {
+              "text": "Guardar",
+              "onclick": null
+            }
+          ],
+          "sections": [
+            "Nuevo Procedimiento"
+          ],
+          "tables": []
+        }
+      },
+      "relationships": []
+    }
+  ],
+  "relationships": [],
+  "validations": []
+}

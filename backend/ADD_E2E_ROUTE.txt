@@ -1,0 +1,19 @@
+========================================
+INSTRUCCIONES: Agregar ruta E2E Testing
+========================================
+
+Agregar DESPUÉS de la línea 2927 en server.js:
+
+// ✅ CONFIGURAR E2E TESTING API - Tests en tiempo real
+const e2eTestingRoutes = require('./src/routes/e2eTestingRoutes');
+app.use('/api/e2e-testing', e2eTestingRoutes);
+
+console.log('🧪 [E2E-TESTING] E2E Testing API ACTIVO:');
+console.log('   📊 GET  /api/e2e-testing/live-stats - Estadísticas en tiempo real');
+console.log('   📋 GET  /api/e2e-testing/modules-status - Estado de módulos');
+
+========================================
+
+O ejecuta este comando:
+
+sed -i '/console.log.*Solo módulos/a\\n// ✅ CONFIGURAR E2E TESTING API - Tests en tiempo real\\nconst e2eTestingRoutes = require('"'"'./src/routes/e2eTestingRoutes'"'"');\\napp.use('"'"'/api/e2e-testing'"'"', e2eTestingRoutes);\\n\\nconsole.log('"'"'🧪 [E2E-TESTING] E2E Testing API ACTIVO:'"'"');\\nconsole.log('"'"'   📊 GET  /api/e2e-testing/live-stats - Estadísticas en tiempo real'"'"');\\nconsole.log('"'"'   📋 GET  /api/e2e-testing/modules-status - Estado de módulos'"'"');' server.js

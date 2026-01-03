@@ -85,3 +85,4 @@ public/uploads/*
 backend/nul
 **/nul
 .aider*
+backend/nlp-service/

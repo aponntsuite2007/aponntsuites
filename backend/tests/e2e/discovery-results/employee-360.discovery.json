@@ -1,0 +1,58 @@
+{
+  "module": "employee-360",
+  "discoveredAt": "2025-12-30T16:24:27.578Z",
+  "entryPoint": {
+    "text": "🎯\n                            Expediente 360°\n                            [COMMERCIAL] Vista completa del empleado, evaluaciones, historial",
+    "onclick": "showTab('employee-360', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Generar Expediente",
+      "id": "btn-generate-report",
+      "className": "btn btn-primary",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Comparar (0)",
+      "id": "btn-compare-employees",
+      "className": "btn btn-secondary",
+      "onclick": null
+    },
+    {
+      "type": "EXPORT",
+      "text": "Exportar PDF",
+      "id": "btn-export-pdf",
+      "className": "btn btn-success",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

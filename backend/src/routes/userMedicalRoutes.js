@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
 
-async function authenticateToken(req, res, next) {
+async function auth(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -51,7 +51,7 @@ const verifyCompanyAccess = (req, res, next) => {
 // 1. MÉDICO DE CABECERA (Primary Physician)
 // ============================================================================
 
-router.get('/:userId/primary-physician', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/primary-physician', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -67,7 +67,7 @@ router.get('/:userId/primary-physician', authenticateToken, verifyCompanyAccess,
     }
 });
 
-router.put('/:userId/primary-physician', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/primary-physician', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -89,7 +89,7 @@ router.put('/:userId/primary-physician', authenticateToken, verifyCompanyAccess,
 // 2. ENFERMEDADES CRÓNICAS (Chronic Conditions)
 // ============================================================================
 
-router.get('/:userId/chronic-conditions', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/chronic-conditions', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -105,7 +105,7 @@ router.get('/:userId/chronic-conditions', authenticateToken, verifyCompanyAccess
     }
 });
 
-router.post('/:userId/chronic-conditions', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/chronic-conditions', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -123,7 +123,7 @@ router.post('/:userId/chronic-conditions', authenticateToken, verifyCompanyAcces
     }
 });
 
-router.put('/:userId/chronic-conditions/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/chronic-conditions/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -144,7 +144,7 @@ router.put('/:userId/chronic-conditions/:id', authenticateToken, verifyCompanyAc
     }
 });
 
-router.delete('/:userId/chronic-conditions/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/chronic-conditions/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -168,7 +168,7 @@ router.delete('/:userId/chronic-conditions/:id', authenticateToken, verifyCompan
 // 3. MEDICAMENTOS (Medications)
 // ============================================================================
 
-router.get('/:userId/medications', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/medications', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -184,7 +184,7 @@ router.get('/:userId/medications', authenticateToken, verifyCompanyAccess, async
     }
 });
 
-router.post('/:userId/medications', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/medications', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -202,7 +202,7 @@ router.post('/:userId/medications', authenticateToken, verifyCompanyAccess, asyn
     }
 });
 
-router.put('/:userId/medications/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/medications/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -223,7 +223,7 @@ router.put('/:userId/medications/:id', authenticateToken, verifyCompanyAccess, a
     }
 });
 
-router.delete('/:userId/medications/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/medications/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -247,7 +247,7 @@ router.delete('/:userId/medications/:id', authenticateToken, verifyCompanyAccess
 // 4. ALERGIAS (Allergies)
 // ============================================================================
 
-router.get('/:userId/allergies', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/allergies', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -263,7 +263,7 @@ router.get('/:userId/allergies', authenticateToken, verifyCompanyAccess, async (
     }
 });
 
-router.post('/:userId/allergies', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/allergies', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -281,7 +281,7 @@ router.post('/:userId/allergies', authenticateToken, verifyCompanyAccess, async 
     }
 });
 
-router.put('/:userId/allergies/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/allergies/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -302,7 +302,7 @@ router.put('/:userId/allergies/:id', authenticateToken, verifyCompanyAccess, asy
     }
 });
 
-router.delete('/:userId/allergies/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/allergies/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -326,7 +326,7 @@ router.delete('/:userId/allergies/:id', authenticateToken, verifyCompanyAccess, 
 // 5. RESTRICCIONES DE ACTIVIDAD (Activity Restrictions)
 // ============================================================================
 
-router.get('/:userId/activity-restrictions', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/activity-restrictions', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -342,7 +342,7 @@ router.get('/:userId/activity-restrictions', authenticateToken, verifyCompanyAcc
     }
 });
 
-router.post('/:userId/activity-restrictions', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/activity-restrictions', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -360,7 +360,7 @@ router.post('/:userId/activity-restrictions', authenticateToken, verifyCompanyAc
     }
 });
 
-router.put('/:userId/activity-restrictions/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/activity-restrictions/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -381,7 +381,7 @@ router.put('/:userId/activity-restrictions/:id', authenticateToken, verifyCompan
     }
 });
 
-router.delete('/:userId/activity-restrictions/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/activity-restrictions/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -405,7 +405,7 @@ router.delete('/:userId/activity-restrictions/:id', authenticateToken, verifyCom
 // 6. RESTRICCIONES LABORALES (Work Restrictions)
 // ============================================================================
 
-router.get('/:userId/work-restrictions', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/work-restrictions', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -421,7 +421,7 @@ router.get('/:userId/work-restrictions', authenticateToken, verifyCompanyAccess,
     }
 });
 
-router.post('/:userId/work-restrictions', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/work-restrictions', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -439,7 +439,7 @@ router.post('/:userId/work-restrictions', authenticateToken, verifyCompanyAccess
     }
 });
 
-router.put('/:userId/work-restrictions/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/work-restrictions/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -460,7 +460,7 @@ router.put('/:userId/work-restrictions/:id', authenticateToken, verifyCompanyAcc
     }
 });
 
-router.delete('/:userId/work-restrictions/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/work-restrictions/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -484,7 +484,7 @@ router.delete('/:userId/work-restrictions/:id', authenticateToken, verifyCompany
 // 7. VACUNAS (Vaccinations)
 // ============================================================================
 
-router.get('/:userId/vaccinations', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/vaccinations', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -501,7 +501,7 @@ router.get('/:userId/vaccinations', authenticateToken, verifyCompanyAccess, asyn
     }
 });
 
-router.post('/:userId/vaccinations', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/vaccinations', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -519,7 +519,7 @@ router.post('/:userId/vaccinations', authenticateToken, verifyCompanyAccess, asy
     }
 });
 
-router.put('/:userId/vaccinations/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/vaccinations/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -540,7 +540,7 @@ router.put('/:userId/vaccinations/:id', authenticateToken, verifyCompanyAccess, 
     }
 });
 
-router.delete('/:userId/vaccinations/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/vaccinations/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -564,7 +564,7 @@ router.delete('/:userId/vaccinations/:id', authenticateToken, verifyCompanyAcces
 // 8. EXÁMENES MÉDICOS (Medical Exams)
 // ============================================================================
 
-router.get('/:userId/medical-exams', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/medical-exams', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -581,7 +581,7 @@ router.get('/:userId/medical-exams', authenticateToken, verifyCompanyAccess, asy
     }
 });
 
-router.post('/:userId/medical-exams', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/medical-exams', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -599,7 +599,7 @@ router.post('/:userId/medical-exams', authenticateToken, verifyCompanyAccess, as
     }
 });
 
-router.put('/:userId/medical-exams/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/medical-exams/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -620,7 +620,7 @@ router.put('/:userId/medical-exams/:id', authenticateToken, verifyCompanyAccess,
     }
 });
 
-router.delete('/:userId/medical-exams/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/medical-exams/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -644,7 +644,7 @@ router.delete('/:userId/medical-exams/:id', authenticateToken, verifyCompanyAcce
 // 9. DOCUMENTOS MÉDICOS (Medical Documents)
 // ============================================================================
 
-router.get('/:userId/medical-documents', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/medical-documents', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -661,7 +661,7 @@ router.get('/:userId/medical-documents', authenticateToken, verifyCompanyAccess,
     }
 });
 
-router.post('/:userId/medical-documents', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/medical-documents', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -679,7 +679,7 @@ router.post('/:userId/medical-documents', authenticateToken, verifyCompanyAccess
     }
 });
 
-router.put('/:userId/medical-documents/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/medical-documents/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -700,7 +700,7 @@ router.put('/:userId/medical-documents/:id', authenticateToken, verifyCompanyAcc
     }
 });
 
-router.delete('/:userId/medical-documents/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/medical-documents/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;

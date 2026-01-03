@@ -1,0 +1,37 @@
+{
+  "module": "database-sync",
+  "discoveredAt": "2025-12-29T18:50:16.622Z",
+  "entryPoint": {
+    "text": "📦\n                            Sincronización de BD\n                            [ADMINISTRATIVE] Herramienta de sincronización entre bases de datos local/producción",
+    "onclick": "showTab('database-sync', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

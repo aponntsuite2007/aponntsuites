@@ -1,0 +1,23 @@
+{
+  "moduleKey": "company-account",
+  "moduleName": "Cuenta Comercial",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T13:08:49.774Z",
+  "discoveryDate": "2025-12-30T13:07:48.631Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"company-account\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 0,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

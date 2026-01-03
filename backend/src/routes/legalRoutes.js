@@ -19,7 +19,7 @@ const EmployeeLegal360Service = require('../services/EmployeeLegal360Service');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
 
-async function authenticateToken(req, res, next) {
+async function auth(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -38,7 +38,7 @@ async function authenticateToken(req, res, next) {
 
 // GET /api/v1/legal/communication-types - Obtener tipos de comunicaciones legales
 // NOTA: checkPermission removido temporalmente - sistema de permisos tiene bugs con PostgreSQL
-router.get('/communication-types', authenticateToken, async (req, res) => {
+router.get('/communication-types', auth, async (req, res) => {
     try {
         const [types] = await sequelize.query(`
             SELECT * FROM legal_communication_types 
@@ -60,7 +60,7 @@ router.get('/communication-types', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/communications - Obtener comunicaciones legales
-router.get('/communications', authenticateToken, async (req, res) => {
+router.get('/communications', auth, async (req, res) => {
     try {
         const { employee_id, type_id, status, page = 1, limit = 50 } = req.query;
         const offset = (page - 1) * limit;
@@ -130,7 +130,7 @@ router.get('/communications', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/communications - Crear nueva comunicación legal
-router.post('/communications', authenticateToken, async (req, res) => {
+router.post('/communications', auth, async (req, res) => {
     try {
         const {
             employee_id,
@@ -247,7 +247,7 @@ router.post('/communications', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/communications/:id - Obtener una comunicación específica
-router.get('/communications/:id', authenticateToken, async (req, res) => {
+router.get('/communications/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -293,7 +293,7 @@ router.get('/communications/:id', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/communications/:id/pdf - Descargar PDF
-router.get('/communications/:id/pdf', authenticateToken, async (req, res) => {
+router.get('/communications/:id/pdf', auth, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -341,7 +341,7 @@ router.get('/communications/:id/pdf', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/v1/legal/communications/:id/status - Cambiar estado de comunicación
-router.put('/communications/:id/status', authenticateToken, async (req, res) => {
+router.put('/communications/:id/status', auth, async (req, res) => {
     try {
         const { id } = req.params;
         const { status, notes } = req.body;
@@ -392,7 +392,7 @@ router.put('/communications/:id/status', authenticateToken, async (req, res) => 
 });
 
 // GET /api/v1/legal/dashboard/stats - Estadísticas para dashboard legal
-router.get('/dashboard/stats', authenticateToken, async (req, res) => {
+router.get('/dashboard/stats', auth, async (req, res) => {
     try {
         // Estadísticas generales
         const [generalStats] = await sequelize.query(`
@@ -673,7 +673,7 @@ async function sendLegalStatusChangeNotification(communicationId, newStatus, not
 // ============================================================================
 
 // GET /api/v1/legal/jurisdiction - Obtener jurisdicción de la empresa actual
-router.get('/jurisdiction', authenticateToken, async (req, res) => {
+router.get('/jurisdiction', auth, async (req, res) => {
     try {
         const companyId = req.user.company_id;
         const jurisdiction = await LegalJurisdictionService.getJurisdictionForCompany(sequelize, companyId);
@@ -689,7 +689,7 @@ router.get('/jurisdiction', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/jurisdiction/employee/:employeeId - Jurisdicción de un empleado específico
-router.get('/jurisdiction/employee/:employeeId', authenticateToken, async (req, res) => {
+router.get('/jurisdiction/employee/:employeeId', auth, async (req, res) => {
     try {
         const { employeeId } = req.params;
         const jurisdiction = await LegalJurisdictionService.getJurisdictionForEmployee(sequelize, employeeId);
@@ -705,7 +705,7 @@ router.get('/jurisdiction/employee/:employeeId', authenticateToken, async (req, 
 });
 
 // GET /api/v1/legal/jurisdiction/all - Lista todas las jurisdicciones disponibles (admin)
-router.get('/jurisdiction/all', authenticateToken, async (req, res) => {
+router.get('/jurisdiction/all', auth, async (req, res) => {
     try {
         res.json({
             success: true,
@@ -725,7 +725,7 @@ router.get('/jurisdiction/all', authenticateToken, async (req, res) => {
 // ============================================================================
 
 // GET /api/v1/legal/employee/:employeeId/legal-360 - Expediente legal completo del empleado
-router.get('/employee/:employeeId/legal-360', authenticateToken, async (req, res) => {
+router.get('/employee/:employeeId/legal-360', auth, async (req, res) => {
     try {
         const { employeeId } = req.params;
         const companyId = req.user.company_id;
@@ -752,7 +752,7 @@ router.get('/employee/:employeeId/legal-360', authenticateToken, async (req, res
 // ============================================================================
 
 // GET /api/v1/legal/issues - Obtener issues legales (juicios/mediaciones)
-router.get('/issues', authenticateToken, async (req, res) => {
+router.get('/issues', auth, async (req, res) => {
     try {
         const companyId = req.user.company_id;
         const { user_id, status, issue_type, page = 1, limit = 50 } = req.query;
@@ -813,7 +813,7 @@ router.get('/issues', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/issues - Crear nuevo issue legal (juicio/mediación)
-router.post('/issues', authenticateToken, async (req, res) => {
+router.post('/issues', auth, async (req, res) => {
     try {
         const companyId = req.user.company_id;
         const {
@@ -884,7 +884,7 @@ router.post('/issues', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/v1/legal/issues/:id - Actualizar issue legal
-router.put('/issues/:id', authenticateToken, async (req, res) => {
+router.put('/issues/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
         const companyId = req.user.company_id;
@@ -929,7 +929,7 @@ router.put('/issues/:id', authenticateToken, async (req, res) => {
 });
 
 // DELETE /api/v1/legal/issues/:id - Eliminar issue legal
-router.delete('/issues/:id', authenticateToken, async (req, res) => {
+router.delete('/issues/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
         const companyId = req.user.company_id;
@@ -962,7 +962,7 @@ try {
 }
 
 // GET /api/v1/legal/editability/:table/:recordId - Verificar editabilidad de registro
-router.get('/editability/:table/:recordId', authenticateToken, async (req, res) => {
+router.get('/editability/:table/:recordId', auth, async (req, res) => {
     try {
         const { table, recordId } = req.params;
         const userId = req.user.id;
@@ -997,7 +997,7 @@ router.get('/editability/:table/:recordId', authenticateToken, async (req, res) 
 });
 
 // POST /api/v1/legal/authorization/request - Solicitar autorización para editar/eliminar
-router.post('/authorization/request', authenticateToken, async (req, res) => {
+router.post('/authorization/request', auth, async (req, res) => {
     try {
         const { table, record_id, reason, action_type, proposed_changes, priority } = req.body;
 
@@ -1046,7 +1046,7 @@ router.post('/authorization/request', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/authorization/:id/approve - Aprobar autorización
-router.post('/authorization/:id/approve', authenticateToken, async (req, res) => {
+router.post('/authorization/:id/approve', auth, async (req, res) => {
     try {
         const { id } = req.params;
         const { response } = req.body;
@@ -1084,7 +1084,7 @@ router.post('/authorization/:id/approve', authenticateToken, async (req, res) =>
 });
 
 // POST /api/v1/legal/authorization/:id/reject - Rechazar autorización
-router.post('/authorization/:id/reject', authenticateToken, async (req, res) => {
+router.post('/authorization/:id/reject', auth, async (req, res) => {
     try {
         const { id } = req.params;
         const { response } = req.body;
@@ -1122,7 +1122,7 @@ router.post('/authorization/:id/reject', authenticateToken, async (req, res) => 
 });
 
 // GET /api/v1/legal/authorizations/pending - Listar autorizaciones pendientes (para RRHH)
-router.get('/authorizations/pending', authenticateToken, async (req, res) => {
+router.get('/authorizations/pending', auth, async (req, res) => {
     try {
         const companyId = req.user.company_id;
         const userRole = req.user.role;
@@ -1145,7 +1145,7 @@ router.get('/authorizations/pending', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/authorizations/my-requests - Mis solicitudes de autorización
-router.get('/authorizations/my-requests', authenticateToken, async (req, res) => {
+router.get('/authorizations/my-requests', auth, async (req, res) => {
     try {
         const companyId = req.user.company_id;
         const userId = req.user.id;
@@ -1169,7 +1169,7 @@ router.get('/authorizations/my-requests', authenticateToken, async (req, res) =>
 });
 
 // PUT /api/v1/legal/record/:table/:id - Actualizar registro con verificación de editabilidad
-router.put('/record/:table/:id', authenticateToken, async (req, res) => {
+router.put('/record/:table/:id', auth, async (req, res) => {
     try {
         const { table, id } = req.params;
         const updates = req.body;
@@ -1204,7 +1204,7 @@ router.put('/record/:table/:id', authenticateToken, async (req, res) => {
 });
 
 // DELETE /api/v1/legal/record/:table/:id - Eliminar registro con verificación de editabilidad
-router.delete('/record/:table/:id', authenticateToken, async (req, res) => {
+router.delete('/record/:table/:id', auth, async (req, res) => {
     try {
         const { table, id } = req.params;
         const { reason } = req.body;
@@ -1256,7 +1256,7 @@ const LegalOllamaService = require('../services/LegalOllamaService');
 // ========== CASOS LEGALES ==========
 
 // GET /api/v1/legal/cases - Listar casos legales
-router.get('/cases', authenticateToken, async (req, res) => {
+router.get('/cases', auth, async (req, res) => {
     try {
         const companyId = req.user.company_id;
         const { stage, case_type, is_active, page = 1, limit = 20 } = req.query;
@@ -1318,7 +1318,7 @@ router.get('/cases', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/cases - Crear nuevo caso legal
-router.post('/cases', authenticateToken, async (req, res) => {
+router.post('/cases', auth, async (req, res) => {
     try {
         const context = {
             companyId: req.user.company_id,
@@ -1334,7 +1334,7 @@ router.post('/cases', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/cases/:id - Obtener caso por ID
-router.get('/cases/:id', authenticateToken, async (req, res) => {
+router.get('/cases/:id', auth, async (req, res) => {
     try {
         const companyId = req.user.company_id;
         const caseId = req.params.id;
@@ -1352,7 +1352,7 @@ router.get('/cases/:id', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/v1/legal/cases/:id/advance-stage - Avanzar etapa del caso
-router.put('/cases/:id/advance-stage', authenticateToken, async (req, res) => {
+router.put('/cases/:id/advance-stage', auth, async (req, res) => {
     try {
         const context = {
             companyId: req.user.company_id,
@@ -1371,7 +1371,7 @@ router.put('/cases/:id/advance-stage', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/v1/legal/cases/:id/sub-status - Actualizar sub-estado
-router.put('/cases/:id/sub-status', authenticateToken, async (req, res) => {
+router.put('/cases/:id/sub-status', auth, async (req, res) => {
     try {
         const context = {
             companyId: req.user.company_id,
@@ -1390,7 +1390,7 @@ router.put('/cases/:id/sub-status', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/v1/legal/cases/:id/close - Cerrar caso
-router.put('/cases/:id/close', authenticateToken, async (req, res) => {
+router.put('/cases/:id/close', auth, async (req, res) => {
     try {
         const context = {
             companyId: req.user.company_id,
@@ -1406,7 +1406,7 @@ router.put('/cases/:id/close', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/cases/:id/timeline - Obtener timeline del caso
-router.get('/cases/:id/timeline', authenticateToken, async (req, res) => {
+router.get('/cases/:id/timeline', auth, async (req, res) => {
     try {
         const timeline = await LegalWorkflowService.getCaseTimeline(
             req.params.id, req.user.company_id
@@ -1419,7 +1419,7 @@ router.get('/cases/:id/timeline', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/cases/:id/timeline - Agregar evento al timeline
-router.post('/cases/:id/timeline', authenticateToken, async (req, res) => {
+router.post('/cases/:id/timeline', auth, async (req, res) => {
     try {
         const eventId = await LegalWorkflowService.addTimelineEvent(req.params.id, {
             ...req.body,
@@ -1433,7 +1433,7 @@ router.post('/cases/:id/timeline', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/cases/:id/documents - Obtener documentos del caso
-router.get('/cases/:id/documents', authenticateToken, async (req, res) => {
+router.get('/cases/:id/documents', auth, async (req, res) => {
     try {
         const documents = await LegalWorkflowService.getCaseDocuments(
             req.params.id, req.user.company_id
@@ -1446,7 +1446,7 @@ router.get('/cases/:id/documents', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/cases/:id/documents - Agregar documento al caso
-router.post('/cases/:id/documents', authenticateToken, async (req, res) => {
+router.post('/cases/:id/documents', auth, async (req, res) => {
     try {
         const context = {
             companyId: req.user.company_id,
@@ -1463,7 +1463,7 @@ router.post('/cases/:id/documents', authenticateToken, async (req, res) => {
 
 
 // POST /api/v1/legal/documents/:docId/response - Registrar respuesta/acuse
-router.post('/documents/:docId/response', authenticateToken, async (req, res) => {
+router.post('/documents/:docId/response', auth, async (req, res) => {
     try {
         const { docId } = req.params;
         const { response_date, notes } = req.body;
@@ -1478,7 +1478,7 @@ router.post('/documents/:docId/response', authenticateToken, async (req, res) =>
 });
 
 // GET /api/v1/legal/documents/alerts - Alertas pendientes
-router.get('/documents/alerts', authenticateToken, async (req, res) => {
+router.get('/documents/alerts', auth, async (req, res) => {
     try {
         const result = await pool.query(`SELECT a.*, d.title as document_title FROM legal_document_alerts a LEFT JOIN legal_case_documents d ON a.document_id = d.id WHERE a.company_id = $1 AND a.is_resolved = false ORDER BY a.due_date`, [req.user.company_id]);
         res.json({ success: true, data: result.rows });
@@ -1486,7 +1486,7 @@ router.get('/documents/alerts', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/cases/:id/deadlines - Obtener vencimientos del caso
-router.get('/cases/:id/deadlines', authenticateToken, async (req, res) => {
+router.get('/cases/:id/deadlines', auth, async (req, res) => {
     try {
         const { status } = req.query;
         const deadlines = await LegalWorkflowService.getCaseDeadlines(
@@ -1500,7 +1500,7 @@ router.get('/cases/:id/deadlines', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/cases/:id/deadlines - Crear vencimiento
-router.post('/cases/:id/deadlines', authenticateToken, async (req, res) => {
+router.post('/cases/:id/deadlines', auth, async (req, res) => {
     try {
         const context = {
             companyId: req.user.company_id,
@@ -1516,7 +1516,7 @@ router.post('/cases/:id/deadlines', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/workflow/stages - Obtener definición de etapas del workflow
-router.get('/workflow/stages', authenticateToken, async (req, res) => {
+router.get('/workflow/stages', auth, async (req, res) => {
     res.json({
         success: true,
         data: LegalWorkflowService.STAGES
@@ -1524,7 +1524,7 @@ router.get('/workflow/stages', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/dashboard/stats - Estadísticas del dashboard legal
-router.get('/dashboard/stats', authenticateToken, async (req, res) => {
+router.get('/dashboard/stats', auth, async (req, res) => {
     try {
         const stats = await LegalWorkflowService.getDashboardStats(req.user.company_id);
         res.json({ success: true, data: stats });
@@ -1537,7 +1537,7 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
 // ========== EXPEDIENTE 360 ==========
 
 // GET /api/v1/legal/employee/:id/360 - Obtener expediente 360 completo
-router.get('/employee/:id/360', authenticateToken, async (req, res) => {
+router.get('/employee/:id/360', auth, async (req, res) => {
     try {
         const dossier = await LegalCase360Service.generateFullDossier(
             req.params.id,
@@ -1551,7 +1551,7 @@ router.get('/employee/:id/360', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/cases/:id/employee-360 - Obtener expediente 360 guardado del caso
-router.get('/cases/:id/employee-360', authenticateToken, async (req, res) => {
+router.get('/cases/:id/employee-360', auth, async (req, res) => {
     try {
         const legalCase = await LegalWorkflowService.getCaseById(
             req.params.id, req.user.company_id
@@ -1585,7 +1585,7 @@ router.get('/cases/:id/employee-360', authenticateToken, async (req, res) => {
 // ========== INTELIGENCIA ARTIFICIAL (OLLAMA) ==========
 
 // GET /api/v1/legal/ai/status - Verificar disponibilidad de Ollama
-router.get('/ai/status', authenticateToken, async (req, res) => {
+router.get('/ai/status', auth, async (req, res) => {
     try {
         const isAvailable = await LegalOllamaService.isAvailable();
         res.json({
@@ -1599,7 +1599,7 @@ router.get('/ai/status', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/ai/analyze-risk - Analizar riesgo del caso
-router.post('/ai/analyze-risk', authenticateToken, async (req, res) => {
+router.post('/ai/analyze-risk', auth, async (req, res) => {
     try {
         const { case_id } = req.body;
         const companyId = req.user.company_id;
@@ -1621,7 +1621,7 @@ router.post('/ai/analyze-risk', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/ai/case-summary - Generar resumen del caso
-router.post('/ai/case-summary', authenticateToken, async (req, res) => {
+router.post('/ai/case-summary', auth, async (req, res) => {
     try {
         const { case_id } = req.body;
         const companyId = req.user.company_id;
@@ -1643,7 +1643,7 @@ router.post('/ai/case-summary', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/ai/analyze-employee - Analizar historial del empleado
-router.post('/ai/analyze-employee', authenticateToken, async (req, res) => {
+router.post('/ai/analyze-employee', auth, async (req, res) => {
     try {
         const { employee_id } = req.body;
         const companyId = req.user.company_id;
@@ -1660,7 +1660,7 @@ router.post('/ai/analyze-employee', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/ai/calculate-exposure - Calcular exposición económica
-router.post('/ai/calculate-exposure', authenticateToken, async (req, res) => {
+router.post('/ai/calculate-exposure', auth, async (req, res) => {
     try {
         const { case_id } = req.body;
         const companyId = req.user.company_id;
@@ -1682,7 +1682,7 @@ router.post('/ai/calculate-exposure', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/ai/suggest-documents - Sugerir documentos a recopilar
-router.post('/ai/suggest-documents', authenticateToken, async (req, res) => {
+router.post('/ai/suggest-documents', auth, async (req, res) => {
     try {
         const { case_type, current_documents } = req.body;
         const suggestions = await LegalOllamaService.suggestDocuments(case_type, current_documents || []);
@@ -1694,7 +1694,7 @@ router.post('/ai/suggest-documents', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/ai/assist - Asistente de consultas
-router.post('/ai/assist', authenticateToken, async (req, res) => {
+router.post('/ai/assist', auth, async (req, res) => {
     try {
         const { question, context } = req.body;
         const response = await LegalOllamaService.assistLawyer(question, context || {});
@@ -1706,7 +1706,7 @@ router.post('/ai/assist', authenticateToken, async (req, res) => {
 });
 
 // POST /api/v1/legal/ai/analyze-timeline - Analizar timeline y sugerir próximos pasos
-router.post('/ai/analyze-timeline', authenticateToken, async (req, res) => {
+router.post('/ai/analyze-timeline', auth, async (req, res) => {
     try {
         const { case_id } = req.body;
         const companyId = req.user.company_id;
@@ -1726,7 +1726,7 @@ router.post('/ai/analyze-timeline', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/ai/recommendations - Obtener recomendaciones proactivas
-router.get('/ai/recommendations', authenticateToken, async (req, res) => {
+router.get('/ai/recommendations', auth, async (req, res) => {
     try {
         const recommendations = await LegalOllamaService.generateProactiveRecommendations(
             req.user.company_id
@@ -1739,7 +1739,7 @@ router.get('/ai/recommendations', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/legal/ai/previous-analyses/:caseId - Obtener análisis previos
-router.get('/ai/previous-analyses/:caseId', authenticateToken, async (req, res) => {
+router.get('/ai/previous-analyses/:caseId', auth, async (req, res) => {
     try {
         const { type } = req.query;
         const analyses = await LegalOllamaService.getPreviousAnalyses(req.params.caseId, type);
@@ -1753,7 +1753,7 @@ router.get('/ai/previous-analyses/:caseId', authenticateToken, async (req, res) 
 // ========== VENCIMIENTOS GLOBALES ==========
 
 // GET /api/v1/legal/deadlines/upcoming - Obtener vencimientos próximos (todos los casos)
-router.get('/deadlines/upcoming', authenticateToken, async (req, res) => {
+router.get('/deadlines/upcoming', auth, async (req, res) => {
     try {
         const { days = 7 } = req.query;
         const companyId = req.user.company_id;
@@ -1774,7 +1774,7 @@ router.get('/deadlines/upcoming', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/v1/legal/deadlines/:id/complete - Marcar vencimiento como completado
-router.put('/deadlines/:id/complete', authenticateToken, async (req, res) => {
+router.put('/deadlines/:id/complete', auth, async (req, res) => {
     try {
         await sequelize.query(`
             UPDATE legal_deadlines

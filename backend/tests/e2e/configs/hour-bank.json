@@ -1,0 +1,23 @@
+{
+  "moduleKey": "hour-bank",
+  "moduleName": "Banco de Horas",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T15:30:36.493Z",
+  "discoveryDate": "2025-12-30T15:30:19.751Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"hour-bank\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 6,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

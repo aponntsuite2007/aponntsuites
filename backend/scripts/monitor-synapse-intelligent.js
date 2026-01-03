@@ -1,0 +1,160 @@
+#!/usr/bin/env node
+
+/**
+ * MONITOR DE PROGRESO - SYNAPSE INTELLIGENT
+ *
+ * Lee el log SYNAPSE-INTELLIGENT.md y muestra progreso actual
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const LOG_FILE = path.join(__dirname, '..', 'SYNAPSE-INTELLIGENT.md');
+
+function parseLog() {
+  if (!fs.existsSync(LOG_FILE)) {
+    return {
+      started: false,
+      modules: 0,
+      passed: 0,
+      failed: 0,
+      skipped: 0,
+      current: null,
+      discoveries: 0,
+      configs: 0,
+      deadends: 0,
+      fixes: 0
+    };
+  }
+
+  const content = fs.readFileSync(LOG_FILE, 'utf8');
+  const lines = content.split('\n');
+
+  let modules = 0;
+  let passed = 0;
+  let failed = 0;
+  let skipped = 0;
+  let current = null;
+  let discoveries = 0;
+  let configs = 0;
+  let deadends = 0;
+  let fixes = 0;
+
+  // Contar módulos procesados
+  const moduleMatches = content.match(/## \d+\. /g);
+  modules = moduleMatches ? moduleMatches.length : 0;
+
+  // Contar por status
+  for (const line of lines) {
+    if (line.includes('**Status**: PASSED')) passed++;
+    if (line.includes('**Status**: FAILED')) failed++;
+    if (line.includes('**Status**: SKIPPED')) skipped++;
+  }
+
+  // Stats del sistema
+  const discoveriesMatch = content.match(/\*\*🔍 Discoveries ejecutados\*\*: (\d+)/);
+  const configsMatch = content.match(/\*\*⚙️ Configs auto-generados\*\*: (\d+)/);
+  const deadendsMatch = content.match(/\*\*🚫 Deadends detectados\*\*: (\d+)/);
+  const fixesMatch = content.match(/\*\*🔧 Fixes aplicados\*\*: (\d+)/);
+
+  if (discoveriesMatch) discoveries = parseInt(discoveriesMatch[1]);
+  if (configsMatch) configs = parseInt(configsMatch[1]);
+  if (deadendsMatch) deadends = parseInt(deadendsMatch[1]);
+  if (fixesMatch) fixes = parseInt(fixesMatch[1]);
+
+  // Módulo actual
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const match = lines[i].match(/## \d+\. (.+?) \(Intento \d+\)/);
+    if (match) {
+      current = match[1];
+      break;
+    }
+  }
+
+  const total = passed + failed + skipped;
+  const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+  return {
+    started: true,
+    modules,
+    passed,
+    failed,
+    skipped,
+    current,
+    passRate,
+    discoveries,
+    configs,
+    deadends,
+    fixes
+  };
+}
+
+function printProgress() {
+  const stats = parseLog();
+
+  console.clear();
+  console.log('═'.repeat(70));
+  console.log('🤖 SYNAPSE INTELLIGENT - PROGRESO EN TIEMPO REAL');
+  console.log('═'.repeat(70));
+
+  if (!stats.started) {
+    console.log('\n⏳ Esperando inicio de ejecución...');
+    console.log('\n   Log: SYNAPSE-INTELLIGENT.md');
+    console.log('═'.repeat(70));
+    return;
+  }
+
+  console.log('\n📊 RESULTADOS:');
+  console.log(`   Módulos procesados: ${stats.modules}`);
+  console.log(`   ✅ PASSED: ${stats.passed} (${stats.passRate}%)`);
+  console.log(`   ❌ FAILED: ${stats.failed}`);
+  console.log(`   ⏭️  SKIPPED: ${stats.skipped}`);
+
+  if (stats.current) {
+    console.log(`\n🔧 Módulo actual: ${stats.current}`);
+  }
+
+  console.log('\n🔬 ACTIVIDAD DEL SISTEMA:');
+  console.log(`   🔍 Discoveries ejecutados: ${stats.discoveries}`);
+  console.log(`   ⚙️  Configs auto-generados: ${stats.configs}`);
+  console.log(`   🚫 Deadends detectados: ${stats.deadends}`);
+  console.log(`   🔧 Fixes aplicados: ${stats.fixes}`);
+
+  // Progress bar
+  const total = stats.passed + stats.failed + stats.skipped;
+  if (total > 0) {
+    const barLength = 50;
+    const passedBars = Math.round((stats.passed / total) * barLength);
+    const failedBars = Math.round((stats.failed / total) * barLength);
+    const skippedBars = barLength - passedBars - failedBars;
+
+    console.log('\n📈 PROGRESO:');
+    console.log('   [' +
+      '█'.repeat(passedBars) +
+      '▓'.repeat(failedBars) +
+      '░'.repeat(skippedBars > 0 ? skippedBars : 0) +
+      ']'
+    );
+  }
+
+  console.log('\n═'.repeat(70));
+  console.log(`⏰ Última actualización: ${new Date().toLocaleTimeString()}`);
+  console.log('═'.repeat(70));
+}
+
+// Monitoreo continuo
+console.log('🚀 Iniciando monitor de SYNAPSE INTELLIGENT...\n');
+console.log('   Presiona Ctrl+C para salir\n');
+
+printProgress();
+
+const interval = setInterval(() => {
+  printProgress();
+}, 5000); // Actualizar cada 5 segundos
+
+// Cleanup al salir
+process.on('SIGINT', () => {
+  clearInterval(interval);
+  console.log('\n\n👋 Monitor detenido');
+  process.exit(0);
+});

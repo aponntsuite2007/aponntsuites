@@ -1,0 +1,121 @@
+{
+  "module": "payroll-liquidation",
+  "discoveredAt": "2025-12-29T23:57:05.709Z",
+  "entryPoint": {
+    "text": "💰\n                            Liquidación de Sueldos\n                            [COMMERCIAL] Cálculo de haberes, deducciones, generación de recibos",
+    "onclick": "showTab('payroll-liquidation', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "VIEW",
+      "text": "Dashboard",
+      "id": null,
+      "className": "pe-nav-item active",
+      "onclick": "PayrollEngine.showView('dashboard')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Proceso",
+      "id": null,
+      "className": "pe-nav-item",
+      "onclick": "PayrollEngine.showView('process')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Empleados",
+      "id": null,
+      "className": "pe-nav-item",
+      "onclick": "PayrollEngine.showView('employees')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Plantillas",
+      "id": null,
+      "className": "pe-nav-item",
+      "onclick": "PayrollEngine.showView('templates')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Entidades",
+      "id": null,
+      "className": "pe-nav-item",
+      "onclick": "PayrollEngine.showView('entities')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Reportes",
+      "id": null,
+      "className": "pe-nav-item",
+      "onclick": "PayrollEngine.showView('reports')"
+    },
+    {
+      "type": "EDIT",
+      "text": "Recibos",
+      "id": null,
+      "className": "pe-nav-item",
+      "onclick": "PayrollEngine.showView('payslip-editor')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Iniciar Liquidacion",
+      "id": null,
+      "className": "pe-action-btn",
+      "onclick": "PayrollEngine.showView('process')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Empleados",
+      "id": null,
+      "className": "pe-action-btn",
+      "onclick": "PayrollEngine.showView('employees')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Plantillas RRHH",
+      "id": null,
+      "className": "pe-action-btn",
+      "onclick": "PayrollEngine.showView('templates')"
+    },
+    {
+      "type": "EXPORT",
+      "text": "Exportar Reporte",
+      "id": null,
+      "className": "pe-action-btn",
+      "onclick": "PayrollEngine.exportReport('summary')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Auditar Configuracion",
+      "id": null,
+      "className": "pe-action-btn",
+      "onclick": "PayrollHelpSystem.auditPayrollData().then(() => PayrollHelpSystem.showAuditReport())"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

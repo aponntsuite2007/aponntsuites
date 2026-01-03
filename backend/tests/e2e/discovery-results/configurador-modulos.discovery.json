@@ -1,0 +1,44 @@
+{
+  "module": "configurador-modulos",
+  "discoveredAt": "2025-12-30T13:26:54.536Z",
+  "entryPoint": {
+    "text": "📦\n                            Configurador de Módulos\n                            [ADMINISTRATIVE] Configuración de módulos disponibles por empresa",
+    "onclick": "showTab('configurador-modulos', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "IMPORT",
+      "text": "🔄 Recargar Página",
+      "id": null,
+      "className": null,
+      "onclick": "location.reload()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

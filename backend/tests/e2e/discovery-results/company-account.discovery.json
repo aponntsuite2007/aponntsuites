@@ -1,0 +1,79 @@
+{
+  "module": "company-account",
+  "discoveredAt": "2025-12-30T13:07:48.631Z",
+  "entryPoint": {
+    "text": "📜\n                            Cuenta Comercial\n                            [CORE] Configuración de la empresa, datos fiscales, preferencias",
+    "onclick": "showTab('company-account', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📊 Dashboard",
+      "id": null,
+      "className": "ca-tab active",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📝 Presupuestos",
+      "id": null,
+      "className": "ca-tab ",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📄 Contratos",
+      "id": null,
+      "className": "ca-tab ",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "💳 Facturas",
+      "id": null,
+      "className": "ca-tab ",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "💬 Comunicaciones",
+      "id": null,
+      "className": "ca-tab ",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🔔",
+      "id": null,
+      "className": "ca-bell-btn",
+      "onclick": "CompanyAccountEngine.toggleNotificationPanel()"
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

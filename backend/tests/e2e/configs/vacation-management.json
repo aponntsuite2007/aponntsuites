@@ -1,0 +1,22 @@
+{
+  "moduleKey": "vacation-management",
+  "moduleName": "",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T15:17:45.003Z",
+  "discoveryDate": "2025-12-30T15:16:46.180Z",
+  "entryPoint": {
+    "selector": "button:has-text(\"\")",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 0,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  }
+}

@@ -9,7 +9,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { auth: authenticateToken } = require('../middleware/auth');
+const { auth: auth } = require('../middleware/auth');
 const UserMedicalExams = require('../models/UserMedicalExams');
 const User = require('../models/User-postgresql');
 const { Op } = require('sequelize');
@@ -18,7 +18,7 @@ const { Op } = require('sequelize');
  * GET /api/v1/users/:userId/medical-exams
  * Obtener todos los exámenes médicos de un usuario
  */
-router.get('/users/:userId/medical-exams', authenticateToken, async (req, res) => {
+router.get('/users/:userId/medical-exams', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const { companyId } = req.user;
@@ -60,7 +60,7 @@ router.get('/users/:userId/medical-exams', authenticateToken, async (req, res) =
  * GET /api/v1/users/:userId/medical-exams/:examId
  * Obtener un examen médico específico
  */
-router.get('/users/:userId/medical-exams/:examId', authenticateToken, async (req, res) => {
+router.get('/users/:userId/medical-exams/:examId', auth, async (req, res) => {
     try {
         const { userId, examId } = req.params;
         const { companyId } = req.user;
@@ -94,7 +94,7 @@ router.get('/users/:userId/medical-exams/:examId', authenticateToken, async (req
  * POST /api/v1/users/:userId/medical-exams
  * Crear nuevo examen médico
  */
-router.post('/users/:userId/medical-exams', authenticateToken, async (req, res) => {
+router.post('/users/:userId/medical-exams', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const { companyId } = req.user;
@@ -160,7 +160,7 @@ router.post('/users/:userId/medical-exams', authenticateToken, async (req, res) 
  * PUT /api/v1/users/:userId/medical-exams/:examId
  * Actualizar examen médico existente
  */
-router.put('/users/:userId/medical-exams/:examId', authenticateToken, async (req, res) => {
+router.put('/users/:userId/medical-exams/:examId', auth, async (req, res) => {
     try {
         const { userId, examId } = req.params;
         const { companyId } = req.user;
@@ -215,7 +215,7 @@ router.put('/users/:userId/medical-exams/:examId', authenticateToken, async (req
  * DELETE /api/v1/users/:userId/medical-exams/:examId
  * Eliminar examen médico
  */
-router.delete('/users/:userId/medical-exams/:examId', authenticateToken, async (req, res) => {
+router.delete('/users/:userId/medical-exams/:examId', auth, async (req, res) => {
     try {
         const { userId, examId } = req.params;
         const { companyId } = req.user;
@@ -256,7 +256,7 @@ router.delete('/users/:userId/medical-exams/:examId', authenticateToken, async (
  * GET /api/v1/medical-exams/expiring
  * Obtener exámenes que vencen pronto (para dashboard)
  */
-router.get('/medical-exams/expiring', authenticateToken, async (req, res) => {
+router.get('/medical-exams/expiring', auth, async (req, res) => {
     try {
         const { companyId } = req.user;
         const days = parseInt(req.query.days) || 30;
@@ -295,7 +295,7 @@ router.get('/medical-exams/expiring', authenticateToken, async (req, res) => {
  * GET /api/v1/users/:userId/medical-exams/latest
  * Obtener último examen médico de un usuario
  */
-router.get('/users/:userId/medical-exams/latest', authenticateToken, async (req, res) => {
+router.get('/users/:userId/medical-exams/latest', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const { companyId } = req.user;

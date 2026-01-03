@@ -1,0 +1,58 @@
+{
+  "module": "auditor",
+  "discoveredAt": "2025-12-29T21:14:09.449Z",
+  "entryPoint": {
+    "text": "📄\n                            Reportes de Auditoría\n                            [COMMERCIAL] Generación de reportes para auditorías externas",
+    "onclick": "showTab('audit-reports', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Generar Reporte",
+      "id": "generateReport",
+      "className": "btn btn-success",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Generación en Lote",
+      "id": "batchGenerate",
+      "className": "btn btn-info",
+      "onclick": null
+    },
+    {
+      "type": "VIEW",
+      "text": "Verificar Reporte",
+      "id": "verifyReport",
+      "className": "btn btn-secondary",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

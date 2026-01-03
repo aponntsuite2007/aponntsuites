@@ -1,0 +1,430 @@
+{
+  "timestamp": "2025-12-27T03:56:08.735Z",
+  "total": 59,
+  "completeWithFrontend": 46,
+  "delegatedWithoutFrontend": 13,
+  "totalComplete": 59,
+  "incomplete": 0,
+  "errors": 0,
+  "coverage": "100%",
+  "details": {
+    "completeWithFrontend": [
+      {
+        "moduleKey": "admin-consent-management",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "art-management",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "associate-marketplace",
+        "score": 9,
+        "maxScore": 10,
+        "issues": [
+          "chaosConfig no habilitado"
+        ]
+      },
+      {
+        "moduleKey": "associate-workflow-panel",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "attendance",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "audit-reports",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "auto-healing-dashboard",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "benefits-management",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "biometric-consent",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "company-email-process",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "compliance-dashboard",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "configurador-modulos",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "dashboard",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "database-sync",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "deploy-manager-3stages",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "dms-dashboard",
+        "score": 9,
+        "maxScore": 10,
+        "issues": [
+          "chaosConfig no habilitado"
+        ]
+      },
+      {
+        "moduleKey": "emotional-analysis",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "employee-360",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "employee-map",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "hour-bank",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "hours-cube-dashboard",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "hse-management",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "inbox",
+        "score": 9,
+        "maxScore": 10,
+        "issues": [
+          "chaosConfig no habilitado"
+        ]
+      },
+      {
+        "moduleKey": "job-postings",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "kiosks",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "legal-dashboard",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "mi-espacio",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "my-procedures",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "notification-center",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "organizational-structure",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "partner-scoring-system",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "payroll-liquidation",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "phase4-integrated-manager",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "positions-management",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "predictive-workforce-dashboard",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "procedures-manual",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "roles-permissions",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "sanctions-management",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "siac-commercial-dashboard",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "sla-tracking",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "support-ai",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "training-management",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "users",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "vacation-management",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "visitors",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      },
+      {
+        "moduleKey": "voice-platform",
+        "score": 10,
+        "maxScore": 10,
+        "issues": []
+      }
+    ],
+    "delegatedWithoutFrontend": [
+      {
+        "moduleKey": "ai-assistant",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: API Backend - Chat con Ollama LLM"
+        ],
+        "isDelegated": true,
+        "delegationReason": "API Backend - Chat con Ollama LLM"
+      },
+      {
+        "moduleKey": "auditor",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: Sistema de Testing - API Routes /api/audit/*"
+        ],
+        "isDelegated": true,
+        "delegationReason": "Sistema de Testing - API Routes /api/audit/*"
+      },
+      {
+        "moduleKey": "companies",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: CRUD vía API - Sin modal dedicado"
+        ],
+        "isDelegated": true,
+        "delegationReason": "CRUD vía API - Sin modal dedicado"
+      },
+      {
+        "moduleKey": "kiosks-apk",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: APK Download Manager - Sin UI web"
+        ],
+        "isDelegated": true,
+        "delegationReason": "APK Download Manager - Sin UI web"
+      },
+      {
+        "moduleKey": "knowledge-base",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: API Backend - Knowledge Graph"
+        ],
+        "isDelegated": true,
+        "delegationReason": "API Backend - Knowledge Graph"
+      },
+      {
+        "moduleKey": "medical-associates",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: Sub-módulo de medical - Integrado en parent"
+        ],
+        "isDelegated": true,
+        "delegationReason": "Sub-módulo de medical - Integrado en parent"
+      },
+      {
+        "moduleKey": "medical",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: Panel médico separado - Ver medical-dashboard-professional.js"
+        ],
+        "isDelegated": true,
+        "delegationReason": "Panel médico separado - Ver medical-dashboard-professional.js"
+      },
+      {
+        "moduleKey": "notifications",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: API Backend - Ver notification-center.js para UI"
+        ],
+        "isDelegated": true,
+        "delegationReason": "API Backend - Ver notification-center.js para UI"
+      },
+      {
+        "moduleKey": "partners",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: Panel separado - Ver partners-admin.js y partners-marketplace.js"
+        ],
+        "isDelegated": true,
+        "delegationReason": "Panel separado - Ver partners-admin.js y partners-marketplace.js"
+      },
+      {
+        "moduleKey": "temporary-access",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: API Backend - Tokens temporales"
+        ],
+        "isDelegated": true,
+        "delegationReason": "API Backend - Tokens temporales"
+      },
+      {
+        "moduleKey": "testing-metrics-dashboard",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: Integrado en engineering-dashboard"
+        ],
+        "isDelegated": true,
+        "delegationReason": "Integrado en engineering-dashboard"
+      },
+      {
+        "moduleKey": "user-support",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: Sistema de tickets - Ver admin-support-tickets-view.js"
+        ],
+        "isDelegated": true,
+        "delegationReason": "Sistema de tickets - Ver admin-support-tickets-view.js"
+      },
+      {
+        "moduleKey": "vendors",
+        "score": 10,
+        "maxScore": 10,
+        "issues": [
+          "✅ DELEGADO: Panel separado - Ver vendor-dashboard.js"
+        ],
+        "isDelegated": true,
+        "delegationReason": "Panel separado - Ver vendor-dashboard.js"
+      }
+    ],
+    "incomplete": [],
+    "errors": []
+  }
+}

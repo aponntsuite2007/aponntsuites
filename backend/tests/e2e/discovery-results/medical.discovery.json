@@ -1,0 +1,142 @@
+{
+  "module": "medical",
+  "discoveredAt": "2025-12-29T23:08:19.347Z",
+  "entryPoint": {
+    "text": "👩‍⚕️\n                            Gestión Médica\n                            [COMMERCIAL] Exámenes preocupacionales, seguimiento médico, aptitudes",
+    "onclick": "showTab('medical', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Actualizar",
+      "id": null,
+      "className": "me-btn me-btn-primary",
+      "onclick": "loadPendingCases_real(); loadEmployeesWithMedicalRecords();"
+    },
+    {
+      "type": "VIEW",
+      "text": "Vista General",
+      "id": null,
+      "className": "me-nav-item active",
+      "onclick": "MedicalEngine.showView('overview')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Candidatos RRHH",
+      "id": null,
+      "className": "me-nav-item",
+      "onclick": "MedicalEngine.showView('candidates')"
+    },
+    {
+      "type": "VIEW",
+      "text": "PRE-Ocupacional",
+      "id": null,
+      "className": "me-nav-item",
+      "onclick": "MedicalEngine.showView('pre')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ocupacional",
+      "id": null,
+      "className": "me-nav-item",
+      "onclick": "MedicalEngine.showView('ocup')"
+    },
+    {
+      "type": "VIEW",
+      "text": "POST-Ocupacional",
+      "id": null,
+      "className": "me-nav-item",
+      "onclick": "MedicalEngine.showView('post')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Legajos 360°",
+      "id": null,
+      "className": "me-nav-item",
+      "onclick": "MedicalEngine.showView('employees')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Notificaciones",
+      "id": null,
+      "className": "me-nav-item",
+      "onclick": "MedicalEngine.showView('notifications')"
+    },
+    {
+      "type": "SEARCH",
+      "text": "Buscar",
+      "id": null,
+      "className": "me-btn me-btn-primary",
+      "onclick": "loadEmployeesWithMedicalRecords()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Diagnosticar",
+      "id": null,
+      "className": "me-btn me-btn-sm me-btn-primary",
+      "onclick": "event.stopPropagation(); openDiagnosisModal('6e80fb3d-b49d-44ed-829f-7b614c299a2f', 'Conchita Cruz L"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Cerrar",
+      "id": null,
+      "className": "me-btn me-btn-sm",
+      "onclick": "event.stopPropagation(); openCloseCaseModal('6e80fb3d-b49d-44ed-829f-7b614c299a2f', 'Conchita Cruz L"
+    },
+    {
+      "type": "VIEW",
+      "text": "Fotos Solicitadas",
+      "id": null,
+      "className": "me-action-btn me-action-photos",
+      "onclick": "showAllEmployeesPhotoRequests()"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Estudios",
+      "id": null,
+      "className": "me-action-btn me-action-studies",
+      "onclick": "showAllEmployeesStudies()"
+    },
+    {
+      "type": "VIEW",
+      "text": "Auditorías Pendientes",
+      "id": null,
+      "className": "me-action-btn me-action-audits",
+      "onclick": "showPendingAudits()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Reporte General",
+      "id": null,
+      "className": "me-action-btn me-action-report",
+      "onclick": "generateGlobalMedicalReport()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

@@ -1,0 +1,79 @@
+{
+  "module": "hour-bank",
+  "discoveredAt": "2025-12-30T15:30:19.751Z",
+  "entryPoint": {
+    "text": "🏦\n                            Banco de Horas\n                            [COMMERCIAL] Acumulación y redención de horas extra",
+    "onclick": "showTab('hour-bank', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "VIEW",
+      "text": "Dashboard",
+      "id": null,
+      "className": "hb-nav-item active",
+      "onclick": "HourBankDashboard.switchView('dashboard')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Fichajes",
+      "id": null,
+      "className": "hb-nav-item ",
+      "onclick": "HourBankDashboard.switchView('fichajes')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Empleados",
+      "id": null,
+      "className": "hb-nav-item ",
+      "onclick": "HourBankDashboard.switchView('employees')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Plantillas",
+      "id": null,
+      "className": "hb-nav-item ",
+      "onclick": "HourBankDashboard.switchView('templates')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Reportes",
+      "id": null,
+      "className": "hb-nav-item ",
+      "onclick": "HourBankDashboard.switchView('reports')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver todos",
+      "id": null,
+      "className": "hb-btn hb-btn-secondary",
+      "onclick": "HourBankDashboard.switchView('employees')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

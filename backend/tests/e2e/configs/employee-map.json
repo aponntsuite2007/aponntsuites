@@ -1,0 +1,23 @@
+{
+  "moduleKey": "employee-map",
+  "moduleName": "️",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T01:44:47.611Z",
+  "discoveryDate": "2025-12-30T01:43:51.310Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"employee-map\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 5,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

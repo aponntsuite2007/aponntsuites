@@ -1,0 +1,30 @@
+{
+  "moduleKey": "associate-marketplace",
+  "moduleName": "‍⚕️",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T11:49:21.214Z",
+  "discoveryDate": "2025-12-30T11:48:33.161Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"associate-marketplace\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 0,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "type": "dashboard",
+  "isDashboard": true,
+  "chaosConfig": {
+    "enabled": false
+  },
+  "skipE2ETesting": true,
+  "isDelegated": true,
+  "delegationReason": "Dashboard sin CRUD - Solo visualización"
+}

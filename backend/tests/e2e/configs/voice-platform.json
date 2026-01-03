@@ -1,0 +1,43 @@
+{
+  "moduleKey": "voice-platform",
+  "moduleName": "Voice Platform",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T18:11:39.051Z",
+  "discoveryDate": "2025-12-30T18:10:49.087Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"voice-platform\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {
+    "create": {
+      "enabled": true,
+      "trigger": {
+        "selector": ".btn btn-primary",
+        "click": true
+      },
+      "modal": {
+        "waitForSelector": "#Modal, .modal.show",
+        "fields": [],
+        "tabs": [],
+        "submitButton": "button:has-text(\"Guardar\"), button:has-text(\"Crear\"), .btn-submit, [onclick*=\"save\"]",
+        "cancelButton": "button:has-text(\"Cancelar\"), button:has-text(\"Cerrar\"), .btn-cancel, [data-dismiss=\"modal\"]"
+      },
+      "validation": {
+        "successMessage": "creado exitosamente, agregado correctamente, guardado con éxito",
+        "listShouldUpdate": true,
+        "checkNewRow": true
+      }
+    }
+  },
+  "validation": {
+    "expectedModals": 1,
+    "expectedActions": 3,
+    "hasCreateAction": true,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

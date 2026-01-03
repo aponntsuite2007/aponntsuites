@@ -1,0 +1,23 @@
+{
+  "moduleKey": "hse-management",
+  "moduleName": "Seguridad e Higiene Laboral (HSE)",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T16:40:31.147Z",
+  "discoveryDate": "2025-12-30T16:39:43.399Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"hse-management\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 1,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

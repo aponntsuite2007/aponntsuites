@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
 
-async function authenticateToken(req, res, next) {
+async function auth(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -45,7 +45,7 @@ const verifyCompanyAccess = (req, res, next) => {
 // 1. DOCUMENTOS PERSONALES (Personal Documents)
 // ============================================================================
 
-router.get('/:userId/documents', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/documents', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -61,7 +61,7 @@ router.get('/:userId/documents', authenticateToken, verifyCompanyAccess, async (
     }
 });
 
-router.post('/:userId/documents', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/documents', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -79,7 +79,7 @@ router.post('/:userId/documents', authenticateToken, verifyCompanyAccess, async 
     }
 });
 
-router.put('/:userId/documents/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/documents/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -100,7 +100,7 @@ router.put('/:userId/documents/:id', authenticateToken, verifyCompanyAccess, asy
     }
 });
 
-router.delete('/:userId/documents/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/documents/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -124,7 +124,7 @@ router.delete('/:userId/documents/:id', authenticateToken, verifyCompanyAccess, 
 // 2. SOLICITUDES DE PERMISOS (Permission Requests)
 // ============================================================================
 
-router.get('/:userId/permissions', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/permissions', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -141,7 +141,7 @@ router.get('/:userId/permissions', authenticateToken, verifyCompanyAccess, async
     }
 });
 
-router.post('/:userId/permissions', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/permissions', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -159,7 +159,7 @@ router.post('/:userId/permissions', authenticateToken, verifyCompanyAccess, asyn
     }
 });
 
-router.put('/:userId/permissions/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/permissions/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -181,7 +181,7 @@ router.put('/:userId/permissions/:id', authenticateToken, verifyCompanyAccess, a
 });
 
 // Aprobar/Rechazar permiso (endpoint especial)
-router.post('/:userId/permissions/:id/approve', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/permissions/:id/approve', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -209,7 +209,7 @@ router.post('/:userId/permissions/:id/approve', authenticateToken, verifyCompany
     }
 });
 
-router.delete('/:userId/permissions/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/permissions/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -233,7 +233,7 @@ router.delete('/:userId/permissions/:id', authenticateToken, verifyCompanyAccess
 // 3. ACCIONES DISCIPLINARIAS (Disciplinary Actions)
 // ============================================================================
 
-router.get('/:userId/disciplinary', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/disciplinary', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -250,7 +250,7 @@ router.get('/:userId/disciplinary', authenticateToken, verifyCompanyAccess, asyn
     }
 });
 
-router.post('/:userId/disciplinary', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/disciplinary', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -269,7 +269,7 @@ router.post('/:userId/disciplinary', authenticateToken, verifyCompanyAccess, asy
     }
 });
 
-router.put('/:userId/disciplinary/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/disciplinary/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -291,7 +291,7 @@ router.put('/:userId/disciplinary/:id', authenticateToken, verifyCompanyAccess, 
 });
 
 // Registrar reconocimiento del empleado (endpoint especial)
-router.post('/:userId/disciplinary/:id/acknowledge', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/disciplinary/:id/acknowledge', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -317,7 +317,7 @@ router.post('/:userId/disciplinary/:id/acknowledge', authenticateToken, verifyCo
     }
 });
 
-router.delete('/:userId/disciplinary/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/disciplinary/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;

@@ -1,0 +1,121 @@
+{
+  "module": "legal-dashboard",
+  "discoveredAt": "2025-12-30T03:46:42.353Z",
+  "entryPoint": {
+    "text": "⚖️\n                            Gestión Legal\n                            [COMMERCIAL] Contratos, vencimientos, alertas legales",
+    "onclick": "showTab('legal-dashboard', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "CREATE",
+      "text": "Crear Nuevo",
+      "id": null,
+      "className": "btn btn-primary btn-create",
+      "onclick": null
+    },
+    {
+      "type": "VIEW",
+      "text": "Dashboard",
+      "id": null,
+      "className": "le-nav-item active",
+      "onclick": "LegalEngine.showView('dashboard')"
+    },
+    {
+      "type": "VIEW",
+      "text": "⚖️ Casos",
+      "id": null,
+      "className": "le-nav-item",
+      "onclick": "LegalEngine.showView('cases')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Comunicaciones",
+      "id": null,
+      "className": "le-nav-item",
+      "onclick": "LegalEngine.showView('communications')"
+    },
+    {
+      "type": "VIEW",
+      "text": "⏰ Vencimientos",
+      "id": null,
+      "className": "le-nav-item",
+      "onclick": "LegalEngine.showView('deadlines')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Tipos",
+      "id": null,
+      "className": "le-nav-item",
+      "onclick": "LegalEngine.showView('types')"
+    },
+    {
+      "type": "CREATE",
+      "text": "Nueva",
+      "id": null,
+      "className": "le-nav-item",
+      "onclick": "LegalEngine.showView('new')"
+    },
+    {
+      "type": "VIEW",
+      "text": "❓ Ayuda",
+      "id": null,
+      "className": "le-nav-item le-nav-help",
+      "onclick": "LegalHelpSystem.showHelp('dashboard')"
+    },
+    {
+      "type": "CREATE",
+      "text": "Nueva Comunicación",
+      "id": null,
+      "className": "le-action-btn",
+      "onclick": "LegalEngine.showView('new')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Comunicaciones",
+      "id": null,
+      "className": "le-action-btn",
+      "onclick": "LegalEngine.showView('communications')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Tipos de Comunicación",
+      "id": null,
+      "className": "le-action-btn",
+      "onclick": "LegalEngine.showView('types')"
+    },
+    {
+      "type": "EXPORT",
+      "text": "Exportar Reporte",
+      "id": null,
+      "className": "le-action-btn",
+      "onclick": "LegalEngine.exportReport()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

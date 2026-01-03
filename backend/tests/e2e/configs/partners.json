@@ -1,0 +1,22 @@
+{
+  "moduleKey": "partners",
+  "moduleName": "‍⚕️",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-29T19:57:53.653Z",
+  "discoveryDate": "2025-12-29T19:57:08.549Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"partners\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 1,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  }
+}

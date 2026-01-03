@@ -1,0 +1,86 @@
+{
+  "module": "hours-cube-dashboard",
+  "discoveredAt": "2025-12-30T13:30:50.214Z",
+  "entryPoint": {
+    "text": "fas fa-cube\n                            Panel Ejecutivo de Horas\n                            [CORE] Cubo OLAP de horas, drill-down multi-nivel, costos de reposición",
+    "onclick": "showTab('hours-cube-dashboard', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "CREATE",
+      "text": "Crear Nuevo",
+      "id": null,
+      "className": "btn btn-primary btn-create",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Actualizar",
+      "id": null,
+      "className": "hcd-btn-refresh",
+      "onclick": "hoursCubeDashboard.refresh()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Resumen General",
+      "id": null,
+      "className": "hcd-tab active",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Métricas Multi-Nivel",
+      "id": null,
+      "className": "hcd-tab",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Cubo de Horas",
+      "id": null,
+      "className": "hcd-tab",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Costos de Reposición",
+      "id": null,
+      "className": "hcd-tab",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Optimizador de Vacaciones",
+      "id": null,
+      "className": "hcd-tab",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

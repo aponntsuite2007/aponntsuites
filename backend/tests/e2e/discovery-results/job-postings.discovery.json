@@ -1,0 +1,389 @@
+{
+  "module": "job-postings",
+  "discoveredAt": "2025-12-30T16:47:21.970Z",
+  "entryPoint": {
+    "text": "💼\n                            Búsquedas Laborales\n                            [COMMERCIAL] Publicación de búsquedas, postulaciones, seguimiento",
+    "onclick": "showTab('job-postings', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "VIEW",
+      "text": "❓ Ayuda",
+      "id": null,
+      "className": "talent-btn talent-btn-secondary",
+      "onclick": "TalentHelp.showDetailedHelp('dashboard')"
+    },
+    {
+      "type": "CREATE",
+      "text": "➕ Nueva Oferta Laboral",
+      "id": null,
+      "className": "talent-btn talent-btn-primary",
+      "onclick": "TalentEngine.showCreateOfferModal()"
+    },
+    {
+      "type": "VIEW",
+      "text": "📊 Dashboard\n                        ?",
+      "id": null,
+      "className": "talent-tab active",
+      "onclick": "TalentEngine.switchView('dashboard')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📋 Ofertas Laborales\n                        ?",
+      "id": null,
+      "className": "talent-tab ",
+      "onclick": "TalentEngine.switchView('offers')"
+    },
+    {
+      "type": "VIEW",
+      "text": "👥 Postulaciones\n                        ?",
+      "id": null,
+      "className": "talent-tab ",
+      "onclick": "TalentEngine.switchView('applications')"
+    },
+    {
+      "type": "VIEW",
+      "text": "🔄 Pipeline\n                        ?",
+      "id": null,
+      "className": "talent-tab ",
+      "onclick": "TalentEngine.switchView('pipeline')"
+    },
+    {
+      "type": "VIEW",
+      "text": "🗣️ Entrevistas\n                        ?",
+      "id": null,
+      "className": "talent-tab ",
+      "onclick": "TalentEngine.switchView('interviews')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📚 Bolsa de CVs\n                        ?",
+      "id": null,
+      "className": "talent-tab ",
+      "onclick": "TalentEngine.switchView('cv_pool')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Ver Todas",
+      "id": null,
+      "className": "talent-btn talent-btn-secondary",
+      "onclick": "TalentEngine.switchView('applications')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [
+    {
+      "type": "CREATE",
+      "triggerAction": "➕ Nueva Oferta Laboral",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Título del Puesto",
+          "type": "text",
+          "tagName": "input",
+          "required": true,
+          "readonly": false,
+          "placeholder": "Ej: Desarrollador Full Stack Senior"
+        },
+        {
+          "name": "department_id",
+          "label": "Departamento",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "job_type",
+          "label": "Tipo de Empleo",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "location",
+          "label": "Ubicación",
+          "type": "text",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Ej: Buenos Aires / Remoto"
+        },
+        {
+          "name": "salary_min",
+          "label": "Salario Mínimo",
+          "type": "number",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": "150000"
+        },
+        {
+          "name": "salary_max",
+          "label": "Salario Máximo",
+          "type": "number",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": "250000"
+        },
+        {
+          "name": "description",
+          "label": "Descripción del Puest",
+          "type": "textarea",
+          "tagName": "textarea",
+          "required": true,
+          "readonly": false,
+          "placeholder": "Describe las responsabilidades y objetivos del puesto..."
+        },
+        {
+          "name": "requirements",
+          "label": "Requisitos",
+          "type": "textarea",
+          "tagName": "textarea",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Lista los requisitos técnicos y experiencia necesaria..."
+        },
+        {
+          "name": "required_docs",
+          "label": "required_docs",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "required_docs",
+          "label": "required_docs",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "required_docs",
+          "label": "required_docs",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "required_docs",
+          "label": "required_docs",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "required_docs",
+          "label": "required_docs",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "required_docs",
+          "label": "required_docs",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        }
+      ],
+      "tabs": [],
+      "tabContents": {
+        "main": {
+          "fields": [
+            {
+              "name": "title",
+              "label": "Título del Puesto",
+              "type": "text",
+              "tagName": "input",
+              "required": true,
+              "readonly": false,
+              "placeholder": "Ej: Desarrollador Full Stack Senior"
+            },
+            {
+              "name": "department_id",
+              "label": "Departamento",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "job_type",
+              "label": "Tipo de Empleo",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "location",
+              "label": "Ubicación",
+              "type": "text",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Ej: Buenos Aires / Remoto"
+            },
+            {
+              "name": "salary_min",
+              "label": "Salario Mínimo",
+              "type": "number",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": "150000"
+            },
+            {
+              "name": "salary_max",
+              "label": "Salario Máximo",
+              "type": "number",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": "250000"
+            },
+            {
+              "name": "description",
+              "label": "Descripción del Puest",
+              "type": "textarea",
+              "tagName": "textarea",
+              "required": true,
+              "readonly": false,
+              "placeholder": "Describe las responsabilidades y objetivos del puesto..."
+            },
+            {
+              "name": "requirements",
+              "label": "Requisitos",
+              "type": "textarea",
+              "tagName": "textarea",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Lista los requisitos técnicos y experiencia necesaria..."
+            },
+            {
+              "name": "required_docs",
+              "label": "required_docs",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "required_docs",
+              "label": "required_docs",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "required_docs",
+              "label": "required_docs",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "required_docs",
+              "label": "required_docs",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "required_docs",
+              "label": "required_docs",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "required_docs",
+              "label": "required_docs",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            }
+          ],
+          "buttons": [
+            {
+              "text": "×",
+              "onclick": "TalentEngine.closeModal('create-offer-modal')"
+            },
+            {
+              "text": "Cancelar",
+              "onclick": "TalentEngine.closeModal('create-offer-modal')"
+            },
+            {
+              "text": "💾 Guardar Borrador",
+              "onclick": "TalentEngine.saveOfferDraft()"
+            },
+            {
+              "text": "🚀 Publicar Oferta",
+              "onclick": "TalentEngine.publishNewOffer()"
+            }
+          ],
+          "sections": [
+            "💼 Nueva Oferta Laboral"
+          ],
+          "tables": []
+        }
+      },
+      "relationships": []
+    }
+  ],
+  "relationships": [],
+  "validations": []
+}

@@ -1,0 +1,795 @@
+{
+  "module": "organizational-structure",
+  "discoveredAt": "2025-12-30T14:47:25.903Z",
+  "entryPoint": {
+    "text": "🏢\n                            Estructura Organizacional\n                            [CORE] Organigrama, departamentos, jerarquías, cargos",
+    "onclick": "showTab('organizational-structure', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "VIEW",
+      "text": "🏢\n                        Departamentos",
+      "id": null,
+      "className": "org-tab active",
+      "onclick": "OrgEngine.showTab('departments')"
+    },
+    {
+      "type": "VIEW",
+      "text": "🏬\n                        Sectores",
+      "id": null,
+      "className": "org-tab",
+      "onclick": "OrgEngine.showTab('sectors')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📜\n                        Convenios",
+      "id": null,
+      "className": "org-tab",
+      "onclick": "OrgEngine.showTab('agreements')"
+    },
+    {
+      "type": "VIEW",
+      "text": "💼\n                        Categorías",
+      "id": null,
+      "className": "org-tab",
+      "onclick": "OrgEngine.showTab('categories')"
+    },
+    {
+      "type": "VIEW",
+      "text": "⏰\n                        Turnos",
+      "id": null,
+      "className": "org-tab",
+      "onclick": "OrgEngine.showTab('shifts')"
+    },
+    {
+      "type": "VIEW",
+      "text": "🏷️\n                        Roles",
+      "id": null,
+      "className": "org-tab",
+      "onclick": "OrgEngine.showTab('roles')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📊\n                        Organigrama",
+      "id": null,
+      "className": "org-tab",
+      "onclick": "OrgEngine.showTab('orgchart')"
+    },
+    {
+      "type": "VIEW",
+      "text": "👔\n                        Posiciones",
+      "id": null,
+      "className": "org-tab",
+      "onclick": "OrgEngine.showTab('positions')"
+    },
+    {
+      "type": "CREATE",
+      "text": "+ Nuevo Departamento",
+      "id": null,
+      "className": "org-btn org-btn-primary",
+      "onclick": "OrgEngine.openDepartmentModal()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "✏️",
+      "id": null,
+      "className": "org-btn org-btn-secondary org-btn-sm",
+      "onclick": "OrgEngine.openDepartmentModal(36)"
+    },
+    {
+      "type": "DELETE",
+      "text": "🗑️",
+      "id": null,
+      "className": "org-btn org-btn-danger org-btn-sm",
+      "onclick": "OrgEngine.deleteDepartment(36)"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [
+    {
+      "type": "CREATE",
+      "triggerAction": "+ Nuevo Departamento",
+      "fields": [
+        {
+          "name": "branch_id",
+          "label": "🏛️ Sucursal:",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "name",
+          "label": "🏢 Nombre *",
+          "type": "text",
+          "tagName": "input",
+          "required": true,
+          "readonly": false,
+          "placeholder": "Ej: Sistemas, RRHH, Operaciones"
+        },
+        {
+          "name": "code",
+          "label": "🔖 Código",
+          "type": "text",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Ej: SIS, RRHH"
+        },
+        {
+          "name": "description",
+          "label": "📝 Descripción",
+          "type": "textarea",
+          "tagName": "textarea",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Descripción del departamento"
+        },
+        {
+          "name": "address",
+          "label": "📍 Dirección",
+          "type": "text",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": "Ej: Piso 3, Oficina 301"
+        },
+        {
+          "name": "allow_gps_attendance",
+          "label": "allow_gps_attendance",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": null,
+          "label": "campo_7",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "authorized_kiosks",
+          "label": "authorized_kiosks",
+          "type": "checkbox",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        }
+      ],
+      "tabs": [],
+      "tabContents": {
+        "main": {
+          "fields": [
+            {
+              "name": "branch_id",
+              "label": "🏛️ Sucursal:",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "name",
+              "label": "🏢 Nombre *",
+              "type": "text",
+              "tagName": "input",
+              "required": true,
+              "readonly": false,
+              "placeholder": "Ej: Sistemas, RRHH, Operaciones"
+            },
+            {
+              "name": "code",
+              "label": "🔖 Código",
+              "type": "text",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Ej: SIS, RRHH"
+            },
+            {
+              "name": "description",
+              "label": "📝 Descripción",
+              "type": "textarea",
+              "tagName": "textarea",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Descripción del departamento"
+            },
+            {
+              "name": "address",
+              "label": "📍 Dirección",
+              "type": "text",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": "Ej: Piso 3, Oficina 301"
+            },
+            {
+              "name": "allow_gps_attendance",
+              "label": "allow_gps_attendance",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": null,
+              "label": "campo_7",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "authorized_kiosks",
+              "label": "authorized_kiosks",
+              "type": "checkbox",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            }
+          ],
+          "buttons": [
+            {
+              "text": "×",
+              "onclick": "OrgEngine.closeModal()"
+            },
+            {
+              "text": "Cancelar",
+              "onclick": "OrgEngine.closeModal()"
+            },
+            {
+              "text": "✅ Crear Departamento",
+              "onclick": "OrgEngine.saveDepartment()"
+            }
+          ],
+          "sections": [
+            "🏢 Nuevo Departamento"
+          ],
+          "tables": []
+        }
+      },
+      "relationships": []
+    }
+  ],
+  "relationships": [],
+  "validations": []
+}

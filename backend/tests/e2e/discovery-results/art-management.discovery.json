@@ -1,0 +1,121 @@
+{
+  "module": "art-management",
+  "discoveredAt": "2025-12-30T14:44:55.355Z",
+  "entryPoint": {
+    "text": "🏥\n                            Gestión de ART\n                            [COMMERCIAL] Accidentes laborales, denuncias ART, seguimiento de casos",
+    "onclick": "showTab('art-management', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "VIEW",
+      "text": "🏢 Aseguradoras",
+      "id": null,
+      "className": "art-tab-btn active",
+      "onclick": "showArtTab('providers')"
+    },
+    {
+      "type": "VIEW",
+      "text": "🩺 Exámenes Médicos",
+      "id": null,
+      "className": "art-tab-btn",
+      "onclick": "showArtTab('exams')"
+    },
+    {
+      "type": "VIEW",
+      "text": "🚨 Accidentes Laborales",
+      "id": null,
+      "className": "art-tab-btn",
+      "onclick": "showArtTab('accidents')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📞 Comunicación ART",
+      "id": null,
+      "className": "art-tab-btn",
+      "onclick": "showArtTab('communication')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📜 Legislación Vigente",
+      "id": null,
+      "className": "art-tab-btn",
+      "onclick": "showArtTab('legislation')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📊 Reportes",
+      "id": null,
+      "className": "art-tab-btn",
+      "onclick": "showArtTab('reports')"
+    },
+    {
+      "type": "CREATE",
+      "text": "➕ Nueva ART",
+      "id": null,
+      "className": "btn btn-primary",
+      "onclick": "addNewArtProvider()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🔄 Sincronizar con SRT",
+      "id": null,
+      "className": "btn btn-info",
+      "onclick": "syncArtProviders()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "✅ Validar Cumplimiento",
+      "id": null,
+      "className": "btn btn-warning",
+      "onclick": "validateArtCompliance()"
+    },
+    {
+      "type": "EDIT",
+      "text": "✏️ Editar",
+      "id": null,
+      "className": "btn btn-sm btn-primary",
+      "onclick": "editArtProvider(1)"
+    },
+    {
+      "type": "VIEW",
+      "text": "👁️ Ver Detalles",
+      "id": null,
+      "className": "btn btn-sm btn-info",
+      "onclick": "viewArtDetails(1)"
+    },
+    {
+      "type": "CREATE",
+      "text": "🔄 Renovar",
+      "id": null,
+      "className": "btn btn-sm btn-warning",
+      "onclick": "renewArtContract(1)"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

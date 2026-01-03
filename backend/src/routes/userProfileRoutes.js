@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
 
-async function authenticateToken(req, res, next) {
+async function auth(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -52,7 +52,7 @@ const verifyCompanyAccess = (req, res, next) => {
 // ============================================================================
 
 // GET - Listar historial laboral
-router.get('/:userId/work-history', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/work-history', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -70,7 +70,7 @@ router.get('/:userId/work-history', authenticateToken, verifyCompanyAccess, asyn
 });
 
 // POST - Crear antecedente laboral
-router.post('/:userId/work-history', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/work-history', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -89,7 +89,7 @@ router.post('/:userId/work-history', authenticateToken, verifyCompanyAccess, asy
 });
 
 // PUT - Actualizar antecedente laboral
-router.put('/:userId/work-history/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/work-history/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -111,7 +111,7 @@ router.put('/:userId/work-history/:id', authenticateToken, verifyCompanyAccess, 
 });
 
 // DELETE - Eliminar antecedente laboral
-router.delete('/:userId/work-history/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/work-history/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -136,7 +136,7 @@ router.delete('/:userId/work-history/:id', authenticateToken, verifyCompanyAcces
 // ============================================================================
 
 // GET - Obtener estado civil
-router.get('/:userId/marital-status', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/marital-status', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -153,7 +153,7 @@ router.get('/:userId/marital-status', authenticateToken, verifyCompanyAccess, as
 });
 
 // POST/PUT - Crear o actualizar estado civil
-router.put('/:userId/marital-status', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/marital-status', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -176,7 +176,7 @@ router.put('/:userId/marital-status', authenticateToken, verifyCompanyAccess, as
 // ============================================================================
 
 // GET - Listar hijos
-router.get('/:userId/children', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/children', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -194,7 +194,7 @@ router.get('/:userId/children', authenticateToken, verifyCompanyAccess, async (r
 });
 
 // POST - Agregar hijo
-router.post('/:userId/children', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/children', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -213,7 +213,7 @@ router.post('/:userId/children', authenticateToken, verifyCompanyAccess, async (
 });
 
 // PUT - Actualizar hijo
-router.put('/:userId/children/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/children/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -235,7 +235,7 @@ router.put('/:userId/children/:id', authenticateToken, verifyCompanyAccess, asyn
 });
 
 // DELETE - Eliminar hijo
-router.delete('/:userId/children/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/children/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -260,7 +260,7 @@ router.delete('/:userId/children/:id', authenticateToken, verifyCompanyAccess, a
 // ============================================================================
 
 // GET - Listar familiares
-router.get('/:userId/family-members', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/family-members', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -277,7 +277,7 @@ router.get('/:userId/family-members', authenticateToken, verifyCompanyAccess, as
 });
 
 // POST - Agregar familiar
-router.post('/:userId/family-members', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/family-members', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -296,7 +296,7 @@ router.post('/:userId/family-members', authenticateToken, verifyCompanyAccess, a
 });
 
 // PUT - Actualizar familiar
-router.put('/:userId/family-members/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/family-members/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -318,7 +318,7 @@ router.put('/:userId/family-members/:id', authenticateToken, verifyCompanyAccess
 });
 
 // DELETE - Eliminar familiar
-router.delete('/:userId/family-members/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/family-members/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -343,7 +343,7 @@ router.delete('/:userId/family-members/:id', authenticateToken, verifyCompanyAcc
 // ============================================================================
 
 // GET - Listar educación
-router.get('/:userId/education', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.get('/:userId/education', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -361,7 +361,7 @@ router.get('/:userId/education', authenticateToken, verifyCompanyAccess, async (
 });
 
 // POST - Agregar educación
-router.post('/:userId/education', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.post('/:userId/education', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
@@ -380,7 +380,7 @@ router.post('/:userId/education', authenticateToken, verifyCompanyAccess, async 
 });
 
 // PUT - Actualizar educación
-router.put('/:userId/education/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.put('/:userId/education/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;
@@ -402,7 +402,7 @@ router.put('/:userId/education/:id', authenticateToken, verifyCompanyAccess, asy
 });
 
 // DELETE - Eliminar educación
-router.delete('/:userId/education/:id', authenticateToken, verifyCompanyAccess, async (req, res) => {
+router.delete('/:userId/education/:id', auth, verifyCompanyAccess, async (req, res) => {
     try {
         const { userId, id } = req.params;
         const companyId = req.user.company_id;

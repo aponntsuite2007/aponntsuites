@@ -1,0 +1,72 @@
+<!-- ============================================================ -->
+<!-- VOICE PLATFORM V2.0 - TARJETAS PARA MI ESPACIO -->
+<!-- Insertar ANTES de la línea 1381 (cierre del grid) -->
+<!-- ============================================================ -->
+
+                    <!-- Card: A MI ME PASO (Búsqueda Inteligente) -->
+                    <div class="mi-espacio-module-card"
+                         style="--card-accent: #FF6B6B; --card-glow: rgba(255, 107, 107, 0.4);"
+                         onclick="if (window.AMiMePaso) { window.AMiMePaso.showSearchModal(); } else { console.error('AMiMePaso no disponible'); }">
+                        <span class="badge-new" style="background: linear-gradient(135deg, #FF6B6B, #FFA500);">NUEVO</span>
+                        <div class="module-icon" style="background: linear-gradient(135deg, #FF6B6B, #FFA500);">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h4>🎯 A MI ME PASO</h4>
+                        <p>Busca soluciones a problemas similares. Encuentra experiencias, procedimientos y noticias relevantes.</p>
+                        <div class="module-actions">
+                            <span class="action-tag"><i class="fas fa-lightbulb"></i> Experiencias</span>
+                            <span class="action-tag"><i class="fas fa-book"></i> Procedimientos</span>
+                            <span class="action-tag"><i class="fas fa-newspaper"></i> Noticias</span>
+                        </div>
+                    </div>
+
+                    <!-- Card: Mis Experiencias (Crear con Wizard) -->
+                    <div class="mi-espacio-module-card"
+                         style="--card-accent: #8B5CF6; --card-glow: rgba(139, 92, 246, 0.4);"
+                         onclick="if (window.VoicePlatformWizard) { window.VoicePlatformWizard.start(); } else { console.error('Wizard no disponible'); }">
+                        <span class="badge-new" style="background: linear-gradient(135deg, #8B5CF6, #EC4899);">NUEVO</span>
+                        <div class="module-icon" style="background: linear-gradient(135deg, #8B5CF6, #EC4899);">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <h4>Compartir Mi Experiencia</h4>
+                        <p>Comparte sugerencias, problemas o soluciones. Ayuda a mejorar procesos con tu conocimiento.</p>
+                        <div class="module-actions">
+                            <span class="action-tag"><i class="fas fa-lightbulb"></i> Sugerencias</span>
+                            <span class="action-tag"><i class="fas fa-exclamation-triangle"></i> Problemas</span>
+                            <span class="action-tag"><i class="fas fa-check-circle"></i> Soluciones</span>
+                        </div>
+                    </div>
+
+                    <!-- Card: Feed de Experiencias (Ver todas) -->
+                    <div class="mi-espacio-module-card"
+                         style="--card-accent: #10B981; --card-glow: rgba(16, 185, 129, 0.4);"
+                         onclick="window.MiEspacio.openSubmodule('voice-platform-feed', 'Feed de Experiencias')">
+                        <span class="badge-new" style="background: linear-gradient(135deg, #10B981, #059669);">NUEVO</span>
+                        <div class="module-icon" style="background: linear-gradient(135deg, #10B981, #059669);">
+                            <i class="fas fa-stream"></i>
+                        </div>
+                        <h4>Feed de Experiencias</h4>
+                        <p>Explora experiencias compartidas por otros empleados. Vota, comenta y aprende de la comunidad.</p>
+                        <div class="module-actions">
+                            <span class="action-tag"><i class="fas fa-fire"></i> Popular</span>
+                            <span class="action-tag"><i class="fas fa-star"></i> Destacadas</span>
+                            <span class="action-tag"><i class="fas fa-comments"></i> Comentarios</span>
+                        </div>
+                    </div>
+
+                    <!-- Card: Noticias de la Empresa -->
+                    <div class="mi-espacio-module-card"
+                         style="--card-accent: #3B82F6; --card-glow: rgba(59, 130, 246, 0.4);"
+                         onclick="window.MiEspacio.openSubmodule('company-news', 'Noticias')">
+                        <span class="badge-new" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">NUEVO</span>
+                        <div class="module-icon" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+                        <h4>Noticias de la Empresa</h4>
+                        <p>Mantente informado sobre mejoras implementadas, reconocimientos y anuncios importantes.</p>
+                        <div class="module-actions">
+                            <span class="action-tag"><i class="fas fa-trophy"></i> Logros</span>
+                            <span class="action-tag"><i class="fas fa-rocket"></i> Mejoras</span>
+                            <span class="action-tag"><i class="fas fa-bullhorn"></i> Anuncios</span>
+                        </div>
+                    </div>

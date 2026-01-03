@@ -1,0 +1,44 @@
+{
+  "module": "inbox",
+  "discoveredAt": "2025-12-30T14:12:15.866Z",
+  "entryPoint": {
+    "text": "📬\n                            Bandeja Notificaciones\n                            [CORE] Centro de notificaciones y mensajes del sistema",
+    "onclick": "showTab('inbox', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Reintentar",
+      "id": null,
+      "className": null,
+      "onclick": "InboxModule.init()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

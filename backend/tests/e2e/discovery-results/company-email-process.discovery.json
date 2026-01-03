@@ -1,0 +1,44 @@
+{
+  "module": "company-email-process",
+  "discoveredAt": "2025-12-30T13:17:18.890Z",
+  "entryPoint": {
+    "text": "📧\n                            Asignación de Emails a Procesos\n                            Configure qué email de la empresa se usa para cada proceso de notificación",
+    "onclick": "showTab('company-email-process', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "IMPORT",
+      "text": "🔄 Recargar Página",
+      "id": null,
+      "className": null,
+      "onclick": "location.reload()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

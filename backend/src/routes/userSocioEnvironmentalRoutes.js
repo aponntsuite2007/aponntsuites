@@ -12,7 +12,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { auth: authenticateToken } = require('../middleware/auth');
+const { auth: auth } = require('../middleware/auth');
 const { User, sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 
@@ -24,7 +24,7 @@ const { QueryTypes } = require('sequelize');
  * GET /api/v1/:userId/household-members
  * Obtener todos los miembros del hogar de un usuario
  */
-router.get('/:userId/household-members', authenticateToken, async (req, res) => {
+router.get('/:userId/household-members', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id || req.user.companyId;
@@ -66,7 +66,7 @@ router.get('/:userId/household-members', authenticateToken, async (req, res) => 
  * POST /api/v1/:userId/household-members
  * Agregar un nuevo miembro del hogar
  */
-router.post('/:userId/household-members', authenticateToken, async (req, res) => {
+router.post('/:userId/household-members', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id || req.user.companyId;
@@ -156,7 +156,7 @@ router.post('/:userId/household-members', authenticateToken, async (req, res) =>
  * PUT /api/v1/:userId/household-members/:memberId
  * Actualizar un miembro del hogar
  */
-router.put('/:userId/household-members/:memberId', authenticateToken, async (req, res) => {
+router.put('/:userId/household-members/:memberId', auth, async (req, res) => {
     try {
         const { userId, memberId } = req.params;
         const companyId = req.user.company_id || req.user.companyId;
@@ -214,7 +214,7 @@ router.put('/:userId/household-members/:memberId', authenticateToken, async (req
  * DELETE /api/v1/:userId/household-members/:memberId
  * Eliminar (desactivar) un miembro del hogar
  */
-router.delete('/:userId/household-members/:memberId', authenticateToken, async (req, res) => {
+router.delete('/:userId/household-members/:memberId', auth, async (req, res) => {
     try {
         const { userId, memberId } = req.params;
         const currentUserId = req.user.user_id || req.user.userId || req.user.id;
@@ -245,7 +245,7 @@ router.delete('/:userId/household-members/:memberId', authenticateToken, async (
  * GET /api/v1/:userId/emergency-contacts
  * Obtener todos los contactos de emergencia de un usuario
  */
-router.get('/:userId/emergency-contacts', authenticateToken, async (req, res) => {
+router.get('/:userId/emergency-contacts', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id || req.user.companyId;
@@ -280,7 +280,7 @@ router.get('/:userId/emergency-contacts', authenticateToken, async (req, res) =>
  * POST /api/v1/:userId/emergency-contacts
  * Agregar un nuevo contacto de emergencia
  */
-router.post('/:userId/emergency-contacts', authenticateToken, async (req, res) => {
+router.post('/:userId/emergency-contacts', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id || req.user.companyId;
@@ -373,7 +373,7 @@ router.post('/:userId/emergency-contacts', authenticateToken, async (req, res) =
  * PUT /api/v1/:userId/emergency-contacts/:contactId
  * Actualizar un contacto de emergencia
  */
-router.put('/:userId/emergency-contacts/:contactId', authenticateToken, async (req, res) => {
+router.put('/:userId/emergency-contacts/:contactId', auth, async (req, res) => {
     try {
         const { userId, contactId } = req.params;
 
@@ -429,7 +429,7 @@ router.put('/:userId/emergency-contacts/:contactId', authenticateToken, async (r
  * DELETE /api/v1/:userId/emergency-contacts/:contactId
  * Eliminar (desactivar) un contacto de emergencia
  */
-router.delete('/:userId/emergency-contacts/:contactId', authenticateToken, async (req, res) => {
+router.delete('/:userId/emergency-contacts/:contactId', auth, async (req, res) => {
     try {
         const { userId, contactId } = req.params;
 
@@ -459,7 +459,7 @@ router.delete('/:userId/emergency-contacts/:contactId', authenticateToken, async
  * GET /api/v1/:userId/socioeconomic-data
  * Obtener todos los datos sociodemográficos de un usuario (usando función PostgreSQL)
  */
-router.get('/:userId/socioeconomic-data', authenticateToken, async (req, res) => {
+router.get('/:userId/socioeconomic-data', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id || req.user.companyId;

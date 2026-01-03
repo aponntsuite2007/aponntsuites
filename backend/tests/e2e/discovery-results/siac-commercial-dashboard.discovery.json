@@ -1,0 +1,114 @@
+{
+  "module": "siac-commercial-dashboard",
+  "discoveredAt": "2025-12-30T00:51:42.194Z",
+  "entryPoint": {
+    "text": "fa-chart-line\n                            SIAC Comercial Integral\n                            Sistema Comercial Completo: Clientes, Facturacion AFIP, Remitos, Ctas Corrientes, Cobranzas, Caja y Plantillas Fiscales",
+    "onclick": "showTab('siac-commercial-dashboard', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "CREATE",
+      "text": "Crear Nuevo",
+      "id": null,
+      "className": "btn btn-primary btn-create",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Actualizar",
+      "id": null,
+      "className": "siac-btn siac-btn-primary",
+      "onclick": "SiacCommercialDashboard.refreshData()"
+    },
+    {
+      "type": "VIEW",
+      "text": "Overview",
+      "id": null,
+      "className": "siac-tab active",
+      "onclick": "SiacCommercialDashboard.switchTab('overview')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Remitos",
+      "id": null,
+      "className": "siac-tab",
+      "onclick": "SiacCommercialDashboard.switchTab('remitos')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Ctas. Corrientes",
+      "id": null,
+      "className": "siac-tab",
+      "onclick": "SiacCommercialDashboard.switchTab('cuenta-corriente')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Cobranzas",
+      "id": null,
+      "className": "siac-tab",
+      "onclick": "SiacCommercialDashboard.switchTab('cobranzas')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Caja",
+      "id": null,
+      "className": "siac-tab",
+      "onclick": "SiacCommercialDashboard.switchTab('caja')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Clientes",
+      "id": null,
+      "className": "siac-tab",
+      "onclick": "SiacCommercialDashboard.switchTab('clientes')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Facturacion",
+      "id": null,
+      "className": "siac-tab",
+      "onclick": "SiacCommercialDashboard.switchTab('facturacion')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Plantillas Fiscales",
+      "id": null,
+      "className": "siac-tab",
+      "onclick": "SiacCommercialDashboard.switchTab('plantillas-fiscales')"
+    },
+    {
+      "type": "VIEW",
+      "text": "Reintentar",
+      "id": null,
+      "className": "siac-btn",
+      "onclick": "SiacCommercialDashboard.loadOverview()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

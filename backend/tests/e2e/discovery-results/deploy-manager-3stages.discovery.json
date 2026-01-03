@@ -1,0 +1,44 @@
+{
+  "module": "deploy-manager-3stages",
+  "discoveredAt": "2025-12-30T13:46:14.002Z",
+  "entryPoint": {
+    "text": "📦\n                            Deploy Manager 3-Stage\n                            [ADMINISTRATIVE] Gestor de despliegue en 3 etapas (dev/staging/prod)",
+    "onclick": "showTab('deploy-manager-3stages', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "IMPORT",
+      "text": "🔄 Recargar Página",
+      "id": null,
+      "className": null,
+      "onclick": "location.reload()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

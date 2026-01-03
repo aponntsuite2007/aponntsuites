@@ -1,0 +1,65 @@
+{
+  "module": "emotional-analysis",
+  "discoveredAt": "2025-12-30T16:16:15.643Z",
+  "entryPoint": {
+    "text": "😊\n                            Análisis Emocional\n                            [COMMERCIAL] Detección de emociones por reconocimiento facial con IA",
+    "onclick": "showTab('emotional-analysis', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🔄 Actualizar",
+      "id": null,
+      "className": null,
+      "onclick": "emotionalAnalysis.refreshData()"
+    },
+    {
+      "type": "VIEW",
+      "text": "📊 Dashboard",
+      "id": "tab-dashboard",
+      "className": "tab-btn active",
+      "onclick": "emotionalAnalysis.switchView('dashboard')"
+    },
+    {
+      "type": "VIEW",
+      "text": "📈 Reportes",
+      "id": "tab-reports",
+      "className": "tab-btn",
+      "onclick": "emotionalAnalysis.switchView('reports')"
+    },
+    {
+      "type": "VIEW",
+      "text": "✅ Cumplimiento Legal",
+      "id": "tab-compliance",
+      "className": "tab-btn",
+      "onclick": "emotionalAnalysis.switchView('compliance')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

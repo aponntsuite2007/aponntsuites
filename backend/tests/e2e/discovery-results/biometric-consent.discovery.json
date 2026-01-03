@@ -1,0 +1,114 @@
+{
+  "module": "biometric-consent",
+  "discoveredAt": "2025-12-30T12:55:43.038Z",
+  "entryPoint": {
+    "text": "📋\n                            Consentimientos y Privacidad\n                            [CORE] Gestión de consentimientos GDPR para datos biométricos",
+    "onclick": "showTab('biometric-consent', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "EXPORT",
+      "text": "📊 Exportar",
+      "id": null,
+      "className": "bc-btn bc-btn-secondary",
+      "onclick": "BiometricConsentEngine.exportData()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📧 Solicitar Pendientes",
+      "id": null,
+      "className": "bc-btn bc-btn-primary",
+      "onclick": "BiometricConsentEngine.requestAllPending()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "👥 Empleados y Consentimientos",
+      "id": null,
+      "className": "bc-tab active",
+      "onclick": "BiometricConsentEngine.switchTab('employees')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📄 Documento Legal",
+      "id": null,
+      "className": "bc-tab ",
+      "onclick": "BiometricConsentEngine.switchTab('document')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🌐 Regulaciones Multi-Pais",
+      "id": null,
+      "className": "bc-tab ",
+      "onclick": "BiometricConsentEngine.switchTab('regulations')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📊 Reportes PDF",
+      "id": null,
+      "className": "bc-tab ",
+      "onclick": "BiometricConsentEngine.switchTab('reports')"
+    },
+    {
+      "type": "SEARCH",
+      "text": "👥 Todos",
+      "id": null,
+      "className": "bc-filter-btn active",
+      "onclick": "BiometricConsentEngine.filter('all')"
+    },
+    {
+      "type": "SEARCH",
+      "text": "✅ Activos",
+      "id": null,
+      "className": "bc-filter-btn ",
+      "onclick": "BiometricConsentEngine.filter('active')"
+    },
+    {
+      "type": "SEARCH",
+      "text": "⏳ Pendientes",
+      "id": null,
+      "className": "bc-filter-btn ",
+      "onclick": "BiometricConsentEngine.filter('pending')"
+    },
+    {
+      "type": "SEARCH",
+      "text": "🚫 Revocados",
+      "id": null,
+      "className": "bc-filter-btn ",
+      "onclick": "BiometricConsentEngine.filter('revoked')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📧",
+      "id": null,
+      "className": "bc-btn-icon",
+      "onclick": "BiometricConsentEngine.sendRequest('48cda7f5-3680-4610-be1a-2bfdcbdb62cb')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

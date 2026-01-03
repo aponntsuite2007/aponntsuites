@@ -1,0 +1,23 @@
+{
+  "moduleKey": "attendance",
+  "moduleName": "Control de Asistencia",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T12:40:13.531Z",
+  "discoveryDate": "2025-12-30T12:39:52.639Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"attendance\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 12,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

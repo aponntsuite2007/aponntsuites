@@ -1,0 +1,18 @@
+// ============================================================================
+// INSERTAR DESPUÉS DE LA LÍNEA 3289 (después de Voice Platform routes)
+// ============================================================================
+
+// ✅ CONFIGURAR A MI ME PASO (Búsqueda Inteligente Multi-Fuente)
+const aMiMePasoRoutes = require('./src/routes/aMiMePasoRoutes');
+app.use('/api/a-mi-me-paso', aMiMePasoRoutes);
+
+console.log('🎯 [A MI ME PASO] Asistente de Conocimiento Personal ACTIVO:');
+console.log('   🔍 POST /api/a-mi-me-paso/search - Búsqueda multi-fuente inteligente');
+console.log('   📊 GET  /api/a-mi-me-paso/popular-searches - Búsquedas populares');
+console.log('   🕵️  GET  /api/a-mi-me-paso/knowledge-gaps - Gaps de conocimiento (admin)');
+console.log('   👍 POST /api/a-mi-me-paso/feedback - Registrar feedback de búsqueda');
+console.log('   💡 POST /api/a-mi-me-paso/autocomplete - Sugerencias de autocompletado');
+console.log('   🧠 Busca en: Experiencias, Procedimientos, Noticias, Mis Aportes');
+console.log('   ⚡ Scoring inteligente con boosts por departamento, recencia y popularidad');
+
+// ============================================================================

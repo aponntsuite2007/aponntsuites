@@ -1,0 +1,142 @@
+{
+  "moduleKey": "job-postings",
+  "moduleName": "Búsquedas Laborales",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T16:48:15.251Z",
+  "discoveryDate": "2025-12-30T16:47:21.970Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"job-postings\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {
+    "create": {
+      "enabled": true,
+      "trigger": {
+        "selector": ".talent-btn talent-btn-primary",
+        "click": true
+      },
+      "modal": {
+        "waitForSelector": "#Modal, .modal.show",
+        "fields": [
+          {
+            "label": "Título del Puesto",
+            "selector": "[name=\"title\"]",
+            "type": "text",
+            "required": true,
+            "testValue": "TEST_Título del Puesto_1767113295251"
+          },
+          {
+            "label": "Departamento",
+            "selector": "[name=\"department_id\"]",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "Tipo de Empleo",
+            "selector": "[name=\"job_type\"]",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "Ubicación",
+            "selector": "[name=\"location\"]",
+            "type": "text",
+            "required": false,
+            "testValue": "TEST_Ubicación_1767113295251"
+          },
+          {
+            "label": "Salario Mínimo",
+            "selector": "[name=\"salary_min\"]",
+            "type": "number",
+            "required": false,
+            "testValue": 123
+          },
+          {
+            "label": "Salario Máximo",
+            "selector": "[name=\"salary_max\"]",
+            "type": "number",
+            "required": false,
+            "testValue": 123
+          },
+          {
+            "label": "Descripción del Puest",
+            "selector": "[name=\"description\"]",
+            "type": "textarea",
+            "required": true,
+            "testValue": "TEST_Descripción del Puest_1767113295251"
+          },
+          {
+            "label": "Requisitos",
+            "selector": "[name=\"requirements\"]",
+            "type": "textarea",
+            "required": false,
+            "testValue": "TEST_Requisitos_1767113295251"
+          },
+          {
+            "label": "required_docs",
+            "selector": "[name=\"required_docs\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "required_docs",
+            "selector": "[name=\"required_docs\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "required_docs",
+            "selector": "[name=\"required_docs\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "required_docs",
+            "selector": "[name=\"required_docs\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "required_docs",
+            "selector": "[name=\"required_docs\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "required_docs",
+            "selector": "[name=\"required_docs\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          }
+        ],
+        "tabs": [],
+        "submitButton": "button:has-text(\"Guardar\"), button:has-text(\"Crear\"), .btn-submit, [onclick*=\"save\"]",
+        "cancelButton": "button:has-text(\"Cancelar\"), button:has-text(\"Cerrar\"), .btn-cancel, [data-dismiss=\"modal\"]"
+      },
+      "validation": {
+        "successMessage": "creado exitosamente, agregado correctamente, guardado con éxito",
+        "listShouldUpdate": true,
+        "checkNewRow": true
+      }
+    }
+  },
+  "validation": {
+    "expectedModals": 1,
+    "expectedActions": 9,
+    "hasCreateAction": true,
+    "hasViewAction": false,
+    "totalFields": 14,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

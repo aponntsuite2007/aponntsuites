@@ -1,0 +1,44 @@
+{
+  "module": "notification-center",
+  "discoveredAt": "2025-12-30T14:33:59.412Z",
+  "entryPoint": {
+    "text": "🔔\n                            Centro de Notificaciones\n                            [CORE] Sistema unificado de notificaciones con workflows y SLA",
+    "onclick": "showTab('notification-center', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "Actualizar",
+      "id": null,
+      "className": "btn-refresh nc-tooltip",
+      "onclick": "NotificationCenter.loadInbox()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

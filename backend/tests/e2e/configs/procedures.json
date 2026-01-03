@@ -1,0 +1,134 @@
+{
+  "moduleKey": "procedures",
+  "moduleName": "Manual de Procedimientos",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-28T23:03:19.626Z",
+  "discoveryDate": "2025-12-28T21:57:43.654Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"procedures\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {
+    "create": {
+      "enabled": true,
+      "trigger": {
+        "selector": ".pm-btn pm-btn-primary",
+        "click": true
+      },
+      "modal": {
+        "waitForSelector": "#Modal, .modal.show",
+        "fields": [
+          {
+            "label": "Código",
+            "selector": "[name=\"code\"]",
+            "type": "text",
+            "required": false,
+            "testValue": "TEST_Código_1766962999627"
+          },
+          {
+            "label": "Tipo de Documento *",
+            "selector": "[name=\"type\"]",
+            "type": "select",
+            "required": true,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "Seleccionar Procedimiento",
+            "selector": "[name=\"parent_id\"]",
+            "type": "select",
+            "required": true,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "Título *",
+            "selector": "[name=\"title\"]",
+            "type": "text",
+            "required": true,
+            "testValue": "TEST_Título *_1766962999627"
+          },
+          {
+            "label": "Objetivo",
+            "selector": "[name=\"objective\"]",
+            "type": "textarea",
+            "required": false,
+            "testValue": "TEST_Objetivo_1766962999627"
+          },
+          {
+            "label": "Alcance",
+            "selector": "[name=\"scope\"]",
+            "type": "textarea",
+            "required": false,
+            "testValue": "TEST_Alcance_1766962999627"
+          },
+          {
+            "label": "Definiciones y Terminología",
+            "selector": "[name=\"definitions\"]",
+            "type": "textarea",
+            "required": false,
+            "testValue": "TEST_Definiciones y Terminología_1766962999627"
+          },
+          {
+            "label": "Responsabilidades",
+            "selector": "[name=\"responsibilities\"]",
+            "type": "textarea",
+            "required": false,
+            "testValue": "TEST_Responsabilidades_1766962999627"
+          },
+          {
+            "label": "Descripción del Procedimiento",
+            "selector": "[name=\"procedure_content\"]",
+            "type": "textarea",
+            "required": false,
+            "testValue": "TEST_Descripción del Procedimiento_1766962999627"
+          },
+          {
+            "label": "Fecha de Vigencia",
+            "selector": "[name=\"effective_date\"]",
+            "type": "date",
+            "required": false,
+            "testValue": "2025-12-31"
+          },
+          {
+            "label": "Fecha de Caducidad (opcio",
+            "selector": "[name=\"expiry_date\"]",
+            "type": "date",
+            "required": false,
+            "testValue": "2025-12-31"
+          },
+          {
+            "label": "Tipo de Alcance",
+            "selector": "[name=\"scope_type\"]",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "is_critical",
+            "selector": "[name=\"is_critical\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          }
+        ],
+        "tabs": [],
+        "submitButton": "button:has-text(\"Guardar\"), button:has-text(\"Crear\"), .btn-submit, [onclick*=\"save\"]",
+        "cancelButton": "button:has-text(\"Cancelar\"), button:has-text(\"Cerrar\"), .btn-cancel, [data-dismiss=\"modal\"]"
+      },
+      "validation": {
+        "successMessage": "creado exitosamente, agregado correctamente, guardado con éxito",
+        "listShouldUpdate": true,
+        "checkNewRow": true
+      }
+    }
+  },
+  "validation": {
+    "expectedModals": 1,
+    "expectedActions": 10,
+    "hasCreateAction": true,
+    "hasViewAction": false,
+    "totalFields": 13,
+    "totalTabs": 0
+  }
+}

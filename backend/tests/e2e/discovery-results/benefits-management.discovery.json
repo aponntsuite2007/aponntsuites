@@ -1,0 +1,31 @@
+{
+  "module": "benefits-management",
+  "discoveredAt": "2025-12-30T15:32:30.008Z",
+  "entryPoint": {},
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚀 Iniciar Sesión",
+      "id": "loginButton",
+      "className": "btn-primary",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

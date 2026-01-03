@@ -1,0 +1,158 @@
+{
+  "ai-assistant": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "companies": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "kiosks-apk": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "knowledge-base": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "medical-associates": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "medical": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "notifications": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "partners": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "support-ai": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "temporary-access": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "testing-metrics-dashboard": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "user-support": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "vendors": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": false,
+    "hasIntegration": false
+  },
+  "admin-consent-management": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "associate-workflow-panel": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "benefits-management": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "configurador-modulos": {
+    "createdDate": "2025-12-23",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "database-sync": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "deploy-manager-3stages": {
+    "createdDate": "2025-12-23",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "hours-cube-dashboard": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "hse-management": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "mi-espacio": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "notification-center": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "partner-scoring-system": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "phase4-integrated-manager": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  },
+  "siac-commercial-dashboard": {
+    "createdDate": "2025-12-26",
+    "description": "N/A",
+    "hasJS": true,
+    "hasIntegration": false
+  }
+}

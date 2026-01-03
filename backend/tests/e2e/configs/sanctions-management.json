@@ -1,0 +1,100 @@
+{
+  "moduleKey": "sanctions-management",
+  "moduleName": "⚖️",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T17:41:00.510Z",
+  "discoveryDate": "2025-12-30T17:38:07.603Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"sanctions-management\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {
+    "create": {
+      "enabled": true,
+      "trigger": {
+        "selector": ".btn-new-sanction",
+        "click": true
+      },
+      "modal": {
+        "waitForSelector": "#Modal, .modal.show",
+        "fields": [
+          {
+            "label": "👤 Empleado *",
+            "selector": "[name=\"employee_id\"]",
+            "type": "select",
+            "required": true,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "📂 Tipo de Sanció",
+            "selector": "[name=\"sanction_type_id\"]",
+            "type": "select",
+            "required": true,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "severity",
+            "selector": "[name=\"severity\"]",
+            "type": "select",
+            "required": true,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "📌 Categoría",
+            "selector": "[name=\"category\"]",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "📋 Título *",
+            "selector": "[name=\"title\"]",
+            "type": "text",
+            "required": true,
+            "testValue": "TEST_📋 Título *_1767116460510"
+          },
+          {
+            "label": "📝 Descripción Detall",
+            "selector": "[name=\"description\"]",
+            "type": "textarea",
+            "required": true,
+            "testValue": "TEST_📝 Descripción Detall_1767116460510"
+          },
+          {
+            "label": "📬 Método de Noti",
+            "selector": "[name=\"delivery_method\"]",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "📎 Evidencia (Ref",
+            "selector": "[name=\"evidence_notes\"]",
+            "type": "text",
+            "required": false,
+            "testValue": "TEST_📎 Evidencia (Ref_1767116460510"
+          }
+        ],
+        "tabs": [],
+        "submitButton": "button:has-text(\"Guardar\"), button:has-text(\"Crear\"), .btn-submit, [onclick*=\"save\"]",
+        "cancelButton": "button:has-text(\"Cancelar\"), button:has-text(\"Cerrar\"), .btn-cancel, [data-dismiss=\"modal\"]"
+      },
+      "validation": {
+        "successMessage": "creado exitosamente, agregado correctamente, guardado con éxito",
+        "listShouldUpdate": true,
+        "checkNewRow": true
+      }
+    }
+  },
+  "validation": {
+    "expectedModals": 1,
+    "expectedActions": 2,
+    "hasCreateAction": true,
+    "hasViewAction": false,
+    "totalFields": 8,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

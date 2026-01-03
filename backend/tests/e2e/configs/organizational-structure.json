@@ -1,0 +1,296 @@
+{
+  "moduleKey": "organizational-structure",
+  "moduleName": "Estructura Organizacional",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T14:48:57.439Z",
+  "discoveryDate": "2025-12-30T14:47:25.903Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"organizational-structure\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {
+    "create": {
+      "enabled": true,
+      "trigger": {
+        "selector": ".org-btn org-btn-primary",
+        "click": true
+      },
+      "modal": {
+        "waitForSelector": "#Modal, .modal.show",
+        "fields": [
+          {
+            "label": "🏛️ Sucursal:",
+            "selector": "[name=\"branch_id\"]",
+            "type": "select",
+            "required": false,
+            "testValue": "option:nth-child(2)"
+          },
+          {
+            "label": "🏢 Nombre *",
+            "selector": "[name=\"name\"]",
+            "type": "text",
+            "required": true,
+            "testValue": "TEST_Nombre 1767106137439"
+          },
+          {
+            "label": "🔖 Código",
+            "selector": "[name=\"code\"]",
+            "type": "text",
+            "required": false,
+            "testValue": "TEST_🔖 Código_1767106137439"
+          },
+          {
+            "label": "📝 Descripción",
+            "selector": "[name=\"description\"]",
+            "type": "textarea",
+            "required": false,
+            "testValue": "TEST_📝 Descripción_1767106137439"
+          },
+          {
+            "label": "📍 Dirección",
+            "selector": "[name=\"address\"]",
+            "type": "text",
+            "required": false,
+            "testValue": "TEST_📍 Dirección_1767106137439"
+          },
+          {
+            "label": "allow_gps_attendance",
+            "selector": "[name=\"allow_gps_attendance\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "campo_7",
+            "selector": "input[type=\"checkbox\"]:nth-of-type(7)",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          },
+          {
+            "label": "authorized_kiosks",
+            "selector": "[name=\"authorized_kiosks\"]",
+            "type": "checkbox",
+            "required": false,
+            "testValue": true
+          }
+        ],
+        "tabs": [],
+        "submitButton": "button:has-text(\"Guardar\"), button:has-text(\"Crear\"), .btn-submit, [onclick*=\"save\"]",
+        "cancelButton": "button:has-text(\"Cancelar\"), button:has-text(\"Cerrar\"), .btn-cancel, [data-dismiss=\"modal\"]"
+      },
+      "validation": {
+        "successMessage": "creado exitosamente, agregado correctamente, guardado con éxito",
+        "listShouldUpdate": true,
+        "checkNewRow": true
+      }
+    }
+  },
+  "validation": {
+    "expectedModals": 1,
+    "expectedActions": 10,
+    "hasCreateAction": true,
+    "hasViewAction": false,
+    "totalFields": 36,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

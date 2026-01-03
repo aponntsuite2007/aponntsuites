@@ -1,0 +1,22 @@
+{
+  "moduleKey": "hours-cube-dashboard",
+  "moduleName": "fas fa-cube",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T13:31:10.591Z",
+  "discoveryDate": "2025-12-30T13:30:50.214Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"hours-cube-dashboard\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 1,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  }
+}

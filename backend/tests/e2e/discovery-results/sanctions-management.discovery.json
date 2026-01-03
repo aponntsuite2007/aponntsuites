@@ -1,0 +1,265 @@
+{
+  "module": "sanctions-management",
+  "discoveredAt": "2025-12-30T17:38:07.603Z",
+  "entryPoint": {
+    "text": "⚖️\n                            Gestión de Sanciones\n                            [COMMERCIAL] Amonestaciones, suspensiones, historial disciplinario",
+    "onclick": "showTab('sanctions-management', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "CREATE",
+      "text": "➕ Nueva Solicitud",
+      "id": null,
+      "className": "btn-new-sanction",
+      "onclick": "SanctionsManagement.showCreateModal()"
+    },
+    {
+      "type": "VIEW",
+      "text": "📥 Mis Pendientes",
+      "id": null,
+      "className": "sanctions-tab active",
+      "onclick": "SanctionsManagement.switchTab('pending-review')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📋 Todas",
+      "id": null,
+      "className": "sanctions-tab ",
+      "onclick": "SanctionsManagement.switchTab('all')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🚨 Activas",
+      "id": null,
+      "className": "sanctions-tab ",
+      "onclick": "SanctionsManagement.switchTab('active')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "⛔ Suspensiones",
+      "id": null,
+      "className": "sanctions-tab ",
+      "onclick": "SanctionsManagement.switchTab('suspensions')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📜 Historial",
+      "id": null,
+      "className": "sanctions-tab ",
+      "onclick": "SanctionsManagement.switchTab('history')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "📂 Catálogo",
+      "id": null,
+      "className": "sanctions-tab ",
+      "onclick": "SanctionsManagement.switchTab('types')"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [
+    {
+      "type": "CREATE",
+      "triggerAction": "➕ Nueva Solicitud",
+      "fields": [
+        {
+          "name": "employee_id",
+          "label": "👤 Empleado *",
+          "type": "select",
+          "tagName": "select",
+          "required": true,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "sanction_type_id",
+          "label": "📂 Tipo de Sanció",
+          "type": "select",
+          "tagName": "select",
+          "required": true,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "severity",
+          "label": "severity",
+          "type": "select",
+          "tagName": "select",
+          "required": true,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "category",
+          "label": "📌 Categoría",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "title",
+          "label": "📋 Título *",
+          "type": "text",
+          "tagName": "input",
+          "required": true,
+          "readonly": false,
+          "placeholder": "Ej: Llegadas tardías reiteradas"
+        },
+        {
+          "name": "description",
+          "label": "📝 Descripción Detall",
+          "type": "textarea",
+          "tagName": "textarea",
+          "required": true,
+          "readonly": false,
+          "placeholder": "Describa detalladamente el motivo de la sanción, incluyendo fechas, hechos y cualquier evidencia relevante..."
+        },
+        {
+          "name": "delivery_method",
+          "label": "📬 Método de Noti",
+          "type": "select",
+          "tagName": "select",
+          "required": false,
+          "readonly": false,
+          "placeholder": null
+        },
+        {
+          "name": "evidence_notes",
+          "label": "📎 Evidencia (Ref",
+          "type": "text",
+          "tagName": "input",
+          "required": false,
+          "readonly": false,
+          "placeholder": "IDs de documentos, testigos, registros..."
+        }
+      ],
+      "tabs": [],
+      "tabContents": {
+        "main": {
+          "fields": [
+            {
+              "name": "employee_id",
+              "label": "👤 Empleado *",
+              "type": "select",
+              "tagName": "select",
+              "required": true,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "sanction_type_id",
+              "label": "📂 Tipo de Sanció",
+              "type": "select",
+              "tagName": "select",
+              "required": true,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "severity",
+              "label": "severity",
+              "type": "select",
+              "tagName": "select",
+              "required": true,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "category",
+              "label": "📌 Categoría",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "title",
+              "label": "📋 Título *",
+              "type": "text",
+              "tagName": "input",
+              "required": true,
+              "readonly": false,
+              "placeholder": "Ej: Llegadas tardías reiteradas"
+            },
+            {
+              "name": "description",
+              "label": "📝 Descripción Detall",
+              "type": "textarea",
+              "tagName": "textarea",
+              "required": true,
+              "readonly": false,
+              "placeholder": "Describa detalladamente el motivo de la sanción, incluyendo fechas, hechos y cualquier evidencia relevante..."
+            },
+            {
+              "name": "delivery_method",
+              "label": "📬 Método de Noti",
+              "type": "select",
+              "tagName": "select",
+              "required": false,
+              "readonly": false,
+              "placeholder": null
+            },
+            {
+              "name": "evidence_notes",
+              "label": "📎 Evidencia (Ref",
+              "type": "text",
+              "tagName": "input",
+              "required": false,
+              "readonly": false,
+              "placeholder": "IDs de documentos, testigos, registros..."
+            }
+          ],
+          "buttons": [
+            {
+              "text": "×",
+              "onclick": "SanctionsManagement.closeModals()"
+            },
+            {
+              "text": "Cancelar",
+              "onclick": "SanctionsManagement.closeModals()"
+            },
+            {
+              "text": "📝 Crear como Borrador",
+              "onclick": null
+            }
+          ],
+          "sections": [
+            "📝 Nueva Solicitud de Sanción",
+            "Flujo de Aprobación",
+            "⛔ Configuración de Suspensión"
+          ],
+          "tables": []
+        }
+      },
+      "relationships": []
+    }
+  ],
+  "relationships": [],
+  "validations": []
+}

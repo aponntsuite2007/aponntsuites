@@ -1,0 +1,37 @@
+{
+  "module": "dashboard",
+  "discoveredAt": "2025-12-30T13:34:12.412Z",
+  "entryPoint": {
+    "text": "📊\n                            Dashboard Principal\n                            [CORE] Panel principal con KPIs y resumen ejecutivo de la empresa",
+    "onclick": "showTab('dashboard', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}

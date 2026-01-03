@@ -1,0 +1,36 @@
+{
+  "moduleKey": "auto-healing-dashboard",
+  "moduleName": "Dashboard de Auto-Healing",
+  "type": "dashboard",
+  "generatedFrom": "manual-fix",
+  "generatedAt": "2025-12-30T01:00:00.000Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"auto-healing-dashboard\"]",
+    "waitForSelector": ".dashboard-content, .auto-healing-container, .card, .stats, #mainContent",
+    "click": true,
+    "timeout": 8000
+  },
+  "actions": {
+    "navigate": {
+      "enabled": true,
+      "description": "Dashboard sin CRUD - solo navegación"
+    }
+  },
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 0,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0,
+    "isDashboard": true
+  },
+  "waitForSelector": "#mainContent",
+  "isDashboard": true,
+  "chaosConfig": {
+    "enabled": false
+  },
+  "skipE2ETesting": true,
+  "isDelegated": true,
+  "delegationReason": "Dashboard sin CRUD - Solo visualización"
+}

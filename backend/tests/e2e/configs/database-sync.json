@@ -1,0 +1,23 @@
+{
+  "moduleKey": "database-sync",
+  "moduleName": "Sincronización de BD",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-29T18:51:02.068Z",
+  "discoveryDate": "2025-12-29T18:50:16.622Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"database-sync\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 0,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

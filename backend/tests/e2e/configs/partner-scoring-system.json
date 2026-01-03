@@ -1,0 +1,23 @@
+{
+  "moduleKey": "partner-scoring-system",
+  "moduleName": "Sistema de Scoring de Partners",
+  "generatedFrom": "discovery",
+  "generatedAt": "2025-12-30T14:57:54.592Z",
+  "discoveryDate": "2025-12-30T14:57:24.910Z",
+  "entryPoint": {
+    "selector": "[onclick*=\"partner-scoring-system\"]",
+    "waitForSelector": "table tbody tr, .btn-add, .btn-create, .dashboard-content",
+    "click": true,
+    "timeout": 5000
+  },
+  "actions": {},
+  "validation": {
+    "expectedModals": 0,
+    "expectedActions": 1,
+    "hasCreateAction": false,
+    "hasViewAction": false,
+    "totalFields": 0,
+    "totalTabs": 0
+  },
+  "waitForSelector": "#mainContent"
+}

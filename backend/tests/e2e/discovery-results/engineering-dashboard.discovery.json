@@ -1,0 +1,44 @@
+{
+  "module": "engineering-dashboard",
+  "discoveredAt": "2025-12-30T14:03:08.671Z",
+  "entryPoint": {
+    "text": "📦\n                            Dashboard de Ingeniería\n                            [ADMINISTRATIVE] Panel de control de desarrollo con Gantt, PERT, roadmap, métricas",
+    "onclick": "showTab('engineering-dashboard', this)",
+    "dataModule": null,
+    "id": null,
+    "selector": null
+  },
+  "actions": [
+    {
+      "type": "UNKNOWN",
+      "text": "🚪 Salir",
+      "id": null,
+      "className": null,
+      "onclick": "cerrarSesion()"
+    },
+    {
+      "type": "CREATE",
+      "text": "Crear Nuevo",
+      "id": null,
+      "className": "btn btn-primary btn-create",
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🤖",
+      "id": "ai-assistant-button",
+      "className": null,
+      "onclick": null
+    },
+    {
+      "type": "UNKNOWN",
+      "text": "🎯",
+      "id": null,
+      "className": "brain-tour-launcher",
+      "onclick": null
+    }
+  ],
+  "modals": [],
+  "relationships": [],
+  "validations": []
+}
