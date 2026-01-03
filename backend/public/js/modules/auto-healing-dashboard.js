@@ -67,11 +67,26 @@ const AutoHealingDashboard = {
         <!-- Header -->
         <div style="margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 15px;">
           <h2 style="margin: 0 0 10px 0; color: var(--text-primary); font-size: 24px; font-weight: 600;">
-            🔧 Auto-Healing Cycle
+            🔧 Auto-Healing Cycle - Testing Automático Completo
           </h2>
-          <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">
-            Sistema automático de testing y actualización del Brain metadata
+          <p style="margin: 0 0 10px 0; color: var(--text-secondary); font-size: 14px;">
+            Sistema automático de testing, análisis IA, auto-reparación y actualización del Brain metadata
           </p>
+          <!-- Banner explicativo -->
+          <div style="background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; padding: 15px; margin-top: 15px; border-radius: 6px;">
+            <div style="color: #3b82f6; font-weight: 600; font-size: 13px; margin-bottom: 8px;">⚡ ¿Cuándo usar Auto-Healing?</div>
+            <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+              <li>Testeo <strong>automático completo</strong> de TODOS los módulos de la empresa</li>
+              <li><strong>Análisis de errores con IA</strong> (Ollama) + generación de tickets</li>
+              <li><strong>Auto-reparación</strong> de errores detectados</li>
+              <li><strong>Ciclos iterativos</strong> hasta que todos los módulos pasen</li>
+              <li><strong>Actualización automática</strong> del Brain metadata</li>
+              <li>Reportes técnicos completos con métricas agregadas</li>
+            </ul>
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(59, 130, 246, 0.2); color: var(--text-muted); font-size: 12px;">
+              💡 <strong>Diferencia con E2E Testing Advanced:</strong> E2E Advanced es para testing <em>manual selectivo</em> de módulos específicos. Auto-Healing es un <em>sistema completo automatizado</em> que incluye testing + IA + reparación.
+            </div>
+          </div>
         </div>
 
         <!-- Métricas -->
