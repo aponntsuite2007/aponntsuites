@@ -20,11 +20,15 @@ var currentVisitor = window.currentVisitor;
 var departmentsList = window.departmentsList;
 var employeesList = window.employeesList;
 
-// CSS del módulo
+// CSS del módulo - DARK THEME COMPATIBLE
 const visitorsStyleElement = document.createElement('style');
 visitorsStyleElement.id = 'visitors-module-styles';
 visitorsStyleElement.textContent = `
-    /* Estilos del módulo de visitantes */
+    /* Estilos del módulo de visitantes - DARK THEME */
+    .visitors-container {
+        padding: 20px;
+    }
+
     .visitors-header {
         display: flex !important;
         justify-content: space-between !important;
@@ -38,85 +42,104 @@ visitorsStyleElement.textContent = `
     }
 
     .visitors-header h2 {
-        font-size: 1.5rem !important;
-        font-weight: bold !important;
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
         margin: 0 0 0.5rem 0 !important;
+        color: var(--text-primary);
     }
 
     .visitors-header p {
-        color: #6c757d !important;
+        color: var(--text-muted) !important;
         margin: 0 !important;
+        font-size: 0.95rem;
     }
 
+    /* Status badges con dark theme */
     .visitor-status-badge {
         display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        font-size: 0.875rem;
-        font-weight: 500;
+        padding: 0.35rem 0.85rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
     }
 
     .visitor-status-pending {
-        background-color: #fff3cd;
-        color: #856404;
+        background-color: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.3);
     }
 
     .visitor-status-authorized {
-        background-color: #d4edda;
-        color: #155724;
+        background-color: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.3);
     }
 
     .visitor-status-rejected {
-        background-color: #f8d7da;
-        color: #721c24;
+        background-color: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
     }
 
     .visitor-status-completed {
-        background-color: #d1ecf1;
-        color: #0c5460;
+        background-color: rgba(23, 162, 184, 0.15);
+        color: #17a2b8;
+        border: 1px solid rgba(23, 162, 184, 0.3);
     }
 
+    /* Cards con dark theme */
     .visitor-card {
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 1rem;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
         margin-bottom: 1rem;
-        background: white;
+        background: var(--bg-card);
+        transition: all 0.3s ease;
     }
 
     .visitor-card:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
     }
 
     .visitor-card-header {
         display: flex;
         justify-content: space-between;
         align-items: start;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
     }
 
     .visitor-card-title {
-        font-weight: bold;
-        font-size: 1.1rem;
-        color: #212529;
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: var(--text-primary);
     }
 
     .visitor-card-body {
-        color: #6c757d;
+        color: var(--text-muted);
         font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .visitor-card-body > div {
+        margin-bottom: 0.4rem;
     }
 
     .visitor-card-actions {
-        margin-top: 0.75rem;
+        margin-top: 1rem;
         display: flex;
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
+    /* Filtros con dark theme */
     .visitor-filters {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 8px;
+        background: var(--bg-secondary);
+        padding: 1.25rem;
+        border-radius: 12px;
         margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
     }
 
     .visitor-filters .row {
@@ -130,6 +153,29 @@ visitorsStyleElement.textContent = `
         min-width: 200px;
     }
 
+    .visitor-filters label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .visitor-filters .form-control {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        border-radius: 8px;
+        padding: 0.6rem 0.9rem;
+    }
+
+    .visitor-filters .form-control:focus {
+        background: var(--bg-card);
+        border-color: var(--accent);
+        color: var(--text-primary);
+    }
+
+    /* Modal con dark theme */
     #visitorModal .modal-dialog {
         max-width: 700px !important;
     }
@@ -144,26 +190,92 @@ visitorsStyleElement.textContent = `
         opacity: 1 !important;
     }
 
+    #visitorModal .modal-content {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+    }
+
+    #visitorModal .modal-header {
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border);
+        border-radius: 16px 16px 0 0;
+    }
+
+    #visitorModal .modal-title {
+        color: var(--text-primary);
+        font-weight: 700;
+    }
+
+    #visitorModal .modal-body {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    #visitorModal .modal-footer {
+        background: var(--bg-card);
+        border-top: 1px solid var(--border);
+        border-radius: 0 0 16px 16px;
+    }
+
+    #visitorModal .close {
+        color: var(--text-muted);
+        opacity: 0.8;
+    }
+
+    #visitorModal .close:hover {
+        color: var(--text-primary);
+        opacity: 1;
+    }
+
+    /* Forms con dark theme */
+    #visitorModal .form-group label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    #visitorModal .form-control,
+    #visitorModal .form-control:focus,
+    #visitorModal select.form-control,
+    #visitorModal textarea.form-control {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        border-radius: 8px;
+    }
+
+    #visitorModal .form-control:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25);
+    }
+
+    /* Detalles visitante */
     .visitor-detail-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-        margin-top: 1rem;
+        gap: 1.25rem;
+        margin-top: 1.25rem;
     }
 
     .visitor-detail-item label {
         font-weight: 600;
-        color: #495057;
+        color: var(--text-muted);
         display: block;
-        margin-bottom: 0.25rem;
-        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .visitor-detail-item span {
-        color: #212529;
+        color: var(--text-primary);
         display: block;
+        font-size: 1rem;
     }
 
+    /* Timeline con dark theme */
     .visitor-timeline {
         position: relative;
         padding-left: 2rem;
@@ -177,13 +289,23 @@ visitorsStyleElement.textContent = `
         top: 0;
         bottom: 0;
         width: 2px;
-        background: #dee2e6;
+        background: var(--border);
     }
 
     .visitor-timeline-item {
         position: relative;
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
         padding-bottom: 1rem;
+    }
+
+    .visitor-timeline-item strong {
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .visitor-timeline-item small {
+        color: var(--text-muted);
+        font-size: 0.85rem;
     }
 
     .visitor-timeline-item::before {
@@ -191,11 +313,12 @@ visitorsStyleElement.textContent = `
         position: absolute;
         left: -1.625rem;
         top: 0.25rem;
-        width: 10px;
-        height: 10px;
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
         background: #28a745;
-        border: 2px solid white;
+        border: 2px solid var(--bg-secondary);
+        box-shadow: 0 0 0 3px var(--bg-card);
     }
 
     .visitor-timeline-item.pending::before {
@@ -205,6 +328,29 @@ visitorsStyleElement.textContent = `
     .visitor-timeline-item.rejected::before {
         background: #dc3545;
     }
+
+    .visitor-timeline-item.authorized::before {
+        background: #28a745;
+    }
+
+    /* Alert con dark theme */
+    .alert {
+        border-radius: 10px;
+        padding: 1rem;
+        border: 1px solid var(--border);
+    }
+
+    .alert-info {
+        background: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+        border-color: rgba(23, 162, 184, 0.3);
+    }
+
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border-color: rgba(220, 53, 69, 0.3);
+    }
 `;
 document.head.appendChild(visitorsStyleElement);
 
@@ -212,7 +358,11 @@ document.head.appendChild(visitorsStyleElement);
  * Función principal para mostrar el contenido del módulo de visitantes
  */
 async function showVisitorsContent() {
-    const content = document.getElementById('content');
+    const content = document.getElementById('mainContent');
+    if (!content) {
+        console.error('❌ [VISITORS] Elemento mainContent no encontrado');
+        return;
+    }
 
     content.innerHTML = `
         <div class="visitors-container">
@@ -337,7 +487,7 @@ function renderVisitorsList(visitors) {
             <div class="visitor-card-header">
                 <div>
                     <div class="visitor-card-title">${visitor.fullName || visitor.firstName + ' ' + visitor.lastName}</div>
-                    <div style="font-size: 0.85rem; color: #6c757d;">DNI: ${visitor.dni}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">DNI: ${visitor.dni}</div>
                 </div>
                 <span class="visitor-status-badge visitor-status-${visitor.authorizationStatus}">
                     ${getStatusLabel(visitor.authorizationStatus)}
