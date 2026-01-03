@@ -4,8 +4,13 @@
  */
 
 class CertificationAlertService {
-    constructor() {
+    constructor(pool) {
+        this.pool = pool;
         console.log('📜 [CertAlert] Service stub loaded');
+    }
+
+    startCronJob() {
+        console.log('📜 [CertAlert] Cron job started (stub)');
     }
 
     async start() {
@@ -17,4 +22,4 @@ class CertificationAlertService {
     }
 }
 
-module.exports = new CertificationAlertService();
+module.exports = CertificationAlertService;
