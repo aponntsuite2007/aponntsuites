@@ -64,13 +64,13 @@ module.exports = (sequelize) => {
       comment: 'Departamento que visita'
     },
     responsible_employee_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id'
+        key: 'user_id'
       },
-      comment: 'Empleado responsable de la visita'
+      comment: 'Empleado responsable de la visita (UUID de users.user_id)'
     },
 
     // Estado de autorización
@@ -81,13 +81,13 @@ module.exports = (sequelize) => {
       comment: 'pending: esperando aprobación, authorized: aprobado, rejected: rechazado, completed: visita finalizada'
     },
     authorized_by: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
       references: {
         model: 'users',
-        key: 'id'
+        key: 'user_id'
       },
-      comment: 'Usuario que autorizó/rechazó la visita'
+      comment: 'Usuario que autorizó/rechazó la visita (UUID de users.user_id)'
     },
     authorized_at: {
       type: DataTypes.DATE,
@@ -183,6 +183,72 @@ module.exports = (sequelize) => {
         model: 'companies',
         key: 'id'
       }
+    },
+
+    // ========== ENTERPRISE FEATURES ==========
+
+    // Categoría de visitante (para políticas de seguridad diferenciadas)
+    visitor_category: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: 'standard',
+      validate: {
+        isIn: [['vip', 'contractor', 'auditor', 'medical', 'delivery', 'standard', 'other']]
+      },
+      comment: 'Categoría: vip, contractor, auditor, medical, delivery, standard, other'
+    },
+
+    // Badge físico
+    badge_number: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      unique: true,
+      comment: 'Número del badge físico impreso (único por visita activa)'
+    },
+
+    // Nivel de clearance de seguridad (zonas restringidas)
+    security_clearance_level: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 1,
+      validate: {
+        min: 1,
+        max: 4
+      },
+      comment: 'Nivel: 1=público, 2=restringido, 3=confidencial, 4=secreto'
+    },
+
+    // Audit trail (compliance)
+    audit_reason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Razón documentada de autorización/rechazo'
+    },
+    audit_ip_address: {
+      type: DataTypes.STRING(45),
+      allowNull: true,
+      comment: 'IP desde donde se autorizó/rechazó'
+    },
+    audit_user_agent: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'User agent del navegador que autorizó'
+    },
+
+    // Timestamps de cambios de status
+    status_updated_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Última vez que cambió authorization_status'
+    },
+    status_updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'user_id'
+      },
+      comment: 'Quién cambió el status por última vez (UUID de users.user_id)'
     }
   }, {
     tableName: 'visitors',
