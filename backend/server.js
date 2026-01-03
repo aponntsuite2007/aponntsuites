@@ -2888,12 +2888,22 @@ app.use('/api/modules', modulesRoutes);
 // ✅ CONFIGURAR SISTEMA DE AUDITORÍA Y AUTO-DIAGNÓSTICO
 const auditorRoutes = require('./src/routes/auditorRoutes')(database);
 app.use('/api/audit', auditorRoutes);
-// ✅ CONFIGURAR PHASE 4: AUTONOMOUS REPAIR + TECHNICAL REPORTS
-const auditorPhase4Routes = require('./src/routes/auditorPhase4Routes')(database);
-app.use('/api/audit/phase4', auditorPhase4Routes);
-// ✅ CONFIGURAR AUTO-HEALING CYCLE - Universal Discovery + Brain Update
-const autoHealingRoutes = require('./src/routes/autoHealingRoutes');
-app.use('/api/auto-healing', autoHealingRoutes);
+// ✅ CONFIGURAR PHASE 4: AUTONOMOUS REPAIR + TECHNICAL REPORTS (opcional en producción)
+try {
+    const auditorPhase4Routes = require('./src/routes/auditorPhase4Routes')(database);
+    app.use('/api/audit/phase4', auditorPhase4Routes);
+    console.log('✅ [AUDITOR-PHASE4] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [AUDITOR-PHASE4] Routes not available (optional in production)');
+}
+// ✅ CONFIGURAR AUTO-HEALING CYCLE - Universal Discovery + Brain Update (opcional en producción)
+try {
+    const autoHealingRoutes = require('./src/routes/autoHealingRoutes');
+    app.use('/api/auto-healing', autoHealingRoutes);
+    console.log('✅ [AUTO-HEALING] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [AUTO-HEALING] Routes not available (optional in production)');
+}
 // app.use('/api/engineering-live', engineeringMetadataRoutes); // Moved to line 3342+ area
 // app.use('/api/process-chain', processChainRoutes); // Moved to line 3131 (after declaration)
 
