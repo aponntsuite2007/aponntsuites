@@ -2534,6 +2534,9 @@ const debugDbRoutes = require('./src/routes/debug-db');
 const siacClientesRoutes = require('./src/routes/siac/clientes');
 const siacFacturacionRoutes = require('./src/routes/siac/facturacion');
 
+// 🔐 IMPORTAR RUTAS DE ACCESOS TEMPORALES (Auditores, Asesores, Médicos Externos)
+const temporaryAccessRoutes = require('./src/routes/temporaryAccessRoutes');
+
 // Configurar rutas con sistema de permisos
 app.use('/api/v1/permissions', permissionsRoutes);
 app.use('/api/v1/auth', authRoutes);
@@ -2541,6 +2544,9 @@ app.use('/api/v1/auth/aponnt', aponntAuthRoutes); // ✅ Auth Staff + Partners
 app.use('/api/aponnt/staff', aponntStaffAuthRoutes); // ✅ Auth Staff Aponnt (con puerta trasera postgres)
 app.use('/api/aponnt/staff-data', aponntStaffRoutes); // ✅ CRUD Staff Aponnt (GET/POST/PUT/DELETE)
 app.use('/api/aponnt/staff-commissions', staffCommissionsRoutes); // ✅ Comisiones Piramidales Staff (Enero 2025)
+
+// 🔐 Sistema de Accesos Temporales (Auditores, Asesores, Médicos Externos) - Enero 2026
+app.use('/api/temporary-access', temporaryAccessRoutes);
 
 // 📊 Sistema de Ventas y Leads (Diciembre 2025)
 const salesOrchestrationRoutes = require('./src/routes/salesOrchestrationRoutes');
@@ -2698,6 +2704,7 @@ console.log('🧠 [EMOTIONAL-ANALYSIS] Rutas profesionales configuradas');
 const biometricConsentRoutes = require('./src/routes/biometricConsentRoutes');
 app.use('/api/v1/biometric', biometricConsentRoutes);
 console.log('🔐 [BIOMETRIC-CONSENT] Sistema de consentimientos biométricos configurado');
+// ⚖️ RISK INTELLIGENCE DASHBOARD - Análisis de Riesgo Laboralconst riskIntelligenceRoutes = require('./src/routes/riskIntelligenceRoutes');app.use('/api/compliance', riskIntelligenceRoutes);console.log('⚖️ [RISK-INTELLIGENCE] Dashboard de análisis de riesgo laboral configurado');console.log('   📊 Endpoints: /api/compliance/risk-dashboard, /employee/:id/risk-analysis, /violations');
 
 // 🌍 REGULACIONES DE PRIVACIDAD MULTI-PAÍS (Workday/SAP Style)
 const privacyRegulationRoutes = require('./src/routes/privacyRegulationRoutes');
@@ -2792,8 +2799,9 @@ const kioskRoutes = require('./src/routes/kioskRoutes');
 app.use('/api/v1/kiosks', kioskRoutes);
 
 // 🧪 KIOSK TEST BYPASS - Testing sin biometria real
-const kioskTestBypassRoutes = require('./src/routes/kiosk-test-bypass')(require('./src/config/database'));
-app.use('/api/kiosk-test', kioskTestBypassRoutes);
+// ⚠️ COMENTADO: Archivo no existe
+// const kioskTestBypassRoutes = require('./src/routes/kiosk-test-bypass')(require('./src/config/database'));
+// app.use('/api/kiosk-test', kioskTestBypassRoutes);
 
 // 🚨 CONFIGURAR API DE SANCIONES
 const sanctionRoutes = require('./src/routes/sanctionRoutes');
@@ -3062,16 +3070,17 @@ console.log('   💚 GET  /api/brain-analyzer/health - Dashboard de salud');
 console.log('   🔬 GET  /api/brain-analyzer/full-analysis - Análisis COMPLETO');
 
 // ✅ CONFIGURAR BRAIN INTELLIGENT TESTING - Testing Inteligente basado en Brain
-const brainTestingRoutes = require('./src/routes/brainTestingRoutes');
-app.use('/api/brain-testing', brainTestingRoutes);
+// ⚠️ COMENTADO: Archivo no existe
+// const brainTestingRoutes = require('./src/routes/brainTestingRoutes');
+// app.use('/api/brain-testing', brainTestingRoutes);
 
-console.log('🧪 [BRAIN-TESTING] Sistema de Testing Inteligente ACTIVO:');
-console.log('   📋 GET  /api/brain-testing/forms - Escanear formularios frontend');
-console.log('   🎯 GET  /api/brain-testing/plan/:moduleKey - Plan de tests inteligente');
-console.log('   📊 GET  /api/brain-testing/capabilities - Capacidades de testing');
-console.log('   🚀 POST /api/brain-testing/execute/:moduleKey - Ejecutar tests');
-console.log('   🔍 GET  /api/brain-testing/fields/:moduleKey - Análisis de campos');
-console.log('   🎲 POST /api/brain-testing/generate-data/:moduleKey - Generar datos');
+// console.log('🧪 [BRAIN-TESTING] Sistema de Testing Inteligente ACTIVO:');
+// console.log('   📋 GET  /api/brain-testing/forms - Escanear formularios frontend');
+// console.log('   🎯 GET  /api/brain-testing/plan/:moduleKey - Plan de tests inteligente');
+// console.log('   📊 GET  /api/brain-testing/capabilities - Capacidades de testing');
+// console.log('   🚀 POST /api/brain-testing/execute/:moduleKey - Ejecutar tests');
+// console.log('   🔍 GET  /api/brain-testing/fields/:moduleKey - Análisis de campos');
+// console.log('   🎲 POST /api/brain-testing/generate-data/:moduleKey - Generar datos');
 
 // ✅ CONFIGURAR BRAIN NERVOUS SYSTEM - Sistema Nervioso Reactivo
 const brainNervousRoutes = require('./src/routes/brainNervousRoutes');
@@ -3102,17 +3111,18 @@ console.log('   🔄 GET  /api/brain/tours/workflow/:name - Tour de workflow');
 console.log('   💾 POST /api/brain/tours/progress - Guardar progreso');
 
 // ✅ CONFIGURAR UNIFIED TEST ENGINE - Sistema de Testing que FUNCIONA
-const unifiedTestRoutes = require('./src/routes/unifiedTestRoutes');
-app.use('/api/unified-test', unifiedTestRoutes);
+// ⚠️ COMENTADO: Archivo no existe
+// const unifiedTestRoutes = require('./src/routes/unifiedTestRoutes');
+// app.use('/api/unified-test', unifiedTestRoutes);
 
-console.log('🔧 [UNIFIED-TEST] Sistema de Testing Unificado ACTIVO:');
-console.log('   🚀 POST /api/unified-test/run - Ejecutar test completo');
-console.log('   📦 POST /api/unified-test/module/:name - Testear módulo específico');
-console.log('   📋 POST /api/unified-test/user-modal - Test 11 tabs del modal');
-console.log('   🔒 POST /api/unified-test/ssot - Tests de integridad SSOT');
-console.log('   🧠 GET  /api/unified-test/brain-modules - Módulos desde Brain VIVO');
-console.log('   📚 GET  /api/unified-test/tutorial/:name - Tutorial dinámico');
-console.log('   📊 GET  /api/unified-test/status - Estado del engine');
+// console.log('🔧 [UNIFIED-TEST] Sistema de Testing Unificado ACTIVO:');
+// console.log('   🚀 POST /api/unified-test/run - Ejecutar test completo');
+// console.log('   📦 POST /api/unified-test/module/:name - Testear módulo específico');
+// console.log('   📋 POST /api/unified-test/user-modal - Test 11 tabs del modal');
+// console.log('   🔒 POST /api/unified-test/ssot - Tests de integridad SSOT');
+// console.log('   🧠 GET  /api/unified-test/brain-modules - Módulos desde Brain VIVO');
+// console.log('   📚 GET  /api/unified-test/tutorial/:name - Tutorial dinámico');
+// console.log('   📊 GET  /api/unified-test/status - Estado del engine');
 
 // ✅ CONFIGURAR TRAINING & KNOWLEDGE - Sistema de Capacitación Inteligente
 const trainingKnowledgeRoutes = require('./src/routes/trainingKnowledgeRoutes');
@@ -3325,8 +3335,9 @@ console.log('   🔄 POST /api/email-verification/resend - Reenviar email');
 console.log('   🏥 GET  /api/email-verification/health - Estado del sistema');
 
 // ✅ CONFIGURAR SISTEMA DE TESTING VISIBLE - PHASE 4 (Legacy - usar /api/phase4 en su lugar)
-const visibleTestingRoutes = require('./src/routes/visibleTestingRoutes');
-app.use('/api/testing', visibleTestingRoutes);
+// ⚠️ COMENTADO TEMPORALMENTE: Falla al cargar
+// const visibleTestingRoutes = require('./src/routes/visibleTestingRoutes');
+// app.use('/api/testing', visibleTestingRoutes);
 
 // ❌ ELIMINADO - Phase4Routes (obsoleto, funcionalidad integrada en auditorPhase4Routes)
 // const phase4Routes = require('./src/routes/phase4Routes');
