@@ -1,10 +1,39 @@
 /**
  * ============================================================================
- * AUTO-HEALING DASHBOARD - Funcional con logs en tiempo real
+ * AUTO-HEALING DASHBOARD - Funcional con logs en tiempo real (DARK THEME)
  * ============================================================================
  */
 
-console.log('✅ [AUTO-HEALING] Módulo cargado');
+// ========================================
+// DARK THEME - Inyectar variables CSS globales si no existen
+// ========================================
+if (!document.getElementById('auto-healing-dark-theme-vars')) {
+    const darkThemeVars = document.createElement('style');
+    darkThemeVars.id = 'auto-healing-dark-theme-vars';
+    darkThemeVars.textContent = `
+        :root {
+            --bg-primary: #1a1d29;
+            --bg-secondary: #252834;
+            --bg-card: #2d3142;
+            --bg-hover: #363a4f;
+            --text-primary: #e4e6eb;
+            --text-secondary: #b8b9bf;
+            --text-muted: #8e8f96;
+            --border: #404456;
+            --border-light: #4a4d5e;
+            --accent: #0d6efd;
+            --accent-hover: #0b5ed7;
+            --success-bg: rgba(40, 167, 69, 0.15);
+            --warning-bg: rgba(255, 193, 7, 0.15);
+            --danger-bg: rgba(220, 53, 69, 0.15);
+            --info-bg: rgba(23, 162, 184, 0.15);
+        }
+    `;
+    document.head.insertBefore(darkThemeVars, document.head.firstChild);
+}
+
+console.log('✅ [AUTO-HEALING] Módulo cargado (Dark Theme)');
+
 
 const AutoHealingDashboard = {
   currentExecution: null,
@@ -33,14 +62,14 @@ const AutoHealingDashboard = {
     }
 
     section.innerHTML = `
-      <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+      <div style="background: var(--bg-card); padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
         <!-- Header -->
-        <div style="margin-bottom: 25px; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px;">
-          <h2 style="margin: 0 0 10px 0; color: #374151; font-size: 24px; font-weight: 600;">
+        <div style="margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 15px;">
+          <h2 style="margin: 0 0 10px 0; color: var(--text-primary); font-size: 24px; font-weight: 600;">
             🔧 Auto-Healing Cycle
           </h2>
-          <p style="margin: 0; color: #6b7280; font-size: 14px;">
+          <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">
             Sistema automático de testing y actualización del Brain metadata
           </p>
         </div>
@@ -51,8 +80,8 @@ const AutoHealingDashboard = {
         </div>
 
         <!-- Panel de control -->
-        <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
-          <h3 style="margin: 0 0 15px 0; color: #374151; font-size: 18px; font-weight: 600;">
+        <div style="background: var(--bg-secondary); padding: 20px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border);">
+          <h3 style="margin: 0 0 15px 0; color: var(--text-primary); font-size: 18px; font-weight: 600;">
             🎮 Ejecutar Test
           </h3>
 
@@ -76,29 +105,29 @@ const AutoHealingDashboard = {
             </button>
 
             <div style="display: flex; gap: 10px; align-items: center;">
-              <label style="color: #6b7280; font-size: 14px; font-weight: 500;">Iteraciones:</label>
+              <label style="color: var(--text-secondary); font-size: 14px; font-weight: 500;">Iteraciones:</label>
               <input
                 type="number"
                 id="max-iterations"
                 value="3"
                 min="1"
                 max="10"
-                style="width: 70px; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;"
+                style="width: 70px; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px;"
               />
             </div>
 
             <div style="display: flex; gap: 10px; align-items: center;">
-              <label style="color: #6b7280; font-size: 14px; font-weight: 500;">Empresa:</label>
+              <label style="color: var(--text-secondary); font-size: 14px; font-weight: 500;">Empresa:</label>
               <input
                 type="text"
                 id="company-slug"
                 value="isi"
-                style="width: 120px; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;"
+                style="width: 120px; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px;"
               />
             </div>
 
             <div style="display: flex; gap: 10px; align-items: center;">
-              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #6b7280; font-size: 14px; font-weight: 500;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-secondary); font-size: 14px; font-weight: 500;">
                 <input
                   type="checkbox"
                   id="show-browser"
@@ -112,7 +141,7 @@ const AutoHealingDashboard = {
 
         <!-- Logs en tiempo real -->
         <div style="margin-bottom: 20px;">
-          <h3 style="margin: 0 0 15px 0; color: #374151; font-size: 18px; font-weight: 600;">
+          <h3 style="margin: 0 0 15px 0; color: var(--text-primary); font-size: 18px; font-weight: 600;">
             📜 Logs en Tiempo Real
           </h3>
           <div id="auto-healing-logs" style="background: #1e3a8a; color: #10b981; padding: 15px; border-radius: 6px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; max-height: 400px; overflow-y: auto; min-height: 200px;">
@@ -127,7 +156,7 @@ const AutoHealingDashboard = {
 
         <!-- Reportes recientes -->
         <div>
-          <h3 style="margin: 0 0 15px 0; color: #374151; font-size: 18px; font-weight: 600;">
+          <h3 style="margin: 0 0 15px 0; color: var(--text-primary); font-size: 18px; font-weight: 600;">
             📋 Reportes Recientes
           </h3>
           <div id="recent-reports">
@@ -179,7 +208,7 @@ const AutoHealingDashboard = {
   renderExecutionStatus() {
     if (!this.currentExecution || !this.currentExecution.isRunning) {
       return `
-        <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; text-align: center; color: #6b7280; margin-bottom: 20px;">
+        <div style="background: var(--bg-secondary); padding: 15px; border-radius: 6px; text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
           No hay ejecución en curso
         </div>
       `;
@@ -201,7 +230,7 @@ const AutoHealingDashboard = {
         <div style="background: #dbeafe; height: 8px; border-radius: 4px; margin-bottom: 15px;">
           <div style="background: #3b82f6; height: 100%; width: ${progress}%; border-radius: 4px; transition: width 0.3s;"></div>
         </div>
-        <div style="color: #374151; font-size: 14px;">
+        <div style="color: var(--text-primary); font-size: 14px;">
           Iteración ${exec.currentIteration} de ${exec.totalIterations} - ${progress}%
         </div>
       </div>
@@ -214,21 +243,21 @@ const AutoHealingDashboard = {
   renderRecentReports() {
     if (!this.reports || this.reports.length === 0) {
       return `
-        <div style="background: #f3f4f6; padding: 20px; border-radius: 6px; text-align: center; color: #6b7280;">
+        <div style="background: var(--bg-secondary); padding: 20px; border-radius: 6px; text-align: center; color: var(--text-secondary);">
           No hay reportes disponibles
         </div>
       `;
     }
 
     return `
-      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;">
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
-            <tr style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
-              <th style="padding: 12px; text-align: left; color: #374151; font-size: 13px;">Fecha</th>
-              <th style="padding: 12px; text-align: center; color: #374151; font-size: 13px;">Iteraciones</th>
-              <th style="padding: 12px; text-align: center; color: #374151; font-size: 13px;">Gaps Sanados</th>
-              <th style="padding: 12px; text-align: center; color: #374151; font-size: 13px;">Estado</th>
+            <tr style="background: var(--bg-secondary); border-bottom: 2px solid var(--border);">
+              <th style="padding: 12px; text-align: left; color: var(--text-primary); font-size: 13px;">Fecha</th>
+              <th style="padding: 12px; text-align: center; color: var(--text-primary); font-size: 13px;">Iteraciones</th>
+              <th style="padding: 12px; text-align: center; color: var(--text-primary); font-size: 13px;">Gaps Sanados</th>
+              <th style="padding: 12px; text-align: center; color: var(--text-primary); font-size: 13px;">Estado</th>
             </tr>
           </thead>
           <tbody>
@@ -237,9 +266,9 @@ const AutoHealingDashboard = {
               const timestamp = new Date(report.timestamp || report.startedAt).toLocaleString();
 
               return `
-                <tr style="border-bottom: 1px solid #e5e7eb; ${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
-                  <td style="padding: 12px; color: #374151; font-size: 13px;">${timestamp}</td>
-                  <td style="padding: 12px; text-align: center; color: #6b7280; font-size: 13px;">${report.iterations?.length || 0}</td>
+                <tr style="border-bottom: 1px solid var(--border); ${index % 2 === 0 ? 'background: var(--bg-card);' : 'background: var(--bg-secondary);'}">
+                  <td style="padding: 12px; color: var(--text-primary); font-size: 13px;">${timestamp}</td>
+                  <td style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">${report.iterations?.length || 0}</td>
                   <td style="padding: 12px; text-align: center; color: #10b981; font-size: 13px; font-weight: 600;">${report.totalGapsHealed || 0}</td>
                   <td style="padding: 12px; text-align: center;">
                     <span style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${isSuccess ? '#d1fae5' : '#fef3c7'}; color: ${isSuccess ? '#065f46' : '#92400e'};">
