@@ -20,6 +20,31 @@ var currentVisitor = window.currentVisitor;
 var departmentsList = window.departmentsList;
 var employeesList = window.employeesList;
 
+
+// ========================================
+// DARK THEME - Inyectar variables CSS globales si no existen
+// ========================================
+if (!document.getElementById('dark-theme-variables')) {
+    const darkThemeVars = document.createElement('style');
+    darkThemeVars.id = 'dark-theme-variables';
+    darkThemeVars.textContent = `
+        :root {
+            --bg-primary: #1a1d29;
+            --bg-secondary: #252834;
+            --bg-card: #2d3142;
+            --bg-hover: #363a4f;
+            --text-primary: #e4e6eb;
+            --text-secondary: #b8b9bf;
+            --text-muted: #8e8f96;
+            --border: #404456;
+            --border-light: #4a4d5e;
+            --accent: #0d6efd;
+            --accent-hover: #0b5ed7;
+        }
+    `;
+    document.head.insertBefore(darkThemeVars, document.head.firstChild);
+}
+
 // CSS del módulo - DARK THEME COMPATIBLE
 const visitorsStyleElement = document.createElement('style');
 visitorsStyleElement.id = 'visitors-module-styles';
