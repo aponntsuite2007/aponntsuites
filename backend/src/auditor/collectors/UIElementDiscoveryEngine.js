@@ -17,7 +17,8 @@
  * @date 2025-12-20
  */
 
-const { chromium } = require('playwright');
+let chromium;
+try { chromium = require('playwright').chromium; } catch(e) { console.log('⚠️ [UI-DISCOVERY] Playwright no disponible (opcional en producción)'); }
 
 /**
  * Tipos de elementos UI detectables
