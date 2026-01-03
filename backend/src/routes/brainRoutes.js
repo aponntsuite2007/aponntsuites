@@ -15,8 +15,14 @@ const express = require('express');
 const router = express.Router();
 const EcosystemBrainService = require('../services/EcosystemBrainService');
 
-// Importar rutas de circuitos de negocio
-const circuitRoutes = require('./circuitRoutes');
+// Importar rutas de circuitos de negocio (opcional para compatibilidad con producción)
+let circuitRoutes = null;
+try {
+  circuitRoutes = require('./circuitRoutes');
+  console.log('✅ [BRAIN-API] Circuit routes loaded');
+} catch(e) {
+  console.log('⚠️ [BRAIN-API] Circuit routes not available:', e.message);
+}
 
 let brainService = null;
 
@@ -638,11 +644,14 @@ router.get('/workflows/notifications', async (req, res) => {
 console.log('🧠 [BRAIN-API] Sistema Nervioso - Prerrequisitos activado');
 
 // ============================================================================
-// MONTAR RUTAS DE CIRCUITOS DE NEGOCIO
+// MONTAR RUTAS DE CIRCUITOS DE NEGOCIO (si están disponibles)
 // ============================================================================
-router.use('/circuits', circuitRoutes);
-
-console.log('🔄 [BRAIN-API] Rutas de circuitos de negocio montadas en /api/brain/circuits');
+if (circuitRoutes) {
+  router.use('/circuits', circuitRoutes);
+  console.log('🔄 [BRAIN-API] Rutas de circuitos de negocio montadas en /api/brain/circuits');
+} else {
+  console.log('⚠️ [BRAIN-API] Circuit routes no montadas (dependencias no disponibles)');
+}
 
 // Exportar router e inicializador
 module.exports = router;
