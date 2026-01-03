@@ -114,7 +114,7 @@ router.get('/', auth, async (req, res) => {
         {
           model: User,
           as: 'responsibleEmployee',
-          attributes: ['user_id', 'first_name', 'last_name', 'email']
+          attributes: ['user_id', 'firstName', 'lastName', 'email']
         },
         {
           model: Department,
@@ -124,7 +124,7 @@ router.get('/', auth, async (req, res) => {
         {
           model: User,
           as: 'authorizedBy',
-          attributes: ['user_id', 'first_name', 'last_name'],
+          attributes: ['user_id', 'firstName', 'lastName'],
           required: false
         },
         {
