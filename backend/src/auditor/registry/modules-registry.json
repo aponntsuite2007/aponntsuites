@@ -1097,7 +1097,7 @@
             "CASE_ARCHIVED"
           ],
           "auto_generated": true,
-          "generated_at": "2025-12-22T03:21:01.134Z",
+          "generated_at": "2026-01-02T22:51:52.945Z",
           "stats": {
             "total": 43,
             "core": 3,
@@ -1107,7 +1107,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2025-12-22T03:21:01.140Z"
+      "lastBrainUpdate": "2026-01-02T22:51:52.958Z"
     },
     {
       "id": "associate-marketplace",
@@ -1279,7 +1279,7 @@
         "discoveredModals": 0,
         "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
       },
-      "lastBrainUpdate": "2025-12-22T03:21:01.125Z",
+      "lastBrainUpdate": "2026-01-02T22:51:52.933Z",
       "autoHealedGaps": 14,
       "workflows": {
         "clock_in": {
@@ -1405,7 +1405,7 @@
           "entry_point": "BIOMETRIC_CAPTURE",
           "final_states": [],
           "auto_generated": true,
-          "generated_at": "2025-12-22T03:21:01.118Z",
+          "generated_at": "2026-01-02T22:51:52.775Z",
           "stats": {
             "total": 152,
             "core": 37,
@@ -4596,21 +4596,43 @@
       "id": "visitors",
       "name": "Control de Visitantes",
       "category": "security",
-      "version": "1.0.0",
-      "description": "Registro y control de ingreso de visitantes",
+      "version": "2.0.0",
+      "description": "Control de acceso físico de visitantes con GPS tracking, geofencing, badges y audit trail completo. Nivel ENTERPRISE multi-tenant.",
       "dependencies": {
         "required": [
-          "companies"
+          "companies",
+          "users",
+          "departments"
         ],
         "optional": [
-          "real-biometric-enterprise"
+          "real-biometric-enterprise",
+          "kiosks",
+          "notification-center"
         ],
-        "integrates_with": [],
-        "provides_to": []
+        "integrates_with": [
+          "access-control",
+          "kiosks",
+          "notification-center",
+          "audit-reports"
+        ],
+        "provides_to": [
+          "security-dashboard",
+          "compliance-reports",
+          "audit-reports"
+        ]
       },
       "commercial": {
-        "is_core": false,
-        "standalone": true
+        "is_core": true,
+        "standalone": true,
+        "enterprise_features": [
+          "gps_geofencing",
+          "visitor_categories",
+          "badge_generation",
+          "security_clearance_levels",
+          "audit_trail",
+          "rate_limiting",
+          "multi_tenant_analytics"
+        ]
       },
       "ui": {
         "mainButtons": [
