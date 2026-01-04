@@ -2721,7 +2721,11 @@ console.log('🧠 [EMOTIONAL-ANALYSIS] Rutas profesionales configuradas');
 const biometricConsentRoutes = require('./src/routes/biometricConsentRoutes');
 app.use('/api/v1/biometric', biometricConsentRoutes);
 console.log('🔐 [BIOMETRIC-CONSENT] Sistema de consentimientos biométricos configurado');
-// ⚖️ RISK INTELLIGENCE DASHBOARD - Análisis de Riesgo Laboralconst riskIntelligenceRoutes = require('./src/routes/riskIntelligenceRoutes');app.use('/api/compliance', riskIntelligenceRoutes);console.log('⚖️ [RISK-INTELLIGENCE] Dashboard de análisis de riesgo laboral configurado');console.log('   📊 Endpoints: /api/compliance/risk-dashboard, /employee/:id/risk-analysis, /violations');
+// ⚖️ RISK INTELLIGENCE DASHBOARD - Análisis de Riesgo Laboral
+const riskIntelligenceRoutes = require('./src/routes/riskIntelligenceRoutes');
+app.use('/api/compliance', riskIntelligenceRoutes);
+console.log('⚖️ [RISK-INTELLIGENCE] Dashboard de análisis de riesgo laboral configurado');
+console.log('   📊 Endpoints: /api/compliance/risk-dashboard, /employee/:id/risk-analysis, /violations');
 
 // 🌍 REGULACIONES DE PRIVACIDAD MULTI-PAÍS (Workday/SAP Style)
 const privacyRegulationRoutes = require('./src/routes/privacyRegulationRoutes');
