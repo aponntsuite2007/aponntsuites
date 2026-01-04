@@ -1,11 +1,11 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
  * 🏭 WAREHOUSE MANAGEMENT SYSTEM (WMS) - DARK THEME
- * Sistema de Gestión de Almacenes y Depósitos
+ * Sistema de Gestión de Almacenes
  * ═══════════════════════════════════════════════════════════════════════════════
  *
  * Módulo principal para gestión multi-tenant de:
- * - Sucursales y Depósitos (ilimitados)
+ * - Sucursales y Almacenes (ilimitados)
  * - Padrón de Artículos (Tab Principal)
  * - Categorías (Rubros, SubRubros, Familias)
  * - Listas de Precios con sistema de espejos
@@ -1083,9 +1083,9 @@ const WarehouseManagement = {
                             </select>
                         </div>
                         <div class="wms-selector-group">
-                            <span class="wms-selector-label">Depósito</span>
+                            <span class="wms-selector-label">Almacén</span>
                             <select id="wms-warehouse-selector" class="wms-selector">
-                                <option value="">Selecciona sucursal</option>
+                                <option value="">Selecciona almacén</option>
                             </select>
                         </div>
                     </div>
@@ -1215,7 +1215,7 @@ const WarehouseManagement = {
         } else if (tab === 'ubicaciones') {
             return `
                 <div class="wms-toolbar-left">
-                    <span style="color: var(--wms-text-muted);">Planograma y ubicaciones del depósito</span>
+                    <span style="color: var(--wms-text-muted);">Planograma y ubicaciones del almacén</span>
                 </div>
                 <div class="wms-toolbar-right">
                     <button class="wms-btn wms-btn-secondary" id="wms-new-zone-btn">
@@ -1271,14 +1271,35 @@ const WarehouseManagement = {
     // API HELPER
     // ═══════════════════════════════════════════════════════════════════════
     async api(endpoint, options = {}) {
-        const token = localStorage.getItem('token');
+        // El panel-empresa guarda el token como 'authToken', no como 'token'
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         const baseUrl = '/api/warehouse';
 
+        // Validar que exista un token antes de hacer la llamada
+        if (!token || token === 'null' || token === 'undefined') {
+            console.warn('[WMS] Token no disponible, esperando...');
+            // Intentar esperar a que el token esté disponible (max 3 segundos)
+            await new Promise((resolve, reject) => {
+                let attempts = 0;
+                const checkToken = setInterval(() => {
+                    const newToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+                    if (newToken && newToken !== 'null' && newToken !== 'undefined') {
+                        clearInterval(checkToken);
+                        resolve();
+                    } else if (++attempts >= 30) {
+                        clearInterval(checkToken);
+                        reject(new Error('Token no disponible. Por favor, inicie sesión nuevamente.'));
+                    }
+                }, 100);
+            });
+        }
+
+        const finalToken = localStorage.getItem('authToken') || localStorage.getItem('token');
         const response = await fetch(`${baseUrl}${endpoint}`, {
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${finalToken}`,
                 ...options.headers
             }
         });
@@ -1292,7 +1313,7 @@ const WarehouseManagement = {
     },
 
     // ═══════════════════════════════════════════════════════════════════════
-    // SELECTORES DE SUCURSAL/DEPÓSITO
+    // SELECTORES DE SUCURSAL/ALMACÉN
     // ═══════════════════════════════════════════════════════════════════════
     updateBranchSelector() {
         const selector = document.getElementById('wms-branch-selector');
@@ -1311,15 +1332,15 @@ const WarehouseManagement = {
     async selectBranch(branchId) {
         this.state.currentBranch = branchId;
 
-        // Cargar depósitos de la sucursal
+        // Cargar almacenes de la sucursal
         const warehousesResponse = await this.api(`/warehouses?branch_id=${branchId}`);
         this.state.warehouses = warehousesResponse.data || [];
 
-        // Actualizar selector de depósitos
+        // Actualizar selector de almacenes
         const selector = document.getElementById('wms-warehouse-selector');
         if (selector) {
             if (this.state.warehouses.length === 0) {
-                selector.innerHTML = '<option value="">Sin depósitos</option>';
+                selector.innerHTML = '<option value="">Sin almacenes</option>';
             } else {
                 selector.innerHTML = this.state.warehouses.map(w =>
                     `<option value="${w.id}">${w.name}</option>`
@@ -1327,7 +1348,7 @@ const WarehouseManagement = {
             }
         }
 
-        // Seleccionar primer depósito si existe
+        // Seleccionar primer almacén si existe
         if (this.state.warehouses.length > 0) {
             await this.selectWarehouse(this.state.warehouses[0].id);
         } else {
@@ -1448,7 +1469,7 @@ const WarehouseManagement = {
     },
 
     async loadLocations() {
-        // Cargar zonas y ubicaciones del depósito actual
+        // Cargar zonas y ubicaciones del almacén actual
         if (this.state.currentWarehouse) {
             const response = await this.api(`/warehouses/${this.state.currentWarehouse}/planogram`);
             this.state.planogram = response.data || [];
@@ -1470,8 +1491,8 @@ const WarehouseManagement = {
         if (!this.state.currentBranch || !this.state.currentWarehouse) {
             contentEl.innerHTML = this.renderEmptyState(
                 '🏭',
-                'Selecciona una sucursal y depósito',
-                'Para comenzar, selecciona una sucursal y un depósito en los selectores superiores.'
+                'Selecciona una sucursal y almacén',
+                'Para comenzar, selecciona una sucursal y un almacén en los selectores superiores.'
             );
             return;
         }
@@ -1523,7 +1544,7 @@ const WarehouseManagement = {
                     <div class="wms-stat-icon stock">📊</div>
                     <div class="wms-stat-info">
                         <h3>${this.formatNumber(stats.warehouses || 0)}</h3>
-                        <p>Depósitos Activos</p>
+                        <p>Almacenes Activos</p>
                     </div>
                 </div>
                 <div class="wms-stat-card">
@@ -1967,7 +1988,7 @@ const WarehouseManagement = {
                     <div class="wms-empty" style="grid-column: 1 / -1;">
                         <div class="wms-empty-icon">📍</div>
                         <h3>No hay zonas configuradas</h3>
-                        <p>Define zonas y ubicaciones para organizar tu depósito.</p>
+                        <p>Define zonas y ubicaciones para organizar tu almacén.</p>
                         <button class="wms-btn wms-btn-primary" onclick="WarehouseManagement.openZoneModal()">
                             <span>➕</span> Nueva Zona
                         </button>
@@ -2190,7 +2211,7 @@ const WarehouseManagement = {
             });
         }
 
-        // Cambio de depósito
+        // Cambio de almacén
         const warehouseSelector = document.getElementById('wms-warehouse-selector');
         if (warehouseSelector) {
             warehouseSelector.addEventListener('change', (e) => {

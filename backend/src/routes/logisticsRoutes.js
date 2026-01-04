@@ -731,6 +731,32 @@ router.get('/shipments', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * GET /api/logistics/shipments/pending
+ * Envíos pendientes de entrega
+ * IMPORTANTE: Esta ruta debe estar ANTES de /shipments/:id
+ */
+router.get('/shipments/pending', asyncHandler(async (req, res) => {
+    const companyId = req.user?.company_id || req.query.company_id;
+    const shipments = await ShipmentService.getPendingDeliveries(companyId, req.query);
+    res.json({ success: true, data: shipments });
+}));
+
+/**
+ * GET /api/logistics/shipments/kpis
+ * KPIs de envíos
+ * IMPORTANTE: Esta ruta debe estar ANTES de /shipments/:id
+ */
+router.get('/shipments/kpis', asyncHandler(async (req, res) => {
+    const companyId = req.user?.company_id || req.query.company_id;
+    const { date_from, date_to } = req.query;
+    const kpis = await ShipmentService.getShipmentKPIs(companyId, {
+        dateFrom: date_from,
+        dateTo: date_to
+    });
+    res.json({ success: true, data: kpis });
+}));
+
+/**
  * GET /api/logistics/shipments/:id
  * Obtener envío por ID
  */
@@ -885,30 +911,6 @@ router.get('/shipments/:id/pod', asyncHandler(async (req, res) => {
 router.get('/shipments/:id/label', asyncHandler(async (req, res) => {
     const label = await ShipmentService.getShippingLabelData(req.params.id);
     res.json({ success: true, data: label });
-}));
-
-/**
- * GET /api/logistics/shipments/pending
- * Envíos pendientes de entrega
- */
-router.get('/shipments/pending', asyncHandler(async (req, res) => {
-    const companyId = req.user?.company_id || req.query.company_id;
-    const shipments = await ShipmentService.getPendingDeliveries(companyId, req.query);
-    res.json({ success: true, data: shipments });
-}));
-
-/**
- * GET /api/logistics/shipments/kpis
- * KPIs de envíos
- */
-router.get('/shipments/kpis', asyncHandler(async (req, res) => {
-    const companyId = req.user?.company_id || req.query.company_id;
-    const { date_from, date_to } = req.query;
-    const kpis = await ShipmentService.getShipmentKPIs(companyId, {
-        dateFrom: date_from,
-        dateTo: date_to
-    });
-    res.json({ success: true, data: kpis });
 }));
 
 // Error handler

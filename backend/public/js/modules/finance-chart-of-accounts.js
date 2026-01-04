@@ -27,7 +27,12 @@ window.FinanceChartOfAccounts = (function() {
         return `
             <div class="finance-module">
                 <div class="module-header">
-                    <h2>📋 Plan de Cuentas</h2>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button onclick="window.showModuleContent('finance-dashboard', 'Finance Dashboard')" class="finance-back-btn">
+                            ← Volver a Finance
+                        </button>
+                        <h2>📋 Plan de Cuentas</h2>
+                    </div>
                     <div class="header-actions">
                         <input type="text" id="account-search" placeholder="Buscar cuenta..." class="search-input" oninput="FinanceChartOfAccounts.filterAccounts()">
                         <select id="account-type-filter" class="filter-select" onchange="FinanceChartOfAccounts.filterAccounts()">

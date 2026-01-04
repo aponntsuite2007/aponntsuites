@@ -1097,7 +1097,7 @@
             "CASE_ARCHIVED"
           ],
           "auto_generated": true,
-          "generated_at": "2026-01-03T18:13:12.025Z",
+          "generated_at": "2026-01-04T20:32:35.130Z",
           "stats": {
             "total": 43,
             "core": 3,
@@ -1107,7 +1107,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2026-01-03T18:13:12.029Z"
+      "lastBrainUpdate": "2026-01-04T20:32:35.135Z"
     },
     {
       "id": "associate-marketplace",
@@ -1279,7 +1279,7 @@
         "discoveredModals": 0,
         "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
       },
-      "lastBrainUpdate": "2026-01-03T18:13:12.017Z",
+      "lastBrainUpdate": "2026-01-04T20:32:35.117Z",
       "autoHealedGaps": 14,
       "workflows": {
         "clock_in": {
@@ -1405,7 +1405,7 @@
           "entry_point": "BIOMETRIC_CAPTURE",
           "final_states": [],
           "auto_generated": true,
-          "generated_at": "2026-01-03T18:13:12.014Z",
+          "generated_at": "2026-01-04T20:32:35.109Z",
           "stats": {
             "total": 152,
             "core": 37,

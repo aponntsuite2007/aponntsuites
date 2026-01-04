@@ -103,6 +103,47 @@ const Company = require('../models/Company')(sequelize);
 const SystemModule = require('../models/SystemModule')(sequelize);
 const CompanyModule = require('../models/CompanyModule')(sequelize);
 
+// ✅ MODELOS - Finance Enterprise System (39 modelos)
+const FinanceChartOfAccounts = require('../models/FinanceChartOfAccounts')(sequelize);
+const FinanceCostCenter = require('../models/FinanceCostCenter')(sequelize);
+const FinanceFiscalPeriod = require('../models/FinanceFiscalPeriod')(sequelize);
+const FinanceDimension = require('../models/FinanceDimension')(sequelize);
+const FinanceBudget = require('../models/FinanceBudget')(sequelize);
+const FinanceBudgetLine = require('../models/FinanceBudgetLine')(sequelize);
+const FinanceBudgetInvestment = require('../models/FinanceBudgetInvestment')(sequelize);
+const FinanceInflationRate = require('../models/FinanceInflationRate')(sequelize);
+const FinanceJournalEntry = require('../models/FinanceJournalEntry')(sequelize);
+const FinanceJournalEntryLine = require('../models/FinanceJournalEntryLine')(sequelize);
+const FinanceAccountBalance = require('../models/FinanceAccountBalance')(sequelize);
+const FinanceBudgetExecution = require('../models/FinanceBudgetExecution')(sequelize);
+const FinanceBankAccount = require('../models/FinanceBankAccount')(sequelize);
+const FinanceBankTransaction = require('../models/FinanceBankTransaction')(sequelize);
+const FinanceCashFlowForecast = require('../models/FinanceCashFlowForecast')(sequelize);
+const FinancePaymentMethod = require('../models/FinancePaymentMethod')(sequelize);
+const FinanceCashRegister = require('../models/FinanceCashRegister')(sequelize);
+const FinanceCashRegisterAssignment = require('../models/FinanceCashRegisterAssignment')(sequelize);
+const FinanceCashRegisterSession = require('../models/FinanceCashRegisterSession')(sequelize);
+const FinanceCashSessionBalance = require('../models/FinanceCashSessionBalance')(sequelize);
+const FinanceCashTransfer = require('../models/FinanceCashTransfer')(sequelize);
+const FinanceCashCount = require('../models/FinanceCashCount')(sequelize);
+const FinancePettyCashFund = require('../models/FinancePettyCashFund')(sequelize);
+const FinancePettyCashExpense = require('../models/FinancePettyCashExpense')(sequelize);
+const FinancePettyCashReplenishment = require('../models/FinancePettyCashReplenishment')(sequelize);
+const FinanceCashIntegrationConfig = require('../models/FinanceCashIntegrationConfig')(sequelize);
+const FinanceCashAdjustment = require('../models/FinanceCashAdjustment')(sequelize);
+const FinanceCashMovement = require('../models/FinanceCashMovement')(sequelize);
+const FinanceCashEgressRequest = require('../models/FinanceCashEgressRequest')(sequelize);
+const FinanceCurrency = require('../models/FinanceCurrency')(sequelize);
+const FinanceCurrencyExchange = require('../models/FinanceCurrencyExchange')(sequelize);
+const FinanceExchangeRate = require('../models/FinanceExchangeRate')(sequelize);
+const FinanceBalanceCarryover = require('../models/FinanceBalanceCarryover')(sequelize);
+const FinanceAuthorizationLog = require('../models/FinanceAuthorizationLog')(sequelize);
+const FinanceCheckBook = require('../models/FinanceCheckBook')(sequelize);
+const FinanceIssuedCheck = require('../models/FinanceIssuedCheck')(sequelize);
+const FinancePaymentOrder = require('../models/FinancePaymentOrder')(sequelize);
+const FinancePaymentOrderItem = require('../models/FinancePaymentOrderItem')(sequelize);
+const FinanceResponsibleConfig = require('../models/FinanceResponsibleConfig')(sequelize);
+
 // Nuevos modelos para documentación personal y licencias
 const MultipleARTConfiguration = require('../models/MultipleARTConfiguration')(sequelize);
 const VacationConfiguration = require('../models/VacationConfiguration')(sequelize);
@@ -1561,6 +1602,52 @@ EppInspection.belongsTo(EppDelivery, { foreignKey: 'delivery_id', as: 'delivery'
 User.hasMany(EppInspection, { foreignKey: 'inspector_id', sourceKey: 'user_id', as: 'eppInspections' });
 EppInspection.belongsTo(User, { foreignKey: 'inspector_id', targetKey: 'user_id', as: 'inspector' });
 
+// =========================================================================
+// ✅ ASOCIACIONES - Finance Enterprise System
+// =========================================================================
+
+// Company -> Finance models
+Company.hasMany(FinanceChartOfAccounts, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'financeChartOfAccounts' });
+Company.hasMany(FinanceAccountBalance, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'financeAccountBalances' });
+Company.hasMany(FinanceCostCenter, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'financeCostCenters' });
+Company.hasMany(FinanceFiscalPeriod, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'financeFiscalPeriods' });
+Company.hasMany(FinanceJournalEntry, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'financeJournalEntries' });
+Company.hasMany(FinanceBudget, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'financeBudgets' });
+
+// FinanceAccountBalance -> FinanceChartOfAccounts
+FinanceAccountBalance.belongsTo(FinanceChartOfAccounts, { foreignKey: 'account_id', as: 'account' });
+FinanceChartOfAccounts.hasMany(FinanceAccountBalance, { foreignKey: 'account_id', as: 'balances' });
+
+// FinanceAccountBalance -> Company
+FinanceAccountBalance.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// FinanceJournalEntry -> Company
+FinanceJournalEntry.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// FinanceJournalEntry -> FinanceJournalEntryLine
+FinanceJournalEntry.hasMany(FinanceJournalEntryLine, { foreignKey: 'entry_id', as: 'lines' });
+FinanceJournalEntryLine.belongsTo(FinanceJournalEntry, { foreignKey: 'entry_id', as: 'entry' });
+
+// FinanceJournalEntryLine -> FinanceChartOfAccounts
+FinanceJournalEntryLine.belongsTo(FinanceChartOfAccounts, { foreignKey: 'account_id', as: 'account' });
+FinanceChartOfAccounts.hasMany(FinanceJournalEntryLine, { foreignKey: 'account_id', as: 'journalLines' });
+
+// FinanceChartOfAccounts -> Company
+FinanceChartOfAccounts.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// FinanceCostCenter -> Company
+FinanceCostCenter.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// FinanceFiscalPeriod -> Company
+FinanceFiscalPeriod.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// FinanceBudget -> Company
+FinanceBudget.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// FinanceBudgetLine -> FinanceBudget
+FinanceBudgetLine.belongsTo(FinanceBudget, { foreignKey: 'budget_id', as: 'budget' });
+FinanceBudget.hasMany(FinanceBudgetLine, { foreignKey: 'budget_id', as: 'lines' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -1771,6 +1858,47 @@ module.exports = {
   EppDelivery,
   EppInspection,
   HseCompanyConfig,
+
+  // ✅ EXPORTS - Finance Enterprise System (39 modelos)
+  FinanceChartOfAccounts,
+  FinanceCostCenter,
+  FinanceFiscalPeriod,
+  FinanceDimension,
+  FinanceBudget,
+  FinanceBudgetLine,
+  FinanceBudgetInvestment,
+  FinanceInflationRate,
+  FinanceJournalEntry,
+  FinanceJournalEntryLine,
+  FinanceAccountBalance,
+  FinanceBudgetExecution,
+  FinanceBankAccount,
+  FinanceBankTransaction,
+  FinanceCashFlowForecast,
+  FinancePaymentMethod,
+  FinanceCashRegister,
+  FinanceCashRegisterAssignment,
+  FinanceCashRegisterSession,
+  FinanceCashSessionBalance,
+  FinanceCashTransfer,
+  FinanceCashCount,
+  FinancePettyCashFund,
+  FinancePettyCashExpense,
+  FinancePettyCashReplenishment,
+  FinanceCashIntegrationConfig,
+  FinanceCashAdjustment,
+  FinanceCashMovement,
+  FinanceCashEgressRequest,
+  FinanceCurrency,
+  FinanceCurrencyExchange,
+  FinanceExchangeRate,
+  FinanceBalanceCarryover,
+  FinanceAuthorizationLog,
+  FinanceCheckBook,
+  FinanceIssuedCheck,
+  FinancePaymentOrder,
+  FinancePaymentOrderItem,
+  FinanceResponsibleConfig,
 
   connect: async () => {
     try {

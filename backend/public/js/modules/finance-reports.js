@@ -27,7 +27,12 @@ window.FinanceReports = (function() {
         return `
             <div class="finance-module finance-reports">
                 <div class="module-header">
-                    <h2>📊 Reportes Financieros</h2>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button onclick="window.showModuleContent('finance-dashboard', 'Finance Dashboard')" class="finance-back-btn">
+                            ← Volver a Finance
+                        </button>
+                        <h2>📊 Reportes Financieros</h2>
+                    </div>
                     <div class="header-actions">
                         <select id="report-period-year" class="filter-select">
                             ${generateYearOptions()}

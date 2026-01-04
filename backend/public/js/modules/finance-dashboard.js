@@ -102,6 +102,19 @@ window.FinanceDashboard = (function() {
                 <!-- Alertas -->
                 <div id="finance-alerts" class="alerts-container" style="margin-bottom: 20px;"></div>
 
+                <!-- Finance Modules Grid -->
+                <div style="margin-bottom: 32px;">
+                    <h2 style="color: ${THEME.text}; font-size: 22px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+                        📊 Módulos Financieros Profesionales
+                        <span style="font-size: 12px; background: rgba(0, 217, 255, 0.2); color: ${THEME.success}; padding: 4px 12px; border-radius: 12px; font-weight: 600;">
+                            8 MÓDULOS PRO
+                        </span>
+                    </h2>
+                    <div id="finance-modules-grid" class="finance-modules-grid">
+                        <!-- Se renderiza dinámicamente -->
+                    </div>
+                </div>
+
                 <!-- KPIs Row 1 -->
                 <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
                     <div id="kpi-budget" class="kpi-card"></div>
@@ -249,6 +262,7 @@ window.FinanceDashboard = (function() {
 
             // Renderizar componentes
             renderAlerts(alerts);
+            renderFinanceModulesCards(); // Grid de 8 módulos profesionales
             renderKPIs(dashboard);
             renderCharts(dashboard);
             renderBudgetExecution(dashboard);
@@ -629,6 +643,74 @@ window.FinanceDashboard = (function() {
         `;
     }
 
+    /**
+     * Renderiza el grid de 8 módulos Finance profesionales
+     */
+    function renderFinanceModulesCards() {
+        const container = document.getElementById('finance-modules-grid');
+        if (!container) return;
+
+        const modules = [
+            {
+                key: 'chart-of-accounts',
+                icon: '📊',
+                name: 'Plan de Cuentas',
+                description: 'Gestión completa del plan de cuentas contable'
+            },
+            {
+                key: 'budget',
+                icon: '📋',
+                name: 'Presupuestos',
+                description: 'Control y seguimiento de presupuestos'
+            },
+            {
+                key: 'cash-flow',
+                icon: '💰',
+                name: 'Flujo de Caja',
+                description: 'Proyecciones y análisis de tesorería'
+            },
+            {
+                key: 'cost-centers',
+                icon: '🏢',
+                name: 'Centros de Costo',
+                description: 'Gestión de centros de costo y dimensiones'
+            },
+            {
+                key: 'journal-entries',
+                icon: '📝',
+                name: 'Asientos Contables',
+                description: 'Registro de movimientos contables'
+            },
+            {
+                key: 'treasury',
+                icon: '🏦',
+                name: 'Tesorería',
+                description: 'Gestión de caja, bancos y pagos'
+            },
+            {
+                key: 'reports',
+                icon: '📈',
+                name: 'Reportes Financieros',
+                description: 'Balance, Estado de Resultados y más'
+            },
+            {
+                key: 'executive-dashboard',
+                icon: '📊',
+                name: 'Dashboard Ejecutivo',
+                description: 'KPIs ejecutivos y análisis avanzado'
+            }
+        ];
+
+        container.innerHTML = modules.map(mod => `
+            <div class="finance-module-card" onclick="FinanceDashboard.goToModule('${mod.key}')">
+                <span class="module-icon">${mod.icon}</span>
+                <span class="module-name">${mod.name}</span>
+                <span class="module-description">${mod.description}</span>
+                <span class="module-badge">PRO</span>
+            </div>
+        `).join('');
+    }
+
     // =============================================
     // UTILIDADES
     // =============================================
@@ -668,9 +750,11 @@ window.FinanceDashboard = (function() {
     }
 
     function goToModule(moduleName) {
-        // Navegar a módulo específico
-        if (window.ModuleNavigator) {
-            window.ModuleNavigator.navigate(`finance-${moduleName}`);
+        // Navegar a módulo específico usando showModuleContent
+        if (window.showModuleContent) {
+            window.showModuleContent(`finance-${moduleName}`, moduleName);
+        } else {
+            console.error('showModuleContent no está disponible');
         }
     }
 

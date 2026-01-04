@@ -27,7 +27,12 @@ window.FinanceTreasury = (function() {
         return `
             <div class="finance-module">
                 <div class="module-header">
-                    <h2>🏦 Tesorería</h2>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button onclick="window.showModuleContent('finance-dashboard', 'Finance Dashboard')" class="finance-back-btn">
+                            ← Volver a Finance
+                        </button>
+                        <h2>🏦 Tesorería</h2>
+                    </div>
                     <div class="header-actions">
                         <button onclick="FinanceTreasury.showAddAccountModal()" class="btn-primary">
                             + Nueva Cuenta Bancaria

@@ -635,9 +635,14 @@ const FinanceExecutiveDashboard = {
     renderHeader() {
         return `
             <div class="finance-exec-header">
-                <div class="finance-exec-title">
-                    <h1>Dashboard Ejecutivo de Finanzas</h1>
-                    <span class="badge">ENTERPRISE</span>
+                <div style="display: flex; align-items: center; gap: 24px; flex: 1;">
+                    <button onclick="window.showModuleContent('finance-dashboard', 'Finance Dashboard')" class="finance-back-btn">
+                        ← Volver a Finance
+                    </button>
+                    <div class="finance-exec-title">
+                        <h1>Dashboard Ejecutivo de Finanzas</h1>
+                        <span class="badge">ENTERPRISE</span>
+                    </div>
                 </div>
                 <div class="finance-exec-actions">
                     <button class="finance-exec-btn secondary" onclick="FinanceExecutiveDashboard.exportReport()">

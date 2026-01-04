@@ -383,6 +383,7 @@ router.get('/:companyId', async (req, res) => {
     console.log(`🧩 [COMPANY-MODULES] Solicitando módulos para empresa: ${companyId}`);
 
     // Obtener módulos contratados por la empresa desde company_modules
+    // ✅ SSOT: Usar v_modules_by_panel para filtrar correctamente
     const contractedModules = await database.sequelize.query(`
       SELECT
         cm.id,
@@ -390,18 +391,23 @@ router.get('/:companyId', async (req, res) => {
         cm.system_module_id,
         cm.activo as is_active,
         cm.created_at as contracted_at,
-        sm.module_key,
-        sm.name,
-        sm.description,
-        sm.icon,
-        sm.color,
-        sm.category,
+        vmp.module_key,
+        vmp.name,
+        vmp.description,
+        vmp.icon,
+        vmp.color,
+        vmp.category,
+        vmp.commercial_type,
         sm.base_price,
-        sm.metadata
+        vmp.metadata
       FROM company_modules cm
       INNER JOIN system_modules sm ON cm.system_module_id = sm.id
+      INNER JOIN v_modules_by_panel vmp ON vmp.module_key = sm.module_key
       WHERE cm.company_id = ?
-      ORDER BY sm.category, sm.name ASC
+        AND cm.activo = true
+        AND vmp.target_panel = 'panel-empresa'
+        AND vmp.show_as_card = true
+      ORDER BY vmp.display_order, vmp.name ASC
     `, {
       replacements: [companyId],
       type: database.sequelize.QueryTypes.SELECT

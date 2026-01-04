@@ -122,6 +122,9 @@
     <!-- 🚚 LOGÍSTICA AVANZADA - WMS + TMS Dashboard -->
     <link rel="stylesheet" href="css/logistics-dashboard.css">
 
+    <!-- 💼 FINANCE MODULES - Dark Theme Professional -->
+    <link rel="stylesheet" href="css/finance-modules-dark.css">
+
     <!-- 📐 BALANCEADO - CSS balanceado sin romper el diseño original -->
     <!-- COMENTADO TEMPORALMENTE - CSS muy agresivo que rompió el diseño
     <link rel="stylesheet" href="css/module-buttons-compact.css">
@@ -2233,6 +2236,17 @@
 
     <!-- 🚚 Logística Avanzada - WMS + TMS -->
     <script src="js/modules/logistics-dashboard.js"></script>
+
+    <!-- 💼 Finance Enterprise System - 9 Módulos Profesionales -->
+    <script src="js/modules/finance-dashboard.js"></script>
+    <script src="js/modules/finance-chart-of-accounts.js"></script>
+    <script src="js/modules/finance-budget.js"></script>
+    <script src="js/modules/finance-cash-flow.js"></script>
+    <script src="js/modules/finance-cost-centers.js"></script>
+    <script src="js/modules/finance-journal-entries.js"></script>
+    <script src="js/modules/finance-treasury.js"></script>
+    <script src="js/modules/finance-reports.js"></script>
+    <script src="js/modules/finance-executive-dashboard.js"></script>
 
     <!-- 🎯 Brain Tour Guide - ACTIVADO con verificación de prerrequisitos -->
     <script src="js/modules/brain-tour-guide.js"></script>
@@ -4540,7 +4554,9 @@
                             mainContent.innerHTML = `<div id="${containerId}" style="padding:20px;"></div>`;
                         }
 
-                        window[pascalCaseName].init(containerId);
+                        // Pasar elemento DOM, no string (algunos módulos esperan elemento)
+                        const containerElement = document.getElementById(containerId);
+                        window[pascalCaseName].init(containerElement || containerId);
                         initialized = true;
                     }
                 }
@@ -4568,6 +4584,7 @@
                         'procedures-manual': 'showProceduresManualContent',
                         'my-procedures': 'showMyProceduresContent',
                         'user-support': 'showUserSupportContent'
+                        // Finance modules use PascalCase pattern (handled above), no need for legacy mapping
                     };
 
                     const legacyFunctionName = legacyFunctionMap[moduleId] || `show${capitalize(moduleId)}Content`;

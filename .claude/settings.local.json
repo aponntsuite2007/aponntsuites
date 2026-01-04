@@ -100,7 +100,18 @@
       "Bash(cmd //c \"taskkill /F /PID 34672\")",
       "Bash(for f in src/routes/financeBudgetRoutes.js src/routes/financeDashboardRoutes.js src/routes/financeReportsRoutes.js src/routes/financeTreasuryRoutes.js)",
       "Bash(do sed -i 's/authenticateToken/auth/g' \"$f\")",
-      "Bash(while read f)"
+      "Bash(while read f)",
+      "Bash(backend/migrations/*.sql)",
+      "Bash(backend/public/css/*.css)",
+      "Bash(backend/scripts/*.js)",
+      "Bash(backend/*.md)",
+      "Bash(backend/engineering-metadata.js)",
+      "Bash(PGPASSWORD=\"G50GN9h8meeCVsfi51Z7SlPQn4ThyJXY\" '/c/Program Files/PostgreSQL/16/bin/psql.exe' -h dpg-d4op2lq4d50c7392i190-a.oregon-postgres.render.com -p 5432 -U aponnt_db_user -d aponnt_db -t -c \"SELECT COUNT\\(*\\) FROM pg_tables WHERE schemaname=''public'' AND tablename LIKE ''wms_%'';\")",
+      "Bash(PGPASSWORD=\"G50GN9h8meeCVsfi51Z7SlPQn4ThyJXY\" '/c/Program Files/PostgreSQL/16/bin/psql.exe' -h dpg-d4op2lq4d50c7392i190-a.oregon-postgres.render.com -p 5432 -U aponnt_db_user -d aponnt_db -f /c/Bio/sistema_asistencia_biometrico/backend/migrations/20260104_wms_products_enterprise_fields.sql)",
+      "Bash(PGPASSWORD=\"Aedr15150302\" '/c/Program Files/PostgreSQL/16/bin/psql.exe' -h localhost -p 5432 -U postgres -d attendance_system -t -c \"SELECT module_key, name FROM system_modules WHERE module_key LIKE ''finance-%'' ORDER BY module_key;\")",
+      "Bash(PGPASSWORD=\"G50GN9h8meeCVsfi51Z7SlPQn4ThyJXY\" '/c/Program Files/PostgreSQL/16/bin/psql.exe' -h dpg-d4op2lq4d50c7392i190-a.oregon-postgres.render.com -p 5432 -U aponnt_db_user -d aponnt_db -c \"\\\\d system_modules\")",
+      "Bash(git fsck:*)",
+      "Bash(cmd //c \"taskkill /F /PID 30484\")"
     ],
     "deny": [],
     "ask": []

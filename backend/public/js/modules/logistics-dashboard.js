@@ -2296,6 +2296,99 @@
                 background: rgba(245, 158, 11, 0.2);
                 color: #fbbf24;
             }
+
+            /* Notificaciones toast */
+            .logistics-notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 500;
+                z-index: 10001;
+                animation: slideIn 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            }
+
+            .logistics-notification.success {
+                background: linear-gradient(135deg, #10b981, #059669);
+            }
+
+            .logistics-notification.error {
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+            }
+
+            .logistics-notification.info {
+                background: linear-gradient(135deg, #3b82f6, #2563eb);
+            }
+
+            .logistics-notification.warning {
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+            }
+
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+
+            /* Info Banner */
+            .info-banner {
+                background: rgba(59, 130, 246, 0.15);
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                border-radius: 8px;
+                padding: 12px 16px;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #93c5fd;
+            }
+
+            .info-banner .info-icon {
+                font-size: 18px;
+            }
+
+            /* Empty State */
+            .empty-state {
+                text-align: center;
+                padding: 60px 20px;
+                background: rgba(30, 30, 50, 0.5);
+                border-radius: 12px;
+                border: 2px dashed rgba(255, 255, 255, 0.1);
+            }
+
+            .empty-state .empty-icon {
+                font-size: 48px;
+                display: block;
+                margin-bottom: 15px;
+            }
+
+            .empty-state h4 {
+                color: #e6edf3;
+                margin: 0 0 10px 0;
+            }
+
+            .empty-state p {
+                color: #8b949e;
+                margin: 0 0 20px 0;
+            }
+
+            .empty-text {
+                color: #8b949e;
+                font-style: italic;
+                padding: 20px;
+            }
+
+            /* Header actions */
+            .header-actions {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
         `;
         document.head.appendChild(styleSheet);
     }
@@ -3658,40 +3751,82 @@
     // ============================================================================
 
     function renderWarehousesTab() {
+        const hasWarehouses = cache.warehouses && cache.warehouses.length > 0;
+
         return `
             <div class="logistics-warehouses">
                 <div class="section-header">
-                    <h3>🏭 Gestión de Almacenes</h3>
-                    <button class="btn-primary" onclick="LogisticsDashboard.showCreateWarehouseModal()">
-                        + Nuevo Almacén
-                    </button>
+                    <h3>🏭 Almacenes Disponibles</h3>
+                    <div class="header-actions">
+                        <button class="btn-secondary" onclick="LogisticsDashboard.openWMSModule()">
+                            🔗 Ir a Gestión de Almacenes (WMS)
+                        </button>
+                        <button class="btn-icon" onclick="LogisticsDashboard.refreshWarehouses()" title="Actualizar">
+                            🔄
+                        </button>
+                    </div>
                 </div>
 
-                <div class="warehouses-grid" id="warehouses-grid">
-                    ${cache.warehouses.map(renderWarehouseCard).join('')}
+                <div class="info-banner">
+                    <span class="info-icon">ℹ️</span>
+                    <span>Los almacenes se gestionan desde el módulo <strong>Gestión de Almacenes (WMS)</strong>.
+                    Aquí se muestran para operaciones logísticas.</span>
                 </div>
+
+                ${hasWarehouses ? `
+                    <div class="warehouses-grid" id="warehouses-grid">
+                        ${cache.warehouses.map(renderWarehouseCard).join('')}
+                    </div>
+                ` : `
+                    <div class="empty-state">
+                        <span class="empty-icon">🏭</span>
+                        <h4>No hay almacenes configurados</h4>
+                        <p>Configura almacenes desde el módulo WMS para comenzar operaciones logísticas.</p>
+                        <button class="btn-primary" onclick="LogisticsDashboard.openWMSModule()">
+                            Ir a Gestión de Almacenes
+                        </button>
+                    </div>
+                `}
 
                 <div class="section-header mt-4">
                     <h3>📍 Tipos de Ubicación</h3>
-                    <button class="btn-secondary" onclick="LogisticsDashboard.showCreateLocationTypeModal()">
-                        + Nuevo Tipo
-                    </button>
                 </div>
 
                 <div class="location-types-list" id="location-types-list">
-                    ${cache.locationTypes.map(renderLocationType).join('')}
+                    ${(cache.locationTypes || []).length > 0
+                        ? cache.locationTypes.map(renderLocationType).join('')
+                        : '<p class="empty-text">Sin tipos de ubicación configurados</p>'}
                 </div>
             </div>
         `;
     }
 
+    // Función para abrir módulo WMS
+    window.LogisticsDashboard.openWMSModule = function() {
+        // Buscar si existe el módulo WMS y abrirlo
+        if (typeof window.loadModule === 'function') {
+            window.loadModule('warehouse-management');
+        } else {
+            showInfo('Módulo Gestión de Almacenes - Abrir desde el menú lateral');
+        }
+    };
+
+    window.LogisticsDashboard.refreshWarehouses = async function() {
+        showSuccess('Actualizando almacenes...');
+        await loadWarehouses();
+        const grid = document.getElementById('warehouses-grid');
+        if (grid) {
+            grid.innerHTML = cache.warehouses.map(renderWarehouseCard).join('');
+        }
+    };
+
     function renderWarehouseCard(warehouse) {
         return `
             <div class="warehouse-card" onclick="LogisticsDashboard.viewWarehouse(${warehouse.id})">
                 <div class="warehouse-header">
-                    <span class="warehouse-code">${warehouse.code}</span>
-                    <span class="warehouse-status ${warehouse.is_active ? 'active' : 'inactive'}">
-                        ${warehouse.is_active ? 'Activo' : 'Inactivo'}
+                    <span class="warehouse-code">${warehouse.code || 'WH'}</span>
+                    <span class="warehouse-status ${warehouse.is_active !== false ? 'active' : 'inactive'}">
+                        ${warehouse.is_active !== false ? 'Activo' : 'Inactivo'}
                     </span>
                 </div>
                 <h4 class="warehouse-name">${warehouse.name}</h4>
@@ -3707,16 +3842,27 @@
                     </div>
                 </div>
                 <div class="warehouse-actions">
-                    <button class="btn-icon" onclick="event.stopPropagation(); LogisticsDashboard.editWarehouse(${warehouse.id})">
-                        ✏️
+                    <button class="btn-icon" onclick="event.stopPropagation(); LogisticsDashboard.openWMSModule()" title="Editar en WMS">
+                        🔗
                     </button>
-                    <button class="btn-icon" onclick="event.stopPropagation(); LogisticsDashboard.viewWarehouseLocations(${warehouse.id})">
-                        📍
+                    <button class="btn-icon" onclick="event.stopPropagation(); LogisticsDashboard.selectWarehouseForOperations(${warehouse.id})" title="Usar para operaciones">
+                        ✅
                     </button>
                 </div>
             </div>
         `;
     }
+
+    window.LogisticsDashboard.selectWarehouseForOperations = function(warehouseId) {
+        currentWarehouseId = warehouseId;
+        const warehouse = cache.warehouses.find(w => w.id === warehouseId);
+        const name = warehouse ? warehouse.name : warehouseId;
+        showSuccess('Almacén "' + name + '" seleccionado para operaciones');
+
+        // Actualizar selector en header
+        const selector = document.getElementById('warehouse-selector');
+        if (selector) selector.value = warehouseId;
+    };
 
     function renderLocationType(type) {
         return `
@@ -5954,7 +6100,11 @@
 
     function showSuccess(message) {
         console.log('✅', message);
-        // Implementar toast notification
+        const notification = document.createElement('div');
+        notification.className = 'logistics-notification success';
+        notification.innerHTML = `<span>✅</span> ${message}`;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 4000);
     }
 
     function refreshData() {
@@ -5996,7 +6146,31 @@
 
     function showError(message) {
         console.error(message);
-        // Implementar notificación visual
+        // Mostrar notificación de error
+        const notification = document.createElement('div');
+        notification.className = 'logistics-notification error';
+        notification.innerHTML = `<span>❌</span> ${message}`;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 4000);
+    }
+
+    function showInfo(message) {
+        console.info(message);
+        // Mostrar notificación informativa
+        const notification = document.createElement('div');
+        notification.className = 'logistics-notification info';
+        notification.innerHTML = `<span>ℹ️</span> ${message}`;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 4000);
+    }
+
+    function showWarning(message) {
+        console.warn(message);
+        const notification = document.createElement('div');
+        notification.className = 'logistics-notification warning';
+        notification.innerHTML = `<span>⚠️</span> ${message}`;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 4000);
     }
 
     // Exponer funciones públicas adicionales
@@ -6025,26 +6199,3097 @@
         }
     };
 
-    // Más funciones públicas...
+    // ============================================================================
+    // SISTEMA DE MODALES
+    // ============================================================================
+
+    function showModal(title, content, onSave) {
+        const existingModal = document.getElementById('logistics-modal');
+        if (existingModal) existingModal.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'logistics-modal';
+        modal.className = 'logistics-modal-overlay';
+        modal.innerHTML = `
+            <div class="logistics-modal logistics-modal-large">
+                <div class="modal-header">
+                    <h3>${title}</h3>
+                    <button class="modal-close" onclick="LogisticsDashboard.closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    ${content}
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="LogisticsDashboard.closeModal()">Cancelar</button>
+                    <button class="btn-primary" onclick="LogisticsDashboard.saveModal()">Guardar</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        modal._onSave = onSave;
+
+        // Inicializar tabs si existen
+        setTimeout(() => {
+            const tabs = modal.querySelectorAll('.form-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    modal.querySelectorAll('.form-tab-content').forEach(content => {
+                        content.classList.remove('active');
+                        if (content.dataset.tab === tabName || content.id === `tab-${tabName}`) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+        }, 100);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('logistics-modal');
+        if (modal) modal.remove();
+    }
+
+    window.LogisticsDashboard.closeModal = closeModal;
+
+    window.LogisticsDashboard.saveModal = async function() {
+        const modal = document.getElementById('logistics-modal');
+        if (modal && modal._onSave) {
+            await modal._onSave();
+        }
+    };
+
+    // ============================================================================
+    // MODAL: CREAR ALMACÉN
+    // ============================================================================
     window.LogisticsDashboard.showCreateWarehouseModal = function() {
-        console.log('Crear almacén');
-        // TODO: Implementar modal
+        const content = `
+            <form id="warehouse-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Código *</label>
+                        <input type="text" name="code" required placeholder="ALM-001" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" name="name" required placeholder="Almacén Principal">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Dirección</label>
+                        <input type="text" name="address" placeholder="Av. Industrial 1234">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ciudad</label>
+                        <input type="text" name="city" placeholder="Buenos Aires">
+                    </div>
+                    <div class="form-group">
+                        <label>Capacidad (m³)</label>
+                        <input type="number" name="capacity_m3" placeholder="1000" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select name="warehouse_type">
+                            <option value="main">Principal</option>
+                            <option value="distribution">Distribución</option>
+                            <option value="cross_dock">Cross-Dock</option>
+                            <option value="cold_storage">Refrigerado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select name="status">
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        `;
+
+        showModal('🏭 Nuevo Almacén', content, async () => {
+            const form = document.getElementById('warehouse-form');
+            const formData = new FormData(form);
+            try {
+                const response = await fetchAPI('/warehouses', {
+                    method: 'POST',
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+                if (response.success) {
+                    showSuccess('Almacén creado exitosamente');
+                    closeModal();
+                    loadTabData('warehouses');
+                }
+            } catch (error) {
+                showError('Error al crear almacén');
+            }
+        });
     };
 
+    // ============================================================================
+    // MODAL: CREAR TRANSPORTISTA
+    // ============================================================================
     window.LogisticsDashboard.showCreateCarrierModal = function() {
-        console.log('Crear transportista');
+        const content = `
+            <form id="carrier-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Código *</label>
+                        <input type="text" name="code" required placeholder="TRANS-001" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre/Razón Social *</label>
+                        <input type="text" name="name" required placeholder="Transportes Express S.A.">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>CUIT/Tax ID</label>
+                        <input type="text" name="tax_id" placeholder="30-12345678-9">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select name="carrier_type">
+                            <option value="own">Flota Propia</option>
+                            <option value="third_party">Tercerizado</option>
+                            <option value="courier">Courier/Mensajería</option>
+                            <option value="freight">Carga Pesada</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" name="phone" placeholder="+54 11 1234-5678">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" placeholder="contacto@transporte.com">
+                    </div>
+                </div>
+            </form>
+        `;
+
+        showModal('🚛 Nuevo Transportista', content, async () => {
+            const form = document.getElementById('carrier-form');
+            const formData = new FormData(form);
+            try {
+                const response = await fetchAPI('/carriers', {
+                    method: 'POST',
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+                if (response.success) {
+                    showSuccess('Transportista creado exitosamente');
+                    closeModal();
+                    loadTabData('fleet');
+                }
+            } catch (error) {
+                showError('Error al crear transportista');
+            }
+        });
     };
 
+    // ============================================================================
+    // MODAL: CREAR VEHÍCULO (EXPANDIDO - 4 TABS)
+    // ============================================================================
+    window.LogisticsDashboard.showCreateVehicleModal = function() {
+        const carriersOptions = (cache.carriers || []).map(c =>
+            `<option value="${c.id}">${c.name}</option>`
+        ).join('');
+
+        const content = `
+            <form id="vehicle-form" class="modal-form modal-form-large">
+                <!-- TABS DE NAVEGACIÓN -->
+                <div class="form-tabs">
+                    <button type="button" class="form-tab active" data-tab="basic">📋 Básico</button>
+                    <button type="button" class="form-tab" data-tab="specs">⚙️ Especificaciones</button>
+                    <button type="button" class="form-tab" data-tab="docs">📄 Documentación</button>
+                    <button type="button" class="form-tab" data-tab="equipment">🔧 Equipamiento</button>
+                </div>
+
+                <!-- TAB: DATOS BÁSICOS -->
+                <div class="form-tab-content active" data-tab="basic">
+                    <div class="form-section-title">Identificación del Vehículo</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Dominio/Patente Tractor *</label>
+                            <input type="text" name="plate_number" required placeholder="ABC123" maxlength="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Dominio Semirremolque/Acoplado</label>
+                            <input type="text" name="trailer_plate" placeholder="XYZ789" maxlength="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Número Interno</label>
+                            <input type="text" name="internal_number" placeholder="U-001">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Marca *</label>
+                            <select name="brand" required>
+                                <option value="">Seleccionar...</option>
+                                <optgroup label="🚛 Camiones Pesados">
+                                    <option value="Scania">Scania</option>
+                                    <option value="Volvo">Volvo</option>
+                                    <option value="Mercedes-Benz">Mercedes-Benz</option>
+                                    <option value="MAN">MAN</option>
+                                    <option value="DAF">DAF</option>
+                                    <option value="Iveco">Iveco</option>
+                                </optgroup>
+                                <optgroup label="🚚 Camiones Medianos">
+                                    <option value="Volkswagen">Volkswagen</option>
+                                    <option value="Ford">Ford Cargo</option>
+                                    <option value="Hino">Hino</option>
+                                    <option value="Isuzu">Isuzu</option>
+                                    <option value="Agrale">Agrale</option>
+                                </optgroup>
+                                <optgroup label="🚐 Utilitarios">
+                                    <option value="Fiat">Fiat</option>
+                                    <option value="Renault">Renault</option>
+                                    <option value="Peugeot">Peugeot</option>
+                                    <option value="Citroën">Citroën</option>
+                                    <option value="Toyota">Toyota</option>
+                                </optgroup>
+                                <optgroup label="🏍️ Motos">
+                                    <option value="Honda">Honda</option>
+                                    <option value="Yamaha">Yamaha</option>
+                                    <option value="Zanella">Zanella</option>
+                                    <option value="Motomel">Motomel</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Modelo *</label>
+                            <input type="text" name="model" required placeholder="R450 / Actros / Daily">
+                        </div>
+                        <div class="form-group">
+                            <label>Año *</label>
+                            <input type="number" name="year" required min="1990" max="2030" placeholder="2023">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>VIN/Número de Chasis *</label>
+                            <input type="text" name="vin" required placeholder="1HGBH41JXMN109186" minlength="17" maxlength="17">
+                        </div>
+                        <div class="form-group">
+                            <label>Número de Motor</label>
+                            <input type="text" name="engine_number" placeholder="ABC123456">
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Configuración del Vehículo</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo de Unidad *</label>
+                            <select name="unit_type" required onchange="LogisticsDashboard.onVehicleTypeChange(this.value)">
+                                <option value="">Seleccionar...</option>
+                                <optgroup label="🏍️ Motocicletas">
+                                    <option value="motorcycle">Motocicleta</option>
+                                    <option value="moto_cargo">Moto con Caja de Carga</option>
+                                </optgroup>
+                                <optgroup label="🚐 Utilitarios y Furgones">
+                                    <option value="van_small">Furgoneta Pequeña (hasta 1.5t)</option>
+                                    <option value="van_medium">Furgón Mediano (hasta 3.5t)</option>
+                                    <option value="van_large">Furgón Grande (hasta 7t)</option>
+                                    <option value="pickup">Pickup/Camioneta</option>
+                                </optgroup>
+                                <optgroup label="🚚 Camiones Rígidos">
+                                    <option value="truck_light">Camión Liviano (3.5-7.5t)</option>
+                                    <option value="truck_medium">Camión Mediano (7.5-12t)</option>
+                                    <option value="truck_heavy">Camión Pesado (12-26t)</option>
+                                </optgroup>
+                                <optgroup label="🚛 Tractores y Combinaciones">
+                                    <option value="tractor_4x2">Tractor 4x2</option>
+                                    <option value="tractor_6x2">Tractor 6x2</option>
+                                    <option value="tractor_6x4">Tractor 6x4</option>
+                                </optgroup>
+                                <optgroup label="🚛🚛 Semirremolques">
+                                    <option value="semi_dryvan">Semirremolque Furgón (Dry Van)</option>
+                                    <option value="semi_reefer">Semirremolque Refrigerado</option>
+                                    <option value="semi_flatbed">Semirremolque Plataforma</option>
+                                    <option value="semi_curtain">Semirremolque Tautliner/Cortinas</option>
+                                    <option value="semi_lowboy">Semirremolque Cama Baja</option>
+                                    <option value="semi_container">Portacontenedor</option>
+                                </optgroup>
+                                <optgroup label="🐄 Transporte de Ganado">
+                                    <option value="livestock_cattle">Jaula para Bovinos</option>
+                                    <option value="livestock_pig">Jaula para Porcinos</option>
+                                    <option value="livestock_sheep">Jaula para Ovinos</option>
+                                    <option value="livestock_poultry">Transporte Avícola</option>
+                                    <option value="livestock_horse">Transporte Equino</option>
+                                </optgroup>
+                                <optgroup label="🌾 Transporte de Granos">
+                                    <option value="grain_hopper">Tolva Granelera</option>
+                                    <option value="grain_silo">Silo Móvil</option>
+                                </optgroup>
+                                <optgroup label="🛢️ Cisternas">
+                                    <option value="tanker_fuel">Cisterna Combustible</option>
+                                    <option value="tanker_chemical">Cisterna Química</option>
+                                    <option value="tanker_food">Cisterna Alimenticia</option>
+                                    <option value="tanker_gas">Cisterna GLP/GNC</option>
+                                </optgroup>
+                                <optgroup label="🚛🚛🚛 Bitrén/Road Train">
+                                    <option value="bitren">Bitrén (2 semirremolques)</option>
+                                    <option value="road_train">Road Train (3+ unidades)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Configuración de Ejes</label>
+                            <select name="axle_config">
+                                <option value="">-- Seleccionar --</option>
+                                <optgroup label="🏍️ Motocicletas">
+                                    <option value="2x1">2x1 (2 ruedas, 1 tracción) - Motos</option>
+                                </optgroup>
+                                <optgroup label="🚐 Vehículos Livianos (2 ejes)">
+                                    <option value="4x2">4x2 (2 ejes, 1 tracción)</option>
+                                </optgroup>
+                                <optgroup label="🚚 Camiones Medianos (3 ejes)">
+                                    <option value="6x2">6x2 (3 ejes, 1 tracción)</option>
+                                    <option value="6x4">6x4 (3 ejes, 2 tracción)</option>
+                                </optgroup>
+                                <optgroup label="🚛 Camiones Pesados (4+ ejes)">
+                                    <option value="8x2">8x2 (4 ejes, 1 tracción)</option>
+                                    <option value="8x4">8x4 (4 ejes, 2 tracción)</option>
+                                </optgroup>
+                                <optgroup label="🚛🚛 Combinaciones con Semirremolque">
+                                    <option value="6x2+2">6x2+2 (Tractor 3 ejes + Semi 2 ejes)</option>
+                                    <option value="6x2+3">6x2+3 (Tractor 3 ejes + Semi 3 ejes)</option>
+                                    <option value="6x4+3">6x4+3 (Tractor 3 ejes + Semi 3 ejes)</option>
+                                </optgroup>
+                                <optgroup label="🚛🚛🚛 Bitrén/Road Train">
+                                    <option value="6x4+3+2">6x4+3+2 (Bitrén 8 ejes)</option>
+                                    <option value="6x4+3+3">6x4+3+3 (Bitrén 9 ejes)</option>
+                                    <option value="8x4+3+3">8x4+3+3 (Road Train 10 ejes)</option>
+                                </optgroup>
+                                <option value="other">Otra configuración</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cantidad de Ejes (Total)</label>
+                            <input type="number" name="total_axles" min="2" max="12" placeholder="5">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Carrocería</label>
+                            <select name="body_type">
+                                <option value="closed">Cerrada/Furgón</option>
+                                <option value="open">Abierta/Plataforma</option>
+                                <option value="curtainside">Cortinas Laterales</option>
+                                <option value="refrigerated">Refrigerada</option>
+                                <option value="tanker">Cisterna</option>
+                                <option value="tipper">Volcadora</option>
+                                <option value="livestock">Jaula Ganadera</option>
+                                <option value="hopper">Tolva</option>
+                                <option value="container">Portacontenedor</option>
+                                <option value="lowboy">Cama Baja</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Transportista</label>
+                            <select name="carrier_id">
+                                <option value="">-- Flota Propia --</option>
+                                ${carriersOptions}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <select name="status">
+                                <option value="available">Disponible</option>
+                                <option value="in_use">En Uso</option>
+                                <option value="maintenance">En Mantenimiento</option>
+                                <option value="inactive">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: ESPECIFICACIONES TÉCNICAS -->
+                <div class="form-tab-content" data-tab="specs">
+                    <div class="form-section-title">Capacidades</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Capacidad de Carga (kg)</label>
+                            <input type="number" name="load_capacity_kg" placeholder="25000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Volumen (m³)</label>
+                            <input type="number" name="volume_m3" placeholder="90" min="0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Peso Bruto Total (kg)</label>
+                            <input type="number" name="gross_weight_kg" placeholder="45000" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tara (kg)</label>
+                            <input type="number" name="tare_weight_kg" placeholder="15000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Largo Interno (m)</label>
+                            <input type="number" name="internal_length_m" placeholder="13.6" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Ancho Interno (m)</label>
+                            <input type="number" name="internal_width_m" placeholder="2.45" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Alto Interno (m)</label>
+                            <input type="number" name="internal_height_m" placeholder="2.70" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Capacidad Pallets (Europallet)</label>
+                            <input type="number" name="pallet_capacity" placeholder="33" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Puertas de Carga</label>
+                            <select name="loading_doors">
+                                <option value="rear">Solo Trasera</option>
+                                <option value="side">Solo Lateral</option>
+                                <option value="both">Trasera + Lateral</option>
+                                <option value="top">Superior (Tolva)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Motor y Combustible</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Potencia (HP)</label>
+                            <input type="number" name="engine_power_hp" placeholder="450">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Combustible</label>
+                            <select name="fuel_type">
+                                <option value="diesel">Diesel</option>
+                                <option value="gasoline">Nafta</option>
+                                <option value="gnc">GNC</option>
+                                <option value="electric">Eléctrico</option>
+                                <option value="hybrid">Híbrido</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Consumo Promedio (L/100km)</label>
+                            <input type="number" name="fuel_consumption" placeholder="35" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Capacidad Tanque (L)</label>
+                            <input type="number" name="fuel_tank_capacity" placeholder="600">
+                        </div>
+                        <div class="form-group">
+                            <label>Norma de Emisiones</label>
+                            <select name="emission_standard">
+                                <option value="euro6">Euro 6</option>
+                                <option value="euro5">Euro 5</option>
+                                <option value="euro4">Euro 4</option>
+                                <option value="euro3">Euro 3</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>AdBlue/DEF</label>
+                            <select name="has_adblue">
+                                <option value="yes">Sí - Con AdBlue</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sección especial para ganado -->
+                    <div id="livestock-specs" style="display:none;">
+                        <div class="form-section-title">🐄 Especificaciones Ganaderas</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Capacidad Bovinos (500kg c/u)</label>
+                                <input type="number" name="cattle_capacity" placeholder="30">
+                            </div>
+                            <div class="form-group">
+                                <label>Capacidad Porcinos (100kg c/u)</label>
+                                <input type="number" name="pig_capacity" placeholder="100">
+                            </div>
+                            <div class="form-group">
+                                <label>Pisos/Niveles</label>
+                                <select name="livestock_floors">
+                                    <option value="1">1 Piso</option>
+                                    <option value="2">2 Pisos</option>
+                                    <option value="3">3 Pisos</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Sistema de Ventilación</label>
+                                <select name="ventilation_system">
+                                    <option value="natural">Natural</option>
+                                    <option value="forced">Forzada</option>
+                                    <option value="climate">Climatizada</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Bebederos</label>
+                                <select name="has_water_system">
+                                    <option value="yes">Sí</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rampa Hidráulica</label>
+                                <select name="has_hydraulic_ramp">
+                                    <option value="yes">Sí</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección especial para granos -->
+                    <div id="grain-specs" style="display:none;">
+                        <div class="form-section-title">🌾 Especificaciones Graneleras</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Capacidad (Toneladas)</label>
+                                <input type="number" name="grain_capacity_tons" placeholder="30">
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo de Descarga</label>
+                                <select name="discharge_type">
+                                    <option value="gravity">Gravedad</option>
+                                    <option value="hydraulic">Hidráulica</option>
+                                    <option value="pneumatic">Neumática</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Cobertura</label>
+                                <select name="grain_cover">
+                                    <option value="tarp">Lona Manual</option>
+                                    <option value="automatic">Lona Automática</option>
+                                    <option value="hardtop">Techo Rígido</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección especial para refrigerados -->
+                    <div id="reefer-specs" style="display:none;">
+                        <div class="form-section-title">❄️ Especificaciones Refrigeración</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Marca Equipo Frío</label>
+                                <select name="reefer_brand">
+                                    <option value="thermoking">Thermo King</option>
+                                    <option value="carrier">Carrier</option>
+                                    <option value="daikin">Daikin</option>
+                                    <option value="other">Otro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rango de Temperatura</label>
+                                <select name="temp_range">
+                                    <option value="frozen">Congelado (-25°C a -18°C)</option>
+                                    <option value="chilled">Refrigerado (0°C a 4°C)</option>
+                                    <option value="multi">Multi-Temperatura</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Particiones</label>
+                                <select name="reefer_partitions">
+                                    <option value="0">Sin particiones</option>
+                                    <option value="1">1 partición</option>
+                                    <option value="2">2 particiones</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: DOCUMENTACIÓN -->
+                <div class="form-tab-content" data-tab="docs">
+                    <div class="form-section-title">Documentación Obligatoria</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>VTV/ITV Vencimiento *</label>
+                            <input type="date" name="vtv_expiry" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Seguro Vencimiento *</label>
+                            <input type="date" name="insurance_expiry" required>
+                        </div>
+                        <div class="form-group">
+                            <label>RUTA/Habilitación CNRT</label>
+                            <input type="date" name="ruta_expiry">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Número de Póliza</label>
+                            <input type="text" name="insurance_policy" placeholder="POL-123456">
+                        </div>
+                        <div class="form-group">
+                            <label>Aseguradora</label>
+                            <select name="insurance_company">
+                                <option value="">Seleccionar...</option>
+                                <option value="la_segunda">La Segunda</option>
+                                <option value="mapfre">Mapfre</option>
+                                <option value="zurich">Zurich</option>
+                                <option value="allianz">Allianz</option>
+                                <option value="federacion_patronal">Federación Patronal</option>
+                                <option value="sancor">Sancor</option>
+                                <option value="other">Otra</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Cobertura</label>
+                            <select name="insurance_type">
+                                <option value="full">Todo Riesgo</option>
+                                <option value="third_party">Terceros Completo</option>
+                                <option value="basic">Responsabilidad Civil</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Certificaciones Especiales</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_hazmat_cert" onchange="LogisticsDashboard.toggleHazmatFields(this.checked)">
+                                ☢️ Habilitación HAZMAT/ADR
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_food_cert">
+                                🍎 Habilitación Alimentos (SENASA)
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_pharma_cert">
+                                💊 Habilitación Farmacéutica
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="hazmat-docs" style="display:none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Clases ADR Habilitadas</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" name="hazmat_class_1"> Clase 1 - Explosivos</label>
+                                    <label><input type="checkbox" name="hazmat_class_2"> Clase 2 - Gases</label>
+                                    <label><input type="checkbox" name="hazmat_class_3"> Clase 3 - Líquidos Inflamables</label>
+                                    <label><input type="checkbox" name="hazmat_class_4"> Clase 4 - Sólidos Inflamables</label>
+                                    <label><input type="checkbox" name="hazmat_class_5"> Clase 5 - Oxidantes</label>
+                                    <label><input type="checkbox" name="hazmat_class_6"> Clase 6 - Tóxicos</label>
+                                    <label><input type="checkbox" name="hazmat_class_7"> Clase 7 - Radioactivos</label>
+                                    <label><input type="checkbox" name="hazmat_class_8"> Clase 8 - Corrosivos</label>
+                                    <label><input type="checkbox" name="hazmat_class_9"> Clase 9 - Misceláneos</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Vencimiento Cert. HAZMAT</label>
+                                <input type="date" name="hazmat_cert_expiry">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Transporte Internacional</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_mercosur" onchange="LogisticsDashboard.toggleMercosurFields(this.checked)">
+                                🌎 Habilitación MERCOSUR/TIR
+                            </label>
+                        </div>
+                    </div>
+                    <div id="mercosur-docs" style="display:none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Países Habilitados</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" name="mercosur_br"> 🇧🇷 Brasil</label>
+                                    <label><input type="checkbox" name="mercosur_uy"> 🇺🇾 Uruguay</label>
+                                    <label><input type="checkbox" name="mercosur_py"> 🇵🇾 Paraguay</label>
+                                    <label><input type="checkbox" name="mercosur_cl"> 🇨🇱 Chile</label>
+                                    <label><input type="checkbox" name="mercosur_bo"> 🇧🇴 Bolivia</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Número MIC/DTA</label>
+                                <input type="text" name="mic_dta_number" placeholder="MIC-AR-123456">
+                            </div>
+                            <div class="form-group">
+                                <label>Vencimiento Habilitación</label>
+                                <input type="date" name="mercosur_expiry">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: EQUIPAMIENTO -->
+                <div class="form-tab-content" data-tab="equipment">
+                    <div class="form-section-title">Equipamiento de Seguridad</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_gps" checked>
+                                📍 GPS/Rastreo Satelital
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_dashcam">
+                                📹 Cámara DVR
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_immobilizer">
+                                🔒 Inmovilizador Remoto
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_alarm">
+                                🚨 Alarma de Apertura
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_seals">
+                                🔐 Precintos Electrónicos
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_fire_extinguisher" checked>
+                                🧯 Matafuegos
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Equipamiento de Control</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_tachograph">
+                                ⏱️ Tacógrafo Digital
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Marca Tacógrafo</label>
+                            <select name="tachograph_brand">
+                                <option value="">N/A</option>
+                                <option value="vdo">VDO/Continental</option>
+                                <option value="stoneridge">Stoneridge</option>
+                                <option value="actia">Actia</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Última Calibración</label>
+                            <input type="date" name="tachograph_calibration">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_speed_limiter">
+                                ⚡ Limitador de Velocidad
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Velocidad Máxima (km/h)</label>
+                            <input type="number" name="speed_limit" placeholder="90" min="60" max="120">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_eld">
+                                📊 ELD (Electronic Logging)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Equipamiento de Carga</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_liftgate">
+                                🏋️ Rampa Elevadora
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Capacidad Rampa (kg)</label>
+                            <input type="number" name="liftgate_capacity" placeholder="2000">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_pallet_jack">
+                                🚜 Transpaleta a Bordo
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_load_bars">
+                                📏 Barras de Carga
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_straps">
+                                🔗 Cinchas de Amarre
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_blankets">
+                                🛡️ Mantas Protectoras
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Telemetría y Sensores</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_temp_sensor">
+                                🌡️ Sensor de Temperatura
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_door_sensor">
+                                🚪 Sensor de Puertas
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_fuel_sensor">
+                                ⛽ Sensor de Combustible
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_weight_sensor">
+                                ⚖️ Sensor de Peso
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_humidity_sensor">
+                                💧 Sensor de Humedad
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Proveedor Telemetría</label>
+                            <select name="telematics_provider">
+                                <option value="">Ninguno</option>
+                                <option value="geotab">Geotab</option>
+                                <option value="samsara">Samsara</option>
+                                <option value="omnitracs">Omnitracs</option>
+                                <option value="custom">Propio/Custom</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        `;
+
+        showModal('🚛 Nuevo Vehículo', content, async () => {
+            const form = document.getElementById('vehicle-form');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+
+            // Convertir checkboxes
+            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                data[cb.name] = cb.checked;
+            });
+
+            try {
+                const response = await fetchAPI('/vehicles', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                if (response.success) {
+                    showSuccess('Vehículo creado exitosamente');
+                    closeModal();
+                    loadTabData('fleet');
+                }
+            } catch (error) {
+                showError('Error al crear vehículo');
+            }
+        });
+    };
+
+    // Toggle campos HAZMAT
+    window.LogisticsDashboard.toggleHazmatFields = function(show) {
+        const hazmatDocs = document.getElementById('hazmat-docs');
+        if (hazmatDocs) hazmatDocs.style.display = show ? 'block' : 'none';
+    };
+
+    // Toggle campos MERCOSUR
+    window.LogisticsDashboard.toggleMercosurFields = function(show) {
+        const mercosurDocs = document.getElementById('mercosur-docs');
+        if (mercosurDocs) mercosurDocs.style.display = show ? 'block' : 'none';
+    };
+
+    // ============================================================================
+    // VALIDACIÓN INTELIGENTE DE VEHÍCULOS
+    // ============================================================================
+
+    function classifyVehicleType(type) {
+        // MOTOCICLETAS
+        if (type === 'motorcycle' || type === 'moto_cargo') {
+            return { category: 'MOTORCYCLE', maxAxles: 2, hasTrailer: false };
+        }
+        // UTILITARIOS
+        if (['pickup', 'van_small', 'van_medium', 'van_large'].includes(type)) {
+            return { category: 'UTILITY', maxAxles: 2, hasTrailer: false };
+        }
+        // CAMIONES LIVIANOS
+        if (type === 'truck_light') {
+            return { category: 'TRUCK_LIGHT', maxAxles: 2, hasTrailer: false };
+        }
+        // CAMIONES MEDIANOS
+        if (type === 'truck_medium') {
+            return { category: 'TRUCK_MEDIUM', maxAxles: 3, hasTrailer: false };
+        }
+        // CAMIONES PESADOS
+        if (type === 'truck_heavy') {
+            return { category: 'TRUCK_HEAVY', maxAxles: 4, hasTrailer: false };
+        }
+        // TRACTORES
+        if (type.startsWith('tractor_')) {
+            return { category: 'TRACTOR', maxAxles: 4, hasTrailer: true };
+        }
+        // SEMIRREMOLQUES
+        if (type.startsWith('semi_')) {
+            return { category: 'SEMI_TRAILER', maxAxles: 6, hasTrailer: true };
+        }
+        // BITRÉN/ROAD TRAIN
+        if (type === 'bitren' || type === 'road_train') {
+            return { category: 'ROAD_TRAIN', maxAxles: 9, hasTrailer: true };
+        }
+        // GANADO
+        if (type.startsWith('livestock_')) {
+            return { category: 'LIVESTOCK', maxAxles: 6, hasTrailer: true };
+        }
+        // GRANOS
+        if (type.startsWith('grain_')) {
+            return { category: 'GRAIN', maxAxles: 6, hasTrailer: true };
+        }
+        // CISTERNAS
+        if (type.startsWith('tanker_')) {
+            return { category: 'TANKER', maxAxles: 6, hasTrailer: true };
+        }
+        // DEFAULT
+        return { category: 'TRUCK_HEAVY', maxAxles: 4, hasTrailer: false };
+    }
+
+    function getVehicleRules(vehicleClass) {
+        const baseRules = {
+            allowedAxleConfigs: [],
+            maxAxles: vehicleClass.maxAxles,
+            allowedBodyTypes: [],
+            requiresVIN: true,
+            requiresTachograph: true,
+            requiresRUTA: true,
+            allowsHazmat: true,
+            allowsLivestock: true,
+            allowsGrain: true,
+            allowsReefer: true
+        };
+
+        switch (vehicleClass.category) {
+            case 'MOTORCYCLE':
+                return {
+                    ...baseRules,
+                    allowedAxleConfigs: ['2x1'],
+                    maxAxles: 2,
+                    allowedBodyTypes: ['motorcycle', 'moto_cargo', 'moto_box'],
+                    requiresTachograph: false,
+                    requiresRUTA: false,
+                    allowsHazmat: false,
+                    allowsLivestock: false,
+                    allowsGrain: false,
+                    allowsReefer: false
+                };
+
+            case 'UTILITY':
+                return {
+                    ...baseRules,
+                    allowedAxleConfigs: ['4x2'],
+                    maxAxles: 2,
+                    allowedBodyTypes: ['pickup', 'van', 'panel', 'minivan', 'box_small'],
+                    requiresTachograph: false,
+                    requiresRUTA: false,
+                    allowsHazmat: false,
+                    allowsLivestock: false,
+                    allowsGrain: false,
+                    allowsReefer: true
+                };
+
+            case 'TRUCK_LIGHT':
+                return {
+                    ...baseRules,
+                    allowedAxleConfigs: ['4x2'],
+                    maxAxles: 2,
+                    allowedBodyTypes: ['box', 'flatbed', 'reefer_box', 'curtainside'],
+                    requiresTachograph: true,
+                    requiresRUTA: true,
+                    allowsHazmat: false,
+                    allowsLivestock: false,
+                    allowsGrain: false,
+                    allowsReefer: true
+                };
+
+            case 'TRUCK_MEDIUM':
+                return {
+                    ...baseRules,
+                    allowedAxleConfigs: ['4x2', '6x2'],
+                    maxAxles: 3,
+                    allowedBodyTypes: ['box', 'flatbed', 'reefer_box', 'curtainside', 'tanker_small'],
+                    requiresTachograph: true,
+                    requiresRUTA: true,
+                    allowsHazmat: true,
+                    allowsLivestock: false,
+                    allowsGrain: false,
+                    allowsReefer: true
+                };
+
+            case 'TRACTOR':
+                return {
+                    ...baseRules,
+                    allowedAxleConfigs: ['4x2', '6x2', '6x4', '8x4'],
+                    maxAxles: 4,
+                    allowedBodyTypes: ['tractor_unit'],
+                    requiresTachograph: true,
+                    requiresRUTA: true,
+                    allowsHazmat: true,
+                    allowsLivestock: true,
+                    allowsGrain: true,
+                    allowsReefer: true
+                };
+
+            case 'SEMI_TRAILER':
+            case 'TRUCK_TRAILER':
+                return {
+                    ...baseRules,
+                    allowedAxleConfigs: ['4x2', '6x2', '6x4', '6x2+2', '6x2+3', '6x4+3'],
+                    maxAxles: 6,
+                    allowedBodyTypes: ['semi_dryvan', 'semi_flatbed', 'semi_reefer', 'semi_curtain',
+                                       'semi_lowboy', 'semi_tanker', 'semi_container'],
+                    requiresTachograph: true,
+                    requiresRUTA: true,
+                    allowsHazmat: true,
+                    allowsLivestock: true,
+                    allowsGrain: true,
+                    allowsReefer: true
+                };
+
+            case 'ROAD_TRAIN':
+                return {
+                    ...baseRules,
+                    allowedAxleConfigs: ['6x4+3+3', '6x4+3+2', '8x4+3+3'],
+                    maxAxles: 9,
+                    allowedBodyTypes: ['bitren_tandem', 'bitren_full', 'road_train'],
+                    requiresTachograph: true,
+                    requiresRUTA: true,
+                    allowsHazmat: true,
+                    allowsLivestock: true,
+                    allowsGrain: true,
+                    allowsReefer: true
+                };
+
+            case 'LIVESTOCK':
+                return {
+                    ...baseRules,
+                    allowedAxleConfigs: ['4x2', '6x2', '6x4', '6x2+2', '6x2+3'],
+                    maxAxles: 6,
+                    allowedBodyTypes: ['livestock_single', 'livestock_double', 'livestock_triple'],
+                    requiresTachograph: true,
+                    requiresRUTA: true,
+                    allowsHazmat: false,
+                    allowsLivestock: true,
+                    allowsGrain: false,
+                    allowsReefer: false
+                };
+
+            case 'GRAIN':
+                return {
+                    ...baseRules,
+                    allowedAxleConfigs: ['6x2', '6x4', '6x2+2', '6x2+3', '6x4+3'],
+                    maxAxles: 6,
+                    allowedBodyTypes: ['hopper', 'silo', 'grain_trailer'],
+                    requiresTachograph: true,
+                    requiresRUTA: true,
+                    allowsHazmat: false,
+                    allowsLivestock: false,
+                    allowsGrain: true,
+                    allowsReefer: false
+                };
+
+            case 'TANKER':
+                return {
+                    ...baseRules,
+                    allowedAxleConfigs: ['4x2', '6x2', '6x4', '6x2+2', '6x2+3'],
+                    maxAxles: 6,
+                    allowedBodyTypes: ['tanker_fuel', 'tanker_chemical', 'tanker_food', 'tanker_gas'],
+                    requiresTachograph: true,
+                    requiresRUTA: true,
+                    allowsHazmat: true,
+                    allowsLivestock: false,
+                    allowsGrain: false,
+                    allowsReefer: false
+                };
+
+            default:
+                return baseRules;
+        }
+    }
+
+    function applyVehicleRules(rules, vehicleClass) {
+        // Actualizar selector de configuración de ejes
+        const axleConfigSelect = document.querySelector('[name="axle_config"]');
+        if (axleConfigSelect) {
+            // Primero, mostrar todas las opciones y optgroups
+            axleConfigSelect.querySelectorAll('option, optgroup').forEach(el => {
+                el.style.display = '';
+                el.disabled = false;
+            });
+
+            // Luego, ocultar/deshabilitar opciones no permitidas
+            const allOptions = axleConfigSelect.querySelectorAll('option');
+            allOptions.forEach(opt => {
+                if (opt.value === '' || opt.value === 'other') {
+                    opt.style.display = '';
+                    return;
+                }
+                const isAllowed = rules.allowedAxleConfigs.some(config =>
+                    opt.value === config || opt.value.startsWith(config)
+                );
+                opt.disabled = !isAllowed;
+                opt.style.display = isAllowed ? '' : 'none';
+            });
+
+            // Ocultar optgroups vacíos
+            axleConfigSelect.querySelectorAll('optgroup').forEach(group => {
+                const visibleOptions = group.querySelectorAll('option:not([style*="display: none"])');
+                group.style.display = visibleOptions.length > 0 ? '' : 'none';
+            });
+
+            // Si el valor actual no es válido, resetear
+            if (axleConfigSelect.value && axleConfigSelect.value !== 'other' &&
+                !rules.allowedAxleConfigs.some(c => axleConfigSelect.value === c || axleConfigSelect.value.startsWith(c))) {
+                axleConfigSelect.value = '';
+            }
+
+            // Para motos, auto-seleccionar 2x1
+            if (vehicleClass.category === 'MOTORCYCLE') {
+                axleConfigSelect.value = '2x1';
+            }
+        }
+
+        // Limitar cantidad máxima de ejes
+        const axleCountInput = document.querySelector('[name="total_axles"]');
+        if (axleCountInput) {
+            axleCountInput.max = rules.maxAxles;
+            if (parseInt(axleCountInput.value) > rules.maxAxles) {
+                axleCountInput.value = rules.maxAxles;
+            }
+            if (vehicleClass.category === 'MOTORCYCLE') {
+                axleCountInput.value = 2;
+                axleCountInput.disabled = true;
+            } else {
+                axleCountInput.disabled = false;
+            }
+        }
+
+        // Controlar campos de tacógrafo
+        const tachographField = document.querySelector('[name="has_tachograph"]');
+        if (tachographField) {
+            if (!rules.requiresTachograph) {
+                tachographField.checked = false;
+                tachographField.disabled = true;
+                if (tachographField.closest('label')) {
+                    tachographField.closest('label').style.opacity = '0.5';
+                }
+            } else {
+                tachographField.disabled = false;
+                if (tachographField.closest('label')) {
+                    tachographField.closest('label').style.opacity = '1';
+                }
+            }
+        }
+
+        // Controlar capacidad de carga
+        const capacityInput = document.querySelector('[name="load_capacity_kg"]');
+        if (capacityInput) {
+            switch (vehicleClass.category) {
+                case 'MOTORCYCLE':
+                    capacityInput.max = 200;
+                    capacityInput.placeholder = 'Máx 200 kg';
+                    break;
+                case 'UTILITY':
+                    capacityInput.max = 1500;
+                    capacityInput.placeholder = 'Máx 1.500 kg';
+                    break;
+                case 'TRUCK_LIGHT':
+                    capacityInput.max = 7500;
+                    capacityInput.placeholder = 'Máx 7.500 kg';
+                    break;
+                default:
+                    capacityInput.max = 100000;
+                    capacityInput.placeholder = 'kg';
+            }
+        }
+
+        // Controlar VIN
+        const vinField = document.querySelector('[name="vin"]');
+        if (vinField) {
+            if (vehicleClass.category === 'MOTORCYCLE') {
+                vinField.minLength = 6;
+                vinField.placeholder = 'Número de chasis/cuadro';
+            } else {
+                vinField.minLength = 17;
+                vinField.placeholder = '1HGBH41JXMN109186';
+            }
+        }
+    }
+
+    function showVehicleWarning(vehicleClass, rules) {
+        const existingWarning = document.getElementById('vehicle-type-warning');
+        if (existingWarning) existingWarning.remove();
+
+        let warningMessage = null;
+
+        switch (vehicleClass.category) {
+            case 'MOTORCYCLE':
+                warningMessage = '🏍️ Motocicleta: Máximo 2 ejes, sin tacógrafo, capacidad limitada a 200kg';
+                break;
+            case 'UTILITY':
+                warningMessage = '🚐 Vehículo utilitario: Máximo 2 ejes, capacidad hasta 1.500kg';
+                break;
+            case 'TRUCK_LIGHT':
+                warningMessage = '🚚 Camión liviano: Hasta 7.500kg, requiere RUTA y tacógrafo';
+                break;
+            case 'ROAD_TRAIN':
+                warningMessage = '🚛🚛 Bitrén/Road Train: Configuración especial, máximo 9 ejes';
+                break;
+        }
+
+        if (!warningMessage) return;
+
+        const warningDiv = document.createElement('div');
+        warningDiv.id = 'vehicle-type-warning';
+        warningDiv.className = 'form-warning-banner';
+        warningDiv.innerHTML = `<span class="warning-icon">ℹ️</span> ${warningMessage}`;
+
+        const typeSelect = document.querySelector('[name="unit_type"]');
+        if (typeSelect) {
+            typeSelect.closest('.form-row')?.after(warningDiv);
+        }
+    }
+
+    window.LogisticsDashboard.onVehicleTypeChange = function(type) {
+        if (!type) return;
+
+        const vehicleClass = classifyVehicleType(type);
+        console.log(`🚛 [VEHICLE] Tipo: ${type} → Clase: ${vehicleClass.category}`);
+
+        const rules = getVehicleRules(vehicleClass);
+        applyVehicleRules(rules, vehicleClass);
+
+        // Ocultar todos los campos especiales primero
+        document.querySelectorAll('#livestock-specs, #grain-specs, #reefer-specs').forEach(el => {
+            if (el) el.style.display = 'none';
+        });
+
+        // Mostrar campos según tipo específico
+        if (type.includes('livestock') || type.includes('cattle') || type.includes('pig') || type.includes('sheep') || type.includes('poultry') || type.includes('horse')) {
+            const livestockSpecs = document.getElementById('livestock-specs');
+            if (livestockSpecs) livestockSpecs.style.display = 'block';
+        }
+
+        if (type.includes('grain') || type.includes('hopper') || type.includes('silo')) {
+            const grainSpecs = document.getElementById('grain-specs');
+            if (grainSpecs) grainSpecs.style.display = 'block';
+        }
+
+        if (type.includes('reefer') || type.includes('refriger')) {
+            const reeferSpecs = document.getElementById('reefer-specs');
+            if (reeferSpecs) reeferSpecs.style.display = 'block';
+        }
+
+        showVehicleWarning(vehicleClass, rules);
+    };
+
+    // ============================================================================
+    // MODAL: CREAR ZONA
+    // ============================================================================
     window.LogisticsDashboard.showCreateZoneModal = function() {
-        console.log('Crear zona');
+        const content = `
+            <form id="zone-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Código *</label>
+                        <input type="text" name="code" required placeholder="ZONA-NORTE" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" name="name" required placeholder="Zona Norte CABA">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Descripción</label>
+                        <textarea name="description" rows="2" placeholder="Descripción de la zona de cobertura..."></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tiempo Base (minutos)</label>
+                        <input type="number" name="base_delivery_time_min" placeholder="60" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Costo Base ($)</label>
+                        <input type="number" name="base_cost" placeholder="500" min="0" step="0.01">
+                    </div>
+                </div>
+            </form>
+        `;
+
+        showModal('📍 Nueva Zona de Cobertura', content, async () => {
+            const form = document.getElementById('zone-form');
+            const formData = new FormData(form);
+            try {
+                const response = await fetchAPI('/zones', {
+                    method: 'POST',
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+                if (response.success) {
+                    showSuccess('Zona creada exitosamente');
+                    closeModal();
+                    loadTabData('coverage');
+                }
+            } catch (error) {
+                showError('Error al crear zona');
+            }
+        });
     };
 
+    // ============================================================================
+    // MODAL: CREAR TIPO DE UBICACIÓN
+    // ============================================================================
+    window.LogisticsDashboard.showCreateLocationTypeModal = function() {
+        const content = `
+            <form id="location-type-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Código *</label>
+                        <input type="text" name="code" required placeholder="RACK-A" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" name="name" required placeholder="Rack Altura Simple">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Categoría *</label>
+                        <select name="category" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="rack">📦 Rack</option>
+                            <option value="shelf">📚 Estantería</option>
+                            <option value="floor">🏭 Piso</option>
+                            <option value="dock">🚚 Dársena</option>
+                            <option value="staging">📋 Staging</option>
+                            <option value="cold">❄️ Cámara Fría</option>
+                            <option value="hazmat">☣️ HAZMAT</option>
+                            <option value="bulk">🌾 Granel</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Capacidad (kg)</label>
+                        <input type="number" name="max_weight_kg" placeholder="1000" min="0" step="0.01">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Alto máx (m)</label>
+                        <input type="number" name="max_height_m" placeholder="2.5" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Ancho máx (m)</label>
+                        <input type="number" name="max_width_m" placeholder="1.2" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Profundidad máx (m)</label>
+                        <input type="number" name="max_depth_m" placeholder="1.0" min="0" step="0.01">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Descripción</label>
+                        <textarea name="description" rows="2" placeholder="Descripción del tipo de ubicación..."></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="requires_forklift">
+                            Requiere autoelevador
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="temperature_controlled">
+                            Temperatura controlada
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="fifo_required">
+                            FIFO obligatorio
+                        </label>
+                    </div>
+                </div>
+            </form>
+        `;
+
+        showModal('📍 Nuevo Tipo de Ubicación', content, async () => {
+            const form = document.getElementById('location-type-form');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+
+            // Checkboxes
+            data.requires_forklift = form.querySelector('[name="requires_forklift"]').checked;
+            data.temperature_controlled = form.querySelector('[name="temperature_controlled"]').checked;
+            data.fifo_required = form.querySelector('[name="fifo_required"]').checked;
+
+            try {
+                const response = await fetchAPI('/location-types', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                if (response.success) {
+                    showSuccess('Tipo de ubicación creado exitosamente');
+                    closeModal();
+                    loadTabData('warehouses');
+                }
+            } catch (error) {
+                showError('Error al crear tipo de ubicación');
+            }
+        });
+    };
+
+    // ============================================================================
+    // MODAL: CREAR RUTA
+    // ============================================================================
+    window.LogisticsDashboard.showCreateRouteModal = function() {
+        const zonesOptions = (cache.zones || []).map(z =>
+            `<option value="${z.id}">${z.code} - ${z.name}</option>`
+        ).join('');
+
+        const carriersOptions = (cache.carriers || []).map(c =>
+            `<option value="${c.id}">${c.name}</option>`
+        ).join('');
+
+        const content = `
+            <form id="route-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Código de Ruta *</label>
+                        <input type="text" name="code" required placeholder="RUT-001" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" name="name" required placeholder="Ruta CABA Norte">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Zona Origen *</label>
+                        <select name="origin_zone_id" required>
+                            <option value="">Seleccionar zona...</option>
+                            ${zonesOptions}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Zona Destino *</label>
+                        <select name="destination_zone_id" required>
+                            <option value="">Seleccionar zona...</option>
+                            ${zonesOptions}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Transportista Preferido</label>
+                        <select name="preferred_carrier_id">
+                            <option value="">Sin preferencia</option>
+                            ${carriersOptions}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Ruta</label>
+                        <select name="route_type">
+                            <option value="local">🏙️ Local (mismo día)</option>
+                            <option value="regional">🗺️ Regional (1-2 días)</option>
+                            <option value="national">🇦🇷 Nacional (3-5 días)</option>
+                            <option value="international">🌍 Internacional (MERCOSUR)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Distancia (km)</label>
+                        <input type="number" name="distance_km" placeholder="150" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Tiempo Estimado (horas)</label>
+                        <input type="number" name="estimated_hours" placeholder="3.5" min="0" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Costo por km ($)</label>
+                        <input type="number" name="cost_per_km" placeholder="25.50" min="0" step="0.01">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Notas / Restricciones</label>
+                        <textarea name="notes" rows="2" placeholder="Ej: Evitar autopista en hora pico, restricción camiones >20t..."></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="hazmat_allowed">
+                            ☣️ Permite HAZMAT
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="refrigerated_allowed" checked>
+                            ❄️ Permite refrigerado
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="active" checked>
+                            ✅ Ruta activa
+                        </label>
+                    </div>
+                </div>
+            </form>
+        `;
+
+        showModal('🛣️ Nueva Ruta', content, async () => {
+            const form = document.getElementById('route-form');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+
+            // Checkboxes
+            data.hazmat_allowed = form.querySelector('[name="hazmat_allowed"]').checked;
+            data.refrigerated_allowed = form.querySelector('[name="refrigerated_allowed"]').checked;
+            data.active = form.querySelector('[name="active"]').checked;
+
+            try {
+                const response = await fetchAPI('/routes', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                if (response.success) {
+                    showSuccess('Ruta creada exitosamente');
+                    closeModal();
+                    loadTabData('coverage');
+                }
+            } catch (error) {
+                showError('Error al crear ruta');
+            }
+        });
+    };
+
+    // ============================================================================
+    // MODAL: CREAR ENVÍO
+    // ============================================================================
     window.LogisticsDashboard.showCreateShipmentModal = function() {
-        console.log('Crear envío');
+        const content = `
+            <form id="shipment-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo de Envío *</label>
+                        <select name="shipment_type" required>
+                            <option value="delivery">Entrega a Cliente</option>
+                            <option value="transfer">Transferencia entre Almacenes</option>
+                            <option value="return">Devolución</option>
+                            <option value="pickup">Retiro en Punto</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Prioridad</label>
+                        <select name="priority">
+                            <option value="normal">Normal</option>
+                            <option value="express">Express</option>
+                            <option value="same_day">Mismo Día</option>
+                            <option value="scheduled">Programado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Destinatario *</label>
+                        <input type="text" name="recipient_name" required placeholder="Nombre del destinatario">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Dirección de Entrega *</label>
+                        <input type="text" name="delivery_address" required placeholder="Dirección completa">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" name="recipient_phone" placeholder="+54 11 1234-5678">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="recipient_email" placeholder="email@ejemplo.com">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Peso (kg)</label>
+                        <input type="number" name="weight_kg" placeholder="5" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Bultos</label>
+                        <input type="number" name="packages_count" placeholder="1" min="1">
+                    </div>
+                </div>
+            </form>
+        `;
+
+        showModal('📬 Nuevo Envío', content, async () => {
+            const form = document.getElementById('shipment-form');
+            const formData = new FormData(form);
+            try {
+                const response = await fetchAPI('/shipments', {
+                    method: 'POST',
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+                if (response.success) {
+                    showSuccess('Envío creado exitosamente');
+                    closeModal();
+                    loadTabData('shipments');
+                }
+            } catch (error) {
+                showError('Error al crear envío');
+            }
+        });
     };
 
+    // ============================================================================
+    // MODAL: GENERAR OLA DE PICKING
+    // ============================================================================
     window.LogisticsDashboard.showGenerateWaveModal = function() {
-        console.log('Generar ola');
+        const content = `
+            <form id="wave-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Nombre de la Ola *</label>
+                        <input type="text" name="name" required placeholder="Ola Mañana - ${new Date().toLocaleDateString()}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select name="wave_type">
+                            <option value="standard">Estándar</option>
+                            <option value="express">Express</option>
+                            <option value="bulk">Masiva</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Almacén</label>
+                        <select name="warehouse_id">
+                            ${(cache.warehouses || []).map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Hora Inicio</label>
+                        <input type="time" name="start_time" value="08:00">
+                    </div>
+                    <div class="form-group">
+                        <label>Hora Fin Estimada</label>
+                        <input type="time" name="end_time" value="12:00">
+                    </div>
+                </div>
+            </form>
+        `;
+
+        showModal('🌊 Generar Ola de Picking', content, async () => {
+            const form = document.getElementById('wave-form');
+            const formData = new FormData(form);
+            try {
+                const response = await fetchAPI('/picking/waves', {
+                    method: 'POST',
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+                if (response.success) {
+                    showSuccess('Ola generada exitosamente');
+                    closeModal();
+                    loadTabData('picking');
+                }
+            } catch (error) {
+                showError('Error al generar ola');
+            }
+        });
+    };
+
+    // ============================================================================
+    // MODAL: CREAR CONDUCTOR (EXPANDIDO - 5 TABS)
+    // ============================================================================
+    window.LogisticsDashboard.showCreateDriverModal = function() {
+        const carriersOptions = (cache.carriers || []).map(c =>
+            `<option value="${c.id}">${c.name}</option>`
+        ).join('');
+
+        const content = `
+            <form id="driver-form" class="modal-form modal-form-large">
+                <!-- TABS DE NAVEGACIÓN -->
+                <div class="form-tabs">
+                    <button type="button" class="form-tab active" data-tab="personal">👤 Datos Personales</button>
+                    <button type="button" class="form-tab" data-tab="license">🪪 Licencias</button>
+                    <button type="button" class="form-tab" data-tab="medical">🏥 Médico</button>
+                    <button type="button" class="form-tab" data-tab="certifications">📜 Certificaciones</button>
+                    <button type="button" class="form-tab" data-tab="compliance">⏱️ Cumplimiento</button>
+                </div>
+
+                <!-- TAB 1: DATOS PERSONALES -->
+                <div class="form-tab-content active" id="tab-personal">
+                    <div class="form-section-title">📋 Información Personal</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre Completo *</label>
+                            <input type="text" name="name" required placeholder="Juan Carlos Pérez González">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo Documento *</label>
+                            <select name="document_type" required>
+                                <option value="DNI">DNI - Argentina</option>
+                                <option value="CI">CI - Uruguay/Paraguay</option>
+                                <option value="RUT">RUT - Chile</option>
+                                <option value="CPF">CPF - Brasil</option>
+                                <option value="PASSPORT">Pasaporte</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Número de Documento *</label>
+                            <input type="text" name="document_number" required placeholder="12345678">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>CUIL/CUIT</label>
+                            <input type="text" name="cuil" placeholder="20-12345678-9">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha Nacimiento *</label>
+                            <input type="date" name="birth_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nacionalidad</label>
+                            <select name="nationality">
+                                <option value="AR">🇦🇷 Argentina</option>
+                                <option value="BR">🇧🇷 Brasil</option>
+                                <option value="CL">🇨🇱 Chile</option>
+                                <option value="UY">🇺🇾 Uruguay</option>
+                                <option value="PY">🇵🇾 Paraguay</option>
+                                <option value="BO">🇧🇴 Bolivia</option>
+                                <option value="PE">🇵🇪 Perú</option>
+                                <option value="OTHER">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">📞 Contacto</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Teléfono Principal *</label>
+                            <input type="tel" name="phone" required placeholder="+54 11 1234-5678">
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono Alternativo</label>
+                            <input type="tel" name="phone_alt" placeholder="+54 11 8765-4321">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" placeholder="conductor@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Dirección</label>
+                            <input type="text" name="address" placeholder="Av. Siempreviva 742">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ciudad</label>
+                            <input type="text" name="city" placeholder="Buenos Aires">
+                        </div>
+                        <div class="form-group">
+                            <label>Código Postal</label>
+                            <input type="text" name="postal_code" placeholder="C1234ABC">
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">🚛 Asignación</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Transportista</label>
+                            <select name="carrier_id">
+                                <option value="">-- Flota Propia --</option>
+                                ${carriersOptions}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <select name="status">
+                                <option value="available">Disponible</option>
+                                <option value="on_route">En Ruta</option>
+                                <option value="off_duty">Fuera de Servicio</option>
+                                <option value="vacation">Vacaciones</option>
+                                <option value="sick_leave">Licencia Médica</option>
+                                <option value="inactive">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de Ingreso</label>
+                            <input type="date" name="hire_date">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>
+                                <input type="checkbox" name="is_owner_operator">
+                                👨‍💼 Es dueño/operador de su propio vehículo
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: LICENCIAS -->
+                <div class="form-tab-content" id="tab-license">
+                    <div class="form-section-title">🪪 Licencia de Conducir Principal</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>País Emisor *</label>
+                            <select name="license_country" id="license-country-select" required onchange="LogisticsDashboard.onLicenseCountryChange(this.value)">
+                                <option value="AR">🇦🇷 Argentina</option>
+                                <option value="BR">🇧🇷 Brasil</option>
+                                <option value="CL">🇨🇱 Chile</option>
+                                <option value="UY">🇺🇾 Uruguay</option>
+                                <option value="US">🇺🇸 Estados Unidos</option>
+                                <option value="EU">🇪🇺 Unión Europea</option>
+                                <option value="OTHER">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Número de Licencia *</label>
+                            <input type="text" name="license_number" required placeholder="12345678">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Categoría/Clase *</label>
+                            <select name="license_category" id="license-category-select" required onchange="LogisticsDashboard.onLicenseCategoryChange(this.value)">
+                                <optgroup label="🇦🇷 Argentina">
+                                    <option value="A1">A1 - Ciclomotores hasta 50cc</option>
+                                    <option value="A2.1">A2.1 - Motos hasta 150cc</option>
+                                    <option value="A2.2">A2.2 - Motos hasta 300cc</option>
+                                    <option value="A3">A3 - Motos sin límite</option>
+                                    <option value="B1">B1 - Auto hasta 3.500kg</option>
+                                    <option value="B2">B2 - Auto + remolque</option>
+                                    <option value="C1">C1 - Camión hasta 12.000kg</option>
+                                    <option value="C2">C2 - Camión sin límite</option>
+                                    <option value="C3">C3 - Camión articulado</option>
+                                    <option value="D1">D1 - Bus hasta 24 pasajeros</option>
+                                    <option value="D2">D2 - Bus sin límite</option>
+                                    <option value="D3">D3 - Bus articulado</option>
+                                    <option value="E1">E1 - Maquinaria agrícola</option>
+                                    <option value="E2">E2 - Maquinaria vial</option>
+                                </optgroup>
+                                <optgroup label="🇧🇷 Brasil">
+                                    <option value="BR_A">A - Motocicleta</option>
+                                    <option value="BR_B">B - Auto hasta 3.500kg</option>
+                                    <option value="BR_C">C - Carga > 3.500kg</option>
+                                    <option value="BR_D">D - Pasajeros > 8</option>
+                                    <option value="BR_E">E - Combinaciones articuladas</option>
+                                </optgroup>
+                                <optgroup label="🇨🇱 Chile">
+                                    <option value="CL_B">B - Auto</option>
+                                    <option value="CL_A1">A1 - Taxi básico</option>
+                                    <option value="CL_A2">A2 - Taxi ejecutivo</option>
+                                    <option value="CL_A3">A3 - Bus</option>
+                                    <option value="CL_A4">A4 - Camión simple</option>
+                                    <option value="CL_A5">A5 - Camión doble eje</option>
+                                </optgroup>
+                                <optgroup label="🇺🇾 Uruguay">
+                                    <option value="UY_A">A - Motos</option>
+                                    <option value="UY_B">B - Auto</option>
+                                    <option value="UY_C">C - Camión</option>
+                                    <option value="UY_D">D - Ómnibus</option>
+                                    <option value="UY_E">E - Articulado</option>
+                                    <option value="UY_F">F - Agrícola</option>
+                                    <option value="UY_G">G - Maquinaria especial</option>
+                                </optgroup>
+                                <optgroup label="🇺🇸 USA / CDL">
+                                    <option value="US_A">CDL Class A - Combinations > 26,000 lbs</option>
+                                    <option value="US_B">CDL Class B - Single > 26,000 lbs</option>
+                                    <option value="US_C">CDL Class C - Hazmat/Passengers</option>
+                                </optgroup>
+                                <optgroup label="🇪🇺 Unión Europea">
+                                    <option value="EU_AM">AM - Ciclomotores</option>
+                                    <option value="EU_A1">A1 - Motos ligeras</option>
+                                    <option value="EU_A2">A2 - Motos medianas</option>
+                                    <option value="EU_A">A - Motos sin límite</option>
+                                    <option value="EU_B">B - Auto</option>
+                                    <option value="EU_C1">C1 - Camión 3.5-7.5t</option>
+                                    <option value="EU_C">C - Camión > 7.5t</option>
+                                    <option value="EU_D1">D1 - Minibus</option>
+                                    <option value="EU_D">D - Bus</option>
+                                    <option value="EU_BE">BE - Auto + remolque</option>
+                                    <option value="EU_C1E">C1E - Camión ligero + remolque</option>
+                                    <option value="EU_CE">CE - Camión + remolque</option>
+                                    <option value="EU_D1E">D1E - Minibus + remolque</option>
+                                    <option value="EU_DE">DE - Bus + remolque</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha de Emisión</label>
+                            <input type="date" name="license_issue_date">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de Vencimiento *</label>
+                            <input type="date" name="license_expiry" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Puntos Vigentes</label>
+                            <input type="number" name="license_points" placeholder="20" min="0" max="30">
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">📋 LINTI (Lic. Nacional Transporte Interjurisdiccional)</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_linti" onchange="LogisticsDashboard.toggleLintiFields(this.checked)">
+                                Posee LINTI
+                            </label>
+                        </div>
+                    </div>
+                    <div id="linti-fields" style="display:none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Número LINTI</label>
+                                <input type="text" name="linti_number" placeholder="LINTI-123456">
+                            </div>
+                            <div class="form-group">
+                                <label>Categoría LINTI</label>
+                                <select name="linti_category">
+                                    <option value="carga">Carga General</option>
+                                    <option value="peligrosa">Mercancías Peligrosas</option>
+                                    <option value="pasajeros">Transporte de Pasajeros</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Vencimiento LINTI</label>
+                                <input type="date" name="linti_expiry">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: MÉDICO -->
+                <div class="form-tab-content" id="tab-medical">
+                    <div class="form-section-title">🏥 Aptitud Psicofísica</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha Último Examen</label>
+                            <input type="date" name="medical_exam_date">
+                        </div>
+                        <div class="form-group">
+                            <label>Vencimiento Certificado *</label>
+                            <input type="date" name="medical_expiry" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Resultado</label>
+                            <select name="medical_status">
+                                <option value="apt">Apto sin restricciones</option>
+                                <option value="apt_restrictions">Apto con restricciones</option>
+                                <option value="pending">Pendiente</option>
+                                <option value="expired">Vencido</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Grupo Sanguíneo</label>
+                            <select name="blood_type">
+                                <option value="">Desconocido</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Obra Social/Prepaga</label>
+                            <input type="text" name="health_insurance" placeholder="OSDE / Swiss Medical">
+                        </div>
+                        <div class="form-group">
+                            <label>Número Afiliado</label>
+                            <input type="text" name="health_insurance_number" placeholder="12345678">
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">👁️ Vista y Audición</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="uses_glasses">
+                                👓 Usa anteojos/lentes de contacto
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="uses_hearing_aid">
+                                🦻 Usa audífono
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">⚠️ Restricciones y Condiciones</div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Restricciones Médicas</label>
+                            <textarea name="medical_restrictions" rows="2" placeholder="Detallar restricciones médicas si las hubiera..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Alergias Conocidas</label>
+                            <input type="text" name="allergies" placeholder="Penicilina, maní, etc.">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Contacto de Emergencia</label>
+                            <input type="text" name="emergency_contact_name" placeholder="Nombre del contacto">
+                        </div>
+                        <div class="form-group">
+                            <label>Parentesco</label>
+                            <select name="emergency_contact_relation">
+                                <option value="spouse">Cónyuge</option>
+                                <option value="parent">Padre/Madre</option>
+                                <option value="sibling">Hermano/a</option>
+                                <option value="child">Hijo/a</option>
+                                <option value="other">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono Emergencia</label>
+                            <input type="tel" name="emergency_contact_phone" placeholder="+54 11 1234-5678">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: CERTIFICACIONES -->
+                <div class="form-tab-content" id="tab-certifications">
+                    <div class="form-section-title">☢️ Materiales Peligrosos (HAZMAT/ADR)</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_hazmat_cert" onchange="LogisticsDashboard.toggleDriverHazmatFields(this.checked)">
+                                Certificación HAZMAT/ADR
+                            </label>
+                        </div>
+                    </div>
+                    <div id="driver-hazmat-fields" style="display:none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Clases Habilitadas</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" name="hazmat_class_1"> Clase 1 - Explosivos</label>
+                                    <label><input type="checkbox" name="hazmat_class_2"> Clase 2 - Gases</label>
+                                    <label><input type="checkbox" name="hazmat_class_3"> Clase 3 - Líquidos Inflamables</label>
+                                    <label><input type="checkbox" name="hazmat_class_4"> Clase 4 - Sólidos Inflamables</label>
+                                    <label><input type="checkbox" name="hazmat_class_5"> Clase 5 - Oxidantes</label>
+                                    <label><input type="checkbox" name="hazmat_class_6"> Clase 6 - Tóxicos</label>
+                                    <label><input type="checkbox" name="hazmat_class_7"> Clase 7 - Radioactivos</label>
+                                    <label><input type="checkbox" name="hazmat_class_8"> Clase 8 - Corrosivos</label>
+                                    <label><input type="checkbox" name="hazmat_class_9"> Clase 9 - Misceláneos</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Vencimiento Cert. HAZMAT</label>
+                                <input type="date" name="hazmat_cert_expiry">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">🐄 Transporte de Ganado</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_livestock_cert" onchange="LogisticsDashboard.toggleDriverLivestockFields(this.checked)">
+                                Certificación Transporte de Animales
+                            </label>
+                        </div>
+                    </div>
+                    <div id="driver-livestock-fields" style="display:none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tipos de Animales</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" name="livestock_cattle"> 🐄 Bovinos</label>
+                                    <label><input type="checkbox" name="livestock_pigs"> 🐷 Porcinos</label>
+                                    <label><input type="checkbox" name="livestock_sheep"> 🐑 Ovinos</label>
+                                    <label><input type="checkbox" name="livestock_poultry"> 🐔 Aves</label>
+                                    <label><input type="checkbox" name="livestock_horses"> 🐴 Equinos</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Vencimiento Certificación</label>
+                                <input type="date" name="livestock_cert_expiry">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">🌾 Transporte de Granos</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_grain_cert">
+                                Certificación Transporte Granelero
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">❄️ Cadena de Frío</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_reefer_cert">
+                                Certificación Transporte Refrigerado
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_pharma_cert">
+                                Certificación Transporte Farmacéutico
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_food_cert">
+                                Certificación Transporte Alimentos (BPM)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">🌎 Transporte Internacional (MERCOSUR)</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_mercosur_permit" onchange="LogisticsDashboard.toggleDriverMercosurFields(this.checked)">
+                                Habilitación MERCOSUR
+                            </label>
+                        </div>
+                    </div>
+                    <div id="driver-mercosur-fields" style="display:none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Países Habilitados</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" name="mercosur_br"> 🇧🇷 Brasil</label>
+                                    <label><input type="checkbox" name="mercosur_uy"> 🇺🇾 Uruguay</label>
+                                    <label><input type="checkbox" name="mercosur_py"> 🇵🇾 Paraguay</label>
+                                    <label><input type="checkbox" name="mercosur_cl"> 🇨🇱 Chile</label>
+                                    <label><input type="checkbox" name="mercosur_bo"> 🇧🇴 Bolivia</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Número Permiso MERCOSUR</label>
+                                <input type="text" name="mercosur_permit_number" placeholder="MERC-AR-123456">
+                            </div>
+                            <div class="form-group">
+                                <label>Vencimiento</label>
+                                <input type="date" name="mercosur_expiry">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: CUMPLIMIENTO -->
+                <div class="form-tab-content" id="tab-compliance">
+                    <div class="form-section-title">⏱️ Control de Horas (EU 561/2006 / FMCSA)</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Régimen de Horas</label>
+                            <select name="hours_regime">
+                                <option value="argentina">Argentina (Ley 24.449)</option>
+                                <option value="eu561">EU 561/2006</option>
+                                <option value="fmcsa">FMCSA (USA)</option>
+                                <option value="mercosur">MERCOSUR</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Máx. Horas Conducción/Día</label>
+                            <input type="number" name="max_driving_hours" placeholder="9" min="4" max="15">
+                        </div>
+                        <div class="form-group">
+                            <label>Máx. Horas Trabajo/Día</label>
+                            <input type="number" name="max_work_hours" placeholder="13" min="8" max="16">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Descanso Mínimo Diario (hs)</label>
+                            <input type="number" name="min_daily_rest" placeholder="11" min="8" max="14">
+                        </div>
+                        <div class="form-group">
+                            <label>Descanso Semanal (hs)</label>
+                            <input type="number" name="min_weekly_rest" placeholder="45" min="24" max="72">
+                        </div>
+                        <div class="form-group">
+                            <label>Pausa Obligatoria (min)</label>
+                            <input type="number" name="mandatory_break" placeholder="45" min="15" max="60">
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">📊 Tacógrafo</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="has_tachograph_card">
+                                Posee Tarjeta de Conductor
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Número Tarjeta</label>
+                            <input type="text" name="tachograph_card_number" placeholder="ARG1234567890">
+                        </div>
+                        <div class="form-group">
+                            <label>Vencimiento Tarjeta</label>
+                            <input type="date" name="tachograph_card_expiry">
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">📝 Capacitaciones</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="training_defensive_driving">
+                                🛡️ Manejo Defensivo
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="training_first_aid">
+                                🚑 Primeros Auxilios
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="training_fire_safety">
+                                🧯 Seguridad contra Incendios
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="training_load_securing">
+                                📦 Sujeción de Cargas
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="training_eco_driving">
+                                🌿 Conducción Eficiente
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="training_customer_service">
+                                🤝 Atención al Cliente
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">⚠️ Historial</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Accidentes (últimos 5 años)</label>
+                            <input type="number" name="accidents_count" placeholder="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Infracciones (últimos 2 años)</label>
+                            <input type="number" name="violations_count" placeholder="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Score de Seguridad</label>
+                            <input type="number" name="safety_score" placeholder="100" min="0" max="100">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Observaciones</label>
+                            <textarea name="notes" rows="2" placeholder="Notas adicionales sobre el conductor..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        `;
+
+        showModal('👤 Nuevo Conductor', content, async () => {
+            const form = document.getElementById('driver-form');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+
+            // Convertir checkboxes
+            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                data[cb.name] = cb.checked;
+            });
+
+            try {
+                const response = await fetchAPI('/drivers', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                if (response.success) {
+                    showSuccess('Conductor creado exitosamente');
+                    closeModal();
+                    loadTabData('fleet');
+                }
+            } catch (error) {
+                showError('Error al crear conductor');
+            }
+        });
+    };
+
+    // Toggle campos LINTI
+    window.LogisticsDashboard.toggleLintiFields = function(show) {
+        const fields = document.getElementById('linti-fields');
+        if (fields) fields.style.display = show ? 'block' : 'none';
+    };
+
+    // Toggle campos HAZMAT conductor
+    window.LogisticsDashboard.toggleDriverHazmatFields = function(show) {
+        const fields = document.getElementById('driver-hazmat-fields');
+        if (fields) fields.style.display = show ? 'block' : 'none';
+    };
+
+    // Toggle campos Ganado conductor
+    window.LogisticsDashboard.toggleDriverLivestockFields = function(show) {
+        const fields = document.getElementById('driver-livestock-fields');
+        if (fields) fields.style.display = show ? 'block' : 'none';
+    };
+
+    // Toggle campos MERCOSUR conductor
+    window.LogisticsDashboard.toggleDriverMercosurFields = function(show) {
+        const fields = document.getElementById('driver-mercosur-fields');
+        if (fields) fields.style.display = show ? 'block' : 'none';
+    };
+
+    // Cambio de país de licencia
+    window.LogisticsDashboard.onLicenseCountryChange = function(country) {
+        const categorySelect = document.getElementById('license-category-select');
+        if (!categorySelect) return;
+
+        // Mostrar solo las opciones del país seleccionado
+        const optgroups = categorySelect.querySelectorAll('optgroup');
+        optgroups.forEach(og => {
+            const countryCode = og.label.match(/🇦🇷|🇧🇷|🇨🇱|🇺🇾|🇺🇸|🇪🇺/);
+            if (countryCode) {
+                const countryMap = {
+                    '🇦🇷': 'AR',
+                    '🇧🇷': 'BR',
+                    '🇨🇱': 'CL',
+                    '🇺🇾': 'UY',
+                    '🇺🇸': 'US',
+                    '🇪🇺': 'EU'
+                };
+                const optCountry = countryMap[countryCode[0]];
+                og.style.display = (country === optCountry || country === 'OTHER') ? '' : 'none';
+            }
+        });
+
+        // Re-aplicar validación de categoría
+        if (categorySelect.value) {
+            window.LogisticsDashboard.onLicenseCategoryChange(categorySelect.value);
+        }
+    };
+
+    // ============================================================================
+    // VALIDACIÓN INTELIGENTE DE LICENCIAS DE CONDUCTOR
+    // ============================================================================
+
+    function classifyLicenseType(category) {
+        // MOTOCICLETAS
+        if (['A1', 'A2.1', 'A2.2', 'A3', 'BR_A', 'UY_A', 'EU_AM', 'EU_A1', 'EU_A2', 'EU_A'].includes(category)) {
+            return 'MOTORCYCLE';
+        }
+        // AUTOMÓVILES
+        if (['B1', 'B2', 'BR_B', 'CL_B', 'UY_B', 'EU_B', 'EU_BE'].includes(category)) {
+            return 'CAR';
+        }
+        // CAMIONES LIVIANOS
+        if (['C1', 'EU_C1', 'EU_C1E', 'CL_A4'].includes(category)) {
+            return 'TRUCK_LIGHT';
+        }
+        // CAMIONES PESADOS
+        if (['C2', 'C3', 'BR_C', 'BR_E', 'UY_C', 'UY_E', 'CL_A5', 'EU_C', 'EU_CE', 'US_A', 'US_B'].includes(category)) {
+            return 'TRUCK_HEAVY';
+        }
+        // BUSES
+        if (['D1', 'D2', 'D3', 'BR_D', 'UY_D', 'CL_A1', 'CL_A2', 'CL_A3', 'EU_D1', 'EU_D', 'EU_D1E', 'EU_DE', 'US_C'].includes(category)) {
+            return 'BUS';
+        }
+        // MAQUINARIA ESPECIAL
+        if (['E1', 'E2', 'UY_F', 'UY_G'].includes(category)) {
+            return 'SPECIAL_MACHINERY';
+        }
+        return 'CAR';
+    }
+
+    function getLicenseRules(licenseType) {
+        switch (licenseType) {
+            case 'MOTORCYCLE':
+                return {
+                    showTachograph: false,
+                    showDrivingLimits: false,
+                    showLinti: false,
+                    showHazmat: false,
+                    showLivestock: false,
+                    showGrain: false,
+                    showReefer: false,
+                    showMercosur: false
+                };
+            case 'CAR':
+                return {
+                    showTachograph: false,
+                    showDrivingLimits: false,
+                    showLinti: false,
+                    showHazmat: false,
+                    showLivestock: false,
+                    showGrain: false,
+                    showReefer: false,
+                    showMercosur: false
+                };
+            case 'TRUCK_LIGHT':
+                return {
+                    showTachograph: true,
+                    showDrivingLimits: true,
+                    showLinti: true,
+                    showHazmat: false,
+                    showLivestock: false,
+                    showGrain: false,
+                    showReefer: true,
+                    showMercosur: false
+                };
+            case 'TRUCK_HEAVY':
+                return {
+                    showTachograph: true,
+                    showDrivingLimits: true,
+                    showLinti: true,
+                    showHazmat: true,
+                    showLivestock: true,
+                    showGrain: true,
+                    showReefer: true,
+                    showMercosur: true
+                };
+            case 'BUS':
+                return {
+                    showTachograph: true,
+                    showDrivingLimits: true,
+                    showLinti: true,
+                    showHazmat: false,
+                    showLivestock: false,
+                    showGrain: false,
+                    showReefer: false,
+                    showMercosur: true
+                };
+            case 'SPECIAL_MACHINERY':
+                return {
+                    showTachograph: false,
+                    showDrivingLimits: false,
+                    showLinti: false,
+                    showHazmat: false,
+                    showLivestock: false,
+                    showGrain: true,
+                    showReefer: false,
+                    showMercosur: false
+                };
+            default:
+                return {
+                    showTachograph: false,
+                    showDrivingLimits: false,
+                    showLinti: false,
+                    showHazmat: false,
+                    showLivestock: false,
+                    showGrain: false,
+                    showReefer: false,
+                    showMercosur: false
+                };
+        }
+    }
+
+    window.LogisticsDashboard.onLicenseCategoryChange = function(category) {
+        if (!category) return;
+
+        const licenseType = classifyLicenseType(category);
+        console.log(`🪪 [DRIVER] Categoría: ${category} → Tipo: ${licenseType}`);
+
+        const rules = getLicenseRules(licenseType);
+
+        // Mostrar advertencia según tipo
+        showLicenseWarning(licenseType);
+    };
+
+    function showLicenseWarning(licenseType) {
+        const existingWarning = document.getElementById('license-type-warning');
+        if (existingWarning) existingWarning.remove();
+
+        let warningMessage = null;
+
+        switch (licenseType) {
+            case 'MOTORCYCLE':
+                warningMessage = '🏍️ Licencia de motocicleta: No requiere tacógrafo ni certificaciones especiales';
+                break;
+            case 'CAR':
+                warningMessage = '🚗 Licencia de automóvil: Solo para vehículos livianos hasta 3.500kg';
+                break;
+            case 'TRUCK_LIGHT':
+                warningMessage = '🚚 Licencia camión liviano: Requiere LINTI para transporte interjurisdiccional';
+                break;
+            case 'TRUCK_HEAVY':
+                warningMessage = '🚛 Licencia camión pesado: Habilitado para certificaciones HAZMAT, ganado, granos y MERCOSUR';
+                break;
+            case 'BUS':
+                warningMessage = '🚌 Licencia ómnibus: Requiere LINTI y control de horas estricto';
+                break;
+        }
+
+        if (!warningMessage) return;
+
+        const warningDiv = document.createElement('div');
+        warningDiv.id = 'license-type-warning';
+        warningDiv.className = 'form-warning-banner';
+        warningDiv.innerHTML = `<span class="warning-icon">ℹ️</span> ${warningMessage}`;
+
+        const categorySelect = document.getElementById('license-category-select');
+        if (categorySelect) {
+            categorySelect.closest('.form-row')?.after(warningDiv);
+        }
+    }
+
+    // ============================================================================
+    // FUNCIONES DE NAVEGACIÓN Y REFRESH
+    // ============================================================================
+    window.LogisticsDashboard.refreshData = function() {
+        const currentTab = document.querySelector('.tab-button.active')?.dataset?.tab || 'overview';
+        loadTabData(currentTab);
+        showSuccess('Datos actualizados');
+    };
+
+    window.LogisticsDashboard.switchTab = function(tabId) {
+        console.log('🚚 [LOGISTICS] Cambiando a tab:', tabId);
+
+        // Actualizar variable global
+        currentTab = tabId;
+
+        // Re-renderizar contenido
+        const contentContainer = document.getElementById('logistics-content');
+        if (contentContainer) {
+            contentContainer.innerHTML = renderTabContent(tabId);
+        }
+
+        // Actualizar UI de tabs (usar clase correcta: logistics-tab)
+        document.querySelectorAll('.logistics-tab').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        // Encontrar y activar el tab correcto
+        document.querySelectorAll('.logistics-tab').forEach(btn => {
+            if (btn.getAttribute('onclick')?.includes(`'${tabId}'`)) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Cargar datos del tab
+        loadTabData(tabId);
+    };
+
+    // ============================================================================
+    // FUNCIONES DE INVENTARIO ABC/EOQ
+    // ============================================================================
+    window.LogisticsDashboard.recalculateABC = async function() {
+        showSuccess('Recalculando clasificación ABC...');
+        try {
+            const response = await fetchAPI('/inventory/recalculate-abc', { method: 'POST' });
+            if (response.success) {
+                showSuccess('Clasificación ABC actualizada');
+                loadTabData('inventory');
+            }
+        } catch (error) {
+            showError('Error al recalcular ABC');
+        }
+    };
+
+    window.LogisticsDashboard.exportABC = function() {
+        showSuccess('Exportando reporte ABC...');
+        window.open('/api/logistics/inventory/export-abc?format=xlsx', '_blank');
+    };
+
+    window.LogisticsDashboard.exportCostReport = function() {
+        showSuccess('Exportando reporte de costos...');
+        window.open('/api/logistics/costs/export?format=xlsx', '_blank');
+    };
+
+    // ============================================================================
+    // FUNCIONES DE ÓRDENES DE COMPRA
+    // ============================================================================
+    window.LogisticsDashboard.createPurchaseOrder = async function(type = 'normal') {
+        const urgencyLabel = type === 'urgent' ? '🚨 URGENTE' : '📋 Normal';
+        showModal(`${urgencyLabel} Nueva Orden de Compra`, `
+            <form id="po-form" class="modal-form">
+                <p class="form-info">Función de creación de OC - En desarrollo</p>
+                <div class="form-group">
+                    <label>Proveedor</label>
+                    <select name="supplier_id">
+                        <option value="">Seleccionar proveedor...</option>
+                    </select>
+                </div>
+            </form>
+        `, async () => {
+            showSuccess('Orden de compra creada');
+            closeModal();
+        });
+    };
+
+    window.LogisticsDashboard.viewPurchaseOrder = async function(id) {
+        showInfo(`Ver Orden de Compra #${id} - Próximamente`);
+    };
+
+    window.LogisticsDashboard.viewConsolidation = function() {
+        showInfo('Ver consolidaciones de compra - Próximamente');
+    };
+
+    window.LogisticsDashboard.viewNegotiations = function() {
+        showInfo('Ver negociaciones activas - Próximamente');
+    };
+
+    // ============================================================================
+    // FUNCIONES DE TRANSFERENCIAS
+    // ============================================================================
+    window.LogisticsDashboard.showTransferModal = function() {
+        showModal('🔄 Nueva Transferencia', `
+            <form id="transfer-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Origen *</label>
+                        <select name="from_warehouse_id" required>
+                            <option value="">Seleccionar almacén...</option>
+                            ${(cache.warehouses || []).map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Destino *</label>
+                        <select name="to_warehouse_id" required>
+                            <option value="">Seleccionar almacén...</option>
+                            ${(cache.warehouses || []).map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Motivo</label>
+                    <select name="reason">
+                        <option value="replenishment">Reposición</option>
+                        <option value="balancing">Balanceo de stock</option>
+                        <option value="consolidation">Consolidación</option>
+                        <option value="emergency">Emergencia</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notas</label>
+                    <textarea name="notes" rows="2"></textarea>
+                </div>
+            </form>
+        `, async () => {
+            const form = document.getElementById('transfer-form');
+            const data = Object.fromEntries(new FormData(form));
+            try {
+                const response = await fetchAPI('/transfers', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                if (response.success) {
+                    showSuccess('Transferencia creada');
+                    closeModal();
+                    loadTabData('transfers');
+                }
+            } catch (error) {
+                showError('Error al crear transferencia');
+            }
+        });
+    };
+
+    window.LogisticsDashboard.showQuickTransferModal = function() {
+        window.LogisticsDashboard.showTransferModal();
+    };
+
+    window.LogisticsDashboard.showNewTransferModal = function() {
+        window.LogisticsDashboard.showTransferModal();
+    };
+
+    window.LogisticsDashboard.showAdjustmentModal = function() {
+        showModal('⚖️ Ajuste de Inventario', `
+            <form id="adjustment-form" class="modal-form">
+                <div class="form-group">
+                    <label>Producto *</label>
+                    <input type="text" name="product_search" placeholder="Buscar producto...">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo de Ajuste *</label>
+                        <select name="adjustment_type" required>
+                            <option value="positive">➕ Ingreso</option>
+                            <option value="negative">➖ Salida</option>
+                            <option value="correction">📝 Corrección</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad *</label>
+                        <input type="number" name="quantity" required min="1" placeholder="1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Motivo *</label>
+                    <select name="reason" required>
+                        <option value="count">Conteo físico</option>
+                        <option value="damage">Daño/Rotura</option>
+                        <option value="expiry">Vencimiento</option>
+                        <option value="return">Devolución</option>
+                        <option value="other">Otro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea name="notes" rows="2"></textarea>
+                </div>
+            </form>
+        `, async () => {
+            showSuccess('Ajuste registrado');
+            closeModal();
+        });
+    };
+
+    window.LogisticsDashboard.showQuickTransfer = function(itemId) {
+        showInfo(`Transferencia rápida para ítem #${itemId} - Próximamente`);
+    };
+
+    window.LogisticsDashboard.showQuickAdjust = function(itemId) {
+        showInfo(`Ajuste rápido para ítem #${itemId} - Próximamente`);
+    };
+
+    window.LogisticsDashboard.viewTransferDetails = async function(id) {
+        showInfo(`Ver detalles de transferencia #${id} - Próximamente`);
+    };
+
+    window.LogisticsDashboard.printTransfer = function(id) {
+        window.open(`/api/logistics/transfers/${id}/print`, '_blank');
+    };
+
+    // ============================================================================
+    // FUNCIONES DE PICKING / WAVES
+    // ============================================================================
+    window.LogisticsDashboard.showWaves = function() {
+        document.querySelectorAll('.picking-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('.picking-tab:first-child')?.classList.add('active');
+        loadTabData('picking');
+    };
+
+    window.LogisticsDashboard.showPickLists = function() {
+        document.querySelectorAll('.picking-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('.picking-tab:last-child')?.classList.add('active');
+        showInfo('Vista de Pick Lists - Próximamente');
+    };
+
+    window.LogisticsDashboard.viewWave = async function(id) {
+        showInfo(`Ver ola de picking #${id} - Próximamente`);
+    };
+
+    // ============================================================================
+    // FUNCIONES DE ENTIDADES (View)
+    // ============================================================================
+    window.LogisticsDashboard.viewCarrier = async function(id) {
+        try {
+            const response = await fetchAPI(`/carriers/${id}`);
+            if (response.success && response.data) {
+                const c = response.data;
+                showModal(`🚚 ${c.name}`, `
+                    <div class="entity-detail">
+                        <div class="detail-row"><strong>Código:</strong> ${c.code}</div>
+                        <div class="detail-row"><strong>CUIT:</strong> ${c.tax_id || '-'}</div>
+                        <div class="detail-row"><strong>Contacto:</strong> ${c.contact_name || '-'}</div>
+                        <div class="detail-row"><strong>Email:</strong> ${c.email || '-'}</div>
+                        <div class="detail-row"><strong>Teléfono:</strong> ${c.phone || '-'}</div>
+                        <div class="detail-row"><strong>Estado:</strong> ${c.status === 'active' ? '🟢 Activo' : '🔴 Inactivo'}</div>
+                    </div>
+                `);
+            }
+        } catch (error) {
+            showError('Error al cargar transportista');
+        }
+    };
+
+    window.LogisticsDashboard.viewZone = async function(id) {
+        try {
+            const response = await fetchAPI(`/zones/${id}`);
+            if (response.success && response.data) {
+                const z = response.data;
+                showModal(`📍 ${z.name}`, `
+                    <div class="entity-detail">
+                        <div class="detail-row"><strong>Código:</strong> ${z.code}</div>
+                        <div class="detail-row"><strong>Descripción:</strong> ${z.description || '-'}</div>
+                        <div class="detail-row"><strong>Tiempo base:</strong> ${z.base_delivery_time_min || 0} min</div>
+                        <div class="detail-row"><strong>Costo base:</strong> $${z.base_cost || 0}</div>
+                    </div>
+                `);
+            }
+        } catch (error) {
+            showError('Error al cargar zona');
+        }
+    };
+
+    window.LogisticsDashboard.viewRoute = async function(id) {
+        showInfo(`Ver detalles de ruta #${id} - Próximamente`);
+    };
+
+    // ============================================================================
+    // FUNCIONES DE ENVÍOS
+    // ============================================================================
+    window.LogisticsDashboard.showBulkShipmentModal = function() {
+        showModal('📦 Envío Masivo', `
+            <form id="bulk-shipment-form" class="modal-form">
+                <p class="form-info">Cargar múltiples envíos desde archivo Excel/CSV</p>
+                <div class="form-group">
+                    <label>Archivo *</label>
+                    <input type="file" name="file" accept=".xlsx,.xls,.csv" required>
+                </div>
+                <div class="form-group">
+                    <label>Transportista por defecto</label>
+                    <select name="default_carrier_id">
+                        <option value="">Auto-asignar</option>
+                        ${(cache.carriers || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                    </select>
+                </div>
+            </form>
+        `, async () => {
+            showSuccess('Procesando archivo...');
+            closeModal();
+        });
+    };
+
+    window.LogisticsDashboard.showUpdateStatusModal = function(shipmentId) {
+        showModal('📋 Actualizar Estado', `
+            <form id="update-status-form" class="modal-form">
+                <input type="hidden" name="shipment_id" value="${shipmentId}">
+                <div class="form-group">
+                    <label>Nuevo Estado *</label>
+                    <select name="status" required>
+                        <option value="preparing">📦 Preparando</option>
+                        <option value="ready">✅ Listo para despacho</option>
+                        <option value="picked_up">🚚 Retirado</option>
+                        <option value="in_transit">🛣️ En tránsito</option>
+                        <option value="out_for_delivery">📍 En reparto</option>
+                        <option value="delivered">✔️ Entregado</option>
+                        <option value="failed">❌ Fallido</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea name="notes" rows="2"></textarea>
+                </div>
+            </form>
+        `, async () => {
+            const form = document.getElementById('update-status-form');
+            const data = Object.fromEntries(new FormData(form));
+            try {
+                const response = await fetchAPI(`/shipments/${data.shipment_id}/status`, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+                if (response.success) {
+                    showSuccess('Estado actualizado');
+                    closeModal();
+                    loadTabData('shipments');
+                }
+            } catch (error) {
+                showError('Error al actualizar estado');
+            }
+        });
+    };
+
+    // ============================================================================
+    // FUNCIONES DE SOLICITUDES
+    // ============================================================================
+    window.LogisticsDashboard.verifyRequestStock = async function(requestId) {
+        showInfo(`Verificando stock para solicitud #${requestId}...`);
+    };
+
+    window.LogisticsDashboard.editRequest = function(requestId) {
+        showInfo(`Editar solicitud #${requestId} - Próximamente`);
+    };
+
+    window.LogisticsDashboard.cancelRequest = async function(requestId) {
+        if (!confirm('¿Está seguro de cancelar esta solicitud?')) return;
+        try {
+            const response = await fetchAPI(`/requests/${requestId}`, {
+                method: 'DELETE'
+            });
+            if (response.success) {
+                showSuccess('Solicitud cancelada');
+                loadTabData('requests');
+            }
+        } catch (error) {
+            showError('Error al cancelar solicitud');
+        }
+    };
+
+    window.LogisticsDashboard.viewRequestHistory = function(requestId) {
+        showInfo(`Historial de solicitud #${requestId} - Próximamente`);
+    };
+
+    // ============================================================================
+    // FUNCIONES DE CONFIGURACIÓN
+    // ============================================================================
+    window.LogisticsDashboard.showLocationTypesConfig = function() {
+        showInfo('Configuración de tipos de ubicación - Próximamente');
+    };
+
+    window.LogisticsDashboard.showPackageTypesConfig = function() {
+        showInfo('Configuración de tipos de paquete - Próximamente');
+    };
+
+    window.LogisticsDashboard.showBusinessRulesConfig = function() {
+        showInfo('Configuración de reglas de negocio - Próximamente');
+    };
+
+    window.LogisticsDashboard.showBusinessProfilesConfig = function() {
+        showInfo('Configuración de perfiles de negocio - Próximamente');
+    };
+
+    // ============================================================================
+    // FUNCIONES DE SLA
+    // ============================================================================
+    window.LogisticsDashboard.configSLANotifications = function() {
+        showModal('🔔 Configurar Notificaciones SLA', `
+            <form id="sla-notifications-form" class="modal-form">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="email_alerts" checked>
+                        Alertas por Email
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="push_alerts" checked>
+                        Notificaciones Push
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>Tiempo de alerta antes del breach (minutos)</label>
+                    <input type="number" name="alert_before_minutes" value="30" min="5" max="120">
+                </div>
+            </form>
+        `, async () => {
+            showSuccess('Configuración guardada');
+            closeModal();
+        });
+    };
+
+    window.LogisticsDashboard.editSLAConfig = function(type) {
+        showInfo(`Editar SLA tipo "${type}" - Próximamente`);
+    };
+
+    window.LogisticsDashboard.escalateSLA = async function(alertId) {
+        if (!confirm('¿Escalar esta alerta al supervisor?')) return;
+        showSuccess(`Alerta #${alertId} escalada`);
+    };
+
+    window.LogisticsDashboard.viewBreachDetails = function(breachId) {
+        showInfo(`Ver detalles de breach #${breachId} - Próximamente`);
     };
 
 })();

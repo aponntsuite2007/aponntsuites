@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-12-22T03:21:02.725Z",
+  "generatedAt": "2026-01-04T20:32:38.062Z",
   "count": 5,
   "flows": {
     "attendance-create": {
@@ -51,7 +51,7 @@
         "attendance-created"
       ],
       "module": "attendance",
-      "generatedAt": "2025-12-22T03:21:02.724Z",
+      "generatedAt": "2026-01-04T20:32:38.060Z",
       "source": "auto-generated"
     },
     "attendance-edit": {
@@ -103,7 +103,7 @@
         "attendance-updated"
       ],
       "module": "attendance",
-      "generatedAt": "2025-12-22T03:21:02.724Z",
+      "generatedAt": "2026-01-04T20:32:38.060Z",
       "source": "auto-generated"
     },
     "attendance-delete": {
@@ -156,7 +156,7 @@
         "attendance-deleted"
       ],
       "module": "attendance",
-      "generatedAt": "2025-12-22T03:21:02.724Z",
+      "generatedAt": "2026-01-04T20:32:38.060Z",
       "source": "auto-generated"
     },
     "attendance-search": {
@@ -198,7 +198,7 @@
         "results-displayed"
       ],
       "module": "attendance",
-      "generatedAt": "2025-12-22T03:21:02.724Z",
+      "generatedAt": "2026-01-04T20:32:38.061Z",
       "source": "auto-generated"
     },
     "attendance-view": {
@@ -235,7 +235,7 @@
         "details-visible"
       ],
       "module": "attendance",
-      "generatedAt": "2025-12-22T03:21:02.724Z",
+      "generatedAt": "2026-01-04T20:32:38.061Z",
       "source": "auto-generated"
     }
   }

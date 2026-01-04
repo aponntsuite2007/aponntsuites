@@ -1,4 +1,18 @@
 {
+  "a_mi_me_paso_search": {
+    "sourceFile": "a-mi-me-paso-search.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 2
+  },
+  "admin_consent_management.backup": {
+    "sourceFile": "admin-consent-management.backup.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 3
+  },
   "admin_consent_management": {
     "sourceFile": "admin-consent-management.js",
     "buttonCount": 0,
@@ -41,13 +55,6 @@
     "hasJSAnalysis": true,
     "apiEndpoints": 0
   },
-  "ai_testing_dashboard": {
-    "sourceFile": "ai-testing-dashboard.js",
-    "buttonCount": 0,
-    "inputCount": 0,
-    "hasJSAnalysis": true,
-    "apiEndpoints": 4
-  },
   "aponnt_billing_dashboard": {
     "sourceFile": "aponnt-billing-dashboard.js",
     "buttonCount": 0,
@@ -76,12 +83,26 @@
     "hasJSAnalysis": true,
     "apiEndpoints": 0
   },
+  "associate_marketplace.backup": {
+    "sourceFile": "associate-marketplace.backup.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 8
+  },
   "associate_marketplace": {
     "sourceFile": "associate-marketplace.js",
     "buttonCount": 0,
     "inputCount": 0,
     "hasJSAnalysis": true,
     "apiEndpoints": 8
+  },
+  "associate_workflow_panel.backup": {
+    "sourceFile": "associate-workflow-panel.backup.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 4
   },
   "associate_workflow_panel": {
     "sourceFile": "associate-workflow-panel.js",
@@ -90,6 +111,13 @@
     "hasJSAnalysis": true,
     "apiEndpoints": 4
   },
+  "attendance.backup": {
+    "sourceFile": "attendance.backup.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
   "attendance": {
     "sourceFile": "attendance.js",
     "buttonCount": 0,
@@ -97,12 +125,26 @@
     "hasJSAnalysis": true,
     "apiEndpoints": 0
   },
+  "audit_reports.backup": {
+    "sourceFile": "audit-reports.backup.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 6
+  },
   "audit_reports": {
     "sourceFile": "audit-reports.js",
     "buttonCount": 0,
     "inputCount": 0,
     "hasJSAnalysis": true,
     "apiEndpoints": 6
+  },
+  "auto_healing_dashboard.backup": {
+    "sourceFile": "auto-healing-dashboard.backup.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 5
   },
   "auto_healing_dashboard": {
     "sourceFile": "auto-healing-dashboard.js",
@@ -120,6 +162,13 @@
   },
   "biometric_attendance_module": {
     "sourceFile": "biometric-attendance-module.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "biometric_consent.backup": {
+    "sourceFile": "biometric-consent.backup.js",
     "buttonCount": 0,
     "inputCount": 0,
     "hasJSAnalysis": true,
@@ -153,60 +202,11 @@
     "hasJSAnalysis": true,
     "apiEndpoints": 6
   },
-  "clientes": {
-    "sourceFile": "clientes.js",
+  "cash_management": {
+    "sourceFile": "cash-management.js",
     "buttonCount": 0,
     "inputCount": 0,
     "hasJSAnalysis": true,
-    "apiEndpoints": 5
-  },
-  "company_account": {
-    "sourceFile": "company-account.js",
-    "buttonCount": 0,
-    "inputCount": 0,
-    "hasJSAnalysis": true,
-    "apiEndpoints": 5
-  },
-  "company_email_process": {
-    "sourceFile": "company-email-process.js",
-    "buttonCount": 0,
-    "inputCount": 0,
-    "hasJSAnalysis": true,
-    "apiEndpoints": 0
-  },
-  "company_email_smtp_config": {
-    "sourceFile": "company-email-smtp-config.js",
-    "buttonCount": 0,
-    "inputCount": 0,
-    "hasJSAnalysis": true,
-    "apiEndpoints": 0
-  },
-  "company_modal_tabs_redesign": {
-    "sourceFile": "company-modal-tabs-redesign.js",
-    "buttonCount": 0,
-    "inputCount": 0,
-    "hasJSAnalysis": true,
-    "apiEndpoints": 0
-  },
-  "company_workflow": {
-    "sourceFile": "company-workflow.js",
-    "buttonCount": 0,
-    "inputCount": 0,
-    "hasJSAnalysis": true,
-    "apiEndpoints": 9
-  },
-  "compliance_dashboard": {
-    "sourceFile": "compliance-dashboard.js",
-    "buttonCount": 0,
-    "inputCount": 0,
-    "hasJSAnalysis": true,
-    "apiEndpoints": 4
-  },
-  "configurador_modulos": {
-    "sourceFile": "configurador-modulos.js",
-    "buttonCount": 0,
-    "inputCount": 0,
-    "hasJSAnalysis": true,
-    "apiEndpoints": 2
+    "apiEndpoints": 1
   }
 }

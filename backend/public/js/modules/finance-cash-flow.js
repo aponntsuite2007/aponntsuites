@@ -27,7 +27,12 @@ window.FinanceCashFlow = (function() {
         return `
             <div class="finance-module finance-cash-flow">
                 <div class="module-header">
-                    <h2>💰 Flujo de Caja</h2>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button onclick="window.showModuleContent('finance-dashboard', 'Finance Dashboard')" class="finance-back-btn">
+                            ← Volver a Finance
+                        </button>
+                        <h2>💰 Flujo de Caja</h2>
+                    </div>
                     <div class="header-actions">
                         <select id="cf-period" class="filter-select" onchange="FinanceCashFlow.changePeriod()">
                             <option value="30">Próximos 30 días</option>

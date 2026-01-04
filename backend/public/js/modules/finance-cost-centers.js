@@ -27,7 +27,12 @@ window.FinanceCostCenters = (function() {
         return `
             <div class="finance-module">
                 <div class="module-header">
-                    <h2>🏢 Centros de Costo</h2>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button onclick="window.showModuleContent('finance-dashboard', 'Finance Dashboard')" class="finance-back-btn">
+                            ← Volver a Finance
+                        </button>
+                        <h2>🏢 Centros de Costo</h2>
+                    </div>
                     <div class="header-actions">
                         <select id="center-type-filter" class="filter-select" onchange="FinanceCostCenters.filterCenters()">
                             <option value="">Todos los tipos</option>

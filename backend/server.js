@@ -2382,6 +2382,20 @@ app.get('/asociados', (req, res) => {
   res.redirect('/associates');
 });
 
+// Portal de Proveedores (www.aponnt.com/providers)
+app.get('/providers', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'panel-proveedores.html'));
+});
+
+// Alias para portal de proveedores
+app.get('/proveedores', (req, res) => {
+  res.redirect('/providers');
+});
+
+app.get('/suppliers', (req, res) => {
+  res.redirect('/providers');
+});
+
 // Rutas legacy para compatibilidad
 app.get('/admin.html', (req, res) => {
   res.redirect('/admin');

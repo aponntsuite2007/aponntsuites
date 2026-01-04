@@ -30,7 +30,12 @@ window.FinanceJournalEntries = (function() {
         return `
             <div class="finance-module">
                 <div class="module-header">
-                    <h2>📓 Asientos Contables</h2>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button onclick="window.showModuleContent('finance-dashboard', 'Finance Dashboard')" class="finance-back-btn">
+                            ← Volver a Finance
+                        </button>
+                        <h2>📓 Asientos Contables</h2>
+                    </div>
                     <div class="header-actions">
                         <select id="entry-year" class="filter-select" onchange="FinanceJournalEntries.filterEntries()">
                             <option value="${currentYear}">${currentYear}</option>

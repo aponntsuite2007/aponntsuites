@@ -1,10 +1,47 @@
 {
-  "analyzedAt": "2025-12-22T03:21:02.558Z",
+  "analyzedAt": "2026-01-04T20:32:37.715Z",
   "files": [
     "panel-empresa.html",
     "panel-administrativo.html"
   ],
   "modules": {
+    "a_mi_me_paso_search": {
+      "key": "a_mi_me_paso_search",
+      "sourceFile": "a-mi-me-paso-search.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 0,
+        "apiEndpoints": [
+          "${this.API_BASE}/search",
+          "${this.API_BASE}/feedback"
+        ],
+        "domReferences": 11
+      }
+    },
+    "admin_consent_management.backup": {
+      "key": "admin_consent_management.backup",
+      "sourceFile": "admin-consent-management.backup.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 4,
+        "apiEndpoints": [
+          "/api/consents/all",
+          "/api/consents/stats",
+          "/api/consents/definitions/${consentId}"
+        ],
+        "domReferences": 21
+      }
+    },
     "admin_consent_management": {
       "key": "admin_consent_management",
       "sourceFile": "admin-consent-management.js",
@@ -123,26 +160,6 @@
         "domReferences": 41
       }
     },
-    "ai_testing_dashboard": {
-      "key": "ai_testing_dashboard",
-      "sourceFile": "ai-testing-dashboard.js",
-      "elements": {
-        "buttons": [],
-        "inputs": [],
-        "modals": [],
-        "tabs": []
-      },
-      "jsAnalysis": {
-        "functionCount": 0,
-        "apiEndpoints": [
-          "/api/audit/phase4/ai-test",
-          "/api/audit/phase4/ai-test/batch",
-          "/api/audit/phase4/ai-test/history",
-          "/api/audit/phase4/ai-test/patterns"
-        ],
-        "domReferences": 18
-      }
-    },
     "aponnt_billing_dashboard": {
       "key": "aponnt_billing_dashboard",
       "sourceFile": "aponnt-billing-dashboard.js",
@@ -214,6 +231,30 @@
         "domReferences": 54
       }
     },
+    "associate_marketplace.backup": {
+      "key": "associate_marketplace.backup",
+      "sourceFile": "associate-marketplace.backup.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 24,
+        "apiEndpoints": [
+          "${config.apiBase}/categories",
+          "${config.apiBase}/contracts/my-company",
+          "${config.apiBase}/search?${params}",
+          "${config.apiBase}/${associateId}",
+          "${config.apiBase}/contracts",
+          "${config.apiBase}/contracts/${contractId}/pause",
+          "${config.apiBase}/contracts/${contractId}/activate",
+          "${config.apiBase}/contracts/${contractId}"
+        ],
+        "domReferences": 8
+      }
+    },
     "associate_marketplace": {
       "key": "associate_marketplace",
       "sourceFile": "associate-marketplace.js",
@@ -238,6 +279,26 @@
         "domReferences": 8
       }
     },
+    "associate_workflow_panel.backup": {
+      "key": "associate_workflow_panel.backup",
+      "sourceFile": "associate-workflow-panel.backup.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 0,
+        "apiEndpoints": [
+          "${this.apiBase}/overview?period=${this.currentPeriod}",
+          "${this.apiBase}/billing-summary?period=${this.currentPeriod}",
+          "${this.apiBase}/stats",
+          "${this.apiBase}/companies"
+        ],
+        "domReferences": 5
+      }
+    },
     "associate_workflow_panel": {
       "key": "associate_workflow_panel",
       "sourceFile": "associate-workflow-panel.js",
@@ -258,6 +319,21 @@
         "domReferences": 5
       }
     },
+    "attendance.backup": {
+      "key": "attendance.backup",
+      "sourceFile": "attendance.backup.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 33,
+        "apiEndpoints": [],
+        "domReferences": 39
+      }
+    },
     "attendance": {
       "key": "attendance",
       "sourceFile": "attendance.js",
@@ -271,6 +347,28 @@
         "functionCount": 29,
         "apiEndpoints": [],
         "domReferences": 39
+      }
+    },
+    "audit_reports.backup": {
+      "key": "audit_reports.backup",
+      "sourceFile": "audit-reports.backup.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 1,
+        "apiEndpoints": [
+          "/api/audit-reports/types",
+          "/api/audit-reports/generate",
+          "/api/audit-reports/batch-generate",
+          "/api/audit-reports/verify/${code}",
+          "/api/audit-reports/history?limit=50",
+          "/api/audit-reports/${reportId}/info"
+        ],
+        "domReferences": 21
       }
     },
     "audit_reports": {
@@ -295,6 +393,27 @@
         "domReferences": 21
       }
     },
+    "auto_healing_dashboard.backup": {
+      "key": "auto_healing_dashboard.backup",
+      "sourceFile": "auto-healing-dashboard.backup.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 3,
+        "apiEndpoints": [
+          "/api/testing/run-e2e-advanced",
+          "/api/auto-healing/stop",
+          "/api/auto-healing/status",
+          "/api/auto-healing/metrics",
+          "/api/auto-healing/reports"
+        ],
+        "domReferences": 15
+      }
+    },
     "auto_healing_dashboard": {
       "key": "auto_healing_dashboard",
       "sourceFile": "auto-healing-dashboard.js",
@@ -313,7 +432,7 @@
           "/api/auto-healing/metrics",
           "/api/auto-healing/reports"
         ],
-        "domReferences": 14
+        "domReferences": 15
       }
     },
     "benefits_management": {
@@ -354,6 +473,21 @@
         "functionCount": 5,
         "apiEndpoints": [],
         "domReferences": 8
+      }
+    },
+    "biometric_consent.backup": {
+      "key": "biometric_consent.backup",
+      "sourceFile": "biometric-consent.backup.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 16,
+        "apiEndpoints": [],
+        "domReferences": 5
       }
     },
     "biometric_consent": {
@@ -426,9 +560,9 @@
         "domReferences": 12
       }
     },
-    "clientes": {
-      "key": "clientes",
-      "sourceFile": "clientes.js",
+    "cash_management": {
+      "key": "cash_management",
+      "sourceFile": "cash-management.js",
       "elements": {
         "buttons": [],
         "inputs": [],
@@ -436,144 +570,11 @@
         "tabs": []
       },
       "jsAnalysis": {
-        "functionCount": 20,
+        "functionCount": 47,
         "apiEndpoints": [
-          "/api/siac/tax-templates?country=${countryCode}",
-          "/api/siac/tax-conditions?country=${countryCode}",
-          "/api/siac/tax-templates",
-          "/api/siac/clientes",
-          "/api/siac/clientes?company_id=${clientesState.companyId}"
+          "${API_BASE}${endpoint}"
         ],
-        "domReferences": 45
-      }
-    },
-    "company_account": {
-      "key": "company_account",
-      "sourceFile": "company-account.js",
-      "elements": {
-        "buttons": [],
-        "inputs": [],
-        "modals": [],
-        "tabs": []
-      },
-      "jsAnalysis": {
-        "functionCount": 12,
-        "apiEndpoints": [
-          "/api/company-account/communications",
-          "/api/company-account/communications/${commId}/read",
-          "/api/company-account/${type}/${id}/download",
-          "/api/company-account/notifications/${notifId}/read",
-          "/api/company-account/notifications/read-all"
-        ],
-        "domReferences": 12
-      }
-    },
-    "company_email_process": {
-      "key": "company_email_process",
-      "sourceFile": "company-email-process.js",
-      "elements": {
-        "buttons": [],
-        "inputs": [],
-        "modals": [],
-        "tabs": []
-      },
-      "jsAnalysis": {
-        "functionCount": 23,
-        "apiEndpoints": [],
-        "domReferences": 2
-      }
-    },
-    "company_email_smtp_config": {
-      "key": "company_email_smtp_config",
-      "sourceFile": "company-email-smtp-config.js",
-      "elements": {
-        "buttons": [],
-        "inputs": [],
-        "modals": [],
-        "tabs": []
-      },
-      "jsAnalysis": {
-        "functionCount": 19,
-        "apiEndpoints": [],
-        "domReferences": 11
-      }
-    },
-    "company_modal_tabs_redesign": {
-      "key": "company_modal_tabs_redesign",
-      "sourceFile": "company-modal-tabs-redesign.js",
-      "elements": {
-        "buttons": [],
-        "inputs": [],
-        "modals": [],
-        "tabs": []
-      },
-      "jsAnalysis": {
-        "functionCount": 5,
-        "apiEndpoints": [],
-        "domReferences": 5
-      }
-    },
-    "company_workflow": {
-      "key": "company_workflow",
-      "sourceFile": "company-workflow.js",
-      "elements": {
-        "buttons": [],
-        "inputs": [],
-        "modals": [],
-        "tabs": []
-      },
-      "jsAnalysis": {
-        "functionCount": 14,
-        "apiEndpoints": [
-          "${this.baseUrl}/modules-pricing",
-          "/api/audit/registry",
-          "${this.baseUrl}/companies/${companyId}/branches",
-          "${this.baseUrl}/companies/${companyId}/users",
-          "${this.baseUrl}/companies",
-          "${this.baseUrl}/companies/${companyId}",
-          "${this.baseUrl}/budgets",
-          "${this.baseUrl}/branches/${branchId}",
-          "${WorkflowAPI.baseUrl}/companies/${companyId}/reset-admin-password"
-        ],
-        "domReferences": 49
-      }
-    },
-    "compliance_dashboard": {
-      "key": "compliance_dashboard",
-      "sourceFile": "compliance-dashboard.js",
-      "elements": {
-        "buttons": [],
-        "inputs": [],
-        "modals": [],
-        "tabs": []
-      },
-      "jsAnalysis": {
-        "functionCount": 19,
-        "apiEndpoints": [
-          "${this.baseUrl}${endpoint}",
-          "/api/compliance/export/dashboard/${format}?period=${periodDays}&company_name=${companyName}",
-          "/api/compliance/export/violations/${format}?company_name=${companyName}",
-          "/api/compliance/export/employee/${employeeId}/pdf?period=${periodDays}&company_name=${companyName}"
-        ],
-        "domReferences": 32
-      }
-    },
-    "configurador_modulos": {
-      "key": "configurador_modulos",
-      "sourceFile": "configurador-modulos.js",
-      "elements": {
-        "buttons": [],
-        "inputs": [],
-        "modals": [],
-        "tabs": []
-      },
-      "jsAnalysis": {
-        "functionCount": 0,
-        "apiEndpoints": [
-          "/api/modules",
-          "/api/modules/stats/general"
-        ],
-        "domReferences": 7
+        "domReferences": 26
       }
     }
   },
