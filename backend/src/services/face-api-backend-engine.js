@@ -6,18 +6,30 @@
  * Compatible con frontend, kiosk y APK
  */
 
-const canvas = require('canvas');
-const faceapi = require('face-api.js');
 const path = require('path');
 const fs = require('fs');
 
-// Configure face-api.js for Node.js
-const { Canvas, Image, ImageData } = canvas;
-faceapi.env.monkeyPatch({
-  Canvas,
-  Image,
-  ImageData
-});
+// 🛡️ PRODUCTION-SAFE: Canvas y face-api.js son opcionales
+let canvas = null;
+let faceapi = null;
+let Canvas = null;
+let Image = null;
+let ImageData = null;
+let FACE_API_AVAILABLE = false;
+
+try {
+  canvas = require('canvas');
+  faceapi = require('face-api.js');
+  // Configure face-api.js for Node.js
+  Canvas = canvas.Canvas;
+  Image = canvas.Image;
+  ImageData = canvas.ImageData;
+  faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
+  FACE_API_AVAILABLE = true;
+  console.log('✅ [FACE-API] Canvas y face-api.js cargados correctamente');
+} catch (e) {
+  console.log('⚠️ [FACE-API] Canvas/face-api.js no disponible (opcional en producción):', e.message);
+}
 
 class FaceAPIBackendEngine {
   constructor() {
@@ -45,6 +57,14 @@ class FaceAPIBackendEngine {
    */
   async initialize() {
     if (this.isInitialized) return true;
+
+    // 🛡️ Verificar si face-api está disponible
+    if (!FACE_API_AVAILABLE || !faceapi) {
+      console.log('⚠️ [FACE-API-BACKEND] Face-API.js no disponible, usando modo stub');
+      this.isInitialized = true;
+      this.stubMode = true;
+      return true;
+    }
 
     try {
       console.log('🧠 [FACE-API-BACKEND] Inicializando Face-API.js REAL...');

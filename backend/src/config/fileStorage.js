@@ -1,8 +1,19 @@
 const AWS = require('aws-sdk');
 const multer = require('multer');
-const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs').promises;
+
+// 🛡️ PRODUCTION-SAFE: Sharp es opcional
+let sharp = null;
+let SHARP_AVAILABLE = false;
+
+try {
+    sharp = require('sharp');
+    SHARP_AVAILABLE = true;
+    console.log('✅ [FILE-STORAGE] Sharp cargado correctamente');
+} catch (e) {
+    console.log('⚠️ [FILE-STORAGE] Sharp no disponible (opcional en producción):', e.message);
+}
 
 /**
  * File Storage Configuration
@@ -179,6 +190,12 @@ class FileStorage {
       format = 'jpeg'
     } = options;
 
+    // 🛡️ Si sharp no está disponible, retornar buffer sin optimizar
+    if (!SHARP_AVAILABLE || !sharp) {
+      console.log('⚠️ [FILE-STORAGE] Sharp no disponible, imagen sin optimizar');
+      return { buffer: buffer, size: buffer.length };
+    }
+
     try {
       const optimized = await sharp(buffer)
         .resize(maxWidth, maxHeight, { 
@@ -208,6 +225,12 @@ class FileStorage {
    * Generate thumbnail
    */
   async generateThumbnail(buffer, originalPath, companySlug) {
+    // 🛡️ Si sharp no está disponible, no generar thumbnail
+    if (!SHARP_AVAILABLE || !sharp) {
+      console.log('⚠️ [FILE-STORAGE] Sharp no disponible, thumbnail no generado');
+      return null;
+    }
+
     try {
       const thumbnailBuffer = await sharp(buffer)
         .resize(300, 300, { 
@@ -297,6 +320,12 @@ class FileStorage {
    * Compress and convert image to WebP for better performance
    */
   async convertToWebP(buffer, quality = 80) {
+    // 🛡️ Si sharp no está disponible, retornar buffer original
+    if (!SHARP_AVAILABLE || !sharp) {
+      console.log('⚠️ [FILE-STORAGE] Sharp no disponible, WebP no generado');
+      return buffer;
+    }
+
     try {
       const webpBuffer = await sharp(buffer)
         .webp({ quality: quality })

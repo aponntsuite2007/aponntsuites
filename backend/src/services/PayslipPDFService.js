@@ -3,9 +3,20 @@
  * Usa templates con bloques configurables + Puppeteer para generar PDF
  */
 
-const puppeteer = require('puppeteer');
 const Mustache = require('mustache');
 const path = require('path');
+
+// 🛡️ PRODUCTION-SAFE: Puppeteer es opcional
+let puppeteer = null;
+let PUPPETEER_AVAILABLE = false;
+
+try {
+    puppeteer = require('puppeteer');
+    PUPPETEER_AVAILABLE = true;
+    console.log('✅ [PAYSLIP-PDF] Puppeteer cargado correctamente');
+} catch (e) {
+    console.log('⚠️ [PAYSLIP-PDF] Puppeteer no disponible (opcional en producción):', e.message);
+}
 
 class PayslipPDFService {
     constructor() {
@@ -16,6 +27,10 @@ class PayslipPDFService {
      * Inicializa el browser de Puppeteer (singleton)
      */
     async initBrowser() {
+        // 🛡️ Verificar si Puppeteer está disponible
+        if (!PUPPETEER_AVAILABLE || !puppeteer) {
+            throw new Error('Puppeteer no disponible en este ambiente. Generación de PDF deshabilitada.');
+        }
         if (!this.browser) {
             this.browser = await puppeteer.launch({
                 headless: 'new',

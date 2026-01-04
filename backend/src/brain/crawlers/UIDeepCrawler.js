@@ -14,9 +14,19 @@
  * ============================================================================
  */
 
-const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
+
+// 🛡️ PRODUCTION-SAFE: Puppeteer es opcional
+let puppeteer = null;
+let PUPPETEER_AVAILABLE = false;
+
+try {
+    puppeteer = require('puppeteer');
+    PUPPETEER_AVAILABLE = true;
+} catch (e) {
+    console.log('⚠️ [UI-DEEP-CRAWLER] Puppeteer no disponible (opcional en producción):', e.message);
+}
 
 class UIDeepCrawler {
     constructor(options = {}) {
@@ -69,6 +79,12 @@ class UIDeepCrawler {
         console.log('\n' + '═'.repeat(60));
         console.log('🔍 UI DEEP CRAWLER - Iniciando');
         console.log('═'.repeat(60));
+
+        // 🛡️ Verificar si Puppeteer está disponible
+        if (!PUPPETEER_AVAILABLE || !puppeteer) {
+            console.log('⚠️ [UI-DEEP-CRAWLER] Puppeteer no disponible, UI crawling deshabilitado');
+            return false;
+        }
 
         try {
             // Launch browser
