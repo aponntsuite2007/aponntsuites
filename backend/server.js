@@ -2729,9 +2729,15 @@ app.use('/api/kiosks', kiosksRoutes);
 const postgresqlPartitioningRoutes = require('./src/routes/postgresql-partitioning');
 app.use('/api/v2/postgresql/partitioning', postgresqlPartitioningRoutes);
 
-// ⏰ CONFIGURAR BIOMETRIC ATTENDANCE API (CLOCK IN/OUT)
-const biometricAttendanceRoutes = require('./src/routes/biometric-attendance-api');
-app.use('/api/v2/biometric-attendance', biometricAttendanceRoutes);
+// ⏰ CONFIGURAR BIOMETRIC ATTENDANCE API (CLOCK IN/OUT) - Opcional en producción (usa canvas)
+let biometricAttendanceRoutes = null;
+try {
+    biometricAttendanceRoutes = require('./src/routes/biometric-attendance-api');
+    app.use('/api/v2/biometric-attendance', biometricAttendanceRoutes);
+    console.log('✅ [BIOMETRIC-ATTENDANCE] Rutas configuradas');
+} catch (e) {
+    console.log('⚠️ [BIOMETRIC-ATTENDANCE] No disponible (canvas/face-api opcional):', e.message);
+}
 
 // 🚀 FAST ATTENDANCE API v3 - Optimizado para fichajes masivos
 const fastAttendanceRoutes = require('./src/routes/fastAttendanceRoutes');
@@ -2743,17 +2749,36 @@ const calendarioLaboralRoutes = require('./src/routes/calendarioLaboralRoutes');
 app.use('/api/calendario', calendarioLaboralRoutes);
 console.log('📅 [CALENDARIO-LABORAL] API de Calendario Laboral configurada');
 
-// 🏢 CONFIGURAR BIOMETRIC ENTERPRISE API (ENCRYPTED TEMPLATES)
-const biometricEnterpriseRoutes = require('./src/routes/biometric-enterprise-routes');
-app.use('/api/v2/biometric-enterprise', biometricEnterpriseRoutes);
+// 🏢 CONFIGURAR BIOMETRIC ENTERPRISE API (ENCRYPTED TEMPLATES) - Opcional (usa canvas)
+let biometricEnterpriseRoutes = null;
+try {
+    biometricEnterpriseRoutes = require('./src/routes/biometric-enterprise-routes');
+    app.use('/api/v2/biometric-enterprise', biometricEnterpriseRoutes);
+    console.log('✅ [BIOMETRIC-ENTERPRISE] Rutas configuradas');
+} catch (e) {
+    console.log('⚠️ [BIOMETRIC-ENTERPRISE] No disponible (canvas/face-api opcional):', e.message);
+}
 
-// 🏭 CONFIGURAR KIOSK ENTERPRISE API (500+ EMPLEADOS)
-const kioskEnterpriseRoutes = require('./src/routes/kiosk-enterprise');
-app.use('/api/v2/kiosk-enterprise', kioskEnterpriseRoutes);
+// 🏭 CONFIGURAR KIOSK ENTERPRISE API (500+ EMPLEADOS) - Opcional (usa face-api)
+let kioskEnterpriseRoutes = null;
+try {
+    kioskEnterpriseRoutes = require('./src/routes/kiosk-enterprise');
+    app.use('/api/v2/kiosk-enterprise', kioskEnterpriseRoutes);
+    console.log('✅ [KIOSK-ENTERPRISE] Rutas configuradas');
+} catch (e) {
+    console.log('⚠️ [KIOSK-ENTERPRISE] No disponible (face-api opcional):', e.message);
+}
 
-// 🔌 IMPORTAR WEBSOCKET SERVERS ENTERPRISE
-const { initializeKioskWebSocketServer } = require('./src/services/kiosk-websocket-server');
-const { AdminPanelWebSocketServer } = require('./src/services/admin-panel-websocket');
+// 🔌 IMPORTAR WEBSOCKET SERVERS ENTERPRISE - Opcional
+let initializeKioskWebSocketServer = null;
+let AdminPanelWebSocketServer = null;
+try {
+    initializeKioskWebSocketServer = require('./src/services/kiosk-websocket-server').initializeKioskWebSocketServer;
+    AdminPanelWebSocketServer = require('./src/services/admin-panel-websocket').AdminPanelWebSocketServer;
+    console.log('✅ [WEBSOCKET] Servers Enterprise cargados');
+} catch (e) {
+    console.log('⚠️ [WEBSOCKET] Servers Enterprise no disponibles:', e.message);
+}
 
 // 📱 CONFIGURAR API MÓVIL COMPLETA
 const mobileRoutes = require('./src/routes/mobileRoutes');
@@ -4017,23 +4042,24 @@ ${_getNetworkInterfaces().map(ip => `   • ${ip.interface}: ${ip.ip}${ip.isPrim
 ⚠️  NOTA: Si cambias de red, reinicia el servidor para detectar nueva IP
       `);
 
-      // 🔌 INICIALIZAR WEBSOCKET SERVERS ENTERPRISE
-      initializeKioskWebSocketServer(server).then((kioskWsServer) => {
-        console.log('🏭 [KIOSK-WS] WebSocket Server Enterprise inicializado para 20+ cámaras simultáneas');
+      // 🔌 INICIALIZAR WEBSOCKET SERVERS ENTERPRISE - Solo si están disponibles
+      if (initializeKioskWebSocketServer && AdminPanelWebSocketServer) {
+        initializeKioskWebSocketServer(server).then((kioskWsServer) => {
+          console.log('🏭 [KIOSK-WS] WebSocket Server Enterprise inicializado para 20+ cámaras simultáneas');
 
-        // Inicializar Admin Panel WebSocket Server
-        console.log('🖥️ [ADMIN-WS] Inicializando WebSocket para panel administrativo...');
-        const adminWsServer = new AdminPanelWebSocketServer(server);
+          // Inicializar Admin Panel WebSocket Server
+          console.log('🖥️ [ADMIN-WS] Inicializando WebSocket para panel administrativo...');
+          const adminWsServer = new AdminPanelWebSocketServer(server);
 
-        // Conectar ambos servidores para comunicación bidireccional
-        adminWsServer.connectToKioskServer(kioskWsServer);
-        kioskWsServer.adminPanelRef = adminWsServer;
+          // Conectar ambos servidores para comunicación bidireccional
+          adminWsServer.connectToKioskServer(kioskWsServer);
+          kioskWsServer.adminPanelRef = adminWsServer;
 
-        // Configurar referencia para rutas de testing (deshabilitado temporalmente)
-        // setAdminPanelWsServer(adminWsServer);
+          // Configurar referencia para rutas de testing (deshabilitado temporalmente)
+          // setAdminPanelWsServer(adminWsServer);
 
-        console.log('✅ [ADMIN-WS] WebSocket para panel administrativo inicializado en /biometric-ws');
-        console.log('🔗 [WS] Servidores WebSocket conectados: Kiosk ↔ Admin Panel');
+          console.log('✅ [ADMIN-WS] WebSocket para panel administrativo inicializado en /biometric-ws');
+          console.log('🔗 [WS] Servidores WebSocket conectados: Kiosk ↔ Admin Panel');
 
         // 🧠 INICIALIZAR BRAIN ORCHESTRATOR - Cerebro Central del Sistema (solo si está disponible)
         if (getBrainOrchestrator) {
@@ -4052,9 +4078,25 @@ ${_getNetworkInterfaces().map(ip => `   • ${ip.interface}: ${ip.ip}${ip.isPrim
           console.log('⚠️ [SERVER] Brain Orchestrator no disponible');
         }
 
-      }).catch(err => {
-        console.error('❌ [KIOSK-WS] Error inicializando WebSocket server:', err);
-      });
+        }).catch(err => {
+          console.error('❌ [KIOSK-WS] Error inicializando WebSocket server:', err);
+        });
+      } else {
+        // WebSocket no disponible, inicializar Brain Orchestrator directamente
+        console.log('⚠️ [WEBSOCKET] Servers Enterprise no disponibles, inicializando Brain directamente...');
+        if (getBrainOrchestrator) {
+          console.log('\n🧠 [SERVER] Inicializando Brain Orchestrator...');
+          getBrainOrchestrator().then(brain => {
+            console.log('✅ [SERVER] Brain Orchestrator inicializado y activo');
+            console.log(`   🤖 Agentes IA: ${Object.keys(brain.agents).length}`);
+            console.log(`   📦 Servicios: ${Object.keys(brain.services).length}`);
+          }).catch(err => {
+            console.error('❌ [SERVER] Error inicializando Brain Orchestrator:', err.message);
+          });
+        } else {
+          console.log('⚠️ [SERVER] Brain Orchestrator no disponible');
+        }
+      }
 
       // 📡 ANUNCIAR SERVICIO VIA mDNS PARA DESCUBRIMIENTO AUTOMÁTICO
       if (!Bonjour) {
