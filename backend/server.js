@@ -2529,9 +2529,16 @@ const transportRoutes = require('./src/routes/transportRoutes');
 const transportFleetRoutes = require('./src/routes/transportFleetRoutes');
 const transportTripsRoutes = require('./src/routes/transportTripsRoutes');
 
-// 🚚 IMPORTAR RUTAS DE LOGÍSTICA AVANZADA (WMS + TMS)
-const logisticsRoutes = require('./src/routes/logisticsRoutes');
-const warehouseRoutes = require('./src/routes/warehouseRoutes'); // 📦 WMS - Gestión de Almacenes multi-tenant
+// 🚚 IMPORTAR RUTAS DE LOGÍSTICA AVANZADA (WMS + TMS) - OPCIONAL EN PRODUCCIÓN
+let logisticsRoutes = null;
+let warehouseRoutes = null;
+try {
+    logisticsRoutes = require('./src/routes/logisticsRoutes');
+    warehouseRoutes = require('./src/routes/warehouseRoutes');
+    console.log('✅ [LOGISTICS/WMS] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [LOGISTICS/WMS] Routes not available:', e.message);
+}
 
 // 💼 IMPORTAR RUTAS DE SIAC ERP
 const siacConfiguradorRoutes = require('./src/routes/siac/configurador');
@@ -2540,19 +2547,48 @@ const siacTaxTemplatesRoutes = require('./src/routes/siac/taxTemplates');
 const debugDbRoutes = require('./src/routes/debug-db');
 const siacClientesRoutes = require('./src/routes/siac/clientes');
 const siacFacturacionRoutes = require('./src/routes/siac/facturacion');
-const siacRemitosRoutes = require('./src/routes/siac/remitosRoutes');
-const siacCuentaCorrienteRoutes = require('./src/routes/siac/cuentaCorrienteRoutes');
-const siacCobranzasRoutes = require('./src/routes/siac/cobranzasRoutes');
-const siacCajaRoutes = require('./src/routes/siac/cajaRoutes');
 
-// 🛒 IMPORTAR RUTAS DE PROCUREMENT P2P (Compras y Proveedores)
-const procurementRoutes = require('./src/routes/procurementRoutes');
+// SIAC Rutas Nuevas - OPCIONAL EN PRODUCCIÓN
+let siacRemitosRoutes = null;
+let siacCuentaCorrienteRoutes = null;
+let siacCobranzasRoutes = null;
+let siacCajaRoutes = null;
+try {
+    siacRemitosRoutes = require('./src/routes/siac/remitosRoutes');
+    siacCuentaCorrienteRoutes = require('./src/routes/siac/cuentaCorrienteRoutes');
+    siacCobranzasRoutes = require('./src/routes/siac/cobranzasRoutes');
+    siacCajaRoutes = require('./src/routes/siac/cajaRoutes');
+    console.log('✅ [SIAC-EXTENDED] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [SIAC-EXTENDED] Routes not available:', e.message);
+}
 
-// 💰 IMPORTAR RUTAS DE FINANZAS (Finance Enterprise)
-const financeRoutes = require('./src/routes/financeRoutes');
+// 🛒 IMPORTAR RUTAS DE PROCUREMENT P2P (Compras y Proveedores) - OPCIONAL EN PRODUCCIÓN
+let procurementRoutes = null;
+try {
+    procurementRoutes = require('./src/routes/procurementRoutes');
+    console.log('✅ [PROCUREMENT] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [PROCUREMENT] Routes not available:', e.message);
+}
 
-// 🔐 IMPORTAR RUTAS DE ACCESOS TEMPORALES (Auditores, Asesores, Médicos Externos)
-const temporaryAccessRoutes = require('./src/routes/temporaryAccessRoutes');
+// 💰 IMPORTAR RUTAS DE FINANZAS (Finance Enterprise) - OPCIONAL EN PRODUCCIÓN
+let financeRoutes = null;
+try {
+    financeRoutes = require('./src/routes/financeRoutes');
+    console.log('✅ [FINANCE] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [FINANCE] Routes not available:', e.message);
+}
+
+// 🔐 IMPORTAR RUTAS DE ACCESOS TEMPORALES - OPCIONAL EN PRODUCCIÓN
+let temporaryAccessRoutes = null;
+try {
+    temporaryAccessRoutes = require('./src/routes/temporaryAccessRoutes');
+    console.log('✅ [TEMPORARY-ACCESS] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [TEMPORARY-ACCESS] Routes not available:', e.message);
+}
 
 // Configurar rutas con sistema de permisos
 app.use('/api/v1/permissions', permissionsRoutes);
@@ -2563,7 +2599,10 @@ app.use('/api/aponnt/staff-data', aponntStaffRoutes); // ✅ CRUD Staff Aponnt (
 app.use('/api/aponnt/staff-commissions', staffCommissionsRoutes); // ✅ Comisiones Piramidales Staff (Enero 2025)
 
 // 🔐 Sistema de Accesos Temporales (Auditores, Asesores, Médicos Externos) - Enero 2026
-app.use('/api/temporary-access', temporaryAccessRoutes);
+if (temporaryAccessRoutes) {
+    app.use('/api/temporary-access', temporaryAccessRoutes);
+    console.log('🔐 [TEMPORARY-ACCESS] Rutas de accesos temporales configuradas');
+}
 
 // 📊 Sistema de Ventas y Leads (Diciembre 2025)
 const salesOrchestrationRoutes = require('./src/routes/salesOrchestrationRoutes');
@@ -3113,33 +3152,23 @@ console.log('   🔬 GET  /api/brain-analyzer/full-analysis - Análisis COMPLETO
 // console.log('   🔍 GET  /api/brain-testing/fields/:moduleKey - Análisis de campos');
 // console.log('   🎲 POST /api/brain-testing/generate-data/:moduleKey - Generar datos');
 
-// ✅ CONFIGURAR BRAIN NERVOUS SYSTEM - Sistema Nervioso Reactivo
-const brainNervousRoutes = require('./src/routes/brainNervousRoutes');
-app.use('/api/brain/nervous', brainNervousRoutes);
+// ✅ CONFIGURAR BRAIN NERVOUS SYSTEM - Sistema Nervioso Reactivo - OPCIONAL EN PRODUCCIÓN
+try {
+    const brainNervousRoutes = require('./src/routes/brainNervousRoutes');
+    app.use('/api/brain/nervous', brainNervousRoutes);
+    console.log('🧠 [BRAIN NERVOUS] Sistema Nervioso del Brain configurado');
+} catch (e) {
+    console.log('⚠️ [BRAIN NERVOUS] No disponible:', e.message);
+}
 
-console.log('🧠 [BRAIN NERVOUS] Sistema Nervioso del Brain ACTIVO:');
-console.log('   📊 GET  /api/brain/nervous/status - Estado del sistema nervioso');
-console.log('   ▶️  POST /api/brain/nervous/start - Iniciar sistema nervioso');
-console.log('   ⏹️  POST /api/brain/nervous/stop - Detener sistema nervioso');
-console.log('   📈 GET  /api/brain/nervous/stats - Estadísticas');
-console.log('   🚨 GET  /api/brain/nervous/incidents - Incidentes activos');
-console.log('   📝 POST /api/brain/nervous/report - Reportar problema manual');
-console.log('   🩺 POST /api/brain/nervous/health-check - Health check manual');
-console.log('   🧪 POST /api/brain/nervous/ssot-test - Test SSOT manual');
-console.log('   ⚡ POST /api/brain/nervous/simulate-error - Simular error (testing)');
-console.log('   🔥 POST /api/brain/nervous/test-escalation - Test escalamiento');
-
-// ✅ CONFIGURAR BRAIN TOUR SERVICE - Tours Guiados Dinámicos
-const brainTourRoutes = require('./src/routes/brainTourRoutes');
-app.use('/api/brain/tours', brainTourRoutes);
-
-console.log('🎯 [BRAIN TOURS] Sistema de Tours Guiados ACTIVO:');
-console.log('   📋 GET  /api/brain/tours - Lista de tours disponibles');
-console.log('   🎓 GET  /api/brain/tours/:tourId - Obtener tour específico');
-console.log('   👋 GET  /api/brain/tours/onboarding/:role - Tour de onboarding');
-console.log('   📦 GET  /api/brain/tours/module/:key - Tour de módulo');
-console.log('   🔄 GET  /api/brain/tours/workflow/:name - Tour de workflow');
-console.log('   💾 POST /api/brain/tours/progress - Guardar progreso');
+// ✅ CONFIGURAR BRAIN TOUR SERVICE - Tours Guiados Dinámicos - OPCIONAL EN PRODUCCIÓN
+try {
+    const brainTourRoutes = require('./src/routes/brainTourRoutes');
+    app.use('/api/brain/tours', brainTourRoutes);
+    console.log('🎯 [BRAIN TOURS] Sistema de Tours Guiados configurado');
+} catch (e) {
+    console.log('⚠️ [BRAIN TOURS] No disponible:', e.message);
+}
 
 // ✅ CONFIGURAR UNIFIED TEST ENGINE - Sistema de Testing que FUNCIONA
 // ⚠️ COMENTADO: Archivo no existe
@@ -3170,26 +3199,18 @@ console.log('   📢 POST /api/training/notify-feature - Notificar nueva feature
 console.log('   📊 GET  /api/training/support-dashboard - Dashboard de soporte');
 console.log('   🧠 GET  /api/training/brain-status - Estado del Brain');
 
-// ✅ SISTEMA AUTÓNOMO - Agentes IA (0 Humanos, 100% IA)
-const brainAgentsRoutes = require('./src/brain/routes/brainAgentsRoutes');
-app.use('/api/brain/agents', brainAgentsRoutes);
+// ✅ SISTEMA AUTÓNOMO - Agentes IA (0 Humanos, 100% IA) - OPCIONAL EN PRODUCCIÓN
+let getBrainOrchestrator = null;
+try {
+    const brainAgentsRoutes = require('./src/brain/routes/brainAgentsRoutes');
+    app.use('/api/brain/agents', brainAgentsRoutes);
 
-// NUEVO: Import BrainOrchestrator para inicialización automática
-const { getInstance: getBrainOrchestrator } = require('./src/brain/BrainOrchestrator');
-
-console.log('🤖 [BRAIN AGENTS] Sistema Autónomo de Agentes IA ACTIVO:');
-console.log('   💬 POST /api/brain/agents/support/ask - Soporte AI 24/7');
-console.log('   🎓 POST /api/brain/agents/trainer/onboarding/start - Iniciar capacitación');
-console.log('   📋 GET  /api/brain/agents/trainer/tutorial/next/:userId - Siguiente tutorial');
-console.log('   🧪 POST /api/brain/agents/tester/run - Ejecutar tests E2E');
-console.log('   📊 POST /api/brain/agents/evaluator/user - Evaluar usuario');
-console.log('   💼 POST /api/brain/agents/sales/demo/start - Iniciar demo ventas');
-console.log('   💰 POST /api/brain/agents/sales/pricing - Calcular pricing');
-console.log('   📈 POST /api/brain/agents/sales/roi - Calcular ROI');
-console.log('   📄 POST /api/brain/agents/sales/proposal/:leadId - Generar propuesta');
-console.log('   🏥 GET  /api/brain/agents/health - Health check del sistema');
-console.log('   📊 GET  /api/brain/agents/stats - Estadísticas globales');
-console.log('   🎛️ GET  /api/brain/agents/dashboard - Resumen para dashboard');
+    // Import BrainOrchestrator para inicialización automática
+    getBrainOrchestrator = require('./src/brain/BrainOrchestrator').getInstance;
+    console.log('🤖 [BRAIN AGENTS] Sistema Autónomo de Agentes IA configurado');
+} catch (e) {
+    console.log('⚠️ [BRAIN AGENTS] No disponible:', e.message);
+}
 
 // ✅ CONFIGURAR DATABASE SYNC - Sistema de Sincronización de BD
 const databaseSyncRoutes = require('./src/routes/databaseSyncRoutes');
@@ -3503,21 +3524,15 @@ console.log('🚛 [TRANSPORT] Rutas de transporte ganadero configuradas:');
 console.log('   📋 /api/transport/* - Rutas principales');
 console.log('   🚗 /api/transport/fleet/* - Gestión de flota');
 
-// 🚚 CONFIGURAR API DE LOGÍSTICA AVANZADA (WMS + TMS)
-app.use('/api/logistics', logisticsRoutes);
-console.log('🚚 [LOGISTICS] Rutas de logística avanzada configuradas:');
-console.log('   📦 /api/logistics/warehouses/* - Gestión de almacenes');
-console.log('   🏭 /api/logistics/picking/* - Wave picking y órdenes');
-console.log('   🚛 /api/logistics/routes/* - Planificación de rutas');
-console.log('   📬 /api/logistics/shipments/* - Gestión de envíos');
-
-// 📦 CONFIGURAR API DE WMS (Warehouse Management System)
-app.use('/api/warehouse', warehouseRoutes);
-console.log('📦 [WMS] Rutas de gestión de almacenes configuradas:');
-console.log('   🏢 /api/warehouse/branches/* - Sucursales multi-tenant');
-console.log('   🏭 /api/warehouse/warehouses/* - Depósitos y ubicaciones');
-console.log('   📦 /api/warehouse/products/* - Productos y categorías');
-console.log('   📊 /api/warehouse/stock/* - Stock y movimientos');
+// 🚚 CONFIGURAR API DE LOGÍSTICA AVANZADA (WMS + TMS) - Solo si están disponibles
+if (logisticsRoutes) {
+    app.use('/api/logistics', logisticsRoutes);
+    console.log('🚚 [LOGISTICS] Rutas de logística avanzada configuradas');
+}
+if (warehouseRoutes) {
+    app.use('/api/warehouse', warehouseRoutes);
+    console.log('📦 [WMS] Rutas de gestión de almacenes configuradas');
+}
 
 // 💼 CONFIGURAR API DE SIAC ERP
 app.use('/api/debug', debugDbRoutes);
@@ -3526,17 +3541,24 @@ app.use('/api/siac/sesiones', siacSesionesRoutes);
 app.use('/api/siac/tax-templates', siacTaxTemplatesRoutes);
 app.use('/api/siac/clientes', siacClientesRoutes);
 app.use('/api/siac/facturacion', siacFacturacionRoutes);
-app.use('/api/siac/remitos', siacRemitosRoutes);
-app.use('/api/siac/cuenta-corriente', siacCuentaCorrienteRoutes);
-app.use('/api/siac/cobranzas', siacCobranzasRoutes);
-app.use('/api/siac/caja', siacCajaRoutes);
 
-// 🛒 PROCUREMENT P2P (Compras y Proveedores) - Enero 2026
-app.use('/api/procurement', procurementRoutes);
+// SIAC Rutas Extendidas - Solo si están disponibles
+if (siacRemitosRoutes) app.use('/api/siac/remitos', siacRemitosRoutes);
+if (siacCuentaCorrienteRoutes) app.use('/api/siac/cuenta-corriente', siacCuentaCorrienteRoutes);
+if (siacCobranzasRoutes) app.use('/api/siac/cobranzas', siacCobranzasRoutes);
+if (siacCajaRoutes) app.use('/api/siac/caja', siacCajaRoutes);
 
-// 💰 FINANCE ENTERPRISE (Finanzas Empresariales) - Enero 2026
-app.use('/api/finance', financeRoutes);
-console.log('💰 [FINANCE] Rutas de finanzas configuradas: /api/finance/*');
+// 🛒 PROCUREMENT P2P (Compras y Proveedores) - Enero 2026 - Solo si está disponible
+if (procurementRoutes) {
+    app.use('/api/procurement', procurementRoutes);
+    console.log('🛒 [PROCUREMENT] Rutas de compras P2P configuradas');
+}
+
+// 💰 FINANCE ENTERPRISE (Finanzas Empresariales) - Enero 2026 - Solo si está disponible
+if (financeRoutes) {
+    app.use('/api/finance', financeRoutes);
+    console.log('💰 [FINANCE] Rutas de finanzas configuradas');
+}
 
 // 📧 FORMULARIO DE CONTACTO PUBLICO (Landing Page)
 const contactRoutes = require('./src/routes/contactRoutes');
@@ -4005,18 +4027,22 @@ ${_getNetworkInterfaces().map(ip => `   • ${ip.interface}: ${ip.ip}${ip.isPrim
         console.log('✅ [ADMIN-WS] WebSocket para panel administrativo inicializado en /biometric-ws');
         console.log('🔗 [WS] Servidores WebSocket conectados: Kiosk ↔ Admin Panel');
 
-        // 🧠 INICIALIZAR BRAIN ORCHESTRATOR - Cerebro Central del Sistema
-        console.log('\n🧠 [SERVER] Inicializando Brain Orchestrator...');
-        getBrainOrchestrator().then(brain => {
-          console.log('✅ [SERVER] Brain Orchestrator inicializado y activo');
-          console.log(`   🤖 Agentes IA: ${Object.keys(brain.agents).length}`);
-          console.log(`   📦 Servicios: ${Object.keys(brain.services).length}`);
-          console.log('   🧠 Sistema Nervioso: Monitoreando en tiempo real');
-          console.log('   🌍 Ecosystem Brain: Escaneando código');
-          console.log('   📝 MetadataWriter: Auto-actualización cada 5 min\n');
-        }).catch(err => {
-          console.error('❌ [SERVER] Error inicializando Brain Orchestrator:', err);
-        });
+        // 🧠 INICIALIZAR BRAIN ORCHESTRATOR - Cerebro Central del Sistema (solo si está disponible)
+        if (getBrainOrchestrator) {
+          console.log('\n🧠 [SERVER] Inicializando Brain Orchestrator...');
+          getBrainOrchestrator().then(brain => {
+            console.log('✅ [SERVER] Brain Orchestrator inicializado y activo');
+            console.log(`   🤖 Agentes IA: ${Object.keys(brain.agents).length}`);
+            console.log(`   📦 Servicios: ${Object.keys(brain.services).length}`);
+            console.log('   🧠 Sistema Nervioso: Monitoreando en tiempo real');
+            console.log('   🌍 Ecosystem Brain: Escaneando código');
+            console.log('   📝 MetadataWriter: Auto-actualización cada 5 min\n');
+          }).catch(err => {
+            console.error('❌ [SERVER] Error inicializando Brain Orchestrator:', err.message);
+          });
+        } else {
+          console.log('⚠️ [SERVER] Brain Orchestrator no disponible');
+        }
 
       }).catch(err => {
         console.error('❌ [KIOSK-WS] Error inicializando WebSocket server:', err);
