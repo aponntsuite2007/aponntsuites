@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# 🛡️ PRE-PUSH HOOK - BLOQUEA PUSHES PELIGROSOS
+# Versión: 1.0
+# Fecha: 2026-01-04
+
+# Este hook se ejecuta ANTES de cada git push
+# BLOQUEA el push si se intenta pushear a master sin estar en main
+
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+CHANGES=$(git status --porcelain)
+
+# Leer qué ramas se están pusheando
+while read local_ref local_sha remote_ref remote_sha
+do
+    REMOTE_BRANCH=$(echo $remote_ref | sed 's/refs\/heads\///')
+
+    # Si se intenta pushear a master
+    if [ "$REMOTE_BRANCH" == "master" ]; then
+
+        # Y NO estamos en main
+        if [ "$CURRENT_BRANCH" != "main" ]; then
+            echo ""
+            echo "🚨 ============================================== 🚨"
+            echo "🚨  PUSH BLOQUEADO - PROTECCIÓN ACTIVADA        🚨"
+            echo "🚨 ============================================== 🚨"
+            echo ""
+            echo "❌ NO podés pushear a 'master' desde '$CURRENT_BRANCH'"
+            echo ""
+            echo "📋 REGLA: Solo se puede pushear a master desde main"
+            echo ""
+            echo "✅ SOLUCIÓN:"
+            echo ""
+            echo "   1. Cambiá a main (solo si NO tenés cambios sin commitear):"
+            echo "      git checkout main"
+            echo ""
+            echo "   2. Pusheá de main a master SIN hacer checkout:"
+            echo "      git push origin main:master --force-with-lease"
+            echo ""
+            echo "   3. O usá el script seguro:"
+            echo "      npm run deploy:safe"
+            echo ""
+
+            exit 1  # BLOQUEAR el push
+        fi
+
+        # Si estamos en main, verificar que no haya cambios sin commitear
+        if [ -n "$CHANGES" ]; then
+            echo ""
+            echo "🚨 ============================================== 🚨"
+            echo "🚨  PUSH BLOQUEADO - CAMBIOS SIN COMMITEAR      🚨"
+            echo "🚨 ============================================== 🚨"
+            echo ""
+            echo "❌ Hay cambios sin commitear"
+            echo ""
+            echo "📊 Cambios pendientes:"
+            git status --short
+            echo ""
+            echo "✅ SOLUCIÓN: Commiteá primero"
+            echo ""
+            echo "   git add -A"
+            echo "   git commit -m \"Tu mensaje\""
+            echo ""
+
+            exit 1  # BLOQUEAR el push
+        fi
+    fi
+done
+
+# Si todo está OK, permitir el push
+exit 0

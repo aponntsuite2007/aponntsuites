@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# 🛡️ PRE-CHECKOUT HOOK - BLOQUEA CHECKOUTS PELIGROSOS
+# Versión: 1.0
+# Fecha: 2026-01-04
+
+# Este hook se ejecuta ANTES de cada git checkout
+# BLOQUEA el checkout si hay cambios sin commitear
+
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+CHANGES=$(git status --porcelain)
+
+# Si hay cambios sin commitear
+if [ -n "$CHANGES" ]; then
+    echo ""
+    echo "🚨 ============================================== 🚨"
+    echo "🚨  CHECKOUT BLOQUEADO - PROTECCIÓN ACTIVADA    🚨"
+    echo "🚨 ============================================== 🚨"
+    echo ""
+    echo "❌ NO podés hacer checkout porque tenés cambios sin commitear"
+    echo ""
+    echo "📊 Cambios pendientes:"
+    git status --short
+    echo ""
+    echo "✅ SOLUCIÓN: Commiteá primero tus cambios"
+    echo ""
+    echo "   git add -A"
+    echo "   git commit -m \"Tu mensaje\""
+    echo ""
+    echo "Después podés hacer checkout tranquilo."
+    echo ""
+
+    exit 1  # BLOQUEAR el checkout
+fi
+
+# Si no hay cambios, permitir checkout
+exit 0

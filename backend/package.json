@@ -21,7 +21,11 @@
     "seed:isi": "node scripts/seed-isi-production.js",
     "migrate:notifications": "node run-migrations.js",
     "seed": "node database/seeds/seed.js",
-    "backup": "node scripts/backup/backup.js"
+    "backup": "node scripts/backup/backup.js",
+    "deploy:safe": "bash scripts/safe-deploy.sh",
+    "deploy:render": "bash scripts/safe-deploy.sh",
+    "git:setup": "bash scripts/setup-git-protection.sh",
+    "git:safe": "bash scripts/git-safe"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.67.0",

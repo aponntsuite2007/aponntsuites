@@ -111,7 +111,11 @@
       "Bash(PGPASSWORD=\"Aedr15150302\" '/c/Program Files/PostgreSQL/16/bin/psql.exe' -h localhost -p 5432 -U postgres -d attendance_system -t -c \"SELECT module_key, name FROM system_modules WHERE module_key LIKE ''finance-%'' ORDER BY module_key;\")",
       "Bash(PGPASSWORD=\"G50GN9h8meeCVsfi51Z7SlPQn4ThyJXY\" '/c/Program Files/PostgreSQL/16/bin/psql.exe' -h dpg-d4op2lq4d50c7392i190-a.oregon-postgres.render.com -p 5432 -U aponnt_db_user -d aponnt_db -c \"\\\\d system_modules\")",
       "Bash(git fsck:*)",
-      "Bash(cmd //c \"taskkill /F /PID 30484\")"
+      "Bash(cmd //c \"taskkill /F /PID 30484\")",
+      "Bash(git fetch:*)",
+      "Bash(chmod:*)",
+      "Bash(bash:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
