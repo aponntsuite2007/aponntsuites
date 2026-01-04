@@ -9,8 +9,16 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const os = require('os');
-const { Bonjour } = require('bonjour-service');
 require('dotenv').config();
+
+// 🛡️ PRODUCTION-SAFE: Bonjour service es opcional (mDNS discovery)
+let Bonjour = null;
+try {
+    Bonjour = require('bonjour-service').Bonjour;
+    console.log('✅ [BONJOUR] Service loaded for local network discovery');
+} catch (e) {
+    console.log('⚠️ [BONJOUR] Service not available (optional in production):', e.message);
+}
 
 // Importar configuración de base de datos PostgreSQL
 const database = require('./src/config/database');
@@ -4049,7 +4057,9 @@ ${_getNetworkInterfaces().map(ip => `   • ${ip.interface}: ${ip.ip}${ip.isPrim
       });
 
       // 📡 ANUNCIAR SERVICIO VIA mDNS PARA DESCUBRIMIENTO AUTOMÁTICO
-      try {
+      if (!Bonjour) {
+        console.log('⚠️ [mDNS] Bonjour no disponible, auto-descubrimiento deshabilitado');
+      } else try {
         const bonjour = new Bonjour();
         const mdnsService = bonjour.publish({
           name: 'siac-biometric-server',
