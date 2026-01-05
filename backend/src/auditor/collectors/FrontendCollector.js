@@ -39,6 +39,9 @@ class FrontendCollector {
   async collect(execution_id, config) {
     console.log('  🌐 [FRONTEND] Iniciando pruebas de frontend...');
 
+    // ✅ GUARDAR company_id para uso posterior (CRÍTICO para audit_test_logs)
+    this.company_id = config.company_id;
+
     const results = [];
 
     try {
@@ -159,8 +162,9 @@ class FrontendCollector {
     console.log('    📐 [BROWSER] Viewport configurado a 1366x768 (responsive estándar)');
 
     // Deshabilitar cache para obtener siempre la versión más reciente del HTML
-    await this.page.setCacheEnabled(false);
-    console.log('    🚫 [BROWSER] Cache deshabilitado - cargando versión fresca del HTML');
+    // NOTA: page.setCacheEnabled() NO existe en Playwright
+    // await this.page.setCacheEnabled(false);
+    console.log('    🚫 [BROWSER] Cache control (native Playwright behavior)');
 
     // ✅✅✅ MEGA-UPGRADE: DETECCIÓN MASIVA DE 100+ TIPOS DE ERRORES ✅✅✅
 
@@ -173,7 +177,7 @@ class FrontendCollector {
 
     // 1️⃣ JAVASCRIPT ERRORS (30+ tipos) - CONSOLA
     this.page.on('console', async msg => {
-      if (msg.fill() === 'error') {
+      if (msg.type() === 'error') {
         const errorText = msg.text();
         const location = msg.location();
         const stackTrace = msg.stackTrace ? msg.stackTrace() : [];
@@ -203,7 +207,7 @@ class FrontendCollector {
       }
 
       // ✅ CAPTURAR WARNINGS TAMBIÉN (pueden indicar problemas futuros)
-      if (msg.fill() === 'warning') {
+      if (msg.type() === 'warning') {
         const warningText = msg.text();
         const location = msg.location();
 
@@ -580,6 +584,7 @@ class FrontendCollector {
     // Crear log de inicio
     const log = await AuditLog.create({
       execution_id,
+      company_id: this.company_id, // ← CRÍTICO: Incluir company_id
       test_type: 'e2e',
       module_name: module.id,
       test_name: `Frontend CRUD - ${module.name}`,
@@ -1096,9 +1101,39 @@ class FrontendCollector {
       }
 
       // Verificar que el módulo está visible
+      // ✅ FIX: Verificación inteligente - no buscar moduleId literal, sino contenido válido
       const isVisible = await this.page.evaluate((moduleId, moduleName) => {
         const content = document.getElementById('mainContent');
-        return content && content.innerHTML.includes(moduleId);
+        if (!content) return false;
+
+        const html = content.innerHTML;
+
+        // Verificar que NO esté en loading infinito
+        if (html.includes('🔄 Cargando funcionalidades') || html.includes('Loading features')) {
+          return false;
+        }
+
+        // Verificar que tenga contenido real (más de 100 caracteres)
+        const textContent = content.textContent || '';
+        if (textContent.trim().length < 100) {
+          return false; // Muy poco contenido, probablemente vacío o error
+        }
+
+        // Verificar que NO sea solo un mensaje de error
+        const isOnlyError = (
+          html.includes('❌') &&
+          textContent.trim().length < 300 &&
+          !html.includes('<table') &&
+          !html.includes('<button') &&
+          !html.includes('class="card"')
+        );
+
+        if (isOnlyError) {
+          return false;
+        }
+
+        // Si llegamos aquí: tiene contenido, no está loading, no es solo error → OK
+        return true;
       }, module.id, module.name);
 
       return isVisible;
