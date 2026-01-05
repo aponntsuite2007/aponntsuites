@@ -9,6 +9,7 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const SupplierAuthTokenService = require('./SupplierAuthTokenService');
 
 class SupplierPortalService {
     constructor() {
@@ -19,6 +20,7 @@ class SupplierPortalService {
             password: process.env.DB_PASSWORD || 'Aedr15150302',
             database: process.env.DB_NAME || 'attendance_system'
         });
+        this.authTokenService = new SupplierAuthTokenService(this.pool);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -87,7 +89,224 @@ class SupplierPortalService {
                 lastName: user.last_name,
                 role: user.role,
                 supplierId: user.supplier_id,
-                supplierName: user.supplier_name
+                supplierName: user.supplier_name,
+                mustChangePassword: user.must_change_password,
+                emailVerified: user.email_verified,
+                bankingInfoComplete: user.banking_info_complete,
+                canQuote: user.can_quote
+            }
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SELF-SERVICE - GESTIÓN DE PERFIL
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Cambiar contraseña (self-service)
+     * Requiere contraseña actual para validación
+     */
+    async changeSelfPassword(portalUserId, supplierId, currentPassword, newPassword) {
+        // Verificar contraseña actual
+        const userResult = await this.pool.query(`
+            SELECT * FROM supplier_portal_users
+            WHERE id = $1 AND supplier_id = $2
+        `, [portalUserId, supplierId]);
+
+        if (userResult.rows.length === 0) {
+            throw new Error('Usuario no encontrado');
+        }
+
+        const user = userResult.rows[0];
+        const validPassword = await bcrypt.compare(currentPassword, user.password_hash);
+
+        if (!validPassword) {
+            throw new Error('Contraseña actual incorrecta');
+        }
+
+        // Validar nueva contraseña (mínimo 8 caracteres)
+        if (newPassword.length < 8) {
+            throw new Error('La nueva contraseña debe tener al menos 8 caracteres');
+        }
+
+        // Hash nueva contraseña
+        const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+        // Actualizar contraseña y marcar que ya fue cambiada
+        await this.pool.query(`
+            UPDATE supplier_portal_users
+            SET password_hash = $1,
+                must_change_password = false,
+                password_changed_at = NOW(),
+                updated_at = NOW()
+            WHERE id = $2
+        `, [newPasswordHash, portalUserId]);
+
+        console.log(`✅ [SUPPLIER-PORTAL] Usuario ${user.email} cambió su contraseña`);
+
+        return { success: true, message: 'Contraseña cambiada exitosamente' };
+    }
+
+    /**
+     * Solicitar token 2FA para cambio de datos bancarios
+     */
+    async requestBankingToken(portalUserId, supplierId, ipAddress) {
+        const userResult = await this.pool.query(`
+            SELECT spu.*, ws.name as supplier_name, ws.bank_name, ws.bank_account_number
+            FROM supplier_portal_users spu
+            JOIN wms_suppliers ws ON spu.supplier_id = ws.id
+            WHERE spu.id = $1 AND spu.supplier_id = $2
+        `, [portalUserId, supplierId]);
+
+        if (userResult.rows.length === 0) {
+            throw new Error('Usuario no encontrado');
+        }
+
+        const user = userResult.rows[0];
+
+        // Crear token 2FA
+        const metadata = {
+            email: user.email,
+            supplierName: user.supplier_name,
+            currentBankName: user.bank_name,
+            currentAccountNumber: user.bank_account_number
+        };
+
+        const tokenData = await this.authTokenService.createToken(
+            supplierId,
+            portalUserId,
+            'update_banking',
+            ipAddress,
+            metadata
+        );
+
+        // TODO: Enviar token por email (integrar con servicio de email)
+        console.log(`📱 [2FA] Token ${tokenData.token} generado para ${user.email} (válido ${tokenData.expiryMinutes} min)`);
+
+        // En producción, NO devolver el token - solo enviarlo por email
+        // Por ahora lo devolvemos para testing
+        return {
+            success: true,
+            message: `Código de verificación enviado a ${user.email}`,
+            tokenId: tokenData.tokenId,
+            expiresAt: tokenData.expiresAt,
+            // SOLO PARA TESTING - ELIMINAR EN PRODUCCIÓN
+            _devToken: tokenData.token
+        };
+    }
+
+    /**
+     * Actualizar información bancaria con validación 2FA
+     */
+    async updateBankingInfo(portalUserId, supplierId, bankingData, token2FA, ipAddress) {
+        const client = await this.pool.connect();
+
+        try {
+            await client.query('BEGIN');
+
+            // Validar token 2FA
+            const tokenValidation = await this.authTokenService.validateToken(
+                supplierId,
+                'update_banking',
+                token2FA,
+                ipAddress
+            );
+
+            if (!tokenValidation.valid) {
+                throw new Error(tokenValidation.error || 'Token 2FA inválido');
+            }
+
+            const { bankName, bankAccountNumber, bankAccountType, bankRoutingNumber, accountHolderName } = bankingData;
+
+            // Obtener datos actuales para auditoría
+            const currentData = await client.query(`
+                SELECT bank_name, bank_account_number FROM wms_suppliers WHERE id = $1
+            `, [supplierId]);
+
+            // Actualizar datos bancarios
+            await client.query(`
+                UPDATE wms_suppliers
+                SET bank_name = $1,
+                    bank_account_number = $2,
+                    bank_account_type = $3,
+                    bank_routing_number = $4,
+                    account_holder_name = $5,
+                    bank_info_last_updated_at = NOW(),
+                    bank_info_last_updated_by = $6,
+                    bank_info_2fa_token_id = $7,
+                    updated_at = NOW()
+                WHERE id = $8
+            `, [bankName, bankAccountNumber, bankAccountType, bankRoutingNumber, accountHolderName,
+                portalUserId, tokenValidation.tokenId, supplierId]);
+
+            // Marcar que el usuario completó sus datos bancarios
+            await client.query(`
+                UPDATE supplier_portal_users
+                SET banking_info_complete = true,
+                    banking_info_verified_at = NOW(),
+                    updated_at = NOW()
+                WHERE id = $1
+            `, [portalUserId]);
+
+            await client.query('COMMIT');
+
+            console.log(`✅ [BANKING] Proveedor ${supplierId} actualizó datos bancarios con 2FA`);
+            console.log(`   📝 Banco anterior: ${currentData.rows[0]?.bank_name || 'N/A'}`);
+            console.log(`   📝 Banco nuevo: ${bankName}`);
+
+            return {
+                success: true,
+                message: 'Información bancaria actualizada exitosamente'
+            };
+
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    /**
+     * Obtener estado de compliance del proveedor
+     * Indica si puede cotizar y qué pasos le faltan
+     */
+    async getComplianceStatus(portalUserId, supplierId) {
+        const result = await this.pool.query(`
+            SELECT * FROM check_supplier_can_quote($1)
+        `, [portalUserId]);
+
+        const complianceData = result.rows[0];
+
+        // Obtener detalles adicionales
+        const userDetails = await this.pool.query(`
+            SELECT
+                email_verified,
+                must_change_password,
+                banking_info_complete,
+                can_quote,
+                email,
+                first_name,
+                last_name
+            FROM supplier_portal_users
+            WHERE id = $1 AND supplier_id = $2
+        `, [portalUserId, supplierId]);
+
+        const user = userDetails.rows[0];
+
+        return {
+            canQuote: complianceData.can_quote,
+            reason: complianceData.reason,
+            missingSteps: complianceData.missing_steps || [],
+            details: {
+                emailVerified: user.email_verified,
+                passwordChanged: !user.must_change_password,
+                bankingInfoComplete: user.banking_info_complete
+            },
+            user: {
+                email: user.email,
+                firstName: user.first_name,
+                lastName: user.last_name
             }
         };
     }

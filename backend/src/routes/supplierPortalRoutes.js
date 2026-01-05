@@ -7,6 +7,27 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const SupplierPortalService = require('../services/SupplierPortalService');
+const SupplierDocumentService = require('../services/SupplierDocumentService');
+const { uploadSingle, uploadMultiple, cleanupTempFile } = require('../middleware/supplierUpload');
+const { pool } = require('../config/database');
+
+// Inicializar servicio de documentos
+let supplierDocumentService = null;
+try {
+    // Intentar cargar DMSIntegrationService si está disponible
+    let dmsService = null;
+    try {
+        const DMSIntegrationService = require('../services/dms/DMSIntegrationService');
+        dmsService = new DMSIntegrationService(pool);
+    } catch (e) {
+        console.log('⚠️ [SUPPLIER-DOC] DMS no disponible, documentos se guardarán solo en BD');
+    }
+
+    supplierDocumentService = new SupplierDocumentService(pool, dmsService);
+    console.log('✅ [SUPPLIER-DOC] Servicio de documentos inicializado');
+} catch (error) {
+    console.error('❌ [SUPPLIER-DOC] Error inicializando servicio de documentos:', error.message);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE DE AUTENTICACIÓN DEL PORTAL
@@ -36,6 +57,38 @@ const authenticateSupplier = (req, res, next) => {
             return res.status(401).json({ error: 'Token expirado' });
         }
         return res.status(401).json({ error: 'Token inválido' });
+    }
+};
+
+/**
+ * Middleware de validación de compliance
+ * Bloquea operaciones sensibles si el proveedor no completó los pasos obligatorios
+ */
+const requireCompliance = async (req, res, next) => {
+    try {
+        const complianceStatus = await SupplierPortalService.getComplianceStatus(
+            req.portalUserId,
+            req.supplierId
+        );
+
+        if (!complianceStatus.canQuote) {
+            return res.status(403).json({
+                error: 'Debe completar el proceso de compliance antes de realizar esta acción',
+                reason: complianceStatus.reason,
+                missingSteps: complianceStatus.missingSteps,
+                details: complianceStatus.details,
+                instructions: {
+                    email_verification: 'Verifique su email haciendo clic en el enlace que le enviamos',
+                    password_change: 'Cambie su contraseña por defecto en Perfil > Cambiar Contraseña',
+                    banking_info: 'Complete sus datos bancarios en Perfil > Información Bancaria'
+                }
+            });
+        }
+
+        next();
+    } catch (error) {
+        console.error('❌ [COMPLIANCE] Error al verificar compliance:', error.message);
+        return res.status(500).json({ error: 'Error al verificar estado de compliance' });
     }
 };
 
@@ -83,6 +136,98 @@ router.get('/auth/verify', authenticateSupplier, (req, res) => {
         valid: true,
         user: req.supplierUser
     });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SELF-SERVICE - GESTIÓN DE PERFIL
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Cambiar contraseña (self-service)
+router.post('/profile/change-password', authenticateSupplier, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Contraseña actual y nueva contraseña son requeridas' });
+        }
+
+        const result = await SupplierPortalService.changeSelfPassword(
+            req.portalUserId,
+            req.supplierId,
+            currentPassword,
+            newPassword
+        );
+
+        res.json(result);
+
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Change password error:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Solicitar token 2FA para actualizar datos bancarios
+router.post('/profile/request-banking-token', authenticateSupplier, async (req, res) => {
+    try {
+        const ipAddress = req.ip || req.connection.remoteAddress || '0.0.0.0';
+
+        const result = await SupplierPortalService.requestBankingToken(
+            req.portalUserId,
+            req.supplierId,
+            ipAddress
+        );
+
+        res.json(result);
+
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Request banking token error:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Actualizar información bancaria (requiere 2FA)
+router.put('/profile/banking', authenticateSupplier, async (req, res) => {
+    try {
+        const { bankName, bankAccountNumber, bankAccountType, bankRoutingNumber, accountHolderName, token2FA } = req.body;
+
+        if (!bankName || !bankAccountNumber || !token2FA) {
+            return res.status(400).json({
+                error: 'Nombre del banco, número de cuenta y código de verificación son requeridos'
+            });
+        }
+
+        const ipAddress = req.ip || req.connection.remoteAddress || '0.0.0.0';
+
+        const result = await SupplierPortalService.updateBankingInfo(
+            req.portalUserId,
+            req.supplierId,
+            { bankName, bankAccountNumber, bankAccountType, bankRoutingNumber, accountHolderName },
+            token2FA,
+            ipAddress
+        );
+
+        res.json(result);
+
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Update banking info error:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Obtener estado de compliance (si puede cotizar)
+router.get('/profile/compliance-status', authenticateSupplier, async (req, res) => {
+    try {
+        const status = await SupplierPortalService.getComplianceStatus(
+            req.portalUserId,
+            req.supplierId
+        );
+
+        res.json(status);
+
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Get compliance status error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -136,8 +281,8 @@ router.get('/rfqs/:id', authenticateSupplier, async (req, res) => {
     }
 });
 
-// Enviar cotización
-router.post('/rfqs/:id/quote', authenticateSupplier, async (req, res) => {
+// Enviar cotización (requiere compliance completo)
+router.post('/rfqs/:id/quote', authenticateSupplier, requireCompliance, async (req, res) => {
     try {
         const quotation = await SupplierPortalService.submitQuotation(
             req.supplierId,
@@ -163,6 +308,185 @@ router.post('/rfqs/:id/decline', authenticateSupplier, async (req, res) => {
     } catch (error) {
         console.error('❌ [SUPPLIER PORTAL] Decline RFQ error:', error.message);
         res.status(400).json({ error: error.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DOCUMENTOS Y ADJUNTOS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Subir adjunto a cotización (requiere compliance)
+router.post('/rfqs/:id/upload-attachment',
+    authenticateSupplier,
+    requireCompliance,
+    uploadSingle('attachment'),
+    async (req, res) => {
+        try {
+            if (!supplierDocumentService) {
+                return res.status(503).json({ error: 'Servicio de documentos no disponible' });
+            }
+
+            const { description } = req.body;
+            const file = req.file;
+
+            const result = await supplierDocumentService.uploadRfqAttachment(
+                parseInt(req.params.id),
+                req.supplierId,
+                file,
+                req.portalUserId,
+                description
+            );
+
+            // Cleanup archivo temporal
+            await cleanupTempFile(file.path);
+
+            res.status(201).json(result);
+
+        } catch (error) {
+            // Cleanup en caso de error
+            if (req.file) {
+                await cleanupTempFile(req.file.path);
+            }
+            console.error('❌ [SUPPLIER PORTAL] Upload attachment error:', error.message);
+            res.status(400).json({ error: error.message });
+        }
+    }
+);
+
+// Listar adjuntos de un RFQ
+router.get('/rfqs/:id/attachments', authenticateSupplier, async (req, res) => {
+    try {
+        if (!supplierDocumentService) {
+            return res.status(503).json({ error: 'Servicio de documentos no disponible' });
+        }
+
+        const attachments = await supplierDocumentService.getRfqAttachments(
+            parseInt(req.params.id),
+            req.supplierId
+        );
+
+        res.json({ success: true, attachments });
+
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Get attachments error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Eliminar adjunto
+router.delete('/attachments/:id', authenticateSupplier, async (req, res) => {
+    try {
+        if (!supplierDocumentService) {
+            return res.status(503).json({ error: 'Servicio de documentos no disponible' });
+        }
+
+        const result = await supplierDocumentService.deleteRfqAttachment(
+            parseInt(req.params.id),
+            req.supplierId
+        );
+
+        res.json(result);
+
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Delete attachment error:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Subir factura con archivo PDF (requiere compliance)
+router.post('/invoices/upload',
+    authenticateSupplier,
+    requireCompliance,
+    uploadSingle('invoice'),
+    async (req, res) => {
+        try {
+            if (!supplierDocumentService) {
+                return res.status(503).json({ error: 'Servicio de documentos no disponible' });
+            }
+
+            const {
+                invoiceNumber,
+                invoiceDate,
+                purchaseOrderId,
+                subtotal,
+                taxAmount,
+                total,
+                notes
+            } = req.body;
+
+            const file = req.file;
+
+            // Validar campos requeridos
+            if (!invoiceNumber || !invoiceDate || !subtotal || !taxAmount || !total) {
+                await cleanupTempFile(file.path);
+                return res.status(400).json({
+                    error: 'Campos requeridos faltantes',
+                    required: ['invoiceNumber', 'invoiceDate', 'subtotal', 'taxAmount', 'total']
+                });
+            }
+
+            // Obtener companyId del proveedor
+            const supplierResult = await pool.query(
+                'SELECT company_id FROM wms_suppliers WHERE id = $1',
+                [req.supplierId]
+            );
+
+            if (supplierResult.rows.length === 0) {
+                await cleanupTempFile(file.path);
+                return res.status(404).json({ error: 'Proveedor no encontrado' });
+            }
+
+            const companyId = supplierResult.rows[0].company_id;
+
+            const result = await supplierDocumentService.uploadInvoice(
+                req.supplierId,
+                companyId,
+                file,
+                {
+                    invoiceNumber,
+                    invoiceDate,
+                    purchaseOrderId: purchaseOrderId || null,
+                    subtotal: parseFloat(subtotal),
+                    taxAmount: parseFloat(taxAmount),
+                    total: parseFloat(total),
+                    notes
+                },
+                req.portalUserId
+            );
+
+            // Cleanup archivo temporal
+            await cleanupTempFile(file.path);
+
+            res.status(201).json(result);
+
+        } catch (error) {
+            // Cleanup en caso de error
+            if (req.file) {
+                await cleanupTempFile(req.file.path);
+            }
+            console.error('❌ [SUPPLIER PORTAL] Upload invoice error:', error.message);
+            res.status(400).json({ error: error.message });
+        }
+    }
+);
+
+// Obtener URL de descarga de documento
+router.get('/documents/:id/download', authenticateSupplier, async (req, res) => {
+    try {
+        if (!supplierDocumentService) {
+            return res.status(503).json({ error: 'Servicio de documentos no disponible' });
+        }
+
+        const downloadInfo = await supplierDocumentService.getDownloadUrl(
+            parseInt(req.params.id),
+            req.supplierId
+        );
+
+        res.json(downloadInfo);
+
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Get download URL error:', error.message);
+        res.status(404).json({ error: error.message });
     }
 });
 

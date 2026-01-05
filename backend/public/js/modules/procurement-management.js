@@ -13,6 +13,291 @@
  * - Configuración de aprobaciones
  */
 
+// ============================================================================
+// PROCUREMENT HELP SYSTEM - Sistema de Ayuda Contextual
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('procurement-management', {
+        moduleName: 'Gestión de Compras (P2P)',
+        moduleDescription: 'Sistema completo Procure-to-Pay: desde la requisición hasta el pago al proveedor.',
+
+        contexts: {
+            dashboard: {
+                title: 'Panel de Control de Compras',
+                description: 'Vista general del estado de requisiciones, órdenes de compra y pagos pendientes.',
+                tips: [
+                    'Los KPIs muestran el resumen del mes actual y comparación con mes anterior',
+                    'Las pendientes se agrupan por tipo: requisiciones por aprobar, órdenes por recibir, facturas por pagar',
+                    'Click en cualquier métrica para ver el detalle filtrado',
+                    'El módulo se integra automáticamente con Finance (contabilidad) y Warehouse (almacén) si están activos'
+                ],
+                warnings: [
+                    'Los montos se muestran en la moneda base configurada en Finance'
+                ],
+                helpTopics: [
+                    '¿Cómo inicio una requisición de compra?',
+                    '¿Qué significa cada estado de las órdenes?',
+                    '¿Cómo veo el historial de compras a un proveedor?'
+                ],
+                fieldHelp: {}
+            },
+
+            requisitions: {
+                title: 'Requisiciones de Compra',
+                description: 'Solicitudes internas de compra que deben ser aprobadas antes de convertirse en órdenes.',
+                tips: [
+                    'Una requisición es la solicitud formal de compra de productos o servicios',
+                    'Flujo: Borrador → Pendiente Aprobación → Aprobada → Convertida a OC',
+                    'Puede agregar múltiples items a una misma requisición',
+                    'Adjunte documentos de respaldo (presupuestos, cotizaciones) en cada item',
+                    'El sistema valida aprobaciones según configuración (montos, sectores, jerarquía)'
+                ],
+                warnings: [
+                    'Una vez aprobada, no puede modificar la requisición sin rechazarla primero',
+                    'Si no hay configuración de aprobaciones, todas las requisiciones se aprueban automáticamente'
+                ],
+                requirements: [
+                    { check: 'Al menos un proveedor registrado en el sistema', critical: true },
+                    { check: 'Categorías de productos configuradas', critical: false },
+                    { check: 'Sectores/departamentos creados para solicitar', critical: false }
+                ],
+                helpTopics: [
+                    '¿Cómo creo una requisición?',
+                    '¿Quién debe aprobar mi requisición?',
+                    '¿Puedo convertir varias requisiciones en una sola orden?',
+                    '¿Cómo cancelo una requisición enviada?'
+                ],
+                fieldHelp: {
+                    sector_id: 'Sector que solicita la compra (Administración, Producción, Ventas, etc.)',
+                    requested_by: 'Usuario que genera la solicitud (se autocompleta)',
+                    required_date: 'Fecha en que se necesita el material (afecta prioridad)',
+                    priority: 'Urgencia: Normal (3-5 días), Urgente (1-2 días), Crítica (inmediato)',
+                    notes: 'Observaciones adicionales para aprobadores y compradores'
+                }
+            },
+
+            orders: {
+                title: 'Órdenes de Compra (Purchase Orders)',
+                description: 'Compromisos formales de compra enviados a proveedores.',
+                tips: [
+                    'Las OC se generan desde requisiciones aprobadas o directamente',
+                    'Estados: Borrador → Enviada → Confirmada → Recibida (parcial/total)',
+                    'El sistema genera automáticamente número de OC (formato configurable)',
+                    'Envíe la OC al proveedor por email desde el botón "Enviar"',
+                    'Integración con Warehouse: al recibir, actualiza stock automáticamente',
+                    'Integración con Finance: genera asiento de compromiso al enviar OC'
+                ],
+                warnings: [
+                    'Verifique precio, cantidad y términos antes de enviar al proveedor',
+                    'Una vez enviada, cambios requieren aprobación del proveedor',
+                    'Al recibir mercadería, generará movimiento de stock (si Warehouse activo)'
+                ],
+                requirements: [
+                    { check: 'Proveedor con datos completos (dirección, CUIT, email)', critical: true },
+                    { check: 'Términos de pago configurados (30, 60, 90 días)', critical: false },
+                    { check: 'Almacén de destino configurado (si Warehouse activo)', critical: false }
+                ],
+                helpTopics: [
+                    '¿Cómo convierto una requisición en orden?',
+                    '¿Puedo enviar la OC automáticamente al proveedor?',
+                    '¿Qué pasa si el proveedor modifica precios?',
+                    '¿Cómo registro una recepción parcial?'
+                ],
+                fieldHelp: {
+                    supplier_id: 'Proveedor que suministrará los productos/servicios',
+                    delivery_date: 'Fecha comprometida de entrega por el proveedor',
+                    payment_terms: 'Condición de pago (30/60/90 días, Contado, etc.)',
+                    shipping_address: 'Dirección de entrega (puede ser diferente a empresa)',
+                    currency: 'Moneda de la orden (USD, EUR, ARS, etc.)',
+                    exchange_rate: 'TC si la moneda es extranjera (se actualiza diariamente)',
+                    notes: 'Instrucciones especiales para el proveedor'
+                }
+            },
+
+            receipts: {
+                title: 'Recepciones de Mercadería',
+                description: 'Registro de ingreso físico de productos comprados.',
+                tips: [
+                    'Una recepción vincula una OC con el ingreso real de mercadería',
+                    'Puede recibir parcialmente (varias recepciones por OC)',
+                    'Valide cantidad y calidad antes de confirmar recepción',
+                    'Si hay diferencias, genere un reclamo al proveedor',
+                    'Integración Warehouse: actualiza stock en ubicaciones automáticamente'
+                ],
+                warnings: [
+                    'Verifique que los productos recibidos coincidan con la OC',
+                    'Rechace productos con defectos o no conformes',
+                    'Una vez confirmada, la recepción actualiza stock (no reversible)'
+                ],
+                requirements: [
+                    { check: 'Orden de compra en estado "Enviada" o "Confirmada"', critical: true },
+                    { check: 'Usuario con permisos de recepción', critical: true },
+                    { check: 'Almacén con ubicaciones configuradas', critical: false }
+                ],
+                helpTopics: [
+                    '¿Cómo registro una recepción parcial?',
+                    '¿Qué hago si recibo productos defectuosos?',
+                    '¿Cómo genero un reclamo al proveedor?',
+                    '¿Puedo recibir sin OC (compra urgente)?'
+                ],
+                fieldHelp: {
+                    order_id: 'Orden de compra que se está recibiendo',
+                    received_date: 'Fecha real de ingreso de la mercadería',
+                    warehouse_id: 'Almacén donde se recibe (si módulo Warehouse activo)',
+                    received_by: 'Usuario que verifica y recibe físicamente',
+                    quality_status: 'Estado: Conforme, No Conforme, Parcialmente Conforme',
+                    notes: 'Observaciones del ingreso (daños, faltantes, etc.)'
+                }
+            },
+
+            invoices: {
+                title: 'Facturas de Compra',
+                description: 'Registro y validación de facturas recibidas de proveedores.',
+                tips: [
+                    'Vincule cada factura con una OC para validación automática (3-way matching)',
+                    '3-way match: OC + Recepción + Factura (valida cantidades y precios)',
+                    'Estados: Borrador → Recibida → Validada → Aprobada para pago → Pagada',
+                    'El sistema detecta diferencias entre factura y OC automáticamente',
+                    'Integración Finance: genera asiento contable al aprobar factura'
+                ],
+                warnings: [
+                    'Valide número de factura, CUIT y fecha antes de aprobar',
+                    'Verifique que los importes coincidan con OC y recepción',
+                    'No apruebe facturas con diferencias sin autorización'
+                ],
+                requirements: [
+                    { check: 'Orden de compra y recepción previas', critical: true },
+                    { check: 'Proveedor con CUIT/RUT/Tax ID configurado', critical: true },
+                    { check: 'Módulo Finance activo para contabilización', critical: false }
+                ],
+                helpTopics: [
+                    '¿Qué es el 3-way matching?',
+                    '¿Cómo manejo facturas con diferencias de precio?',
+                    '¿Puedo pagar facturas sin OC?',
+                    '¿Cómo genero una orden de pago?'
+                ],
+                fieldHelp: {
+                    invoice_number: 'Número de factura del proveedor (debe ser único)',
+                    invoice_date: 'Fecha de emisión de la factura',
+                    due_date: 'Fecha de vencimiento del pago (según términos)',
+                    order_id: 'OC asociada (para validación 3-way match)',
+                    subtotal: 'Importe neto (sin impuestos)',
+                    tax_amount: 'Impuestos (IVA, IIBB, etc.)',
+                    total_amount: 'Importe total a pagar'
+                }
+            },
+
+            suppliers: {
+                title: 'Gestión de Proveedores',
+                description: 'Registro y evaluación de proveedores (vendor management).',
+                tips: [
+                    'Mantenga actualizada la información de contacto y bancaria',
+                    'El sistema calcula automáticamente el scoring del proveedor',
+                    'Scoring basado en: entregas a tiempo, calidad, precio, cumplimiento',
+                    'Use el historial para ver todas las compras al proveedor',
+                    'Portal de proveedores: permite que cotizen vía web (si activo)'
+                ],
+                warnings: [
+                    'Verifique CUIT/Tax ID antes de la primera compra',
+                    'Solicite certificado de retenciones AFIP/DGI',
+                    'Valide datos bancarios para evitar errores en pagos'
+                ],
+                requirements: [
+                    { check: 'CUIT/RUT/Tax ID válido', critical: true },
+                    { check: 'Email de contacto para envío de OCs', critical: true },
+                    { check: 'Datos bancarios para pagos', critical: false }
+                ],
+                helpTopics: [
+                    '¿Cómo registro un nuevo proveedor?',
+                    '¿Qué es el scoring de proveedores?',
+                    '¿Cómo invito un proveedor al portal web?',
+                    '¿Puedo bloquear un proveedor temporalmente?'
+                ],
+                fieldHelp: {
+                    name: 'Razón social del proveedor',
+                    tax_id: 'CUIT, RUT o Tax ID (identificación fiscal)',
+                    email: 'Email principal para envío de OCs',
+                    payment_terms: 'Términos de pago habituales (30/60/90 días)',
+                    rating_score: 'Calificación 1-5 estrellas (se calcula automáticamente)',
+                    delivery_time_avg: 'Tiempo promedio de entrega en días',
+                    on_time_delivery: 'Porcentaje de entregas a tiempo',
+                    quality_score: 'Índice de calidad 0-100 (rechazos, reclamos)'
+                }
+            },
+
+            mappings: {
+                title: 'Mapeo de Artículos Proveedor',
+                description: 'Vincule códigos de productos del proveedor con sus códigos internos.',
+                tips: [
+                    'Útil cuando el proveedor usa códigos diferentes a los suyos',
+                    'Permite importar OCs desde archivos del proveedor automáticamente',
+                    'El sistema sugiere mapeos basados en descripción y categoría',
+                    'Un código interno puede tener múltiples códigos de proveedores'
+                ],
+                warnings: [
+                    'Verifique que el mapeo sea correcto antes de guardar',
+                    'Un código de proveedor mal mapeado generará errores en recepciones'
+                ],
+                helpTopics: [
+                    '¿Para qué sirve el mapeo?',
+                    '¿Cómo importo mapeos desde Excel?',
+                    '¿El sistema puede mapear automáticamente?'
+                ],
+                fieldHelp: {
+                    supplier_id: 'Proveedor que usa ese código',
+                    supplier_code: 'Código del producto en catálogo del proveedor',
+                    internal_code: 'Su código interno (SKU, Part Number)',
+                    description: 'Descripción del producto para referencia',
+                    unit_price: 'Precio unitario del proveedor (opcional)',
+                    lead_time_days: 'Días de demora en entrega (opcional)'
+                }
+            },
+
+            config: {
+                title: 'Configuración de Aprobaciones',
+                description: 'Defina flujos de aprobación según montos, sectores y jerarquía.',
+                tips: [
+                    'Configure niveles de aprobación por monto (ej: >$10k requiere gerente)',
+                    'Asigne aprobadores por sector (compras de IT aprueba jefe IT)',
+                    'Puede definir aprobaciones en serie o en paralelo',
+                    'El sistema valida automáticamente según las reglas configuradas'
+                ],
+                warnings: [
+                    'Sin configuración, todas las requisiciones se aprueban automáticamente',
+                    'Cambios en configuración NO afectan requisiciones ya enviadas'
+                ],
+                helpTopics: [
+                    '¿Cómo configuro aprobaciones por monto?',
+                    '¿Puedo tener múltiples aprobadores?',
+                    '¿Qué pasa si un aprobador está de vacaciones?'
+                ],
+                fieldHelp: {
+                    approval_level: 'Nivel de aprobación (1, 2, 3... en orden)',
+                    amount_threshold: 'Monto mínimo que activa este nivel',
+                    approver_role: 'Rol requerido (Supervisor, Gerente, Director)',
+                    sector_id: 'Sector al que aplica (vacío = todos)',
+                    approval_type: 'Serie (uno después del otro) o Paralelo (todos al mismo tiempo)'
+                }
+            }
+        },
+
+        fallbackResponses: {
+            requisicion: 'Una requisición es una solicitud interna de compra. Se crea, se aprueba y luego se convierte en orden de compra formal.',
+            orden: 'La orden de compra es el documento formal enviado al proveedor comprometiéndose a comprar. Se genera desde una requisición aprobada.',
+            recepcion: 'La recepción registra el ingreso físico de mercadería. Valida que lo recibido coincida con la orden de compra.',
+            factura: 'La factura es el documento del proveedor que solicita el pago. Se valida contra orden y recepción (3-way match).',
+            proveedor: 'Los proveedores son las empresas que suministran productos o servicios. Mantenga sus datos actualizados.',
+            scoring: 'El scoring evalúa automáticamente a los proveedores según precio, calidad y entregas a tiempo.',
+            '3-way': 'El 3-way matching valida que Orden de Compra, Recepción y Factura coincidan en cantidades y precios.',
+            integracion: 'El módulo se integra con Finance (contabilidad), Warehouse (almacén) y SIAC (facturación) si están activos.',
+            error: 'Si encuentra un error, verifique: 1) Datos obligatorios completos, 2) Proveedor activo, 3) Permisos del usuario.',
+            flujo: 'Flujo P2P: Requisición → Aprobación → Orden de Compra → Recepción → Factura → Pago'
+        }
+    });
+
+    console.log('✅ [PROCUREMENT] Sistema de ayuda contextual registrado');
+}
+
 const ProcurementManagement = {
     name: 'procurement-management',
     currentTab: 'dashboard',
@@ -60,6 +345,13 @@ const ProcurementManagement = {
         await this.loadBaseData();
         this.render();
         this.setupEventListeners();
+
+        // Inicializar sistema de ayuda contextual
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('procurement-management', {
+                initialContext: this.currentTab
+            });
+        }
 
         console.log('✅ [PROCUREMENT] Módulo inicializado correctamente');
     },
@@ -672,6 +964,12 @@ const ProcurementManagement = {
         this.container.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tab);
         });
+
+        // Actualizar contexto de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.setContext(tab);
+        }
+
         this.loadTab(tab);
     },
 
@@ -718,7 +1016,13 @@ const ProcurementManagement = {
                 this.fetchAPI('/api/procurement/dashboard/pending')
             ]);
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('dashboard')
+                : '';
+
             content.innerHTML = `
+                ${helpBanner}
                 <div class="dashboard-grid">
                     <!-- KPIs Row -->
                     <div class="kpi-row">
@@ -856,7 +1160,13 @@ const ProcurementManagement = {
             const response = await this.fetchAPI('/api/procurement/requisitions');
             const requisitions = response?.data || [];
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('requisitions')
+                : '';
+
             content.innerHTML = `
+                ${helpBanner}
                 <div class="list-section">
                     <div class="list-toolbar">
                         <div class="filters">
@@ -948,7 +1258,13 @@ const ProcurementManagement = {
             const response = await this.fetchAPI('/api/procurement/orders');
             const orders = response?.data || [];
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('orders')
+                : '';
+
             content.innerHTML = `
+                ${helpBanner}
                 <div class="list-section">
                     <div class="list-toolbar">
                         <div class="filters">
@@ -1034,7 +1350,13 @@ const ProcurementManagement = {
             const response = await this.fetchAPI('/api/procurement/receipts');
             const receipts = response?.data || [];
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('receipts')
+                : '';
+
             content.innerHTML = `
+                ${helpBanner}
                 <div class="list-section">
                     <div class="list-toolbar">
                         <div class="filters">
@@ -1108,7 +1430,13 @@ const ProcurementManagement = {
             const response = await this.fetchAPI('/api/procurement/invoices');
             const invoices = response?.data || [];
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('invoices')
+                : '';
+
             content.innerHTML = `
+                ${helpBanner}
                 <div class="list-section">
                     <div class="list-toolbar">
                         <div class="filters">
@@ -1186,7 +1514,13 @@ const ProcurementManagement = {
             const response = await this.fetchAPI('/api/procurement/suppliers');
             const suppliers = response?.data || [];
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('suppliers')
+                : '';
+
             content.innerHTML = `
+                ${helpBanner}
                 <div class="list-section">
                     <div class="list-toolbar">
                         <div class="filters">
@@ -1285,7 +1619,13 @@ const ProcurementManagement = {
         try {
             const stats = await this.fetchAPI('/api/procurement/item-mappings/stats');
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('mappings')
+                : '';
+
             content.innerHTML = `
+                ${helpBanner}
                 <div class="mappings-section">
                     <div class="stats-row">
                         <div class="stat-card">
@@ -1415,7 +1755,13 @@ const ProcurementManagement = {
                 this.fetchAPI('/api/procurement/accounting-config')
             ]);
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('config')
+                : '';
+
             content.innerHTML = `
+                ${helpBanner}
                 <div class="config-section">
                     <div class="config-tabs">
                         <button class="config-tab active" data-config="approvals">Aprobaciones</button>

@@ -1090,3 +1090,339 @@
         overflow-x: auto;
     }
 }
+
+/* ============================================================================
+   MODAL OVERLAY Y CONTAINER - PROFESIONAL
+   ============================================================================ */
+
+.logistics-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.logistics-modal {
+    background: var(--logistics-card-bg, #ffffff);
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalSlideIn 0.3s ease-out;
+    width: 500px;
+    max-width: 95vw;
+}
+
+.logistics-modal-large {
+    width: 900px;
+    max-width: 95vw;
+}
+
+@keyframes modalSlideIn {
+    from { transform: translateY(-20px) scale(0.95); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.logistics-modal .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--logistics-border, #e2e8f0);
+    background: linear-gradient(135deg, var(--logistics-primary, #2563eb) 0%, #1d4ed8 100%);
+    color: white;
+}
+
+.logistics-modal .modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.logistics-modal .modal-close {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.logistics-modal .modal-close:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.logistics-modal .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(90vh - 140px);
+}
+
+.logistics-modal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--logistics-border, #e2e8f0);
+    background: var(--logistics-bg, #f8fafc);
+}
+
+/* ============================================================================
+   FORM TABS DENTRO DEL MODAL
+   ============================================================================ */
+
+.form-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--logistics-border, #e2e8f0);
+    margin-bottom: 20px;
+    padding-bottom: 0;
+    overflow-x: auto;
+}
+
+.form-tab {
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--logistics-text-muted, #64748b);
+    transition: all 0.2s;
+    white-space: nowrap;
+    margin-bottom: -2px;
+}
+
+.form-tab:hover {
+    color: var(--logistics-primary, #2563eb);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.form-tab.active {
+    color: var(--logistics-primary, #2563eb);
+    border-bottom-color: var(--logistics-primary, #2563eb);
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.form-tab-content {
+    display: none;
+}
+
+.form-tab-content.active {
+    display: block;
+    animation: tabFadeIn 0.3s ease-out;
+}
+
+@keyframes tabFadeIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================================
+   FORMULARIOS DENTRO DEL MODAL
+   ============================================================================ */
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--logistics-text, #1e293b);
+    margin: 16px 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--logistics-border, #e2e8f0);
+}
+
+.form-section-title:first-child {
+    margin-top: 0;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--logistics-text, #1e293b);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 10px 12px;
+    border: 1px solid var(--logistics-border, #e2e8f0);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--logistics-primary, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #94a3b8;
+}
+
+/* ============================================================================
+   CHECKBOX GRID
+   ============================================================================ */
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--logistics-bg, #f8fafc);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 0.85rem;
+}
+
+.checkbox-item:hover {
+    background: #e2e8f0;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* ============================================================================
+   INFO PANEL (para Warehouse read-only)
+   ============================================================================ */
+
+.info-panel {
+    display: flex;
+    gap: 20px;
+    padding: 24px;
+    border-radius: 8px;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+}
+
+.info-panel-warning {
+    background: #fffbeb;
+    border-color: #fcd34d;
+}
+
+.info-panel .info-icon {
+    font-size: 3rem;
+}
+
+.info-panel .info-content h4 {
+    margin: 0 0 12px 0;
+    font-size: 1.2rem;
+    color: #92400e;
+}
+
+.info-panel .info-content p {
+    margin: 0 0 10px 0;
+    color: #78350f;
+}
+
+.info-panel .info-content ul {
+    margin: 0 0 16px 0;
+    padding-left: 20px;
+}
+
+.info-panel .info-content li {
+    margin-bottom: 6px;
+    color: #78350f;
+}
+
+.info-panel .info-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* ============================================================================
+   BOTONES
+   ============================================================================ */
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--logistics-primary, #2563eb) 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: var(--logistics-text, #1e293b);
+    border: 1px solid var(--logistics-border, #e2e8f0);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--logistics-bg, #f8fafc);
+}

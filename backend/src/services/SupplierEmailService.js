@@ -206,44 +206,62 @@ class SupplierEmailService {
     // ENVÍO DE NOTIFICACIONES
     // ═══════════════════════════════════════════════════════════════════════════
 
-    async sendRfqInvitation(rfqId, supplierId) {
+    async sendRfqInvitation(dataOrRfqId, supplierId = null) {
         try {
-            // Obtener datos del RFQ y proveedor
-            const [rfqData, supplierData, items] = await Promise.all([
-                this.pool.query(`
-                    SELECT rfq.*, c.name as company_name
-                    FROM request_for_quotations rfq
-                    JOIN companies c ON rfq.company_id = c.company_id
-                    WHERE rfq.id = $1
-                `, [rfqId]),
+            // Detectar si se llamó con objeto completo o con IDs
+            let rfq, supplier, companyName, email, deadline;
 
-                this.pool.query(`
-                    SELECT ws.*, spu.email as portal_email, spu.first_name
-                    FROM wms_suppliers ws
-                    LEFT JOIN supplier_portal_users spu ON spu.supplier_id = ws.id AND spu.is_active = true
-                    WHERE ws.id = $1
-                `, [supplierId]),
+            if (typeof dataOrRfqId === 'object') {
+                // Nuevo formato: objeto completo
+                rfq = dataOrRfqId.rfq;
+                supplier = dataOrRfqId.supplier;
+                companyName = dataOrRfqId.company?.name || 'APONNT';
+                email = supplier.email;
 
-                this.pool.query(`
-                    SELECT * FROM rfq_items WHERE rfq_id = $1
-                `, [rfqId])
-            ]);
+                deadline = new Date(rfq.quotationDeadline).toLocaleDateString('es-AR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                // Formato antiguo: IDs separados
+                const rfqId = dataOrRfqId;
 
-            if (!rfqData.rows[0] || !supplierData.rows[0]) {
-                console.log('📧 [SUPPLIER EMAIL] Datos no encontrados para envío');
-                return null;
-            }
+                // Obtener datos del RFQ y proveedor
+                const [rfqData, supplierData, items] = await Promise.all([
+                    this.pool.query(`
+                        SELECT rfq.*, c.name as company_name
+                        FROM request_for_quotations rfq
+                        JOIN companies c ON rfq.company_id = c.company_id
+                        WHERE rfq.id = $1
+                    `, [rfqId]),
 
-            const rfq = rfqData.rows[0];
-            const supplier = supplierData.rows[0];
-            const email = supplier.portal_email || supplier.email;
+                    this.pool.query(`
+                        SELECT ws.*, spu.email as portal_email, spu.first_name
+                        FROM wms_suppliers ws
+                        LEFT JOIN supplier_portal_users spu ON spu.supplier_id = ws.id AND spu.is_active = true
+                        WHERE ws.id = $1
+                    `, [supplierId]),
 
-            if (!email) {
-                console.log('📧 [SUPPLIER EMAIL] Proveedor sin email configurado');
-                return null;
-            }
+                    this.pool.query(`
+                        SELECT * FROM rfq_items WHERE rfq_id = $1
+                    `, [rfqId])
+                ]);
 
-            const deadline = new Date(rfq.submission_deadline).toLocaleDateString('es-AR', {
+                if (!rfqData.rows[0] || !supplierData.rows[0]) {
+                    console.log('📧 [SUPPLIER EMAIL] Datos no encontrados para envío');
+                    return null;
+                }
+
+                rfq = rfqData.rows[0];
+                supplier = supplierData.rows[0];
+                companyName = rfq.company_name;
+                email = supplier.portal_email || supplier.email;
+
+                deadline = new Date(rfq.submission_deadline).toLocaleDateString('es-AR', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -252,25 +270,41 @@ class SupplierEmailService {
                 minute: '2-digit'
             });
 
-            const itemsHtml = items.rows.map(item => `
-                <tr>
-                    <td>${item.product_name}</td>
-                    <td>${item.product_code || '-'}</td>
-                    <td>${item.quantity} ${item.unit_of_measure || 'und'}</td>
-                </tr>
-            `).join('');
+            }
+
+            if (!email) {
+                console.log('📧 [SUPPLIER EMAIL] Proveedor sin email configurado');
+                return null;
+            }
+
+            // Para el nuevo formato, no necesitamos items HTML ya que se verá en el portal
+            const itemsHtml = typeof dataOrRfqId === 'object'
+                ? '<p>Consulte los detalles completos en el portal</p>'
+                : items.rows.map(item => `
+                    <tr>
+                        <td>${item.product_name}</td>
+                        <td>${item.product_code || '-'}</td>
+                        <td>${item.quantity} ${item.unit_of_measure || 'und'}</td>
+                    </tr>
+                `).join('');
+
+            const rfqNumber = typeof dataOrRfqId === 'object' ? rfq.rfqNumber : rfq.rfq_number;
+            const rfqTitle = rfq.title;
+            const rfqDescription = rfq.description;
+            const supplierName = supplier.first_name || supplier.name;
 
             const content = `
                 <h2>Nueva Solicitud de Cotización</h2>
-                <p>Estimado/a ${supplier.first_name || supplier.name},</p>
-                <p><strong>${rfq.company_name}</strong> le invita a presentar cotización para la siguiente solicitud:</p>
+                <p>Estimado/a ${supplierName},</p>
+                <p><strong>${companyName}</strong> le invita a presentar cotización para la siguiente solicitud:</p>
 
                 <div class="info-box">
-                    <h3>📋 ${rfq.rfq_number} - ${rfq.title}</h3>
+                    <h3>📋 ${rfqNumber} - ${rfqTitle}</h3>
                     <p><strong>Fecha límite:</strong> <span class="badge badge-urgent">${deadline}</span></p>
-                    ${rfq.description ? `<p>${rfq.description}</p>` : ''}
+                    ${rfqDescription ? `<p>${rfqDescription}</p>` : ''}
                 </div>
 
+                ${typeof dataOrRfqId === 'object' ? '' : `
                 <h3>Productos Solicitados:</h3>
                 <table>
                     <thead>
@@ -284,6 +318,7 @@ class SupplierEmailService {
                         ${itemsHtml}
                     </tbody>
                 </table>
+                `}
 
                 <p style="text-align: center;">
                     <a href="${this.portalUrl}" class="btn">Ver Solicitud y Cotizar</a>
@@ -297,23 +332,28 @@ class SupplierEmailService {
             const result = await this.transporter.sendMail({
                 from: this.fromEmail,
                 to: email,
-                subject: `[RFQ] Nueva solicitud de cotización: ${rfq.rfq_number}`,
+                subject: `[RFQ] Nueva solicitud de cotización: ${rfqNumber}`,
                 html: this.getBaseTemplate(content, 'Nueva Solicitud de Cotización')
             });
 
-            // Actualizar invitación con fecha de envío
-            await this.pool.query(`
-                UPDATE rfq_invitations
-                SET invitation_sent_at = NOW()
-                WHERE rfq_id = $1 AND supplier_id = $2
-            `, [rfqId, supplierId]);
+            // Solo actualizar BD si se llamó con el formato antiguo
+            if (typeof dataOrRfqId !== 'object') {
+                const rfqId = dataOrRfqId;
 
-            // Registrar notificación
-            await this.pool.query(`
-                UPDATE supplier_notifications
-                SET email_sent = true, email_sent_at = NOW()
-                WHERE reference_type = 'rfq' AND reference_id = $1 AND supplier_id = $2
-            `, [rfqId, supplierId]);
+                // Actualizar invitación con fecha de envío
+                await this.pool.query(`
+                    UPDATE rfq_invitations
+                    SET invitation_sent_at = NOW()
+                    WHERE rfq_id = $1 AND supplier_id = $2
+                `, [rfqId, supplierId]);
+
+                // Registrar notificación
+                await this.pool.query(`
+                    UPDATE supplier_notifications
+                    SET email_sent = true, email_sent_at = NOW()
+                    WHERE reference_type = 'rfq' AND reference_id = $1 AND supplier_id = $2
+                `, [rfqId, supplierId]);
+            }
 
             console.log(`📧 [SUPPLIER EMAIL] RFQ invitation sent to ${email}`);
             return result;

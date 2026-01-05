@@ -450,6 +450,229 @@ class FinanceAutoPostingService {
     }
 
     /**
+     * Post de orden de pago ejecutada
+     * Genera asiento contable automático cuando se ejecuta un pago
+     */
+    async postPaymentOrder(companyId, paymentOrderId, userId) {
+        if (!this.hasModule(companyId, 'procurement-management')) {
+            console.log(`[FINANCE] Módulo procurement-management no activo para empresa ${companyId}`);
+            return null;
+        }
+
+        const paymentOrder = await db.FinancePaymentOrder.findByPk(paymentOrderId, {
+            include: [
+                { model: db.FinancePaymentOrderItem, as: 'items' },
+                { model: db.ProcurementSupplier, as: 'supplier' }
+            ]
+        });
+
+        if (!paymentOrder || paymentOrder.company_id !== companyId) {
+            throw new Error('Orden de pago no encontrada');
+        }
+
+        if (paymentOrder.status !== 'executed') {
+            throw new Error('Solo se pueden contabilizar órdenes ejecutadas');
+        }
+
+        // Obtener cuenta de proveedores (DEBIT - cancelamos deuda)
+        const payableAccount = await this.getAutoPostAccount(companyId, 'procurement', 'credit');
+        if (!payableAccount) {
+            throw new Error('Cuenta de proveedores no configurada');
+        }
+
+        // Determinar cuenta de banco/caja según payment_method
+        let cashAccount;
+        if (paymentOrder.payment_method === 'transfer' && paymentOrder.payment_details?.bank_account_id) {
+            const bankAccount = await db.FinanceBankAccount.findByPk(paymentOrder.payment_details.bank_account_id);
+            if (bankAccount?.ledger_account_id) {
+                cashAccount = await db.FinanceChartOfAccounts.findByPk(bankAccount.ledger_account_id);
+            }
+        }
+
+        // Fallback a cuenta genérica de banco o caja
+        if (!cashAccount) {
+            const accountPattern = paymentOrder.payment_method === 'cash' ? '1102%' : '1101%';
+            cashAccount = await db.FinanceChartOfAccounts.findOne({
+                where: {
+                    company_id: companyId,
+                    account_code: { [db.Sequelize.Op.like]: accountPattern },
+                    is_active: true,
+                    is_header: false
+                }
+            });
+        }
+
+        if (!cashAccount) {
+            throw new Error('Cuenta de banco/caja no encontrada');
+        }
+
+        const lines = [
+            {
+                accountId: payableAccount.id,
+                debit: paymentOrder.total_amount,
+                credit: 0,
+                description: 'Cancelación Proveedores',
+                auxType: 'supplier',
+                auxId: paymentOrder.supplier_id,
+                auxName: paymentOrder.supplier_name
+            },
+            {
+                accountId: cashAccount.id,
+                debit: 0,
+                credit: paymentOrder.net_payment_amount,
+                description: paymentOrder.payment_method === 'cash' ? 'Caja' : 'Banco'
+            }
+        ];
+
+        // Agregar retenciones si existen
+        if (paymentOrder.total_retentions > 0) {
+            // Calcular retenciones totales por tipo desde los items
+            let totalIIBB = 0, totalGanancias = 0, totalIVA = 0, totalSUSS = 0, totalOther = 0;
+
+            for (const item of paymentOrder.items) {
+                totalIIBB += parseFloat(item.retention_iibb || 0);
+                totalGanancias += parseFloat(item.retention_ganancias || 0);
+                totalIVA += parseFloat(item.retention_iva || 0);
+                totalSUSS += parseFloat(item.retention_suss || 0);
+                totalOther += parseFloat(item.other_retentions || 0);
+            }
+
+            // Retención IIBB
+            if (totalIIBB > 0) {
+                const retAccount = await db.FinanceChartOfAccounts.findOne({
+                    where: {
+                        company_id: companyId,
+                        account_code: { [db.Sequelize.Op.like]: '2105%' },
+                        description: { [db.Sequelize.Op.iLike]: '%iibb%' },
+                        is_active: true
+                    }
+                });
+                if (retAccount) {
+                    lines.push({
+                        accountId: retAccount.id,
+                        debit: 0,
+                        credit: totalIIBB,
+                        description: 'Retención IIBB'
+                    });
+                }
+            }
+
+            // Retención Ganancias
+            if (totalGanancias > 0) {
+                const retAccount = await db.FinanceChartOfAccounts.findOne({
+                    where: {
+                        company_id: companyId,
+                        account_code: { [db.Sequelize.Op.like]: '2105%' },
+                        description: { [db.Sequelize.Op.iLike]: '%ganancias%' },
+                        is_active: true
+                    }
+                });
+                if (retAccount) {
+                    lines.push({
+                        accountId: retAccount.id,
+                        debit: 0,
+                        credit: totalGanancias,
+                        description: 'Retención Ganancias'
+                    });
+                }
+            }
+
+            // Retención IVA
+            if (totalIVA > 0) {
+                const retAccount = await db.FinanceChartOfAccounts.findOne({
+                    where: {
+                        company_id: companyId,
+                        account_code: { [db.Sequelize.Op.like]: '2105%' },
+                        description: { [db.Sequelize.Op.iLike]: '%iva%' },
+                        is_active: true
+                    }
+                });
+                if (retAccount) {
+                    lines.push({
+                        accountId: retAccount.id,
+                        debit: 0,
+                        credit: totalIVA,
+                        description: 'Retención IVA'
+                    });
+                }
+            }
+
+            // Retención SUSS
+            if (totalSUSS > 0) {
+                const retAccount = await db.FinanceChartOfAccounts.findOne({
+                    where: {
+                        company_id: companyId,
+                        account_code: { [db.Sequelize.Op.like]: '2105%' },
+                        description: { [db.Sequelize.Op.iLike]: '%suss%' },
+                        is_active: true
+                    }
+                });
+                if (retAccount) {
+                    lines.push({
+                        accountId: retAccount.id,
+                        debit: 0,
+                        credit: totalSUSS,
+                        description: 'Retención SUSS'
+                    });
+                }
+            }
+
+            // Otras retenciones
+            if (totalOther > 0) {
+                const retAccount = await db.FinanceChartOfAccounts.findOne({
+                    where: {
+                        company_id: companyId,
+                        account_code: { [db.Sequelize.Op.like]: '2105%' },
+                        is_active: true,
+                        is_header: false
+                    }
+                });
+                if (retAccount) {
+                    lines.push({
+                        accountId: retAccount.id,
+                        debit: 0,
+                        credit: totalOther,
+                        description: 'Otras Retenciones'
+                    });
+                }
+            }
+        }
+
+        // Agregar descuentos si existen
+        if (paymentOrder.total_discounts > 0) {
+            const discountAccount = await db.FinanceChartOfAccounts.findOne({
+                where: {
+                    company_id: companyId,
+                    account_code: { [db.Sequelize.Op.like]: '4102%' }, // Descuentos Obtenidos
+                    is_active: true
+                }
+            });
+
+            if (discountAccount) {
+                lines.push({
+                    accountId: discountAccount.id,
+                    debit: 0,
+                    credit: paymentOrder.total_discounts,
+                    description: 'Descuentos por Pronto Pago'
+                });
+            }
+        }
+
+        const entry = await this.createAutoEntry(companyId, {
+            sourceType: 'payment_order',
+            sourceModule: 'procurement-management',
+            sourceDocumentId: paymentOrderId,
+            sourceDocumentNumber: paymentOrder.order_number,
+            description: `Pago OP ${paymentOrder.order_number} - ${paymentOrder.supplier_name}`,
+            lines,
+            entryDate: paymentOrder.actual_payment_date || new Date(),
+            userId
+        });
+
+        return entry;
+    }
+
+    /**
      * Post de transacción bancaria
      */
     async postBankTransaction(companyId, transactionId, userId) {

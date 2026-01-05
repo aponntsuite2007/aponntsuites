@@ -4,6 +4,153 @@
  * Incluye: Forecast financiero, Cartera de cheques, Workflow de autorización
  */
 
+// ============================================================================
+// PAYMENT ORDERS HELP SYSTEM - Sistema de Ayuda Contextual
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('payment-orders-dashboard', {
+        moduleName: 'Órdenes de Pago',
+        moduleDescription: 'Sistema de gestión de pagos con dashboard OLAP, cartera de cheques y workflow de autorización.',
+
+        contexts: {
+            dashboard: {
+                title: 'Dashboard OLAP de Pagos',
+                description: 'Vista multidimensional del estado de pagos con cubo de navegación interactivo.',
+                tips: [
+                    'El dashboard OLAP permite navegar por dimensiones: tiempo, proveedor, tipo de pago, estado',
+                    'Use el breadcrumb para volver a niveles superiores del cubo',
+                    'Los KPIs muestran resumen actual vs. proyectado (forecast financiero)',
+                    'El cubo se actualiza automáticamente cada 5 minutos'
+                ],
+                warnings: [
+                    'Los montos se muestran en la moneda base configurada en Finance'
+                ],
+                helpTopics: [
+                    '¿Cómo funciona el cubo OLAP?',
+                    '¿Qué es el forecast financiero?',
+                    '¿Cómo filtro por proveedor o período?'
+                ]
+            },
+
+            orders: {
+                title: 'Órdenes de Pago',
+                description: 'Listado completo de órdenes de pago con filtros y acciones masivas.',
+                tips: [
+                    'Estados: Borrador → Pendiente Aprobación → Aprobada → Programada → Pagada',
+                    'Puede vincular múltiples facturas a una misma orden de pago',
+                    'Integración con Finance: genera asiento al aprobar la orden',
+                    'Exportar a archivo bancario (opcional, según configuración)'
+                ],
+                warnings: [
+                    'Verifique datos bancarios del beneficiario antes de programar pago',
+                    'Una vez aprobada, cambios requieren re-autorización'
+                ],
+                helpTopics: [
+                    '¿Cómo creo una orden de pago desde una factura?',
+                    '¿Puedo pagar varias facturas juntas?',
+                    '¿Qué formatos de archivo bancario soporta?'
+                ],
+                fieldHelp: {
+                    beneficiary: 'Proveedor o persona a quien se pagará',
+                    payment_date: 'Fecha programada de pago (puede ser futura)',
+                    payment_method: 'Transferencia, Cheque, Efectivo, etc.',
+                    bank_account: 'Cuenta bancaria destino del beneficiario',
+                    authorization_workflow: 'Flujo de aprobación según monto y configuración'
+                }
+            },
+
+            pending: {
+                title: 'Pendientes de Aprobación',
+                description: 'Órdenes que requieren autorización según workflow configurado.',
+                tips: [
+                    'El workflow valida jerarquía, montos límite y sectores',
+                    'Puede aprobar/rechazar en lote seleccionando múltiples órdenes',
+                    'Las notificaciones se envían automáticamente a aprobadores',
+                    'Historial de aprobaciones disponible en el detalle de cada orden'
+                ],
+                warnings: [
+                    'Revise adjuntos (facturas, remitos) antes de aprobar',
+                    'Valide que el beneficiario y monto sean correctos'
+                ],
+                helpTopics: [
+                    '¿Quiénes son los aprobadores en mi empresa?',
+                    '¿Puedo delegar mi aprobación?',
+                    '¿Qué hago si una orden tiene montos incorrectos?'
+                ]
+            },
+
+            checks: {
+                title: 'Cartera de Cheques',
+                description: 'Gestión de cheques emitidos, recibidos y posdatados.',
+                tips: [
+                    'Estados de cheques: Emitido → Entregado → Cobrado / Rechazado',
+                    'Cheques propios: emitidos por la empresa (pago a proveedores)',
+                    'Cheques de terceros: recibidos de clientes (pueden re-endosarse)',
+                    'Alertas de vencimiento: notifica 3 días antes del vencimiento',
+                    'Integración bancaria: concilia cheques cobrados automáticamente'
+                ],
+                warnings: [
+                    'Verifique saldo en cuenta antes de emitir cheques',
+                    'Cheques rechazados generan multas bancarias',
+                    'Mantenga actualizado el estado de cheques de terceros'
+                ],
+                helpTopics: [
+                    '¿Cómo registro un cheque recibido de un cliente?',
+                    '¿Puedo endosar un cheque de terceros?',
+                    '¿Cómo doy de baja un cheque extraviado?',
+                    '¿Qué es un cheque posdatado?'
+                ],
+                fieldHelp: {
+                    check_number: 'Número de cheque (según chequera)',
+                    issue_date: 'Fecha de emisión del cheque',
+                    payment_date: 'Fecha de pago/cobro (puede ser posdatada)',
+                    bank: 'Banco emisor del cheque',
+                    account_number: 'Cuenta corriente de origen',
+                    payee: 'Beneficiario del cheque (a la orden de)'
+                }
+            },
+
+            checkbooks: {
+                title: 'Gestión de Chequeras',
+                description: 'Control de chequeras físicas y numeración de cheques.',
+                tips: [
+                    'Registre cada chequera con rango de números de cheques',
+                    'El sistema valida que no se use un número de cheque duplicado',
+                    'Marque cheques como anulados si comete error al emitirlos',
+                    'Cuando se agota una chequera, marque como Finalizada',
+                    'Puede tener múltiples chequeras activas de diferentes cuentas'
+                ],
+                warnings: [
+                    'Guarde las chequeras en lugar seguro',
+                    'Informe al banco cheques extraviados inmediatamente',
+                    'Verifique que el rango de cheques coincida con el banco'
+                ],
+                helpTopics: [
+                    '¿Cómo registro una chequera nueva?',
+                    '¿Qué hago si pierdo una chequera?',
+                    '¿Puedo anular un cheque ya emitido?'
+                ],
+                fieldHelp: {
+                    checkbook_number: 'Número de chequera (según banco)',
+                    start_number: 'Primer número de cheque de la chequera',
+                    end_number: 'Último número de cheque de la chequera',
+                    bank_account_id: 'Cuenta corriente asociada',
+                    status: 'Activa, Finalizada, Anulada'
+                }
+            }
+        },
+
+        fallbackResponses: {
+            olap: 'OLAP (Online Analytical Processing) es un cubo multidimensional que permite analizar datos desde diferentes perspectivas. En Órdenes de Pago, puede navegar por tiempo, proveedor, tipo de pago y estado.',
+            forecast: 'El forecast financiero proyecta pagos futuros basándose en órdenes programadas, términos de pago de facturas pendientes y patrones históricos.',
+            workflow: 'El workflow de autorización define quién debe aprobar una orden según monto, sector y jerarquía. Se configura en Configuración → Aprobaciones.',
+            cheque: 'Un cheque es un documento de pago que ordena al banco transferir fondos. Puede ser "al día" (cobro inmediato) o "diferido/posdatado" (cobro en fecha futura).',
+            endoso: 'Endosar un cheque de terceros significa transferirlo a otro beneficiario (firmando al dorso). Solo cheques "a la orden" pueden endosarse.',
+            conciliacion: 'La conciliación bancaria compara los registros de cheques emitidos con los efectivamente cobrados por el banco, detectando diferencias.'
+        }
+    });
+}
+
 const PaymentOrdersDashboard = {
     name: 'payment-orders-dashboard',
     currentTab: 'dashboard',
@@ -26,6 +173,13 @@ const PaymentOrdersDashboard = {
 
         this.render();
         await this.loadDashboardData();
+
+        // Inicializar sistema de ayuda contextual
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('payment-orders-dashboard', {
+                initialContext: this.currentTab
+            });
+        }
     },
 
     render() {
@@ -742,6 +896,11 @@ const PaymentOrdersDashboard = {
             btn.classList.toggle('active', btn.dataset.tab === tab);
         });
 
+        // Actualizar contexto de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.setContext(tab);
+        }
+
         this.renderTabContent(tab);
     },
 
@@ -783,7 +942,13 @@ const PaymentOrdersDashboard = {
                 this.fetchTimeline()
             ]);
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('dashboard')
+                : '';
+
             container.innerHTML = `
+                ${helpBanner}
                 <!-- KPIs -->
                 <div class="kpi-grid">
                     <div class="kpi-card">
@@ -967,7 +1132,13 @@ const PaymentOrdersDashboard = {
         try {
             const orders = await this.fetchOrders();
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('orders')
+                : '';
+
             container.innerHTML = `
+                ${helpBanner}
                 <div class="orders-header" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
                     <div class="orders-filters">
                         <select id="orders-status-filter" onchange="PaymentOrdersDashboard.filterOrders()">
@@ -1054,7 +1225,13 @@ const PaymentOrdersDashboard = {
         try {
             const pending = await this.fetchPendingApproval();
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('pending')
+                : '';
+
             container.innerHTML = `
+                ${helpBanner}
                 <h3 style="margin-bottom: 20px;"><i class="fas fa-clock"></i> Órdenes Pendientes de Aprobación</h3>
 
                 ${pending.data && pending.data.length > 0 ? `
@@ -1106,7 +1283,13 @@ const PaymentOrdersDashboard = {
         try {
             const dashboard = await this.fetchChecksDashboard();
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('checks')
+                : '';
+
             container.innerHTML = `
+                ${helpBanner}
                 <!-- Alertas -->
                 ${dashboard.alerts && dashboard.alerts.length > 0 ? `
                     <div class="alerts-section" style="margin-bottom: 20px;">
@@ -1220,7 +1403,13 @@ const PaymentOrdersDashboard = {
                 this.fetchCheckbooksStats()
             ]);
 
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('checkbooks')
+                : '';
+
             container.innerHTML = `
+                ${helpBanner}
                 <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
                     <h3><i class="fas fa-book"></i> Gestión de Chequeras</h3>
                     <button class="btn btn-primary" onclick="PaymentOrdersDashboard.showCreateCheckbookModal()">

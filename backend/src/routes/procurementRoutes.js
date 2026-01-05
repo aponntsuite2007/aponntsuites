@@ -274,6 +274,690 @@ router.delete('/requisitions/:id', async (req, res) => {
 });
 
 // ============================================
+// RFQ - SOLICITUDES DE COTIZACIÓN
+// ============================================
+
+/**
+ * POST /api/procurement/rfqs
+ * Crear nueva solicitud de cotización (RFQ)
+ */
+router.post('/rfqs', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+        const companyId = req.user.company_id;
+        const userId = req.user.user_id;
+
+        const transaction = await sequelize.transaction();
+
+        try {
+            // Generar número de RFQ
+            const [lastRfq] = await sequelize.query(
+                `SELECT rfq_number FROM request_for_quotations
+                 WHERE company_id = :companyId ORDER BY id DESC LIMIT 1`,
+                { replacements: { companyId }, type: sequelize.QueryTypes.SELECT, transaction }
+            );
+
+            let nextNumber = 1;
+            if (lastRfq && lastRfq.rfq_number) {
+                const match = lastRfq.rfq_number.match(/RFQ-(\d+)/);
+                nextNumber = match ? parseInt(match[1]) + 1 : 1;
+            }
+            const rfqNumber = `RFQ-${nextNumber.toString().padStart(6, '0')}`;
+
+            // Crear RFQ
+            const [rfqResult] = await sequelize.query(`
+                INSERT INTO request_for_quotations
+                (company_id, rfq_number, requisition_id, title, description, rfq_type,
+                 quotation_deadline, delivery_deadline, delivery_address, payment_terms_required,
+                 warranty_required, evaluation_criteria, allow_partial_quotation, allow_alternatives,
+                 requires_samples, min_suppliers_required, status, notes, internal_notes, created_by)
+                VALUES
+                (:companyId, :rfqNumber, :requisitionId, :title, :description, :rfqType,
+                 :quotationDeadline, :deliveryDeadline, :deliveryAddress, :paymentTerms,
+                 :warranty, :evaluationCriteria, :allowPartial, :allowAlternatives,
+                 :requiresSamples, :minSuppliers, 'draft', :notes, :internalNotes, :userId)
+                RETURNING *
+            `, {
+                replacements: {
+                    companyId,
+                    rfqNumber,
+                    requisitionId: req.body.requisitionId || null,
+                    title: req.body.title,
+                    description: req.body.description,
+                    rfqType: req.body.rfqType || 'standard',
+                    quotationDeadline: req.body.quotationDeadline,
+                    deliveryDeadline: req.body.deliveryDeadline || null,
+                    deliveryAddress: req.body.deliveryAddress || null,
+                    paymentTerms: req.body.paymentTerms || null,
+                    warranty: req.body.warranty || null,
+                    evaluationCriteria: JSON.stringify(req.body.evaluationCriteria || { price: 60, quality: 20, delivery: 20 }),
+                    allowPartial: req.body.allowPartialQuotation !== false,
+                    allowAlternatives: req.body.allowAlternatives || false,
+                    requiresSamples: req.body.requiresSamples || false,
+                    minSuppliers: req.body.minSuppliersRequired || 1,
+                    notes: req.body.notes || null,
+                    internalNotes: req.body.internalNotes || null,
+                    userId
+                },
+                type: sequelize.QueryTypes.INSERT,
+                transaction
+            });
+
+            const rfqId = rfqResult[0].id;
+
+            // Crear items
+            if (req.body.items && req.body.items.length > 0) {
+                for (let i = 0; i < req.body.items.length; i++) {
+                    const item = req.body.items[i];
+                    await sequelize.query(`
+                        INSERT INTO rfq_items
+                        (rfq_id, line_number, item_code, description, quantity, unit_of_measure,
+                         specifications, notes, category_id, estimated_unit_price)
+                        VALUES
+                        (:rfqId, :lineNumber, :itemCode, :description, :quantity, :uom,
+                         :specifications, :notes, :categoryId, :estimatedPrice)
+                    `, {
+                        replacements: {
+                            rfqId,
+                            lineNumber: i + 1,
+                            itemCode: item.itemCode || null,
+                            description: item.description,
+                            quantity: item.quantity,
+                            uom: item.unitOfMeasure || 'UN',
+                            specifications: item.specifications || null,
+                            notes: item.notes || null,
+                            categoryId: item.categoryId || null,
+                            estimatedPrice: item.estimatedPrice || null
+                        },
+                        transaction
+                    });
+                }
+            }
+
+            await transaction.commit();
+
+            res.status(201).json({
+                success: true,
+                data: {
+                    id: rfqId,
+                    rfqNumber: rfqNumber,
+                    status: 'draft',
+                    message: 'RFQ creada exitosamente'
+                }
+            });
+
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    } catch (error) {
+        console.error('❌ [Procurement] Error creando RFQ:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/rfqs
+ * Listar RFQs de la empresa
+ */
+router.get('/rfqs', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+        const { status, page = 1, limit = 20 } = req.query;
+
+        const where = { company_id: req.user.company_id };
+        if (status) where.status = status;
+
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+
+        const [rfqs] = await sequelize.query(`
+            SELECT
+                r.*,
+                (SELECT COUNT(*) FROM rfq_items WHERE rfq_id = r.id) as items_count,
+                (SELECT COUNT(*) FROM rfq_invitations WHERE rfq_id = r.id) as invitations_count,
+                (SELECT COUNT(*) FROM rfq_invitations WHERE rfq_id = r.id AND responded = true) as responses_count,
+                (SELECT COUNT(*) FROM supplier_quotations WHERE rfq_id = r.id) as quotations_count
+            FROM request_for_quotations r
+            WHERE r.company_id = :companyId
+            ${status ? 'AND r.status = :status' : ''}
+            ORDER BY r.created_at DESC
+            LIMIT :limit OFFSET :offset
+        `, {
+            replacements: { companyId: req.user.company_id, status, limit: parseInt(limit), offset },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const [countResult] = await sequelize.query(`
+            SELECT COUNT(*) as total FROM request_for_quotations
+            WHERE company_id = :companyId ${status ? 'AND status = :status' : ''}
+        `, {
+            replacements: { companyId: req.user.company_id, status },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        res.json({
+            success: true,
+            data: rfqs,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalItems: parseInt(countResult.total),
+                totalPages: Math.ceil(countResult.total / limit)
+            }
+        });
+    } catch (error) {
+        console.error('❌ [Procurement] Error listando RFQs:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/rfqs/:id
+ * Obtener detalle de RFQ
+ */
+router.get('/rfqs/:id', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+
+        const [rfq] = await sequelize.query(`
+            SELECT * FROM request_for_quotations
+            WHERE id = :id AND company_id = :companyId
+        `, {
+            replacements: { id: req.params.id, companyId: req.user.company_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!rfq) {
+            return res.status(404).json({ success: false, error: 'RFQ no encontrada' });
+        }
+
+        // Obtener items
+        const [items] = await sequelize.query(`
+            SELECT * FROM rfq_items WHERE rfq_id = :rfqId ORDER BY line_number
+        `, {
+            replacements: { rfqId: req.params.id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        // Obtener invitaciones
+        const [invitations] = await sequelize.query(`
+            SELECT
+                i.*,
+                s.name as supplier_name,
+                s.email as supplier_email,
+                s.contact_name
+            FROM rfq_invitations i
+            JOIN wms_suppliers s ON i.supplier_id = s.id
+            WHERE i.rfq_id = :rfqId
+        `, {
+            replacements: { rfqId: req.params.id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        // Obtener cotizaciones recibidas
+        const [quotations] = await sequelize.query(`
+            SELECT
+                q.*,
+                s.name as supplier_name,
+                (SELECT COUNT(*) FROM supplier_quotation_items WHERE quotation_id = q.id) as items_count
+            FROM supplier_quotations q
+            JOIN wms_suppliers s ON q.supplier_id = s.id
+            WHERE q.rfq_id = :rfqId
+        `, {
+            replacements: { rfqId: req.params.id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        res.json({
+            success: true,
+            data: {
+                rfq,
+                items,
+                invitations,
+                quotations
+            }
+        });
+    } catch (error) {
+        console.error('❌ [Procurement] Error obteniendo RFQ:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/rfqs/:id/publish
+ * Publicar RFQ y enviar invitaciones a proveedores
+ */
+router.post('/rfqs/:id/publish', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+        const companyId = req.user.company_id;
+        const userId = req.user.user_id;
+        const rfqId = req.params.id;
+
+        const transaction = await sequelize.transaction();
+
+        try {
+            // Verificar que existe y pertenece a la empresa
+            const [rfq] = await sequelize.query(`
+                SELECT * FROM request_for_quotations WHERE id = :rfqId AND company_id = :companyId
+            `, {
+                replacements: { rfqId, companyId },
+                type: sequelize.QueryTypes.SELECT,
+                transaction
+            });
+
+            if (!rfq) {
+                await transaction.rollback();
+                return res.status(404).json({ success: false, error: 'RFQ no encontrada' });
+            }
+
+            if (rfq.status !== 'draft') {
+                await transaction.rollback();
+                return res.status(400).json({ success: false, error: 'Solo RFQs en borrador pueden publicarse' });
+            }
+
+            // Verificar que tenga items
+            const [itemCount] = await sequelize.query(`
+                SELECT COUNT(*) as count FROM rfq_items WHERE rfq_id = :rfqId
+            `, {
+                replacements: { rfqId },
+                type: sequelize.QueryTypes.SELECT,
+                transaction
+            });
+
+            if (itemCount.count === 0) {
+                await transaction.rollback();
+                return res.status(400).json({ success: false, error: 'La RFQ debe tener al menos un item' });
+            }
+
+            // Actualizar estado
+            await sequelize.query(`
+                UPDATE request_for_quotations
+                SET status = 'published', published_at = NOW(), published_by = :userId, updated_at = NOW()
+                WHERE id = :rfqId
+            `, {
+                replacements: { rfqId, userId },
+                transaction
+            });
+
+            // Crear invitaciones a proveedores
+            const supplierIds = req.body.supplierIds || [];
+            const invitedSuppliers = [];
+
+            for (const supplierId of supplierIds) {
+                // Obtener datos del proveedor
+                const [supplier] = await sequelize.query(`
+                    SELECT id, name, email, contact_email FROM wms_suppliers
+                    WHERE id = :supplierId AND company_id = :companyId AND status = 'active'
+                `, {
+                    replacements: { supplierId, companyId },
+                    type: sequelize.QueryTypes.SELECT,
+                    transaction
+                });
+
+                if (supplier) {
+                    const emailTo = supplier.contact_email || supplier.email;
+
+                    await sequelize.query(`
+                        INSERT INTO rfq_invitations
+                        (rfq_id, supplier_id, invitation_sent_at, invitation_method, email_sent_to)
+                        VALUES (:rfqId, :supplierId, NOW(), 'email', :emailTo)
+                        ON CONFLICT (rfq_id, supplier_id) DO NOTHING
+                    `, {
+                        replacements: { rfqId, supplierId, emailTo },
+                        transaction
+                    });
+
+                    invitedSuppliers.push({
+                        id: supplier.id,
+                        name: supplier.name,
+                        email: emailTo
+                    });
+
+                    // Enviar notificación por email (asyncrónicamente)
+                    try {
+                        const SupplierEmailService = require('../services/SupplierEmailService');
+                        const emailService = new SupplierEmailService(sequelize);
+
+                        // Obtener empresa
+                        const [company] = await sequelize.query(
+                            `SELECT name FROM companies WHERE company_id = :companyId`,
+                            { replacements: { companyId }, type: sequelize.QueryTypes.SELECT, transaction }
+                        );
+
+                        await emailService.sendRfqInvitation({
+                            supplier: {
+                                id: supplier.id,
+                                name: supplier.name,
+                                email: emailTo
+                            },
+                            company: company || { name: 'APONNT' },
+                            rfq: {
+                                id: rfqId,
+                                rfqNumber: rfq.rfq_number,
+                                title: rfq.title,
+                                description: rfq.description,
+                                quotationDeadline: rfq.quotation_deadline
+                            }
+                        });
+                    } catch (emailError) {
+                        console.error('⚠️ [Procurement] Error enviando email RFQ:', emailError.message);
+                    }
+                }
+            }
+
+            await transaction.commit();
+
+            res.json({
+                success: true,
+                data: {
+                    rfq_id: rfqId,
+                    status: 'published',
+                    invited_suppliers: invitedSuppliers,
+                    message: `RFQ publicada exitosamente. ${invitedSuppliers.length} proveedores invitados.`
+                }
+            });
+
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    } catch (error) {
+        console.error('❌ [Procurement] Error publicando RFQ:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/rfqs/:id/invite
+ * Invitar proveedor adicional a RFQ ya publicada
+ */
+router.post('/rfqs/:id/invite', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+        const companyId = req.user.company_id;
+        const rfqId = req.params.id;
+        const { supplierId } = req.body;
+
+        if (!supplierId) {
+            return res.status(400).json({ success: false, error: 'supplierId es requerido' });
+        }
+
+        // Verificar RFQ
+        const [rfq] = await sequelize.query(`
+            SELECT * FROM request_for_quotations WHERE id = :rfqId AND company_id = :companyId
+        `, {
+            replacements: { rfqId, companyId },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!rfq) {
+            return res.status(404).json({ success: false, error: 'RFQ no encontrada' });
+        }
+
+        if (!['published', 'open'].includes(rfq.status)) {
+            return res.status(400).json({ success: false, error: 'RFQ debe estar publicada para enviar invitaciones' });
+        }
+
+        // Obtener proveedor
+        const [supplier] = await sequelize.query(`
+            SELECT id, name, email, contact_email FROM wms_suppliers
+            WHERE id = :supplierId AND company_id = :companyId AND status = 'active'
+        `, {
+            replacements: { supplierId, companyId },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!supplier) {
+            return res.status(404).json({ success: false, error: 'Proveedor no encontrado o inactivo' });
+        }
+
+        const emailTo = supplier.contact_email || supplier.email;
+
+        // Crear invitación
+        await sequelize.query(`
+            INSERT INTO rfq_invitations
+            (rfq_id, supplier_id, invitation_sent_at, invitation_method, email_sent_to)
+            VALUES (:rfqId, :supplierId, NOW(), 'email', :emailTo)
+            ON CONFLICT (rfq_id, supplier_id) DO UPDATE
+            SET reminder_sent_at = NOW(), reminder_count = rfq_invitations.reminder_count + 1
+        `, {
+            replacements: { rfqId, supplierId, emailTo }
+        });
+
+        // Enviar email
+        try {
+            const SupplierEmailService = require('../services/SupplierEmailService');
+            const emailService = new SupplierEmailService(sequelize);
+
+            const [company] = await sequelize.query(
+                `SELECT name FROM companies WHERE company_id = :companyId`,
+                { replacements: { companyId }, type: sequelize.QueryTypes.SELECT }
+            );
+
+            await emailService.sendRfqInvitation({
+                supplier: { id: supplier.id, name: supplier.name, email: emailTo },
+                company: company || { name: 'APONNT' },
+                rfq: {
+                    id: rfqId,
+                    rfqNumber: rfq.rfq_number,
+                    title: rfq.title,
+                    description: rfq.description,
+                    quotationDeadline: rfq.quotation_deadline
+                }
+            });
+        } catch (emailError) {
+            console.error('⚠️ [Procurement] Error enviando email:', emailError.message);
+        }
+
+        res.json({
+            success: true,
+            data: {
+                supplier: { id: supplier.id, name: supplier.name },
+                email_sent: emailTo,
+                message: 'Invitación enviada exitosamente'
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ [Procurement] Error invitando proveedor:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/rfqs/:id/close
+ * Cerrar RFQ (no acepta más cotizaciones)
+ */
+router.post('/rfqs/:id/close', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+
+        const [result] = await sequelize.query(`
+            UPDATE request_for_quotations
+            SET status = 'closed', closed_at = NOW(), updated_at = NOW()
+            WHERE id = :rfqId AND company_id = :companyId AND status IN ('published', 'open')
+            RETURNING *
+        `, {
+            replacements: { rfqId: req.params.id, companyId: req.user.company_id },
+            type: sequelize.QueryTypes.UPDATE
+        });
+
+        if (result.length === 0) {
+            return res.status(404).json({ success: false, error: 'RFQ no encontrada o no puede cerrarse' });
+        }
+
+        res.json({ success: true, data: result[0], message: 'RFQ cerrada exitosamente' });
+    } catch (error) {
+        console.error('❌ [Procurement] Error cerrando RFQ:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * PUT /api/procurement/rfqs/:id
+ * Actualizar RFQ (solo en estado draft)
+ */
+router.put('/rfqs/:id', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+        const rfqId = req.params.id;
+        const companyId = req.user.company_id;
+
+        const [rfq] = await sequelize.query(`
+            SELECT status FROM request_for_quotations WHERE id = :rfqId AND company_id = :companyId
+        `, {
+            replacements: { rfqId, companyId },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!rfq) {
+            return res.status(404).json({ success: false, error: 'RFQ no encontrada' });
+        }
+
+        if (rfq.status !== 'draft') {
+            return res.status(400).json({ success: false, error: 'Solo RFQs en borrador pueden editarse' });
+        }
+
+        // Actualizar campos permitidos
+        const updates = [];
+        const replacements = { rfqId, companyId };
+
+        if (req.body.title) { updates.push('title = :title'); replacements.title = req.body.title; }
+        if (req.body.description) { updates.push('description = :description'); replacements.description = req.body.description; }
+        if (req.body.quotationDeadline) { updates.push('quotation_deadline = :quotationDeadline'); replacements.quotationDeadline = req.body.quotationDeadline; }
+        if (req.body.deliveryDeadline) { updates.push('delivery_deadline = :deliveryDeadline'); replacements.deliveryDeadline = req.body.deliveryDeadline; }
+        if (req.body.notes) { updates.push('notes = :notes'); replacements.notes = req.body.notes; }
+
+        if (updates.length > 0) {
+            updates.push('updated_at = NOW()');
+            await sequelize.query(`
+                UPDATE request_for_quotations
+                SET ${updates.join(', ')}
+                WHERE id = :rfqId AND company_id = :companyId
+            `, { replacements });
+        }
+
+        res.json({ success: true, message: 'RFQ actualizada exitosamente' });
+    } catch (error) {
+        console.error('❌ [Procurement] Error actualizando RFQ:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * DELETE /api/procurement/rfqs/:id
+ * Cancelar/Eliminar RFQ
+ */
+router.delete('/rfqs/:id', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+
+        await sequelize.query(`
+            UPDATE request_for_quotations
+            SET status = 'cancelled', cancellation_reason = :reason, updated_at = NOW()
+            WHERE id = :rfqId AND company_id = :companyId AND status IN ('draft', 'published')
+        `, {
+            replacements: {
+                rfqId: req.params.id,
+                companyId: req.user.company_id,
+                reason: req.body.reason || 'Cancelada por usuario'
+            }
+        });
+
+        res.json({ success: true, message: 'RFQ cancelada exitosamente' });
+    } catch (error) {
+        console.error('❌ [Procurement] Error cancelando RFQ:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// RFQ - SCORING Y COMPARACIÓN DE COTIZACIONES
+// ============================================
+
+/**
+ * POST /api/procurement/rfqs/:id/evaluate
+ * Evaluar todas las cotizaciones de un RFQ y recomendar la mejor
+ */
+router.post('/rfqs/:id/evaluate', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+        const QuotationScoringService = require('../services/QuotationScoringService');
+        const scoringService = new QuotationScoringService(sequelize);
+
+        const rfqId = req.params.id;
+        const companyId = req.user.company_id;
+
+        // Ejecutar evaluación
+        const evaluation = await scoringService.evaluateRfqQuotations(rfqId, companyId);
+
+        res.json(evaluation);
+    } catch (error) {
+        console.error('❌ [Procurement] Error evaluando cotizaciones:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/rfqs/:id/comparison-report
+ * Generar reporte de comparación para dashboard
+ */
+router.get('/rfqs/:id/comparison-report', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+        const QuotationScoringService = require('../services/QuotationScoringService');
+        const scoringService = new QuotationScoringService(sequelize);
+
+        const rfqId = req.params.id;
+        const companyId = req.user.company_id;
+
+        // Generar reporte con estadísticas
+        const report = await scoringService.generateComparisonReport(rfqId, companyId);
+
+        res.json(report);
+    } catch (error) {
+        console.error('❌ [Procurement] Error generando reporte:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/quotations/compare
+ * Comparar dos cotizaciones específicas lado a lado
+ * Body: { quotationId1: number, quotationId2: number }
+ */
+router.post('/quotations/compare', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+        const QuotationScoringService = require('../services/QuotationScoringService');
+        const scoringService = new QuotationScoringService(sequelize);
+
+        const { quotationId1, quotationId2 } = req.body;
+        const companyId = req.user.company_id;
+
+        if (!quotationId1 || !quotationId2) {
+            return res.status(400).json({
+                success: false,
+                error: 'Se requieren quotationId1 y quotationId2'
+            });
+        }
+
+        // Comparar cotizaciones
+        const comparison = await scoringService.compareQuotations(
+            quotationId1,
+            quotationId2,
+            companyId
+        );
+
+        res.json(comparison);
+    } catch (error) {
+        console.error('❌ [Procurement] Error comparando cotizaciones:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
 // ÓRDENES DE COMPRA
 // ============================================
 
@@ -1013,6 +1697,70 @@ router.get('/suppliers/:id', async (req, res) => {
         res.json({ success: true, data: supplier });
     } catch (error) {
         console.error('❌ [Procurement] Error obteniendo proveedor:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/suppliers/:id/pending-claims
+ * Verificar reclamos pendientes de un proveedor
+ * IMPORTANTE: Usado para validar antes de crear órdenes de pago
+ */
+router.get('/suppliers/:id/pending-claims', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+        const supplierId = req.params.id;
+        const companyId = req.user.company_id;
+
+        // Verificar que el proveedor pertenece a la empresa
+        const supplier = await sequelize.models.ProcurementSupplier.findOne({
+            where: { id: supplierId, company_id: companyId }
+        });
+
+        if (!supplier) {
+            return res.status(404).json({ success: false, error: 'Proveedor no encontrado' });
+        }
+
+        // Buscar reclamos pendientes
+        const [pendingClaims] = await sequelize.query(`
+            SELECT
+                id,
+                claim_number,
+                claim_type,
+                claim_date,
+                description,
+                priority,
+                status,
+                total_affected_amount,
+                resolution_deadline
+            FROM supplier_claims
+            WHERE supplier_id = :supplierId
+              AND company_id = :companyId
+              AND status IN ('submitted', 'acknowledged', 'in_progress', 'escalated')
+            ORDER BY priority DESC, claim_date ASC
+        `, {
+            replacements: { supplierId, companyId },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const hasPendingClaims = pendingClaims && pendingClaims.length > 0;
+
+        res.json({
+            success: true,
+            data: {
+                supplier_id: supplierId,
+                supplier_name: supplier.name,
+                has_pending_claims: hasPendingClaims,
+                pending_claims_count: pendingClaims ? pendingClaims.length : 0,
+                claims: pendingClaims || [],
+                payment_blocked: hasPendingClaims,
+                warning_message: hasPendingClaims
+                    ? `El proveedor tiene ${pendingClaims.length} reclamo(s) pendiente(s). No se podrán crear órdenes de pago hasta resolver los reclamos.`
+                    : 'No hay reclamos pendientes. El proveedor está habilitado para pagos.'
+            }
+        });
+    } catch (error) {
+        console.error('❌ [Procurement] Error verificando reclamos:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

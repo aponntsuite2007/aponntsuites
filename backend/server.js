@@ -2594,6 +2594,15 @@ try {
     console.log('⚠️ [PROCUREMENT] Routes not available:', e.message);
 }
 
+// 🏭 IMPORTAR RUTAS DEL PORTAL DE PROVEEDORES - OPCIONAL EN PRODUCCIÓN
+let supplierPortalRoutes = null;
+try {
+    supplierPortalRoutes = require('./src/routes/supplierPortalRoutes');
+    console.log('✅ [SUPPLIER-PORTAL] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [SUPPLIER-PORTAL] Routes not available:', e.message);
+}
+
 // 💰 IMPORTAR RUTAS DE FINANZAS (Finance Enterprise) - OPCIONAL EN PRODUCCIÓN
 let financeRoutes = null;
 try {
@@ -3599,6 +3608,15 @@ if (siacCajaRoutes) app.use('/api/siac/caja', siacCajaRoutes);
 if (procurementRoutes) {
     app.use('/api/procurement', procurementRoutes);
     console.log('🛒 [PROCUREMENT] Rutas de compras P2P configuradas');
+}
+
+// 🏭 PORTAL DE PROVEEDORES - Enero 2026 - Solo si está disponible
+if (supplierPortalRoutes) {
+    app.use('/api/supplier-portal', supplierPortalRoutes);
+    console.log('🏭 [SUPPLIER-PORTAL] Rutas del portal de proveedores configuradas');
+    console.log('   📍 POST /api/supplier-portal/auth/login - Login portal');
+    console.log('   📍 GET  /api/supplier-portal/dashboard - Dashboard proveedor');
+    console.log('   📍 GET  /api/supplier-portal/offers - Ofertas disponibles');
 }
 
 // 💰 FINANCE ENTERPRISE (Finanzas Empresariales) - Enero 2026 - Solo si está disponible

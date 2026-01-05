@@ -114,6 +114,918 @@
       ]
     }
   },
+  "frontends": {
+    "summary": {
+      "total": 28,
+      "totalLines": 36763,
+      "byType": {
+        "other": [
+          {
+            "filename": "auditor-metrics.html",
+            "type": "other",
+            "title": "Auditor - Métricas de Precisión",
+            "url": "/auditor-metrics.html",
+            "lines": 170,
+            "modules": [
+              "auditor-metrics-dashboard"
+            ],
+            "apiEndpoints": [],
+            "lastModified": "2025-12-16T13:34:17.728Z",
+            "features": [
+              "Gráficos/Dashboards"
+            ]
+          },
+          {
+            "filename": "careers.html",
+            "type": "other",
+            "title": "Bolsa de Trabajo | Aponnt - Oportunidades Laborales",
+            "url": "/careers.html",
+            "lines": 1807,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/job-postings/public/offers",
+              "/api/job-postings/public/companies",
+              "/api/job-postings/public/apply"
+            ],
+            "lastModified": "2026-01-04T02:13:01.783Z",
+            "features": [
+              "Multi-idioma",
+              "Modales dinámicos",
+              "Generación PDF"
+            ]
+          },
+          {
+            "filename": "consent.html",
+            "type": "other",
+            "title": "Consentimiento para Análisis Biométrico",
+            "url": "/consent.html",
+            "lines": 552,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/v1/biometric/consents/accept",
+              "/api/v1/biometric/consents/reject"
+            ],
+            "lastModified": "2025-12-16T13:34:17.730Z",
+            "features": [
+              "Multi-idioma",
+              "Biometría"
+            ]
+          },
+          {
+            "filename": "deploy-manager-3stages.html",
+            "type": "other",
+            "title": "Deploy Manager - 3 Etapas",
+            "url": "/deploy-manager-3stages.html",
+            "lines": 393,
+            "modules": [
+              "deploy-manager-3stages"
+            ],
+            "apiEndpoints": [],
+            "lastModified": "2025-12-16T13:34:17.745Z",
+            "features": [
+              "Multi-idioma"
+            ]
+          },
+          {
+            "filename": "emotional-analysis-dashboard.html",
+            "type": "other",
+            "title": "Análisis Emocional - Bienestar",
+            "url": "/emotional-analysis-dashboard.html",
+            "lines": 522,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/v1"
+            ],
+            "lastModified": "2025-12-16T13:34:17.746Z",
+            "features": [
+              "Multi-idioma",
+              "Gráficos/Dashboards",
+              "Modales dinámicos"
+            ]
+          },
+          {
+            "filename": "for-ai-agents.html",
+            "type": "other",
+            "title": "🤖 AI Agents: APONNT Technical Metadata",
+            "url": "/for-ai-agents.html",
+            "lines": 356,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2026-01-04T02:13:01.788Z",
+            "features": [
+              "Multi-idioma"
+            ]
+          },
+          {
+            "filename": "index.html",
+            "type": "other",
+            "title": "Aponnt - Sistema Integral de RRHH con IA Local | SaaS B2B Multi-Tenant",
+            "url": "/index.html",
+            "lines": 12045,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/contact",
+              "/api/technology-stack/all"
+            ],
+            "lastModified": "2026-01-04T20:30:01.670Z",
+            "features": [
+              "Multi-idioma",
+              "Gráficos/Dashboards",
+              "Tiempo real (WebSocket)",
+              "Biometría",
+              "Generación PDF",
+              "Export Excel"
+            ]
+          },
+          {
+            "filename": "isi-direct.html",
+            "type": "other",
+            "title": "ISI - Acceso Directo",
+            "url": "/isi-direct.html",
+            "lines": 75,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2025-09-25T15:22:57.511Z",
+            "features": []
+          },
+          {
+            "filename": "kiosk-android.html",
+            "type": "other",
+            "title": "🏢 Aponnt - Kiosco Biométrico Android",
+            "url": "/kiosk-android.html",
+            "lines": 509,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/v2/biometric-attendance/verify-real",
+              "/api/v1/health"
+            ],
+            "lastModified": "2025-09-28T05:11:54.743Z",
+            "features": [
+              "Multi-idioma",
+              "Gráficos/Dashboards",
+              "Biometría"
+            ]
+          },
+          {
+            "filename": "kiosk-simple.html",
+            "type": "other",
+            "title": "🏢 Aponnt - Kiosco Simple",
+            "url": "/kiosk-simple.html",
+            "lines": 588,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/v2/biometric-attendance/verify-real",
+              "/api/v1/health"
+            ],
+            "lastModified": "2025-09-28T05:51:05.529Z",
+            "features": [
+              "Multi-idioma",
+              "Biometría"
+            ]
+          },
+          {
+            "filename": "kiosk.html",
+            "type": "other",
+            "title": "🏢 Aponnt - Kiosco Automático",
+            "url": "/kiosk.html",
+            "lines": 2215,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/v2/biometric-attendance/verify-real",
+              "/api/v1/health",
+              "/api/v1/visitors",
+              "/api/v1/config/mobile-connection"
+            ],
+            "lastModified": "2025-10-08T11:52:23.189Z",
+            "features": [
+              "Multi-idioma",
+              "Gráficos/Dashboards",
+              "Modales dinámicos",
+              "Biometría"
+            ]
+          },
+          {
+            "filename": "medical-dashboard.html",
+            "type": "other",
+            "title": "Dashboard Médico Profesional - Sistema Biométrico",
+            "url": "/medical-dashboard.html",
+            "lines": 264,
+            "modules": [
+              "medical-dashboard-professional"
+            ],
+            "apiEndpoints": [
+              "/api/auth/verify"
+            ],
+            "lastModified": "2025-12-16T13:34:17.921Z",
+            "features": []
+          },
+          {
+            "filename": "partner-register.html",
+            "type": "other",
+            "title": "Registro de Partners - Sistema de Asistencia Biométrico",
+            "url": "/partner-register.html",
+            "lines": 860,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2025-12-16T13:34:17.934Z",
+            "features": [
+              "Multi-idioma",
+              "Modales dinámicos"
+            ]
+          },
+          {
+            "filename": "privacidad.html",
+            "type": "other",
+            "title": "Política de Privacidad - Partners Marketplace",
+            "url": "/privacidad.html",
+            "lines": 218,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2025-12-16T13:34:17.936Z",
+            "features": []
+          },
+          {
+            "filename": "process-chain-analytics-demo.html",
+            "type": "other",
+            "title": "Process Chain Analytics Dashboard - Demo",
+            "url": "/process-chain-analytics-demo.html",
+            "lines": 239,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2025-12-16T13:34:17.936Z",
+            "features": []
+          },
+          {
+            "filename": "satisfaction.html",
+            "type": "other",
+            "title": "Tu Opinión | APONNT",
+            "url": "/satisfaction.html",
+            "lines": 377,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2025-12-18T15:40:23.246Z",
+            "features": [
+              "Multi-idioma"
+            ]
+          },
+          {
+            "filename": "support-brain-dashboard.html",
+            "type": "other",
+            "title": "Centro de Conocimiento & Soporte - APONNT",
+            "url": "/support-brain-dashboard.html",
+            "lines": 79,
+            "modules": [
+              "support-brain-dashboard"
+            ],
+            "apiEndpoints": [],
+            "lastModified": "2025-12-16T13:34:17.936Z",
+            "features": []
+          },
+          {
+            "filename": "survey.html",
+            "type": "other",
+            "title": "Encuesta Pre-Reunión | APONNT",
+            "url": "/survey.html",
+            "lines": 645,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2025-12-18T15:40:23.248Z",
+            "features": [
+              "Multi-idioma"
+            ]
+          },
+          {
+            "filename": "terminos.html",
+            "type": "other",
+            "title": "Términos y Condiciones - Partners Marketplace",
+            "url": "/terminos.html",
+            "lines": 142,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2025-12-16T13:34:17.938Z",
+            "features": []
+          },
+          {
+            "filename": "testing-realtime.html",
+            "type": "other",
+            "title": "🧪 Testing WebSocket Tiempo Real",
+            "url": "/testing-realtime.html",
+            "lines": 554,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/test"
+            ],
+            "lastModified": "2025-12-16T13:34:17.940Z",
+            "features": [
+              "Multi-idioma",
+              "Tiempo real (WebSocket)"
+            ]
+          },
+          {
+            "filename": "verify-email.html",
+            "type": "other",
+            "title": "Verificar Email - Aponnt",
+            "url": "/verify-email.html",
+            "lines": 297,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/email-verification/verify"
+            ],
+            "lastModified": "2025-12-16T13:34:17.949Z",
+            "features": [
+              "Multi-idioma"
+            ]
+          }
+        ],
+        "authentication": [
+          {
+            "filename": "force-isi-login.html",
+            "type": "authentication",
+            "title": "ISI - Login Forzado",
+            "url": "/force-isi-login.html",
+            "lines": 52,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2025-09-25T15:25:33.999Z",
+            "features": []
+          }
+        ],
+        "admin": [
+          {
+            "filename": "panel-administrativo.html",
+            "type": "admin",
+            "title": "Panel Administrativo - APONNT",
+            "url": "/panel-administrativo.html",
+            "lines": 777,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2026-01-04T02:13:01.871Z",
+            "features": [
+              "Multi-idioma",
+              "Gráficos/Dashboards",
+              "Tablas de datos",
+              "Export Excel"
+            ]
+          }
+        ],
+        "partners": [
+          {
+            "filename": "panel-asociados.html",
+            "type": "partners",
+            "title": "Aponnt - Portal de Asociados",
+            "url": "/panel-asociados.html",
+            "lines": 2224,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2026-01-01T21:59:57.049Z",
+            "features": [
+              "Multi-idioma",
+              "Gráficos/Dashboards",
+              "Tablas de datos",
+              "Modales dinámicos"
+            ]
+          }
+        ],
+        "company": [
+          {
+            "filename": "panel-empresa.html",
+            "type": "company",
+            "title": "Aponnt - SIN UNDEFINED - v20250926",
+            "url": "/panel-empresa.html",
+            "lines": 7958,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/aponnt/dashboard/companies",
+              "/api/v1/auth/login",
+              "/api/v1/auth/companies",
+              "/api/aponnt/dashboard/admin/operators",
+              "/api/v1/health",
+              "/api/v1/licensing"
+            ],
+            "lastModified": "2026-01-04T20:37:28.220Z",
+            "features": [
+              "Multi-idioma",
+              "Asistente IA integrado",
+              "Gráficos/Dashboards",
+              "Modales dinámicos",
+              "Tiempo real (WebSocket)",
+              "Biometría"
+            ]
+          },
+          {
+            "filename": "siac-panel-empresa.html",
+            "type": "company",
+            "title": "SIAC ERP - Panel Empresa",
+            "url": "/siac-panel-empresa.html",
+            "lines": 632,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2025-09-24T13:42:46.433Z",
+            "features": [
+              "Multi-idioma"
+            ]
+          }
+        ],
+        "client-specific": [
+          {
+            "filename": "panel-isi-direct.html",
+            "type": "client-specific",
+            "title": "ISI - Panel Directo",
+            "url": "/panel-isi-direct.html",
+            "lines": 98,
+            "modules": [],
+            "apiEndpoints": [],
+            "lastModified": "2025-09-25T18:07:58.232Z",
+            "features": []
+          }
+        ],
+        "suppliers": [
+          {
+            "filename": "panel-proveedores.html",
+            "type": "suppliers",
+            "title": "Aponnt - Portal de Proveedores",
+            "url": "/panel-proveedores.html",
+            "lines": 2115,
+            "modules": [],
+            "apiEndpoints": [
+              "/api/supplier-portal"
+            ],
+            "lastModified": "2026-01-04T02:13:01.888Z",
+            "features": [
+              "Multi-idioma",
+              "Gráficos/Dashboards",
+              "Modales dinámicos"
+            ]
+          }
+        ]
+      }
+    },
+    "frontends": [
+      {
+        "filename": "auditor-metrics.html",
+        "type": "other",
+        "title": "Auditor - Métricas de Precisión",
+        "url": "/auditor-metrics.html",
+        "lines": 170,
+        "modules_loaded": 1,
+        "modules": [
+          "auditor-metrics-dashboard"
+        ],
+        "api_endpoints_used": 0,
+        "features": [
+          "Gráficos/Dashboards"
+        ],
+        "last_modified": "2025-12-16T13:34:17.728Z"
+      },
+      {
+        "filename": "careers.html",
+        "type": "other",
+        "title": "Bolsa de Trabajo | Aponnt - Oportunidades Laborales",
+        "url": "/careers.html",
+        "lines": 1807,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 3,
+        "features": [
+          "Multi-idioma",
+          "Modales dinámicos",
+          "Generación PDF"
+        ],
+        "last_modified": "2026-01-04T02:13:01.783Z"
+      },
+      {
+        "filename": "consent.html",
+        "type": "other",
+        "title": "Consentimiento para Análisis Biométrico",
+        "url": "/consent.html",
+        "lines": 552,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 2,
+        "features": [
+          "Multi-idioma",
+          "Biometría"
+        ],
+        "last_modified": "2025-12-16T13:34:17.730Z"
+      },
+      {
+        "filename": "deploy-manager-3stages.html",
+        "type": "other",
+        "title": "Deploy Manager - 3 Etapas",
+        "url": "/deploy-manager-3stages.html",
+        "lines": 393,
+        "modules_loaded": 1,
+        "modules": [
+          "deploy-manager-3stages"
+        ],
+        "api_endpoints_used": 0,
+        "features": [
+          "Multi-idioma"
+        ],
+        "last_modified": "2025-12-16T13:34:17.745Z"
+      },
+      {
+        "filename": "emotional-analysis-dashboard.html",
+        "type": "other",
+        "title": "Análisis Emocional - Bienestar",
+        "url": "/emotional-analysis-dashboard.html",
+        "lines": 522,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 1,
+        "features": [
+          "Multi-idioma",
+          "Gráficos/Dashboards",
+          "Modales dinámicos"
+        ],
+        "last_modified": "2025-12-16T13:34:17.746Z"
+      },
+      {
+        "filename": "for-ai-agents.html",
+        "type": "other",
+        "title": "🤖 AI Agents: APONNT Technical Metadata",
+        "url": "/for-ai-agents.html",
+        "lines": 356,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [
+          "Multi-idioma"
+        ],
+        "last_modified": "2026-01-04T02:13:01.788Z"
+      },
+      {
+        "filename": "force-isi-login.html",
+        "type": "authentication",
+        "title": "ISI - Login Forzado",
+        "url": "/force-isi-login.html",
+        "lines": 52,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [],
+        "last_modified": "2025-09-25T15:25:33.999Z"
+      },
+      {
+        "filename": "index.html",
+        "type": "other",
+        "title": "Aponnt - Sistema Integral de RRHH con IA Local | SaaS B2B Multi-Tenant",
+        "url": "/index.html",
+        "lines": 12045,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 2,
+        "features": [
+          "Multi-idioma",
+          "Gráficos/Dashboards",
+          "Tiempo real (WebSocket)",
+          "Biometría",
+          "Generación PDF",
+          "Export Excel"
+        ],
+        "last_modified": "2026-01-04T20:30:01.670Z"
+      },
+      {
+        "filename": "isi-direct.html",
+        "type": "other",
+        "title": "ISI - Acceso Directo",
+        "url": "/isi-direct.html",
+        "lines": 75,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [],
+        "last_modified": "2025-09-25T15:22:57.511Z"
+      },
+      {
+        "filename": "kiosk-android.html",
+        "type": "other",
+        "title": "🏢 Aponnt - Kiosco Biométrico Android",
+        "url": "/kiosk-android.html",
+        "lines": 509,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 2,
+        "features": [
+          "Multi-idioma",
+          "Gráficos/Dashboards",
+          "Biometría"
+        ],
+        "last_modified": "2025-09-28T05:11:54.743Z"
+      },
+      {
+        "filename": "kiosk-simple.html",
+        "type": "other",
+        "title": "🏢 Aponnt - Kiosco Simple",
+        "url": "/kiosk-simple.html",
+        "lines": 588,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 2,
+        "features": [
+          "Multi-idioma",
+          "Biometría"
+        ],
+        "last_modified": "2025-09-28T05:51:05.529Z"
+      },
+      {
+        "filename": "kiosk.html",
+        "type": "other",
+        "title": "🏢 Aponnt - Kiosco Automático",
+        "url": "/kiosk.html",
+        "lines": 2215,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 4,
+        "features": [
+          "Multi-idioma",
+          "Gráficos/Dashboards",
+          "Modales dinámicos",
+          "Biometría"
+        ],
+        "last_modified": "2025-10-08T11:52:23.189Z"
+      },
+      {
+        "filename": "medical-dashboard.html",
+        "type": "other",
+        "title": "Dashboard Médico Profesional - Sistema Biométrico",
+        "url": "/medical-dashboard.html",
+        "lines": 264,
+        "modules_loaded": 1,
+        "modules": [
+          "medical-dashboard-professional"
+        ],
+        "api_endpoints_used": 1,
+        "features": [],
+        "last_modified": "2025-12-16T13:34:17.921Z"
+      },
+      {
+        "filename": "panel-administrativo.html",
+        "type": "admin",
+        "title": "Panel Administrativo - APONNT",
+        "url": "/panel-administrativo.html",
+        "lines": 777,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [
+          "Multi-idioma",
+          "Gráficos/Dashboards",
+          "Tablas de datos",
+          "Export Excel"
+        ],
+        "last_modified": "2026-01-04T02:13:01.871Z"
+      },
+      {
+        "filename": "panel-asociados.html",
+        "type": "partners",
+        "title": "Aponnt - Portal de Asociados",
+        "url": "/panel-asociados.html",
+        "lines": 2224,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [
+          "Multi-idioma",
+          "Gráficos/Dashboards",
+          "Tablas de datos",
+          "Modales dinámicos"
+        ],
+        "last_modified": "2026-01-01T21:59:57.049Z"
+      },
+      {
+        "filename": "panel-empresa.html",
+        "type": "company",
+        "title": "Aponnt - SIN UNDEFINED - v20250926",
+        "url": "/panel-empresa.html",
+        "lines": 7958,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 6,
+        "features": [
+          "Multi-idioma",
+          "Asistente IA integrado",
+          "Gráficos/Dashboards",
+          "Modales dinámicos",
+          "Tiempo real (WebSocket)",
+          "Biometría"
+        ],
+        "last_modified": "2026-01-04T20:37:28.220Z"
+      },
+      {
+        "filename": "panel-isi-direct.html",
+        "type": "client-specific",
+        "title": "ISI - Panel Directo",
+        "url": "/panel-isi-direct.html",
+        "lines": 98,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [],
+        "last_modified": "2025-09-25T18:07:58.232Z"
+      },
+      {
+        "filename": "panel-proveedores.html",
+        "type": "suppliers",
+        "title": "Aponnt - Portal de Proveedores",
+        "url": "/panel-proveedores.html",
+        "lines": 2115,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 1,
+        "features": [
+          "Multi-idioma",
+          "Gráficos/Dashboards",
+          "Modales dinámicos"
+        ],
+        "last_modified": "2026-01-04T02:13:01.888Z"
+      },
+      {
+        "filename": "partner-register.html",
+        "type": "other",
+        "title": "Registro de Partners - Sistema de Asistencia Biométrico",
+        "url": "/partner-register.html",
+        "lines": 860,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [
+          "Multi-idioma",
+          "Modales dinámicos"
+        ],
+        "last_modified": "2025-12-16T13:34:17.934Z"
+      },
+      {
+        "filename": "privacidad.html",
+        "type": "other",
+        "title": "Política de Privacidad - Partners Marketplace",
+        "url": "/privacidad.html",
+        "lines": 218,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [],
+        "last_modified": "2025-12-16T13:34:17.936Z"
+      },
+      {
+        "filename": "process-chain-analytics-demo.html",
+        "type": "other",
+        "title": "Process Chain Analytics Dashboard - Demo",
+        "url": "/process-chain-analytics-demo.html",
+        "lines": 239,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [],
+        "last_modified": "2025-12-16T13:34:17.936Z"
+      },
+      {
+        "filename": "satisfaction.html",
+        "type": "other",
+        "title": "Tu Opinión | APONNT",
+        "url": "/satisfaction.html",
+        "lines": 377,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [
+          "Multi-idioma"
+        ],
+        "last_modified": "2025-12-18T15:40:23.246Z"
+      },
+      {
+        "filename": "siac-panel-empresa.html",
+        "type": "company",
+        "title": "SIAC ERP - Panel Empresa",
+        "url": "/siac-panel-empresa.html",
+        "lines": 632,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [
+          "Multi-idioma"
+        ],
+        "last_modified": "2025-09-24T13:42:46.433Z"
+      },
+      {
+        "filename": "support-brain-dashboard.html",
+        "type": "other",
+        "title": "Centro de Conocimiento & Soporte - APONNT",
+        "url": "/support-brain-dashboard.html",
+        "lines": 79,
+        "modules_loaded": 1,
+        "modules": [
+          "support-brain-dashboard"
+        ],
+        "api_endpoints_used": 0,
+        "features": [],
+        "last_modified": "2025-12-16T13:34:17.936Z"
+      },
+      {
+        "filename": "survey.html",
+        "type": "other",
+        "title": "Encuesta Pre-Reunión | APONNT",
+        "url": "/survey.html",
+        "lines": 645,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [
+          "Multi-idioma"
+        ],
+        "last_modified": "2025-12-18T15:40:23.248Z"
+      },
+      {
+        "filename": "terminos.html",
+        "type": "other",
+        "title": "Términos y Condiciones - Partners Marketplace",
+        "url": "/terminos.html",
+        "lines": 142,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 0,
+        "features": [],
+        "last_modified": "2025-12-16T13:34:17.938Z"
+      },
+      {
+        "filename": "testing-realtime.html",
+        "type": "other",
+        "title": "🧪 Testing WebSocket Tiempo Real",
+        "url": "/testing-realtime.html",
+        "lines": 554,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 1,
+        "features": [
+          "Multi-idioma",
+          "Tiempo real (WebSocket)"
+        ],
+        "last_modified": "2025-12-16T13:34:17.940Z"
+      },
+      {
+        "filename": "verify-email.html",
+        "type": "other",
+        "title": "Verificar Email - Aponnt",
+        "url": "/verify-email.html",
+        "lines": 297,
+        "modules_loaded": 0,
+        "modules": [],
+        "api_endpoints_used": 1,
+        "features": [
+          "Multi-idioma"
+        ],
+        "last_modified": "2025-12-16T13:34:17.949Z"
+      }
+    ]
+  },
+  "mobileApps": {
+    "summary": {
+      "total": 2,
+      "total_size_mb": "138.34",
+      "platforms": [
+        "Android"
+      ],
+      "framework": "Flutter 3.x"
+    },
+    "apps": [
+      {
+        "filename": "attendance-system.apk",
+        "purpose": "Employee Mobile App - Para empleados marcar asistencia desde móvil",
+        "size_mb": "63.30",
+        "size_bytes": 66379722,
+        "download_url": "/downloads/attendance-system.apk",
+        "platform": "Android",
+        "framework": "Flutter 3.x",
+        "last_modified": "2025-09-24T00:34:10.904Z",
+        "features": [
+          "Marcación desde móvil (geolocalizada)",
+          "Selfie con validación facial",
+          "Visualización de turnos asignados",
+          "Historial de asistencias",
+          "Solicitud de ausencias",
+          "Notificaciones de turnos próximos"
+        ]
+      },
+      {
+        "filename": "kiosk-app.apk",
+        "purpose": "Kiosk Terminal App - Para dispositivos de marcación biométrica fija",
+        "size_mb": "75.04",
+        "size_bytes": 78680819,
+        "download_url": "/downloads/kiosk-app.apk",
+        "platform": "Android",
+        "framework": "Flutter 3.x",
+        "last_modified": "2025-10-19T01:09:10.226Z",
+        "features": [
+          "Marcación biométrica (huella + facial)",
+          "Modo kiosko (bloqueo de navegación)",
+          "Sincronización continua con backend",
+          "Cache local de empleados",
+          "Alertas visuales/sonoras",
+          "Función de mantenimiento/debug"
+        ]
+      }
+    ]
+  },
   "modules": {
     "summary": {
       "total_modules": 72,
@@ -8629,12 +9541,14 @@
     "github": "Private repository - disponible para auditoría bajo NDA"
   },
   "_metadata": {
-    "generated_at": "2026-01-05T00:44:24.923Z",
-    "data_source": "Auto-generated from Brain engineering-metadata.js + modules-registry.json",
-    "version": "4.0.0",
+    "generated_at": "2026-01-05T01:05:53.617Z",
+    "data_source": "Auto-generated from Brain engineering-metadata.js + modules-registry.json + filesystem scan",
+    "version": "4.1.0",
     "total_modules_in_registry": 72,
     "client_visible_modules": 71,
     "engineering_metadata_lines": 22092,
+    "total_frontends": 28,
+    "total_mobile_apps": 2,
     "transparency_level": "RADICAL - Exposing full system architecture for objective AI analysis"
   }
 }

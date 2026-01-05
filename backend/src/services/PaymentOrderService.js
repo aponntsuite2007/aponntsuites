@@ -67,6 +67,28 @@ class PaymentOrderService {
                 throw new Error('Proveedor no encontrado');
             }
 
+            // VALIDACIÓN: Verificar reclamos pendientes
+            if (!data.override_claims_validation) {
+                const pendingClaims = await this.db.sequelize.query(`
+                    SELECT COUNT(*) as count, STRING_AGG(claim_number, ', ') as claim_numbers
+                    FROM supplier_claims
+                    WHERE supplier_id = :supplierId
+                      AND company_id = :companyId
+                      AND status IN ('submitted', 'acknowledged', 'in_progress', 'escalated')
+                `, {
+                    replacements: { supplierId: data.supplier_id, companyId: data.company_id },
+                    type: this.db.sequelize.QueryTypes.SELECT,
+                    transaction
+                });
+
+                if (pendingClaims[0] && parseInt(pendingClaims[0].count) > 0) {
+                    throw new Error(
+                        `No se puede crear orden de pago. El proveedor "${supplier.name}" tiene ${pendingClaims[0].count} reclamo(s) pendiente(s): ${pendingClaims[0].claim_numbers}. ` +
+                        `Debe resolver los reclamos antes de procesar pagos.`
+                    );
+                }
+            }
+
             // Calcular totales desde los items
             let totalAmount = 0;
             let totalRetentions = 0;
@@ -295,6 +317,28 @@ class PaymentOrderService {
                 throw new Error('Orden de pago no encontrada');
             }
 
+            // SAFETY CHECK: Verificar reclamos pendientes antes de ejecutar
+            if (!paymentData.override_claims_validation) {
+                const pendingClaims = await this.db.sequelize.query(`
+                    SELECT COUNT(*) as count, STRING_AGG(claim_number, ', ') as claim_numbers
+                    FROM supplier_claims
+                    WHERE supplier_id = :supplierId
+                      AND company_id = :companyId
+                      AND status IN ('submitted', 'acknowledged', 'in_progress', 'escalated')
+                `, {
+                    replacements: { supplierId: order.supplier_id, companyId: order.company_id },
+                    type: this.db.sequelize.QueryTypes.SELECT,
+                    transaction
+                });
+
+                if (pendingClaims[0] && parseInt(pendingClaims[0].count) > 0) {
+                    throw new Error(
+                        `No se puede ejecutar el pago. El proveedor "${order.supplier_name}" tiene ${pendingClaims[0].count} reclamo(s) pendiente(s): ${pendingClaims[0].claim_numbers}. ` +
+                        `Debe resolver los reclamos antes de ejecutar el pago.`
+                    );
+                }
+            }
+
             // Marcar como en ejecución
             await order.execute(userId, paymentData);
             await order.save({ transaction });
@@ -367,6 +411,40 @@ class PaymentOrderService {
             // Marcar como ejecutada
             await order.markExecuted(userId, cashMovementId, null);
             await order.save({ transaction });
+
+            // INTEGRACIÓN FINANCE: Crear asiento contable automático
+            let journalEntryId = null;
+            try {
+                const FinanceAutoPostingService = require('./FinanceAutoPostingService');
+
+                // Inicializar servicio si no está inicializado
+                if (!FinanceAutoPostingService.initialized) {
+                    await FinanceAutoPostingService.initialize(order.company_id);
+                }
+
+                // Generar asiento contable
+                const journalEntry = await FinanceAutoPostingService.postPaymentOrder(
+                    order.company_id,
+                    order.id,
+                    userId
+                );
+
+                if (journalEntry) {
+                    journalEntryId = journalEntry.id;
+                    console.log(`✅ [PAYMENT ORDER] Asiento contable ${journalEntry.entry_number} generado automáticamente para OP ${order.order_number}`);
+
+                    // Actualizar referencia en la orden
+                    order.payment_details = {
+                        ...order.payment_details,
+                        journal_entry_id: journalEntryId
+                    };
+                    await order.save({ transaction });
+                }
+            } catch (financeError) {
+                console.error(`⚠️ [PAYMENT ORDER] Error generando asiento contable para OP ${order.order_number}:`, financeError.message);
+                // No hacer rollback de la transacción principal, solo logear el error
+                // El pago se ejecuta igual aunque falle la contabilización
+            }
 
             await transaction.commit();
 

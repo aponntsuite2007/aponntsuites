@@ -26,6 +26,219 @@ class BrainLLMContextGenerator {
     this.metadataPath = path.join(this.backendPath, 'engineering-metadata.js');
     this.registryPath = path.join(this.backendPath, 'src/auditor/registry/modules-registry.json');
     this.outputPath = path.join(this.backendPath, 'public/llm-context.json');
+    this.publicPath = path.join(this.backendPath, 'public');
+    this.downloadsPath = path.join(this.publicPath, 'downloads');
+  }
+
+  /**
+   * Detecta todos los frontends HTML en public/
+   */
+  detectFrontends() {
+    console.log('🔍 [FRONTENDS] Detectando frontends HTML...');
+
+    try {
+      const files = fs.readdirSync(this.publicPath);
+      const frontends = [];
+
+      // Filtrar solo archivos .html (excluir backups, test, legacy)
+      const excludePatterns = ['-BACKUP-', '-legacy', 'test-', 'debug', '.before-'];
+
+      for (const file of files) {
+        if (!file.endsWith('.html')) continue;
+        if (excludePatterns.some(pattern => file.includes(pattern))) continue;
+
+        const filePath = path.join(this.publicPath, file);
+        const stats = fs.statSync(filePath);
+
+        frontends.push({
+          filename: file,
+          path: filePath,
+          size: stats.size,
+          lines: this.countLines(filePath),
+          lastModified: stats.mtime
+        });
+      }
+
+      console.log(`   ✅ ${frontends.length} frontends detectados`);
+      return frontends;
+    } catch (error) {
+      console.error('   ❌ Error detectando frontends:', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Detecta APKs móviles en public/downloads/
+   */
+  detectMobileApps() {
+    console.log('📱 [MOBILE APPS] Detectando APKs...');
+
+    try {
+      if (!fs.existsSync(this.downloadsPath)) {
+        console.log('   ⚠️  Directorio downloads no existe');
+        return [];
+      }
+
+      const files = fs.readdirSync(this.downloadsPath);
+      const apps = [];
+
+      for (const file of files) {
+        if (!file.endsWith('.apk')) continue;
+
+        const filePath = path.join(this.downloadsPath, file);
+        const stats = fs.statSync(filePath);
+
+        apps.push({
+          filename: file,
+          path: filePath,
+          size: stats.size,
+          sizeMB: (stats.size / (1024 * 1024)).toFixed(2),
+          lastModified: stats.mtime
+        });
+      }
+
+      console.log(`   ✅ ${apps.length} APKs detectadas`);
+      return apps;
+    } catch (error) {
+      console.error('   ❌ Error detectando APKs:', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Analiza un frontend HTML para extraer metadata
+   */
+  analyzeFrontend(frontendInfo) {
+    try {
+      const content = fs.readFileSync(frontendInfo.path, 'utf-8');
+
+      // Detectar tipo de panel
+      const type = this.detectFrontendType(frontendInfo.filename);
+
+      // Detectar módulos JS que carga
+      const modules = this.extractLoadedModules(content);
+
+      // Detectar endpoints API que usa
+      const apiEndpoints = this.extractAPIEndpoints(content);
+
+      // Detectar título/descripción
+      const title = this.extractTitle(content);
+
+      return {
+        filename: frontendInfo.filename,
+        type: type,
+        title: title,
+        url: `/${frontendInfo.filename}`,
+        lines: frontendInfo.lines,
+        modules: modules,
+        apiEndpoints: apiEndpoints,
+        lastModified: frontendInfo.lastModified,
+        features: this.detectFrontendFeatures(content, type)
+      };
+    } catch (error) {
+      console.error(`   ❌ Error analizando ${frontendInfo.filename}:`, error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Detecta tipo de frontend por nombre de archivo
+   */
+  detectFrontendType(filename) {
+    if (filename.includes('panel-administrativo')) return 'admin';
+    if (filename.includes('panel-empresa')) return 'company';
+    if (filename.includes('panel-asociados')) return 'partners';
+    if (filename.includes('panel-proveedores')) return 'suppliers';
+    if (filename.includes('siac')) return 'invoicing';
+    if (filename.includes('login')) return 'authentication';
+    if (filename.includes('panel-isi')) return 'client-specific';
+    return 'other';
+  }
+
+  /**
+   * Extrae módulos JS que carga el frontend
+   */
+  extractLoadedModules(content) {
+    const modules = [];
+    const regex = /import\s+.*?from\s+['"]\.\/js\/modules\/(.*?)\.js['"]/g;
+    let match;
+
+    while ((match = regex.exec(content)) !== null) {
+      modules.push(match[1]);
+    }
+
+    // También buscar pattern antiguo: <script src="js/modules/...">
+    const scriptRegex = /<script[^>]+src=["']\.?\/js\/modules\/(.*?)\.js["']/g;
+    while ((match = scriptRegex.exec(content)) !== null) {
+      modules.push(match[1]);
+    }
+
+    return [...new Set(modules)]; // Únicos
+  }
+
+  /**
+   * Extrae endpoints API mencionados
+   */
+  extractAPIEndpoints(content) {
+    const endpoints = [];
+    const regex = /['"`](\/api\/[a-zA-Z0-9\/_\-]+)['"`]/g;
+    let match;
+
+    while ((match = regex.exec(content)) !== null) {
+      endpoints.push(match[1]);
+    }
+
+    return [...new Set(endpoints)].slice(0, 20); // Primeros 20 únicos
+  }
+
+  /**
+   * Extrae título del HTML
+   */
+  extractTitle(content) {
+    const titleMatch = content.match(/<title>(.*?)<\/title>/i);
+    if (titleMatch) return titleMatch[1].trim();
+
+    const h1Match = content.match(/<h1[^>]*>(.*?)<\/h1>/i);
+    if (h1Match) return h1Match[1].replace(/<[^>]*>/g, '').trim();
+
+    return 'Sin título';
+  }
+
+  /**
+   * Detecta features del frontend basado en contenido
+   */
+  detectFrontendFeatures(content, type) {
+    const features = [];
+
+    if (content.includes('i18n') || content.includes('translate')) {
+      features.push('Multi-idioma');
+    }
+    if (content.includes('ModuleHelpSystem') || content.includes('ai-assistant')) {
+      features.push('Asistente IA integrado');
+    }
+    if (content.includes('Chart.js') || content.includes('canvas')) {
+      features.push('Gráficos/Dashboards');
+    }
+    if (content.includes('DataTable') || content.includes('table-')) {
+      features.push('Tablas de datos');
+    }
+    if (content.includes('modal') || content.includes('Modal')) {
+      features.push('Modales dinámicos');
+    }
+    if (content.includes('WebSocket') || content.includes('ws://')) {
+      features.push('Tiempo real (WebSocket)');
+    }
+    if (content.includes('biometric') || content.includes('fingerprint')) {
+      features.push('Biometría');
+    }
+    if (content.includes('pdf') || content.includes('jsPDF')) {
+      features.push('Generación PDF');
+    }
+    if (content.includes('excel') || content.includes('xlsx')) {
+      features.push('Export Excel');
+    }
+
+    return features;
   }
 
   /**
@@ -36,6 +249,11 @@ class BrainLLMContextGenerator {
 
     const metadata = this.loadEngineeringMetadata();
     const registry = this.loadModulesRegistry();
+
+    // Detectar frontends y mobile apps
+    const frontends = this.detectFrontends();
+    const mobileApps = this.detectMobileApps();
+    console.log('');
 
     const context = {
       "@context": "https://schema.org",
@@ -48,6 +266,12 @@ class BrainLLMContextGenerator {
 
       // Technology stack (REAL)
       technologyStack: this.generateTechStack(metadata),
+
+      // Frontends (AUTO-DETECTED)
+      frontends: this.generateFrontendsSection(frontends),
+
+      // Mobile Apps (AUTO-DETECTED)
+      mobileApps: this.generateMobileAppsSection(mobileApps),
 
       // Modules (COMPLETE)
       modules: this.generateModulesSection(metadata, registry),
@@ -79,11 +303,13 @@ class BrainLLMContextGenerator {
       // Metadata
       _metadata: {
         generated_at: new Date().toISOString(),
-        data_source: "Auto-generated from Brain engineering-metadata.js + modules-registry.json",
-        version: "4.0.0",
+        data_source: "Auto-generated from Brain engineering-metadata.js + modules-registry.json + filesystem scan",
+        version: "4.1.0",
         total_modules_in_registry: registry.modules ? Object.keys(registry.modules).length : 48,
         client_visible_modules: this.countClientVisibleModules(registry),
         engineering_metadata_lines: this.countLines(this.metadataPath),
+        total_frontends: frontends.length,
+        total_mobile_apps: mobileApps.length,
         transparency_level: "RADICAL - Exposing full system architecture for objective AI analysis"
       }
     };
@@ -93,6 +319,8 @@ class BrainLLMContextGenerator {
 
     console.log(`✅ llm-context.json generado exitosamente`);
     console.log(`📊 Total módulos: ${context._metadata.total_modules_in_registry}`);
+    console.log(`🎨 Total frontends: ${context._metadata.total_frontends}`);
+    console.log(`📱 Total mobile apps: ${context._metadata.total_mobile_apps}`);
     console.log(`📄 Líneas metadata: ${context._metadata.engineering_metadata_lines}`);
     console.log(`📍 Archivo: ${this.outputPath}\n`);
 
@@ -179,6 +407,133 @@ Si evalúas este sistema, tendrás acceso a información que NO está disponible
 
 📈 FILOSOFÍA:
 "El mejor marketing es la transparencia absoluta cuando tienes un producto sólido."`;
+  }
+
+  /**
+   * Genera sección de frontends
+   */
+  generateFrontendsSection(frontends) {
+    console.log('🎨 [FRONTENDS] Generando sección de frontends...');
+
+    const analyzed = frontends
+      .map(f => this.analyzeFrontend(f))
+      .filter(f => f !== null);
+
+    const summary = {
+      total: analyzed.length,
+      totalLines: analyzed.reduce((sum, f) => sum + f.lines, 0),
+      byType: {}
+    };
+
+    // Agrupar por tipo
+    for (const frontend of analyzed) {
+      if (!summary.byType[frontend.type]) {
+        summary.byType[frontend.type] = [];
+      }
+      summary.byType[frontend.type].push(frontend);
+    }
+
+    console.log(`   ✅ ${analyzed.length} frontends analizados`);
+
+    return {
+      summary: summary,
+      frontends: analyzed.map(f => ({
+        filename: f.filename,
+        type: f.type,
+        title: f.title,
+        url: f.url,
+        lines: f.lines,
+        modules_loaded: f.modules.length,
+        modules: f.modules,
+        api_endpoints_used: f.apiEndpoints.length,
+        features: f.features,
+        last_modified: f.lastModified
+      }))
+    };
+  }
+
+  /**
+   * Genera sección de mobile apps
+   */
+  generateMobileAppsSection(apps) {
+    console.log('📱 [MOBILE APPS] Generando sección de APKs...');
+
+    const analyzed = apps.map(app => ({
+      filename: app.filename,
+      purpose: this.detectAPKPurpose(app.filename),
+      size_mb: app.sizeMB,
+      size_bytes: app.size,
+      download_url: `/downloads/${app.filename}`,
+      platform: 'Android',
+      framework: 'Flutter 3.x',
+      last_modified: app.lastModified,
+      features: this.detectAPKFeatures(app.filename)
+    }));
+
+    console.log(`   ✅ ${analyzed.length} APKs procesadas`);
+
+    return {
+      summary: {
+        total: analyzed.length,
+        total_size_mb: analyzed.reduce((sum, app) => sum + parseFloat(app.size_mb), 0).toFixed(2),
+        platforms: ['Android'],
+        framework: 'Flutter 3.x'
+      },
+      apps: analyzed
+    };
+  }
+
+  /**
+   * Detecta propósito de la APK por nombre
+   */
+  detectAPKPurpose(filename) {
+    if (filename.includes('kiosk')) {
+      return 'Kiosk Terminal App - Para dispositivos de marcación biométrica fija';
+    }
+    if (filename.includes('attendance-system') || filename.includes('employee')) {
+      return 'Employee Mobile App - Para empleados marcar asistencia desde móvil';
+    }
+    if (filename.includes('medic') || filename.includes('doctor')) {
+      return 'Medical Professional App - Para médicos ocupacionales';
+    }
+    return 'Mobile Application';
+  }
+
+  /**
+   * Detecta features de la APK por nombre
+   */
+  detectAPKFeatures(filename) {
+    const features = [
+      'Autenticación biométrica (huella + facial)',
+      'Sincronización offline con resolución de conflictos',
+      'Notificaciones push',
+      'GPS tracking (si es app de empleado)',
+      'Captura de fotos'
+    ];
+
+    if (filename.includes('kiosk')) {
+      return [
+        'Marcación biométrica (huella + facial)',
+        'Modo kiosko (bloqueo de navegación)',
+        'Sincronización continua con backend',
+        'Cache local de empleados',
+        'Alertas visuales/sonoras',
+        'Función de mantenimiento/debug'
+      ];
+    }
+
+    if (filename.includes('attendance')) {
+      return [
+        'Marcación desde móvil (geolocalizada)',
+        'Selfie con validación facial',
+        'Visualización de turnos asignados',
+        'Historial de asistencias',
+        'Solicitud de ausencias',
+        'Notificaciones de turnos próximos'
+      ];
+    }
+
+    return features;
   }
 
   /**

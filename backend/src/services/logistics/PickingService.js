@@ -700,7 +700,7 @@ class PickingService {
     static async getPackageTypes(companyId) {
         const query = `
             SELECT * FROM logistics_package_types
-            WHERE company_id = $1 AND is_active = true
+            WHERE company_id = $1 AND active = true
             ORDER BY name
         `;
         const result = await pool.query(query, [companyId]);
@@ -721,7 +721,7 @@ class PickingService {
             INSERT INTO logistics_package_types (
                 company_id, code, name, max_weight,
                 max_length, max_width, max_height, max_volume,
-                tare_weight, is_active, created_at
+                tare_weight, active, created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, NOW())
             RETURNING *
         `;
