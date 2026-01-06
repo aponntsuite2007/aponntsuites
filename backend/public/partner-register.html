@@ -290,6 +290,30 @@
                 width: 100%;
             }
         }
+
+        /* Password toggle styles */
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            z-index: 10;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -342,13 +366,19 @@
 
                         <div class="form-group">
                             <label>Contraseña <span class="required">*</span></label>
-                            <input type="password" name="password" class="form-control" minlength="6" required />
+                            <div class="password-container">
+                                <input type="password" id="password" name="password" class="form-control" minlength="6" required style="padding-right: 40px;" />
+                                <button type="button" class="password-toggle" onclick="togglePassword('password', this)">👁️</button>
+                            </div>
                             <div class="help-text">Mínimo 6 caracteres</div>
                         </div>
 
                         <div class="form-group">
                             <label>Confirmar Contraseña <span class="required">*</span></label>
-                            <input type="password" name="passwordConfirm" class="form-control" required />
+                            <div class="password-container">
+                                <input type="password" id="passwordConfirm" name="passwordConfirm" class="form-control" required style="padding-right: 40px;" />
+                                <button type="button" class="password-toggle" onclick="togglePassword('passwordConfirm', this)">👁️</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -528,6 +558,25 @@
     </div>
 
     <script>
+        // ============================================
+        // 👁️ PASSWORD TOGGLE FUNCTION
+        // ============================================
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            const isPassword = input.type === 'password';
+
+            input.type = isPassword ? 'text' : 'password';
+            button.textContent = isPassword ? '🙈' : '👁️';
+
+            // Mantener el foco en el input
+            input.focus();
+
+            // Posicionar el cursor al final del texto
+            setTimeout(() => {
+                input.selectionStart = input.selectionEnd = input.value.length;
+            }, 0);
+        }
+
         (function() {
             let currentStep = 1;
             const totalSteps = 3;

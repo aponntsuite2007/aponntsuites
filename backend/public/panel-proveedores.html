@@ -524,6 +524,30 @@
         .alert-error { border-left: 3px solid var(--accent-red); }
         .alert-warning { border-left: 3px solid var(--accent-orange); }
         .alert-info { border-left: 3px solid var(--accent-blue); }
+
+        /* Password toggle styles */
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            z-index: 10;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .password-toggle:hover {
+            color: var(--accent-blue);
+        }
     </style>
 </head>
 <body>
@@ -546,7 +570,10 @@
 
                 <div class="form-group">
                     <label class="form-label">Contraseña</label>
-                    <input type="password" id="loginPassword" class="form-control-dark" placeholder="••••••••" required>
+                    <div class="password-container">
+                        <input type="password" id="loginPassword" class="form-control-dark" placeholder="••••••••" required style="padding-right: 40px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)">👁️</button>
+                    </div>
                 </div>
 
                 <div id="loginError" class="alert-dark alert-error hidden" style="margin-bottom: 20px;"></div>
@@ -986,6 +1013,25 @@
     <script src="js/core/ModuleHelpSystem.js"></script>
 
     <script>
+    // ============================================================================
+    // 👁️ PASSWORD TOGGLE FUNCTION
+    // ============================================================================
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+        const isPassword = input.type === 'password';
+
+        input.type = isPassword ? 'text' : 'password';
+        button.textContent = isPassword ? '🙈' : '👁️';
+
+        // Mantener el foco en el input
+        input.focus();
+
+        // Posicionar el cursor al final del texto
+        setTimeout(() => {
+            input.selectionStart = input.selectionEnd = input.value.length;
+        }, 0);
+    }
+
     // ============================================================================
     // 💡 REGISTRO DE AYUDA CONTEXTUAL - PORTAL DE PROVEEDORES
     // ============================================================================

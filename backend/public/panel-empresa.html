@@ -1065,7 +1065,10 @@
                 <!-- PASO 3: CONTRASEÑA -->
                 <div class="form-group">
                     <label for="passwordInput" data-translate="login.password">Contraseña:</label>
-                    <input type="password" id="passwordInput" class="form-control" required disabled>
+                    <div class="password-container">
+                        <input type="password" id="passwordInput" class="form-control" required disabled style="padding-right: 40px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword('passwordInput', this)">👁️</button>
+                    </div>
                     <div class="error-message" id="passwordError"></div>
                 </div>
 
