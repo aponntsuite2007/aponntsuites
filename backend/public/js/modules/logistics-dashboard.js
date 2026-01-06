@@ -14,6 +14,125 @@
     'use strict';
 
     // ============================================================================
+    // 💡 SISTEMA DE AYUDA CONTEXTUAL
+    // ============================================================================
+    if (typeof ModuleHelpSystem !== 'undefined') {
+        ModuleHelpSystem.registerModule('logistics-dashboard', {
+            moduleName: 'Dashboard Logística',
+            moduleDescription: 'Panel de gestión de logística, transportes y distribución',
+            contexts: {
+                overview: {
+                    title: 'Dashboard Logística',
+                    description: 'Vista general de operaciones logísticas',
+                    tips: [
+                        'Revisa el estado de envíos en tiempo real',
+                        'Gestiona vehículos, conductores y rutas',
+                        'Monitorea métricas de desempeño logístico'
+                    ],
+                    warnings: ['Actualiza el estado de los envíos oportunamente'],
+                    helpTopics: ['¿Cómo crear un envío?', '¿Cómo asignar vehículos?', '¿Cómo rastrear entregas?'],
+                    fieldHelp: {
+                        shipmentStatus: 'Estado del envío: pendiente, en tránsito, entregado',
+                        vehicle: 'Vehículo asignado al envío',
+                        driver: 'Conductor asignado',
+                        route: 'Ruta planificada para la entrega'
+                    }
+                },
+                warehouses: {
+                    title: 'Gestión de Almacenes',
+                    description: 'Administración de almacenes y ubicaciones',
+                    tips: [
+                        'Configura zonas y ubicaciones por almacén',
+                        'Define tipos de ubicación según tus necesidades',
+                        'Monitorea el nivel de ocupación'
+                    ],
+                    warnings: ['Asegúrate de tener almacenes configurados antes de recibir inventario'],
+                    helpTopics: ['¿Cómo crear un almacén?', '¿Cómo definir ubicaciones?'],
+                    fieldHelp: {
+                        warehouseName: 'Nombre descriptivo del almacén',
+                        warehouseCode: 'Código único para identificación',
+                        locationType: 'Tipo: zona de recibo, almacenamiento, picking, etc.'
+                    }
+                },
+                inventory: {
+                    title: 'Control de Inventario',
+                    description: 'Gestión de stock y movimientos',
+                    tips: [
+                        'Realiza conteos cíclicos regularmente',
+                        'Controla lotes y fechas de vencimiento',
+                        'Configura alertas de stock mínimo'
+                    ],
+                    warnings: ['Los ajustes de inventario requieren autorización'],
+                    helpTopics: ['¿Cómo realizar un ajuste?', '¿Cómo transferir entre almacenes?'],
+                    fieldHelp: {
+                        lot: 'Número de lote del producto',
+                        expiryDate: 'Fecha de vencimiento',
+                        quantity: 'Cantidad disponible'
+                    }
+                },
+                picking: {
+                    title: 'Picking (Preparación)',
+                    description: 'Gestión de olas de picking',
+                    tips: [
+                        'Agrupa pedidos en olas para optimizar rutas',
+                        'Asigna operadores según disponibilidad',
+                        'Prioriza pedidos urgentes'
+                    ],
+                    warnings: ['Verifica que el stock esté disponible antes de crear olas'],
+                    helpTopics: ['¿Cómo crear una ola?', '¿Cómo asignar operadores?'],
+                    fieldHelp: {
+                        waveType: 'Tipo de ola: estándar, express, consolidada',
+                        priority: 'Prioridad: baja, media, alta, urgente',
+                        operator: 'Operador asignado a la ola'
+                    }
+                },
+                shipments: {
+                    title: 'Gestión de Envíos',
+                    description: 'Seguimiento de envíos y entregas',
+                    tips: [
+                        'Asigna transportistas según zona de entrega',
+                        'Actualiza estados de tracking en tiempo real',
+                        'Configura notificaciones automáticas al cliente'
+                    ],
+                    warnings: ['Los envíos despachados no pueden ser editados'],
+                    helpTopics: ['¿Cómo crear un envío?', '¿Cómo cambiar el estado?'],
+                    fieldHelp: {
+                        carrier: 'Transportista asignado',
+                        trackingNumber: 'Número de guía de rastreo',
+                        status: 'Estado: pendiente, despachado, en tránsito, entregado',
+                        deliveryDate: 'Fecha estimada/real de entrega'
+                    }
+                },
+                routes: {
+                    title: 'Optimización de Rutas',
+                    description: 'Planificación y optimización de rutas de entrega',
+                    tips: [
+                        'El sistema optimiza rutas automáticamente',
+                        'Revisa la secuencia de paradas sugerida',
+                        'Ajusta manualmente si es necesario'
+                    ],
+                    warnings: ['Las rutas en curso no pueden ser eliminadas'],
+                    helpTopics: ['¿Cómo optimizar una ruta?', '¿Cómo reordenar paradas?'],
+                    fieldHelp: {
+                        optimizationMode: 'Modo: distancia mínima, tiempo mínimo, costo mínimo',
+                        stops: 'Paradas de la ruta',
+                        estimatedTime: 'Tiempo estimado total de la ruta'
+                    }
+                }
+            },
+            fallbackResponses: {
+                'envío': 'Crea un nuevo envío desde el botón "+ Nuevo Envío".',
+                'vehículo': 'Gestiona vehículos en la sección "Flota".',
+                'ruta': 'Las rutas se optimizan automáticamente según destinos.',
+                'picking': 'Las olas de picking agrupan pedidos para optimizar la preparación.',
+                'inventario': 'Consulta el inventario disponible en la pestaña "Inventario".',
+                'almacén': 'Configura almacenes en la pestaña "Almacenes".',
+                'transportista': 'Gestiona transportistas en la pestaña "Transportistas".'
+            }
+        });
+    }
+
+    // ============================================================================
     // CONFIGURACIÓN GLOBAL
     // ============================================================================
 
@@ -2419,6 +2538,11 @@
         // Inyectar estilos dark theme
         injectStyles();
 
+        // Inicializar sistema de ayuda contextual
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('logistics-dashboard');
+        }
+
         // Obtener companyId desde el estado global
         const company = window.currentCompany || window.selectedCompany;
         currentCompanyId = company?.id || company?.company_id;
@@ -2467,6 +2591,7 @@
         container.innerHTML = `
             <div class="logistics-dashboard">
                 ${renderHeader()}
+                ${typeof ModuleHelpSystem !== 'undefined' ? ModuleHelpSystem.renderBanner(currentTab) : ''}
                 ${renderTabs()}
                 <div class="logistics-content" id="logistics-content">
                     ${renderTabContent(currentTab)}
@@ -2539,6 +2664,12 @@
 
     function switchTab(tabId) {
         currentTab = tabId;
+
+        // Actualizar contexto de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.setContext(tabId);
+        }
+
         const content = document.getElementById('logistics-content');
         if (content) {
             content.innerHTML = renderTabContent(tabId);

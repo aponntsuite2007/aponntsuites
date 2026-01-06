@@ -3,6 +3,64 @@
  * Flujo de Caja con Proyecciones y Escenarios
  */
 
+// ============================================================================
+// 💡 SISTEMA DE AYUDA CONTEXTUAL
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('finance-cash-flow', {
+        moduleName: 'Flujo de Caja',
+        moduleDescription: 'Gestión y proyección de flujo de caja con escenarios y análisis de liquidez',
+        contexts: {
+            timeline: {
+                title: 'Línea de Tiempo',
+                description: 'Vista cronológica del flujo de caja',
+                tips: [
+                    'Visualiza entradas y salidas mes a mes',
+                    'El saldo final se calcula automáticamente',
+                    'Usa los filtros para ajustar el período'
+                ],
+                helpTopics: ['¿Cómo interpretar el flujo de caja?', '¿Qué es el saldo de caja?']
+            },
+            inflows: {
+                title: 'Entradas de Efectivo',
+                description: 'Ingresos y cobros proyectados',
+                tips: [
+                    'Registra ventas, cobros a clientes, financiamientos',
+                    'Diferencia entre ingreso devengado y cobro real',
+                    'Proyecta entradas futuras basadas en histórico'
+                ],
+                helpTopics: ['¿Cómo proyectar cobros?', '¿Qué es un ingreso devengado?']
+            },
+            outflows: {
+                title: 'Salidas de Efectivo',
+                description: 'Gastos y pagos proyectados',
+                tips: [
+                    'Registra pagos a proveedores, nóminas, impuestos',
+                    'Diferencia entre gasto devengado y pago real',
+                    'Prioriza pagos según liquidez disponible'
+                ],
+                helpTopics: ['¿Cómo gestionar pagos?', '¿Qué hacer ante falta de liquidez?']
+            },
+            scenarios: {
+                title: 'Escenarios y Proyecciones',
+                description: 'Análisis de escenarios futuros',
+                tips: [
+                    'Simula escenarios: optimista, base, pesimista',
+                    'Proyecta liquidez futura según diferentes supuestos',
+                    'Identifica riesgos de falta de caja'
+                ],
+                helpTopics: ['¿Cómo crear escenarios?', '¿Qué hacer ante proyección negativa?']
+            }
+        },
+        fallbackResponses: {
+            'liquidez': 'La liquidez es el efectivo disponible. Revísala en la pestaña Timeline.',
+            'proyección': 'En la pestaña "Escenarios" puedes proyectar el flujo de caja futuro.',
+            'cobro': 'Registra cobros esperados en la pestaña "Entradas".',
+            'pago': 'Gestiona pagos en la pestaña "Salidas".'
+        }
+    });
+}
+
 window.FinanceCashFlow = (function() {
     'use strict';
 
@@ -16,6 +74,11 @@ window.FinanceCashFlow = (function() {
 
     async function init(container) {
         console.log('💰 Inicializando Flujo de Caja...');
+
+        // Inicializar sistema de ayuda contextual
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('finance-cash-flow');
+        }
 
         container.innerHTML = renderStructure();
         await loadCashFlowData();
@@ -333,6 +396,11 @@ window.FinanceCashFlow = (function() {
     // =============================================
 
     function switchTab(tab) {
+        // Cambiar contexto de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.setContext(tab);
+        }
+
         // Update tab buttons
         document.querySelectorAll('.cf-tab').forEach(t => t.classList.remove('active'));
         document.querySelector(`.cf-tab[onclick*="${tab}"]`)?.classList.add('active');
@@ -357,6 +425,10 @@ window.FinanceCashFlow = (function() {
     }
 
     function renderTimelineTab() {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('timeline')
+            : '';
+
         if (!forecastData || !forecastData.daily_forecast) {
             return '<p style="color: #999; text-align: center;">No hay datos disponibles</p>';
         }
@@ -364,6 +436,7 @@ window.FinanceCashFlow = (function() {
         const maxBalance = Math.max(...forecastData.daily_forecast.map(d => Math.abs(d.balance)));
 
         return `
+            ${helpBanner}
             <div class="cf-timeline">
                 ${forecastData.daily_forecast.map(day => {
                     const netFlow = day.inflows - day.outflows;
@@ -390,11 +463,16 @@ window.FinanceCashFlow = (function() {
     }
 
     function renderInflowsTab() {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('inflows')
+            : '';
+
         if (!forecastData || !forecastData.inflows_breakdown) {
             return '<p style="color: #999; text-align: center;">No hay datos disponibles</p>';
         }
 
         return `
+            ${helpBanner}
             <table class="cf-breakdown-table">
                 <thead>
                     <tr>
@@ -429,11 +507,16 @@ window.FinanceCashFlow = (function() {
     }
 
     function renderOutflowsTab() {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('outflows')
+            : '';
+
         if (!forecastData || !forecastData.outflows_breakdown) {
             return '<p style="color: #999; text-align: center;">No hay datos disponibles</p>';
         }
 
         return `
+            ${helpBanner}
             <table class="cf-breakdown-table">
                 <thead>
                     <tr>
@@ -468,6 +551,10 @@ window.FinanceCashFlow = (function() {
     }
 
     function renderScenariosTab() {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('scenarios')
+            : '';
+
         if (!forecastData || !forecastData.scenarios) {
             return '<p style="color: #999; text-align: center;">No hay datos de escenarios</p>';
         }
@@ -475,6 +562,7 @@ window.FinanceCashFlow = (function() {
         const { optimistic, base, pessimistic } = forecastData.scenarios;
 
         return `
+            ${helpBanner}
             <div class="cf-scenarios-grid">
                 <div class="cf-scenario-card optimistic">
                     <h4>🌟 Escenario Optimista</h4>

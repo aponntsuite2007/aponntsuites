@@ -4,6 +4,33 @@
  * Dark Theme Professional
  */
 
+// ============================================================================
+// 💡 SISTEMA DE AYUDA CONTEXTUAL
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('finance-dashboard', {
+        moduleName: 'Dashboard Financiero',
+        moduleDescription: 'Panel principal de gestión financiera y contable',
+        contexts: {
+            dashboard: {
+                title: 'Dashboard Principal',
+                description: 'Vista general de módulos financieros',
+                tips: [
+                    'Accede a todos los módulos financieros desde aquí',
+                    'Revisa métricas clave en las tarjetas superiores',
+                    'Usa el menú para navegar entre módulos'
+                ],
+                helpTopics: ['¿Qué módulos incluye Finance?', '¿Cómo navegar entre módulos?'],
+                fieldHelp: {}
+            }
+        },
+        fallbackResponses: {
+            'módulos': 'Los módulos disponibles son: Plan de Cuentas, Asientos, Presupuestos, Tesorería, Flujo de Caja, Informes.',
+            'navegar': 'Click en cualquier tarjeta de módulo para acceder a su funcionalidad.'
+        }
+    });
+}
+
 window.FinanceDashboard = (function() {
     'use strict';
 
@@ -33,6 +60,11 @@ window.FinanceDashboard = (function() {
 
     async function init(container) {
         console.log('🏦 Inicializando Finance Dashboard...');
+
+        // Inicializar sistema de ayuda contextual
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('finance-dashboard');
+        }
 
         // Si es un string (ID), convertirlo a elemento DOM
         if (typeof container === 'string') {
@@ -71,6 +103,10 @@ window.FinanceDashboard = (function() {
     // =============================================
 
     function renderDashboardStructure() {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('dashboard')
+            : '';
+
         return `
             <div class="finance-dashboard" style="background: ${THEME.background}; min-height: 100vh; padding: 20px;">
                 <!-- Header -->
@@ -98,6 +134,8 @@ window.FinanceDashboard = (function() {
                         </div>
                     </div>
                 </div>
+
+                ${helpBanner}
 
                 <!-- Alertas -->
                 <div id="finance-alerts" class="alerts-container" style="margin-bottom: 20px;"></div>

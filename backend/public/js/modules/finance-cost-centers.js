@@ -3,6 +3,40 @@
  * Centros de Costo con jerarquía de 4 niveles
  */
 
+// ============================================================================
+// 💡 SISTEMA DE AYUDA CONTEXTUAL
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('finance-cost-centers', {
+        moduleName: 'Centros de Costo',
+        moduleDescription: 'Gestión de centros de costo para imputación y análisis de gastos',
+        contexts: {
+            list: {
+                title: 'Centros de Costo',
+                description: 'Lista de centros de costo activos',
+                tips: [
+                    'Los centros de costo permiten clasificar gastos por área/proyecto',
+                    'Asigna gastos a centros para análisis detallado',
+                    'Puedes tener centros por departamento, proyecto o actividad'
+                ],
+                warnings: ['No elimines centros de costo con gastos asignados'],
+                helpTopics: ['¿Qué es un centro de costo?', '¿Cómo asignar gastos?'],
+                fieldHelp: {
+                    code: 'Código único identificador (ej: CC-001)',
+                    name: 'Nombre del centro (ej: Ventas, TI, Proyecto X)',
+                    manager: 'Responsable del centro de costo',
+                    budget: 'Presupuesto asignado al centro'
+                }
+            }
+        },
+        fallbackResponses: {
+            'crear': 'Usa el botón "+ Nuevo Centro" para crear un centro de costo.',
+            'asignar': 'Asigna gastos al centro desde el módulo de Asientos Contables.',
+            'presupuesto': 'Define el presupuesto del centro en el campo "Budget".'
+        }
+    });
+}
+
 window.FinanceCostCenters = (function() {
     'use strict';
 
@@ -17,6 +51,11 @@ window.FinanceCostCenters = (function() {
     async function init(container) {
         console.log('🏢 Inicializando Centros de Costo...');
 
+        // Inicializar sistema de ayuda contextual
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('finance-cost-centers');
+        }
+
         container.innerHTML = renderStructure();
         await loadCostCenters();
 
@@ -24,8 +63,13 @@ window.FinanceCostCenters = (function() {
     }
 
     function renderStructure() {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('list')
+            : '';
+
         return `
             <div class="finance-module">
+                ${helpBanner}
                 <div class="module-header">
                     <div style="display: flex; align-items: center; gap: 16px;">
                         <button onclick="window.showModuleContent('finance-dashboard', 'Finance Dashboard')" class="finance-back-btn">

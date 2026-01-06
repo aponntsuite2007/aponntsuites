@@ -971,6 +971,202 @@ const WMS_STYLES = `
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// SISTEMA DE AYUDA CONTEXTUAL
+// ═══════════════════════════════════════════════════════════════════════════════
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('warehouse-management', {
+        moduleName: 'Gestión de Almacenes',
+        moduleDescription: 'Control completo de inventarios, stock, movimientos de almacén, categorías y listas de precios',
+        contexts: {
+            padron: {
+                title: 'Padrón de Artículos',
+                description: 'Gestión completa del catálogo de productos de la empresa',
+                tips: [
+                    'Mantén códigos de barras únicos para cada producto',
+                    'Define stock mínimo para recibir alertas automáticas',
+                    'Organiza productos por categorías para búsquedas más rápidas',
+                    'Usa la búsqueda rápida con el código de barras o nombre del producto'
+                ],
+                warnings: [
+                    'Productos sin código de barras no podrán ser escaneados',
+                    'Stock negativo indica errores en los registros de movimientos'
+                ],
+                helpTopics: [
+                    '¿Cómo agregar un nuevo producto?',
+                    '¿Qué es el código de barras EAN13?',
+                    '¿Cómo definir stock mínimo?',
+                    '¿Puedo duplicar un producto existente?'
+                ],
+                fieldHelp: {
+                    sku: 'Código único interno del producto (SKU)',
+                    barcode: 'Código de barras EAN13 o UPC para escaneo',
+                    name: 'Nombre comercial del producto',
+                    category: 'Rubro/SubRubro/Familia del producto',
+                    brand: 'Marca comercial del fabricante',
+                    supplier: 'Proveedor habitual del producto',
+                    costPrice: 'Precio de costo sin IVA',
+                    salePrice: 'Precio de venta al público',
+                    minStock: 'Stock mínimo para alertas de reposición',
+                    maxStock: 'Stock máximo recomendado',
+                    location: 'Ubicación física en el almacén (pasillo, estante)'
+                }
+            },
+            categorias: {
+                title: 'Categorías de Productos',
+                description: 'Organización jerárquica: Rubros → SubRubros → Familias',
+                tips: [
+                    'Usa Rubros para categorías principales (Ej: Electrónica, Alimentos)',
+                    'Los SubRubros agrupan dentro de cada Rubro',
+                    'Las Familias son la clasificación más específica',
+                    'Puedes tener hasta 3 niveles de jerarquía'
+                ],
+                warnings: [
+                    'No elimines categorías con productos asignados'
+                ],
+                helpTopics: [
+                    '¿Cómo crear una categoría?',
+                    '¿Cuál es la diferencia entre Rubro y Familia?',
+                    '¿Puedo mover productos entre categorías?'
+                ],
+                fieldHelp: {
+                    parentCategory: 'Categoría padre (vacío si es Rubro principal)',
+                    categoryName: 'Nombre descriptivo de la categoría',
+                    categoryCode: 'Código corto para identificación rápida'
+                }
+            },
+            precios: {
+                title: 'Listas de Precios',
+                description: 'Gestión de múltiples listas con sistema de espejos',
+                tips: [
+                    'Crea listas para diferentes tipos de clientes (Mayorista, Minorista)',
+                    'Usa el sistema de "espejos" para aplicar un % sobre otra lista',
+                    'Lista 1 suele ser precio de costo + margen',
+                    'Puedes tener listas ilimitadas'
+                ],
+                warnings: [
+                    'Los espejos se recalculan automáticamente al cambiar la lista base'
+                ],
+                helpTopics: [
+                    '¿Qué es una lista espejo?',
+                    '¿Cómo aplicar un descuento general?',
+                    '¿Puedo tener precios diferentes por sucursal?'
+                ],
+                fieldHelp: {
+                    listName: 'Nombre descriptivo de la lista (Ej: Mayorista)',
+                    basedOn: 'Lista base para cálculos de espejo',
+                    percentage: 'Porcentaje de incremento/descuento sobre la base',
+                    isMirror: 'Si es espejo, se actualiza automáticamente'
+                }
+            },
+            promociones: {
+                title: 'Promociones y Bonificaciones',
+                description: 'Gestión de ofertas, descuentos y bonificaciones',
+                tips: [
+                    'Define fechas de vigencia para promociones temporales',
+                    'Usa bonificaciones por cantidad (Ej: 3x2)',
+                    'Las promociones pueden aplicarse automáticamente en ventas',
+                    'Puedes combinar descuentos con bonificaciones'
+                ],
+                warnings: [
+                    'Verifica que las fechas de vigencia sean correctas',
+                    'Las promociones vencidas no se aplican automáticamente'
+                ],
+                helpTopics: [
+                    '¿Cómo crear una promoción 2x1?',
+                    '¿Puedo aplicar descuentos por categoría?',
+                    '¿Qué es una bonificación escalonada?'
+                ],
+                fieldHelp: {
+                    promoName: 'Nombre de la promoción',
+                    promoType: 'Tipo: descuento, bonificación, combo',
+                    startDate: 'Fecha de inicio de vigencia',
+                    endDate: 'Fecha de fin de vigencia',
+                    discountPercent: 'Porcentaje de descuento',
+                    minQuantity: 'Cantidad mínima para aplicar promoción'
+                }
+            },
+            stock: {
+                title: 'Control de Stock',
+                description: 'Vista consolidada de niveles de inventario',
+                tips: [
+                    'Revisa alertas de stock bajo diariamente',
+                    'Realiza inventarios físicos periódicos',
+                    'Usa ajustes de inventario para corregir diferencias',
+                    'El stock negativo indica errores en movimientos'
+                ],
+                warnings: [
+                    'Stock negativo debe corregirse inmediatamente',
+                    'Los ajustes afectan la valorización del stock'
+                ],
+                helpTopics: [
+                    '¿Cómo hacer un ajuste de inventario?',
+                    '¿Qué es el stock teórico vs físico?',
+                    '¿Cómo registrar mermas?'
+                ],
+                fieldHelp: {
+                    currentStock: 'Stock actual en sistema',
+                    physicalStock: 'Stock físico contado',
+                    difference: 'Diferencia entre teórico y físico',
+                    reason: 'Motivo del ajuste (merma, robo, error de carga)'
+                }
+            },
+            ubicaciones: {
+                title: 'Ubicaciones y Planogramas',
+                description: 'Organización física del almacén',
+                tips: [
+                    'Divide el almacén en zonas (Ej: Zona A, B, C)',
+                    'Cada zona puede tener múltiples pasillos',
+                    'Asigna productos a ubicaciones específicas',
+                    'Usa códigos cortos para ubicaciones (Ej: A1-E2 = Zona A, Pasillo 1, Estante 2)'
+                ],
+                warnings: [
+                    'Productos sin ubicación son difíciles de encontrar'
+                ],
+                helpTopics: [
+                    '¿Cómo crear una nueva zona?',
+                    '¿Qué es un planograma?',
+                    '¿Puedo tener el mismo producto en varias ubicaciones?'
+                ],
+                fieldHelp: {
+                    zoneName: 'Nombre de la zona del almacén',
+                    aisleNumber: 'Número de pasillo dentro de la zona',
+                    shelfNumber: 'Número de estante',
+                    position: 'Posición específica en el estante'
+                }
+            },
+            config: {
+                title: 'Configuración del Módulo',
+                description: 'Ajustes generales del sistema de almacenes',
+                tips: [
+                    'Configura los métodos de valorización de inventario (FIFO, LIFO, Promedio)',
+                    'Define políticas de stock mínimo globales',
+                    'Configura notificaciones para alertas de stock'
+                ],
+                helpTopics: [
+                    '¿Qué es el método FIFO?',
+                    '¿Cómo configurar alertas automáticas?'
+                ]
+            }
+        },
+        fallbackResponses: {
+            'entrada': 'Registra entradas de mercancía recibida de proveedores. Ve al tab Stock → Nuevo Movimiento → Tipo: Entrada.',
+            'salida': 'Registra salidas por ventas, despachos o consumo interno. Ve al tab Stock → Nuevo Movimiento → Tipo: Salida.',
+            'ajuste': 'Usa ajustes para corregir diferencias entre stock teórico y físico. Ve al tab Stock → Ajustes de Inventario.',
+            'stock mínimo': 'Define el stock mínimo en la ficha de cada producto. Cuando el stock real sea menor, recibirás alertas automáticas.',
+            'código de barras': 'El código de barras EAN13 es un estándar de 13 dígitos. Puedes usar un lector de códigos de barras para escanear productos.',
+            'lista de precios': 'Crea listas para diferentes tipos de clientes. Puedes usar "listas espejo" que se calculan automáticamente como % de otra lista.',
+            'espejo': 'Una lista espejo se calcula automáticamente como porcentaje sobre otra lista base. Ejemplo: Lista Minorista = Lista Mayorista + 20%.',
+            'promoción': 'Las promociones permiten descuentos temporales. Define fecha de inicio/fin y el sistema las aplicará automáticamente.',
+            'ubicación': 'Asigna ubicaciones físicas a cada producto (Zona, Pasillo, Estante) para encontrarlos fácilmente en el almacén.',
+            'planograma': 'Un planograma es un mapa visual del almacén mostrando dónde está ubicado cada producto.',
+            'categoría': 'Organiza productos en jerarquía: Rubro (principal) → SubRubro → Familia (más específica).',
+            'sku': 'SKU (Stock Keeping Unit) es el código único interno de tu empresa para identificar cada producto.',
+            'error': 'Verifica los logs del servidor, revisa que hayas seleccionado una Sucursal y Almacén en los selectores superiores.'
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // MÓDULO PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
 const WarehouseManagement = {
@@ -1027,6 +1223,12 @@ const WarehouseManagement = {
     // ═══════════════════════════════════════════════════════════════════════
     async init(containerId = 'module-content') {
         console.log('🏭 [WMS] Inicializando módulo Warehouse Management - Dark Theme...');
+
+        // Inicializar sistema de ayuda contextual
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('warehouse-management');
+            ModuleHelpSystem.setContext('padron'); // Contexto inicial
+        }
 
         // Inyectar estilos
         if (!document.getElementById('wms-dark-theme-styles')) {
@@ -1530,7 +1732,13 @@ const WarehouseManagement = {
     renderProductsTab() {
         const { products, stats, pagination } = this.state;
 
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('padron')
+            : '';
+
         return `
+            ${helpBanner}
+
             <!-- Stats Cards -->
             <div class="wms-stats-grid">
                 <div class="wms-stat-card">
@@ -1688,7 +1896,13 @@ const WarehouseManagement = {
     renderCategoriesTab() {
         const { categories } = this.state;
 
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('categorias')
+            : '';
+
         return `
+            ${helpBanner}
+
             <div class="wms-table-container">
                 <div class="wms-table-header">
                     <div class="wms-table-title">
@@ -1754,7 +1968,13 @@ const WarehouseManagement = {
     renderPriceListsTab() {
         const { priceLists } = this.state;
 
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('precios')
+            : '';
+
         return `
+            ${helpBanner}
+
             <div class="wms-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
                 ${priceLists.length === 0 ? `
                     <div class="wms-empty" style="grid-column: 1 / -1;">
@@ -1818,6 +2038,10 @@ const WarehouseManagement = {
     renderPromotionsTab() {
         const { promotions } = this.state;
 
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('promociones')
+            : '';
+
         const promoTypeIcons = {
             'percent_discount': '🏷️',
             'fixed_discount': '💵',
@@ -1827,6 +2051,8 @@ const WarehouseManagement = {
         };
 
         return `
+            ${helpBanner}
+
             <div class="wms-table-container">
                 <div class="wms-table-header">
                     <div class="wms-table-title">
@@ -1912,7 +2138,13 @@ const WarehouseManagement = {
     renderStockTab() {
         const { products, stats } = this.state;
 
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('stock')
+            : '';
+
         return `
+            ${helpBanner}
+
             <!-- Alertas de Stock -->
             ${stats.low_stock_alerts > 0 ? `
                 <div class="wms-alert wms-alert-warning">
@@ -1982,7 +2214,13 @@ const WarehouseManagement = {
     renderLocationsTab() {
         const planogram = this.state.planogram || [];
 
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('ubicaciones')
+            : '';
+
         return `
+            ${helpBanner}
+
             <div class="wms-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
                 ${planogram.length === 0 ? `
                     <div class="wms-empty" style="grid-column: 1 / -1;">
@@ -2035,7 +2273,13 @@ const WarehouseManagement = {
     // TAB: CONFIGURACIÓN
     // ═══════════════════════════════════════════════════════════════════════
     renderConfigTab() {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('config')
+            : '';
+
         return `
+            ${helpBanner}
+
             <div class="wms-form-grid">
                 <!-- Configuración de Códigos de Barras -->
                 <div class="wms-table-container" style="grid-column: 1 / -1;">
@@ -2242,6 +2486,11 @@ const WarehouseManagement = {
 
     switchTab(tabId) {
         this.state.currentTab = tabId;
+
+        // Cambiar contexto de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.setContext(tabId);
+        }
 
         // Update tab UI
         document.querySelectorAll('.wms-tab').forEach(tab => {

@@ -165,7 +165,7 @@ class EmployeeProfileCollector {
 
         // Capturar errores de consola
         this.page.on('console', msg => {
-            if (msg.fill() === 'error') {
+            if (msg.type() === 'error') {
                 this.consoleErrors.push({
                     type: 'console', message: msg.text(),
                     timestamp: new Date()

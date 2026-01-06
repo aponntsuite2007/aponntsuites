@@ -11,6 +11,112 @@
  * Solo visible para: ADMINISTRACION, GERENCIA
  */
 
+// ============================================================================
+// 💡 SISTEMA DE AYUDA CONTEXTUAL
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('admin-finance-dashboard', {
+        moduleName: 'Dashboard Finanzas Admin',
+        moduleDescription: 'Dashboard de administración financiera para APONNT (facturación, comisiones, liquidaciones)',
+        contexts: {
+            dashboard: {
+                title: 'Dashboard Principal',
+                description: 'Vista general de estadísticas financieras',
+                tips: [
+                    'Revisa las métricas principales en las tarjetas superiores',
+                    'Usa las pestañas para navegar entre Facturación, Comisiones y Liquidación',
+                    'Las estadísticas se actualizan en tiempo real'
+                ],
+                warnings: [
+                    'Solo usuarios ADMINISTRACION y GERENCIA pueden acceder a este módulo'
+                ],
+                helpTopics: [
+                    '¿Cómo interpretar las métricas del dashboard?',
+                    '¿Qué diferencia hay entre comisiones pendientes y pagadas?'
+                ],
+                fieldHelp: {}
+            },
+            invoices: {
+                title: 'Gestión de Facturación',
+                description: 'Administración de facturas emitidas a empresas cliente',
+                tips: [
+                    'Filtra las facturas por estado: pendiente, pagada, vencida',
+                    'Click en una factura para ver sus detalles completos',
+                    'Puedes generar y descargar facturas desde aquí'
+                ],
+                warnings: [
+                    'Las facturas vencidas aparecen destacadas en rojo'
+                ],
+                helpTopics: [
+                    '¿Cómo generar una nueva factura?',
+                    '¿Cómo marcar una factura como pagada?',
+                    '¿Qué hacer con facturas vencidas?'
+                ],
+                fieldHelp: {
+                    company: 'Empresa a la que se emite la factura',
+                    amount: 'Monto total de la factura (incluye IVA si aplica)',
+                    dueDate: 'Fecha de vencimiento para el pago',
+                    status: 'Estado actual: pendiente, pagada, vencida'
+                }
+            },
+            commissions: {
+                title: 'Gestión de Comisiones',
+                description: 'Seguimiento de comisiones por ventas pendientes y pagadas',
+                tips: [
+                    'Las comisiones se calculan automáticamente según los contratos',
+                    'Filtra por estado: pendientes, pagadas, en proceso',
+                    'Puedes aprobar comisiones pendientes para liquidación'
+                ],
+                warnings: [
+                    'Verifica los montos antes de aprobar comisiones para pago'
+                ],
+                helpTopics: [
+                    '¿Cómo se calculan las comisiones?',
+                    '¿Cuándo se genera una comisión?',
+                    '¿Cómo aprobar comisiones pendientes?'
+                ],
+                fieldHelp: {
+                    seller: 'Vendedor o comercial que generó la venta',
+                    commissionRate: 'Porcentaje de comisión según contrato',
+                    baseAmount: 'Monto base sobre el cual se calcula la comisión',
+                    commissionAmount: 'Monto final de la comisión a pagar',
+                    approvalStatus: 'Estado de aprobación de la comisión'
+                }
+            },
+            liquidation: {
+                title: 'Liquidación de Comisiones',
+                description: 'Proceso de liquidación y pago de comisiones aprobadas',
+                tips: [
+                    'Solo aparecen comisiones ya aprobadas',
+                    'Puedes liquidar comisiones individuales o en lote',
+                    'Al liquidar se genera automáticamente el comprobante de pago'
+                ],
+                warnings: [
+                    'La liquidación es irreversible, verifica los datos antes de confirmar',
+                    'Asegúrate de tener fondos disponibles antes de liquidar'
+                ],
+                helpTopics: [
+                    '¿Cómo liquidar comisiones?',
+                    '¿Qué documentos se generan al liquidar?',
+                    '¿Se puede revertir una liquidación?'
+                ],
+                fieldHelp: {
+                    paymentMethod: 'Método de pago: transferencia, cheque, efectivo',
+                    paymentDate: 'Fecha en que se realizará el pago',
+                    reference: 'Número de referencia o comprobante de pago'
+                }
+            }
+        },
+        fallbackResponses: {
+            factura: 'Las facturas se gestionan desde la pestaña "Facturación". Puedes crear, editar y marcar como pagadas las facturas a empresas.',
+            comision: 'Las comisiones se calculan automáticamente al cerrar ventas. Gestiónalas desde la pestaña "Comisiones".',
+            liquidar: 'Para liquidar comisiones, ve a la pestaña "Liquidación" y selecciona las comisiones aprobadas que deseas pagar.',
+            pago: 'Los pagos se registran al liquidar comisiones o al marcar facturas como pagadas.',
+            vencida: 'Las facturas vencidas aparecen destacadas. Contacta al cliente para gestionar el pago.'
+        }
+    });
+}
+
 const AdminFinanceDashboard = {
     // Estado
     _initialized: false,
@@ -34,6 +140,11 @@ const AdminFinanceDashboard = {
                 this._loadInvoices(),
                 this._loadCommissions()
             ]);
+
+            // Inicializar sistema de ayuda contextual
+            if (typeof ModuleHelpSystem !== 'undefined') {
+                ModuleHelpSystem.init('admin-finance-dashboard');
+            }
 
             this._initialized = true;
             console.log('[FinanceDashboard] Inicializado correctamente');
@@ -84,6 +195,12 @@ const AdminFinanceDashboard = {
      */
     switchTab(tab) {
         this._activeTab = tab;
+
+        // Cambiar contexto de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.setContext(tab);
+        }
+
         const content = document.getElementById('finance-content');
         if (content) {
             content.innerHTML = this._renderActiveTab();
@@ -152,7 +269,12 @@ const AdminFinanceDashboard = {
      * Renderiza tab de facturación
      */
     _renderInvoicesTab() {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('invoices')
+            : '';
+
         return `
+            ${helpBanner}
             <div class="section-container">
                 <div class="section-header">
                     <div>
@@ -257,7 +379,12 @@ const AdminFinanceDashboard = {
      * Renderiza tab de comisiones
      */
     _renderCommissionsTab() {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('commissions')
+            : '';
+
         return `
+            ${helpBanner}
             <div class="section-container">
                 <div class="section-header">
                     <div>
@@ -347,8 +474,12 @@ const AdminFinanceDashboard = {
      */
     _renderLiquidationTab() {
         const pendingByVendor = this._groupCommissionsByVendor();
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('liquidation')
+            : '';
 
         return `
+            ${helpBanner}
             <div class="section-container">
                 <div class="section-header">
                     <div>

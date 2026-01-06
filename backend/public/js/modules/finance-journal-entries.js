@@ -3,6 +3,42 @@
  * Asientos Contables manuales y visualización
  */
 
+// ============================================================================
+// 💡 SISTEMA DE AYUDA CONTEXTUAL
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('finance-journal-entries', {
+        moduleName: 'Asientos Contables',
+        moduleDescription: 'Registro y gestión de asientos contables con partida doble',
+        contexts: {
+            list: {
+                title: 'Libro Diario',
+                description: 'Lista de todos los asientos contables',
+                tips: [
+                    'Los asientos usan partida doble: débito = crédito siempre',
+                    'Filtra por fecha, cuenta o estado (borrador/aprobado)',
+                    'Click en un asiento para ver su detalle completo'
+                ],
+                warnings: ['Los asientos aprobados no pueden modificarse'],
+                helpTopics: ['¿Qué es la partida doble?', '¿Cómo crear un asiento?', '¿Cuándo aprobar un asiento?'],
+                fieldHelp: {
+                    date: 'Fecha del asiento contable',
+                    reference: 'Número de referencia o comprobante',
+                    description: 'Descripción del movimiento contable',
+                    debit: 'Cuenta y monto del débito (debe)',
+                    credit: 'Cuenta y monto del crédito (haber)',
+                    status: 'Borrador o Aprobado'
+                }
+            }
+        },
+        fallbackResponses: {
+            'partida doble': 'La partida doble asegura que cada movimiento tenga débito y crédito iguales.',
+            'aprobar': 'Aprueba un asiento cuando hayas verificado que está correcto. Una vez aprobado, no se puede editar.',
+            'borrador': 'Los borradores permiten guardar asientos sin afectar los balances. Apruébalos cuando estén listos.'
+        }
+    });
+}
+
 window.FinanceJournalEntries = (function() {
     'use strict';
 
@@ -17,6 +53,12 @@ window.FinanceJournalEntries = (function() {
 
     async function init(container) {
         console.log('📓 Inicializando Asientos Contables...');
+
+        // Inicializar sistema de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('finance-journal-entries');
+            ModuleHelpSystem.setContext('list');
+        }
 
         container.innerHTML = renderStructure();
         await Promise.all([loadEntries(), loadAccounts()]);
@@ -58,6 +100,8 @@ window.FinanceJournalEntries = (function() {
                         </button>
                     </div>
                 </div>
+
+                ${typeof ModuleHelpSystem !== 'undefined' ? ModuleHelpSystem.renderBanner('list') : ''}
 
                 <div class="module-content">
                     <div id="entries-table" class="table-container"></div>

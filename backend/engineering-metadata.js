@@ -6,22 +6,22 @@
  * Este archivo se auto-actualiza cada 5 minutos con metadata EN VIVO del sistema.
  * NO editar manualmente - los cambios se sobrescribirán.
  *
- * Generado: 2026-01-05T03:57:05.926Z
- * Módulos: 209
- * Última actualización: 14
+ * Generado: 2026-01-06T01:16:51.714Z
+ * Módulos: 211
+ * Última actualización: 669
  *
  * ============================================================================
  */
 
 const engineeringMetadata = {
-  "generatedAt": "2026-01-05T03:55:36.955Z",
+  "generatedAt": "2026-01-06T01:14:52.699Z",
   "source": "live-introspection",
   "generator": "EcosystemBrainService",
   "version": "2.0.0-live",
   "modules": {
     "absence": {
       "name": "absence",
-      "generatedAt": "2026-01-05T03:55:36.967Z",
+      "generatedAt": "2026-01-06T01:14:52.709Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -51,7 +51,7 @@ const engineeringMetadata = {
     },
     "accessControl": {
       "name": "accessControl",
-      "generatedAt": "2026-01-05T03:55:37.445Z",
+      "generatedAt": "2026-01-06T01:14:53.097Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -146,7 +146,7 @@ const engineeringMetadata = {
     },
     "admin-migrations": {
       "name": "admin-migrations",
-      "generatedAt": "2026-01-05T03:55:37.873Z",
+      "generatedAt": "2026-01-06T01:14:53.470Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -198,7 +198,7 @@ const engineeringMetadata = {
     },
     "admin": {
       "name": "admin",
-      "generatedAt": "2026-01-05T03:55:38.210Z",
+      "generatedAt": "2026-01-06T01:14:53.842Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -263,7 +263,7 @@ const engineeringMetadata = {
     },
     "afip": {
       "name": "afip",
-      "generatedAt": "2026-01-05T03:55:38.689Z",
+      "generatedAt": "2026-01-06T01:14:54.209Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -357,7 +357,7 @@ const engineeringMetadata = {
     },
     "ai-analysis-api": {
       "name": "ai-analysis-api",
-      "generatedAt": "2026-01-05T03:55:39.120Z",
+      "generatedAt": "2026-01-06T01:14:54.562Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -424,7 +424,7 @@ const engineeringMetadata = {
     },
     "aMiMePaso": {
       "name": "aMiMePaso",
-      "generatedAt": "2026-01-05T03:55:39.502Z",
+      "generatedAt": "2026-01-06T01:14:54.996Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -478,7 +478,7 @@ const engineeringMetadata = {
     },
     "apk": {
       "name": "apk",
-      "generatedAt": "2026-01-05T03:55:39.875Z",
+      "generatedAt": "2026-01-06T01:14:55.352Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -545,7 +545,7 @@ const engineeringMetadata = {
     },
     "aponntAuth": {
       "name": "aponntAuth",
-      "generatedAt": "2026-01-05T03:55:40.262Z",
+      "generatedAt": "2026-01-06T01:14:55.711Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -602,7 +602,7 @@ const engineeringMetadata = {
     },
     "aponntBilling": {
       "name": "aponntBilling",
-      "generatedAt": "2026-01-05T03:55:40.625Z",
+      "generatedAt": "2026-01-06T01:14:56.065Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -690,7 +690,7 @@ const engineeringMetadata = {
     },
     "aponntDashboard": {
       "name": "aponntDashboard",
-      "generatedAt": "2026-01-05T03:55:41.199Z",
+      "generatedAt": "2026-01-06T01:14:56.424Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1081,7 +1081,7 @@ const engineeringMetadata = {
     },
     "aponntStaffAuth": {
       "name": "aponntStaffAuth",
-      "generatedAt": "2026-01-05T03:55:41.684Z",
+      "generatedAt": "2026-01-06T01:14:56.792Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1129,7 +1129,7 @@ const engineeringMetadata = {
     },
     "aponntStaff": {
       "name": "aponntStaff",
-      "generatedAt": "2026-01-05T03:55:42.129Z",
+      "generatedAt": "2026-01-06T01:14:57.181Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1214,7 +1214,7 @@ const engineeringMetadata = {
     },
     "assistant": {
       "name": "assistant",
-      "generatedAt": "2026-01-05T03:55:42.522Z",
+      "generatedAt": "2026-01-06T01:14:57.547Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1304,7 +1304,7 @@ const engineeringMetadata = {
     },
     "associate": {
       "name": "associate",
-      "generatedAt": "2026-01-05T03:55:42.991Z",
+      "generatedAt": "2026-01-06T01:14:57.914Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1435,7 +1435,7 @@ const engineeringMetadata = {
     },
     "associateWorkflow": {
       "name": "associateWorkflow",
-      "generatedAt": "2026-01-05T03:55:43.458Z",
+      "generatedAt": "2026-01-06T01:14:58.269Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1487,7 +1487,7 @@ const engineeringMetadata = {
     },
     "attendanceAdvancedStats": {
       "name": "attendanceAdvancedStats",
-      "generatedAt": "2026-01-05T03:55:43.799Z",
+      "generatedAt": "2026-01-06T01:14:58.648Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1571,7 +1571,7 @@ const engineeringMetadata = {
     },
     "attendanceAnalytics": {
       "name": "attendanceAnalytics",
-      "generatedAt": "2026-01-05T03:55:44.090Z",
+      "generatedAt": "2026-01-06T01:14:59.020Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1694,7 +1694,7 @@ const engineeringMetadata = {
     },
     "attendance": {
       "name": "attendance",
-      "generatedAt": "2026-01-05T03:55:44.484Z",
+      "generatedAt": "2026-01-06T01:14:59.387Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1848,13 +1848,13 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 13818,
-      "lastModified": "2026-01-05T02:50:33.784Z",
+      "linesOfCode": 14102,
+      "lastModified": "2026-01-06T00:13:51.343Z",
       "complexity": "complex"
     },
     "attendance_stats_advanced": {
       "name": "attendance_stats_advanced",
-      "generatedAt": "2026-01-05T03:55:44.907Z",
+      "generatedAt": "2026-01-06T01:15:00.135Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1888,7 +1888,7 @@ const engineeringMetadata = {
     },
     "auditorPhase4": {
       "name": "auditorPhase4",
-      "generatedAt": "2026-01-05T03:55:45.224Z",
+      "generatedAt": "2026-01-06T01:15:00.859Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -1966,7 +1966,7 @@ const engineeringMetadata = {
     },
     "auditor": {
       "name": "auditor",
-      "generatedAt": "2026-01-05T03:55:45.537Z",
+      "generatedAt": "2026-01-06T01:15:01.572Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2194,12 +2194,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 4626,
-      "lastModified": "2026-01-04T02:13:03.215Z",
+      "lastModified": "2026-01-05T13:11:07.524Z",
       "complexity": "complex"
     },
     "auditReports": {
       "name": "auditReports",
-      "generatedAt": "2026-01-05T03:55:45.856Z",
+      "generatedAt": "2026-01-06T01:15:02.213Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2267,7 +2267,7 @@ const engineeringMetadata = {
     },
     "authorization": {
       "name": "authorization",
-      "generatedAt": "2026-01-05T03:55:46.231Z",
+      "generatedAt": "2026-01-06T01:15:02.939Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2350,7 +2350,7 @@ const engineeringMetadata = {
     },
     "auth": {
       "name": "auth",
-      "generatedAt": "2026-01-05T03:55:46.656Z",
+      "generatedAt": "2026-01-06T01:15:03.546Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2444,12 +2444,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 9740,
-      "lastModified": "2026-01-05T01:23:43.805Z",
+      "lastModified": "2026-01-05T11:40:10.269Z",
       "complexity": "complex"
     },
     "autoHealing": {
       "name": "autoHealing",
-      "generatedAt": "2026-01-05T03:55:47.082Z",
+      "generatedAt": "2026-01-06T01:15:04.212Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2502,7 +2502,7 @@ const engineeringMetadata = {
     },
     "autoRepair": {
       "name": "autoRepair",
-      "generatedAt": "2026-01-05T03:55:47.428Z",
+      "generatedAt": "2026-01-06T01:15:04.754Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2579,7 +2579,7 @@ const engineeringMetadata = {
     },
     "benefits": {
       "name": "benefits",
-      "generatedAt": "2026-01-05T03:55:47.727Z",
+      "generatedAt": "2026-01-06T01:15:05.343Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2677,7 +2677,7 @@ const engineeringMetadata = {
     },
     "billing": {
       "name": "billing",
-      "generatedAt": "2026-01-05T03:55:48.152Z",
+      "generatedAt": "2026-01-06T01:15:05.883Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2777,7 +2777,7 @@ const engineeringMetadata = {
     },
     "biometric-attendance-api": {
       "name": "biometric-attendance-api",
-      "generatedAt": "2026-01-05T03:55:48.471Z",
+      "generatedAt": "2026-01-06T01:15:06.597Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2850,7 +2850,7 @@ const engineeringMetadata = {
     },
     "biometric-enterprise-": {
       "name": "biometric-enterprise-",
-      "generatedAt": "2026-01-05T03:55:48.856Z",
+      "generatedAt": "2026-01-06T01:15:07.117Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -2901,7 +2901,7 @@ const engineeringMetadata = {
     },
     "biometricConsent": {
       "name": "biometricConsent",
-      "generatedAt": "2026-01-05T03:55:49.207Z",
+      "generatedAt": "2026-01-06T01:15:07.768Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3002,7 +3002,7 @@ const engineeringMetadata = {
     },
     "biometric": {
       "name": "biometric",
-      "generatedAt": "2026-01-05T03:55:49.521Z",
+      "generatedAt": "2026-01-06T01:15:08.345Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3087,7 +3087,7 @@ const engineeringMetadata = {
     },
     "brainAnalyzer": {
       "name": "brainAnalyzer",
-      "generatedAt": "2026-01-05T03:55:49.877Z",
+      "generatedAt": "2026-01-06T01:15:08.881Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3194,7 +3194,7 @@ const engineeringMetadata = {
     },
     "brainEcosystem": {
       "name": "brainEcosystem",
-      "generatedAt": "2026-01-05T03:55:50.186Z",
+      "generatedAt": "2026-01-06T01:15:09.389Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3300,7 +3300,7 @@ const engineeringMetadata = {
     },
     "brainNervous": {
       "name": "brainNervous",
-      "generatedAt": "2026-01-05T03:55:50.537Z",
+      "generatedAt": "2026-01-06T01:15:09.973Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3384,7 +3384,7 @@ const engineeringMetadata = {
     },
     "brainReactive": {
       "name": "brainReactive",
-      "generatedAt": "2026-01-05T03:55:50.851Z",
+      "generatedAt": "2026-01-06T01:15:10.558Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3452,7 +3452,7 @@ const engineeringMetadata = {
     },
     "brain": {
       "name": "brain",
-      "generatedAt": "2026-01-05T03:55:51.163Z",
+      "generatedAt": "2026-01-06T01:15:11.136Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3624,12 +3624,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 19227,
-      "lastModified": "2026-01-05T01:05:27.869Z",
+      "lastModified": "2026-01-05T11:40:10.265Z",
       "complexity": "complex"
     },
     "brainTour": {
       "name": "brainTour",
-      "generatedAt": "2026-01-05T03:55:51.524Z",
+      "generatedAt": "2026-01-06T01:15:11.763Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3750,7 +3750,7 @@ const engineeringMetadata = {
     },
     "brainV2": {
       "name": "brainV2",
-      "generatedAt": "2026-01-05T03:55:51.964Z",
+      "generatedAt": "2026-01-06T01:15:12.312Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3840,7 +3840,7 @@ const engineeringMetadata = {
     },
     "branch": {
       "name": "branch",
-      "generatedAt": "2026-01-05T03:55:52.342Z",
+      "generatedAt": "2026-01-06T01:15:12.883Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3921,7 +3921,7 @@ const engineeringMetadata = {
     },
     "budgetOnboarding": {
       "name": "budgetOnboarding",
-      "generatedAt": "2026-01-05T03:55:52.761Z",
+      "generatedAt": "2026-01-06T01:15:13.418Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -3980,7 +3980,7 @@ const engineeringMetadata = {
     },
     "budget": {
       "name": "budget",
-      "generatedAt": "2026-01-05T03:55:53.219Z",
+      "generatedAt": "2026-01-06T01:15:13.980Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4105,7 +4105,7 @@ const engineeringMetadata = {
     },
     "calendarioLaboral": {
       "name": "calendarioLaboral",
-      "generatedAt": "2026-01-05T03:55:53.677Z",
+      "generatedAt": "2026-01-06T01:15:14.481Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4182,7 +4182,7 @@ const engineeringMetadata = {
     },
     "cashManagement": {
       "name": "cashManagement",
-      "generatedAt": "2026-01-05T03:55:54.053Z",
+      "generatedAt": "2026-01-06T01:15:15.041Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4548,7 +4548,7 @@ const engineeringMetadata = {
     },
     "circuit": {
       "name": "circuit",
-      "generatedAt": "2026-01-05T03:55:54.570Z",
+      "generatedAt": "2026-01-06T01:15:15.551Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4678,7 +4678,7 @@ const engineeringMetadata = {
     },
     "commissionOnboarding": {
       "name": "commissionOnboarding",
-      "generatedAt": "2026-01-05T03:55:54.880Z",
+      "generatedAt": "2026-01-06T01:15:16.136Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4731,7 +4731,7 @@ const engineeringMetadata = {
     },
     "commission": {
       "name": "commission",
-      "generatedAt": "2026-01-05T03:55:55.214Z",
+      "generatedAt": "2026-01-06T01:15:16.699Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4841,7 +4841,7 @@ const engineeringMetadata = {
     },
     "companyAccount": {
       "name": "companyAccount",
-      "generatedAt": "2026-01-05T03:55:55.561Z",
+      "generatedAt": "2026-01-06T01:15:17.363Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -4956,7 +4956,7 @@ const engineeringMetadata = {
     },
     "companyEmailProcess": {
       "name": "companyEmailProcess",
-      "generatedAt": "2026-01-05T03:55:55.860Z",
+      "generatedAt": "2026-01-06T01:15:17.933Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5026,7 +5026,7 @@ const engineeringMetadata = {
     },
     "companyEmail": {
       "name": "companyEmail",
-      "generatedAt": "2026-01-05T03:55:56.195Z",
+      "generatedAt": "2026-01-06T01:15:18.610Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5118,7 +5118,7 @@ const engineeringMetadata = {
     },
     "companyModule": {
       "name": "companyModule",
-      "generatedAt": "2026-01-05T03:55:56.518Z",
+      "generatedAt": "2026-01-06T01:15:19.161Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5185,7 +5185,7 @@ const engineeringMetadata = {
     },
     "companyPanel": {
       "name": "companyPanel",
-      "generatedAt": "2026-01-05T03:55:56.826Z",
+      "generatedAt": "2026-01-06T01:15:19.804Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5263,7 +5263,7 @@ const engineeringMetadata = {
     },
     "companyPricing": {
       "name": "companyPricing",
-      "generatedAt": "2026-01-05T03:55:57.196Z",
+      "generatedAt": "2026-01-06T01:15:20.333Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5321,7 +5321,7 @@ const engineeringMetadata = {
     },
     "company": {
       "name": "company",
-      "generatedAt": "2026-01-05T03:55:57.527Z",
+      "generatedAt": "2026-01-06T01:15:20.915Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5337,6 +5337,7 @@ const engineeringMetadata = {
           "src\\models\\CompanySupportAssignment.js",
           "src\\models\\CompanyTask.js",
           "src\\models\\HseCompanyConfig.js",
+          "src\\models\\RfqCompanyAttachment.js",
           "src\\routes\\companyAccountRoutes.js",
           "src\\routes\\companyEmailProcessRoutes.js",
           "src\\routes\\companyEmailRoutes.js",
@@ -5452,17 +5453,22 @@ const engineeringMetadata = {
           "table": "hse_company_config",
           "model": "HseCompanyConfig",
           "file": "HseCompanyConfig.js"
+        },
+        {
+          "table": "rfq_company_attachments",
+          "model": "RfqCompanyAttachment",
+          "file": "RfqCompanyAttachment.js"
         }
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 8383,
-      "lastModified": "2026-01-04T21:59:54.928Z",
+      "linesOfCode": 8565,
+      "lastModified": "2026-01-05T23:22:10.281Z",
       "complexity": "complex"
     },
     "companyTask": {
       "name": "companyTask",
-      "generatedAt": "2026-01-05T03:55:57.849Z",
+      "generatedAt": "2026-01-06T01:15:21.453Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5524,7 +5530,7 @@ const engineeringMetadata = {
     },
     "compliance": {
       "name": "compliance",
-      "generatedAt": "2026-01-05T03:55:58.270Z",
+      "generatedAt": "2026-01-06T01:15:22.185Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5691,7 +5697,7 @@ const engineeringMetadata = {
     },
     "conceptDependencies": {
       "name": "conceptDependencies",
-      "generatedAt": "2026-01-05T03:55:58.660Z",
+      "generatedAt": "2026-01-06T01:15:22.797Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5803,7 +5809,7 @@ const engineeringMetadata = {
     },
     "config": {
       "name": "config",
-      "generatedAt": "2026-01-05T03:55:59.069Z",
+      "generatedAt": "2026-01-06T01:15:23.440Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -5972,7 +5978,7 @@ const engineeringMetadata = {
     },
     "contactForm": {
       "name": "contactForm",
-      "generatedAt": "2026-01-05T03:55:59.427Z",
+      "generatedAt": "2026-01-06T01:15:24.209Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6005,7 +6011,7 @@ const engineeringMetadata = {
     },
     "contact": {
       "name": "contact",
-      "generatedAt": "2026-01-05T03:55:59.770Z",
+      "generatedAt": "2026-01-06T01:15:24.858Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6039,7 +6045,7 @@ const engineeringMetadata = {
     },
     "contextualHelp": {
       "name": "contextualHelp",
-      "generatedAt": "2026-01-05T03:56:00.267Z",
+      "generatedAt": "2026-01-06T01:15:25.447Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6113,7 +6119,7 @@ const engineeringMetadata = {
     },
     "contractOnboarding": {
       "name": "contractOnboarding",
-      "generatedAt": "2026-01-05T03:56:00.615Z",
+      "generatedAt": "2026-01-06T01:15:26.143Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6170,7 +6176,7 @@ const engineeringMetadata = {
     },
     "contract": {
       "name": "contract",
-      "generatedAt": "2026-01-05T03:56:01.053Z",
+      "generatedAt": "2026-01-06T01:15:26.779Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6298,7 +6304,7 @@ const engineeringMetadata = {
     },
     "contracts": {
       "name": "contracts",
-      "generatedAt": "2026-01-05T03:56:01.407Z",
+      "generatedAt": "2026-01-06T01:15:27.453Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6388,7 +6394,7 @@ const engineeringMetadata = {
     },
     "coordination": {
       "name": "coordination",
-      "generatedAt": "2026-01-05T03:56:01.814Z",
+      "generatedAt": "2026-01-06T01:15:28.072Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6480,7 +6486,7 @@ const engineeringMetadata = {
     },
     "criticalPath": {
       "name": "criticalPath",
-      "generatedAt": "2026-01-05T03:56:02.207Z",
+      "generatedAt": "2026-01-06T01:15:28.792Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6533,7 +6539,7 @@ const engineeringMetadata = {
     },
     "databaseSchema": {
       "name": "databaseSchema",
-      "generatedAt": "2026-01-05T03:56:02.589Z",
+      "generatedAt": "2026-01-06T01:15:29.400Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6590,7 +6596,7 @@ const engineeringMetadata = {
     },
     "databaseSync": {
       "name": "databaseSync",
-      "generatedAt": "2026-01-05T03:56:03.063Z",
+      "generatedAt": "2026-01-06T01:15:30.087Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6647,7 +6653,7 @@ const engineeringMetadata = {
     },
     "debug-company-modules": {
       "name": "debug-company-modules",
-      "generatedAt": "2026-01-05T03:56:03.733Z",
+      "generatedAt": "2026-01-06T01:15:30.716Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6685,7 +6691,7 @@ const engineeringMetadata = {
     },
     "debug-db": {
       "name": "debug-db",
-      "generatedAt": "2026-01-05T03:56:04.219Z",
+      "generatedAt": "2026-01-06T01:15:31.282Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6715,7 +6721,7 @@ const engineeringMetadata = {
     },
     "department": {
       "name": "department",
-      "generatedAt": "2026-01-05T03:56:04.661Z",
+      "generatedAt": "2026-01-06T01:15:31.920Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6780,7 +6786,7 @@ const engineeringMetadata = {
     },
     "deploymentSync": {
       "name": "deploymentSync",
-      "generatedAt": "2026-01-05T03:56:05.019Z",
+      "generatedAt": "2026-01-06T01:15:32.576Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6832,7 +6838,7 @@ const engineeringMetadata = {
     },
     "deploy": {
       "name": "deploy",
-      "generatedAt": "2026-01-05T03:56:05.352Z",
+      "generatedAt": "2026-01-06T01:15:33.252Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6910,7 +6916,7 @@ const engineeringMetadata = {
     },
     "diagnostic": {
       "name": "diagnostic",
-      "generatedAt": "2026-01-05T03:56:05.719Z",
+      "generatedAt": "2026-01-06T01:15:33.868Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -6957,7 +6963,7 @@ const engineeringMetadata = {
     },
     "dms": {
       "name": "dms",
-      "generatedAt": "2026-01-05T03:56:06.224Z",
+      "generatedAt": "2026-01-06T01:15:34.581Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7006,7 +7012,7 @@ const engineeringMetadata = {
     },
     "documentExpiration": {
       "name": "documentExpiration",
-      "generatedAt": "2026-01-05T03:56:06.612Z",
+      "generatedAt": "2026-01-06T01:15:35.217Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7068,7 +7074,7 @@ const engineeringMetadata = {
     },
     "document": {
       "name": "document",
-      "generatedAt": "2026-01-05T03:56:06.941Z",
+      "generatedAt": "2026-01-06T01:15:35.917Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7191,12 +7197,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 9655,
-      "lastModified": "2026-01-05T02:27:21.880Z",
+      "lastModified": "2026-01-05T11:40:10.273Z",
       "complexity": "complex"
     },
     "e2eAdvanced": {
       "name": "e2eAdvanced",
-      "generatedAt": "2026-01-05T03:56:07.374Z",
+      "generatedAt": "2026-01-06T01:15:36.551Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7258,7 +7264,7 @@ const engineeringMetadata = {
     },
     "e2eTestingAdvanced": {
       "name": "e2eTestingAdvanced",
-      "generatedAt": "2026-01-05T03:56:07.685Z",
+      "generatedAt": "2026-01-06T01:15:37.223Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7320,7 +7326,7 @@ const engineeringMetadata = {
     },
     "e2eTesting": {
       "name": "e2eTesting",
-      "generatedAt": "2026-01-05T03:56:07.981Z",
+      "generatedAt": "2026-01-06T01:15:37.863Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7363,7 +7369,7 @@ const engineeringMetadata = {
     },
     "emailConfig": {
       "name": "emailConfig",
-      "generatedAt": "2026-01-05T03:56:08.291Z",
+      "generatedAt": "2026-01-06T01:15:38.539Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7456,7 +7462,7 @@ const engineeringMetadata = {
     },
     "email": {
       "name": "email",
-      "generatedAt": "2026-01-05T03:56:08.735Z",
+      "generatedAt": "2026-01-06T01:15:39.150Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7535,12 +7541,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 8385,
-      "lastModified": "2026-01-05T02:49:16.222Z",
+      "lastModified": "2026-01-05T11:40:10.274Z",
       "complexity": "complex"
     },
     "emailVerification": {
       "name": "emailVerification",
-      "generatedAt": "2026-01-05T03:56:09.081Z",
+      "generatedAt": "2026-01-06T01:15:39.875Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7608,7 +7614,7 @@ const engineeringMetadata = {
     },
     "emotionalAnalysis": {
       "name": "emotionalAnalysis",
-      "generatedAt": "2026-01-05T03:56:09.434Z",
+      "generatedAt": "2026-01-06T01:15:40.499Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7662,7 +7668,7 @@ const engineeringMetadata = {
     },
     "employee360": {
       "name": "employee360",
-      "generatedAt": "2026-01-05T03:56:09.759Z",
+      "generatedAt": "2026-01-06T01:15:41.163Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7738,7 +7744,7 @@ const engineeringMetadata = {
     },
     "employeeDocument": {
       "name": "employeeDocument",
-      "generatedAt": "2026-01-05T03:56:10.216Z",
+      "generatedAt": "2026-01-06T01:15:41.935Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7826,7 +7832,7 @@ const engineeringMetadata = {
     },
     "engineeringMetadata": {
       "name": "engineeringMetadata",
-      "generatedAt": "2026-01-05T03:56:10.796Z",
+      "generatedAt": "2026-01-06T01:15:42.567Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -7889,7 +7895,7 @@ const engineeringMetadata = {
     },
     "engineering": {
       "name": "engineering",
-      "generatedAt": "2026-01-05T03:56:11.159Z",
+      "generatedAt": "2026-01-06T01:15:43.185Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8043,7 +8049,7 @@ const engineeringMetadata = {
     },
     "enterprise-scalability-api": {
       "name": "enterprise-scalability-api",
-      "generatedAt": "2026-01-05T03:56:11.473Z",
+      "generatedAt": "2026-01-06T01:15:43.844Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8115,7 +8121,7 @@ const engineeringMetadata = {
     },
     "faceAuth": {
       "name": "faceAuth",
-      "generatedAt": "2026-01-05T03:56:11.759Z",
+      "generatedAt": "2026-01-06T01:15:44.564Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8163,7 +8169,7 @@ const engineeringMetadata = {
     },
     "facialBiometric": {
       "name": "facialBiometric",
-      "generatedAt": "2026-01-05T03:56:12.090Z",
+      "generatedAt": "2026-01-06T01:15:45.198Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8225,7 +8231,7 @@ const engineeringMetadata = {
     },
     "fastAttendance": {
       "name": "fastAttendance",
-      "generatedAt": "2026-01-05T03:56:12.560Z",
+      "generatedAt": "2026-01-06T01:15:45.810Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8288,7 +8294,7 @@ const engineeringMetadata = {
     },
     "financeAccounts": {
       "name": "financeAccounts",
-      "generatedAt": "2026-01-05T03:56:12.880Z",
+      "generatedAt": "2026-01-06T01:15:46.557Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8422,7 +8428,7 @@ const engineeringMetadata = {
     },
     "financeBudget": {
       "name": "financeBudget",
-      "generatedAt": "2026-01-05T03:56:13.175Z",
+      "generatedAt": "2026-01-06T01:15:47.296Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8568,7 +8574,7 @@ const engineeringMetadata = {
     },
     "financeDashboard": {
       "name": "financeDashboard",
-      "generatedAt": "2026-01-05T03:56:13.472Z",
+      "generatedAt": "2026-01-06T01:15:47.938Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8674,7 +8680,7 @@ const engineeringMetadata = {
     },
     "financeReports": {
       "name": "financeReports",
-      "generatedAt": "2026-01-05T03:56:13.892Z",
+      "generatedAt": "2026-01-06T01:15:48.617Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -8758,7 +8764,7 @@ const engineeringMetadata = {
     },
     "finance": {
       "name": "finance",
-      "generatedAt": "2026-01-05T03:56:14.232Z",
+      "generatedAt": "2026-01-06T01:15:49.219Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9060,12 +9066,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 15919,
-      "lastModified": "2026-01-05T02:55:42.489Z",
+      "lastModified": "2026-01-05T11:40:10.265Z",
       "complexity": "complex"
     },
     "financeTreasury": {
       "name": "financeTreasury",
-      "generatedAt": "2026-01-05T03:56:14.814Z",
+      "generatedAt": "2026-01-06T01:15:50.009Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9190,7 +9196,7 @@ const engineeringMetadata = {
     },
     "holidayApi": {
       "name": "holidayApi",
-      "generatedAt": "2026-01-05T03:56:15.112Z",
+      "generatedAt": "2026-01-06T01:15:50.647Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9286,7 +9292,7 @@ const engineeringMetadata = {
     },
     "hourBank": {
       "name": "hourBank",
-      "generatedAt": "2026-01-05T03:56:15.483Z",
+      "generatedAt": "2026-01-06T01:15:51.257Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9582,7 +9588,7 @@ const engineeringMetadata = {
     },
     "hoursCube": {
       "name": "hoursCube",
-      "generatedAt": "2026-01-05T03:56:15.774Z",
+      "generatedAt": "2026-01-06T01:15:51.906Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9669,7 +9675,7 @@ const engineeringMetadata = {
     },
     "hsePPEDetection": {
       "name": "hsePPEDetection",
-      "generatedAt": "2026-01-05T03:56:16.073Z",
+      "generatedAt": "2026-01-06T01:15:52.649Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9811,7 +9817,7 @@ const engineeringMetadata = {
     },
     "hse": {
       "name": "hse",
-      "generatedAt": "2026-01-05T03:56:16.390Z",
+      "generatedAt": "2026-01-06T01:15:53.195Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -9998,7 +10004,7 @@ const engineeringMetadata = {
     },
     "inboundEmail": {
       "name": "inboundEmail",
-      "generatedAt": "2026-01-05T03:56:16.697Z",
+      "generatedAt": "2026-01-06T01:15:53.816Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10067,7 +10073,7 @@ const engineeringMetadata = {
     },
     "inbox": {
       "name": "inbox",
-      "generatedAt": "2026-01-05T03:56:16.984Z",
+      "generatedAt": "2026-01-06T01:15:54.457Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10222,13 +10228,15 @@ const engineeringMetadata = {
     },
     "invoice": {
       "name": "invoice",
-      "generatedAt": "2026-01-05T03:56:17.410Z",
+      "generatedAt": "2026-01-06T01:15:55.051Z",
       "source": "live-introspection",
       "files": {
         "backend": [
           "src\\models\\Invoice.js",
           "src\\models\\InvoiceItem.js",
           "src\\models\\ProcurementInvoice.js",
+          "src\\models\\SupplierInvoice.js",
+          "src\\models\\SupplierInvoiceItem.js",
           "src\\routes\\invoiceRoutes.js",
           "src\\services\\billing\\ManualInvoiceService.js",
           "src\\services\\InvoiceGenerationService.js"
@@ -10315,17 +10323,27 @@ const engineeringMetadata = {
           "table": "procurement_invoices",
           "model": "ProcurementInvoice",
           "file": "ProcurementInvoice.js"
+        },
+        {
+          "table": "supplier_invoices",
+          "model": "SupplierInvoice",
+          "file": "SupplierInvoice.js"
+        },
+        {
+          "table": "supplier_invoice_items",
+          "model": "SupplierInvoiceItem",
+          "file": "SupplierInvoiceItem.js"
         }
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 1798,
-      "lastModified": "2026-01-04T02:13:03.190Z",
+      "linesOfCode": 2066,
+      "lastModified": "2026-01-05T23:24:51.057Z",
       "complexity": "complex"
     },
     "invoicing": {
       "name": "invoicing",
-      "generatedAt": "2026-01-05T03:56:18.304Z",
+      "generatedAt": "2026-01-06T01:15:55.911Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10400,7 +10418,7 @@ const engineeringMetadata = {
     },
     "jobPostings": {
       "name": "jobPostings",
-      "generatedAt": "2026-01-05T03:56:18.727Z",
+      "generatedAt": "2026-01-06T01:15:56.625Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10639,7 +10657,7 @@ const engineeringMetadata = {
     },
     "kiosk-enterprise": {
       "name": "kiosk-enterprise",
-      "generatedAt": "2026-01-05T03:56:19.313Z",
+      "generatedAt": "2026-01-06T01:15:57.320Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10693,7 +10711,7 @@ const engineeringMetadata = {
     },
     "kiosk": {
       "name": "kiosk",
-      "generatedAt": "2026-01-05T03:56:19.701Z",
+      "generatedAt": "2026-01-06T01:15:57.968Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10800,7 +10818,7 @@ const engineeringMetadata = {
     },
     "kiosks": {
       "name": "kiosks",
-      "generatedAt": "2026-01-05T03:56:20.161Z",
+      "generatedAt": "2026-01-06T01:15:58.559Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10858,7 +10876,7 @@ const engineeringMetadata = {
     },
     "lead": {
       "name": "lead",
-      "generatedAt": "2026-01-05T03:56:20.571Z",
+      "generatedAt": "2026-01-06T01:15:59.140Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -10962,7 +10980,7 @@ const engineeringMetadata = {
     },
     "legal": {
       "name": "legal",
-      "generatedAt": "2026-01-05T03:56:21.014Z",
+      "generatedAt": "2026-01-06T01:15:59.808Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11279,12 +11297,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 9502,
-      "lastModified": "2026-01-05T02:50:33.804Z",
+      "lastModified": "2026-01-06T00:13:51.369Z",
       "complexity": "complex"
     },
     "location": {
       "name": "location",
-      "generatedAt": "2026-01-05T03:56:21.408Z",
+      "generatedAt": "2026-01-06T01:16:00.429Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11366,7 +11384,7 @@ const engineeringMetadata = {
     },
     "logistics": {
       "name": "logistics",
-      "generatedAt": "2026-01-05T03:56:21.826Z",
+      "generatedAt": "2026-01-06T01:16:01.079Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11764,7 +11782,7 @@ const engineeringMetadata = {
     },
     "marketing": {
       "name": "marketing",
-      "generatedAt": "2026-01-05T03:56:22.230Z",
+      "generatedAt": "2026-01-06T01:16:01.724Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -11860,7 +11878,7 @@ const engineeringMetadata = {
     },
     "medicalAdvanced": {
       "name": "medicalAdvanced",
-      "generatedAt": "2026-01-05T03:56:22.607Z",
+      "generatedAt": "2026-01-06T01:16:02.340Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12022,7 +12040,7 @@ const engineeringMetadata = {
     },
     "medicalAuthorizations": {
       "name": "medicalAuthorizations",
-      "generatedAt": "2026-01-05T03:56:22.989Z",
+      "generatedAt": "2026-01-06T01:16:03.159Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12091,7 +12109,7 @@ const engineeringMetadata = {
     },
     "medicalCase": {
       "name": "medicalCase",
-      "generatedAt": "2026-01-05T03:56:23.445Z",
+      "generatedAt": "2026-01-06T01:16:03.838Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12189,7 +12207,7 @@ const engineeringMetadata = {
     },
     "medicalDoctor": {
       "name": "medicalDoctor",
-      "generatedAt": "2026-01-05T03:56:24.043Z",
+      "generatedAt": "2026-01-06T01:16:04.535Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12251,7 +12269,7 @@ const engineeringMetadata = {
     },
     "medicalRecords": {
       "name": "medicalRecords",
-      "generatedAt": "2026-01-05T03:56:24.516Z",
+      "generatedAt": "2026-01-06T01:16:05.182Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12351,7 +12369,7 @@ const engineeringMetadata = {
     },
     "medicalRoutes-basic": {
       "name": "medicalRoutes-basic",
-      "generatedAt": "2026-01-05T03:56:24.927Z",
+      "generatedAt": "2026-01-06T01:16:05.942Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12386,7 +12404,7 @@ const engineeringMetadata = {
     },
     "medical": {
       "name": "medical",
-      "generatedAt": "2026-01-05T03:56:25.315Z",
+      "generatedAt": "2026-01-06T01:16:06.536Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12647,7 +12665,7 @@ const engineeringMetadata = {
     },
     "medicalTemplates": {
       "name": "medicalTemplates",
-      "generatedAt": "2026-01-05T03:56:26.864Z",
+      "generatedAt": "2026-01-06T01:16:07.347Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12720,7 +12738,7 @@ const engineeringMetadata = {
     },
     "message": {
       "name": "message",
-      "generatedAt": "2026-01-05T03:56:27.336Z",
+      "generatedAt": "2026-01-06T01:16:07.996Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12798,7 +12816,7 @@ const engineeringMetadata = {
     },
     "military-security-api": {
       "name": "military-security-api",
-      "generatedAt": "2026-01-05T03:56:27.850Z",
+      "generatedAt": "2026-01-06T01:16:08.625Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12870,7 +12888,7 @@ const engineeringMetadata = {
     },
     "mobile": {
       "name": "mobile",
-      "generatedAt": "2026-01-05T03:56:28.333Z",
+      "generatedAt": "2026-01-06T01:16:09.250Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -12991,7 +13009,7 @@ const engineeringMetadata = {
     },
     "modules": {
       "name": "modules",
-      "generatedAt": "2026-01-05T03:56:28.860Z",
+      "generatedAt": "2026-01-06T01:16:09.921Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13081,7 +13099,7 @@ const engineeringMetadata = {
     },
     "modulesRoutes_SIMPLIFIED": {
       "name": "modulesRoutes_SIMPLIFIED",
-      "generatedAt": "2026-01-05T03:56:29.235Z",
+      "generatedAt": "2026-01-06T01:16:10.551Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13114,7 +13132,7 @@ const engineeringMetadata = {
     },
     "multipleART": {
       "name": "multipleART",
-      "generatedAt": "2026-01-05T03:56:29.645Z",
+      "generatedAt": "2026-01-06T01:16:11.210Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13186,7 +13204,7 @@ const engineeringMetadata = {
     },
     "notification": {
       "name": "notification",
-      "generatedAt": "2026-01-05T03:56:30.224Z",
+      "generatedAt": "2026-01-06T01:16:11.951Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13322,12 +13340,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 19768,
-      "lastModified": "2026-01-05T02:50:33.836Z",
+      "lastModified": "2026-01-06T00:13:51.416Z",
       "complexity": "complex"
     },
     "notificationsEnterprise": {
       "name": "notificationsEnterprise",
-      "generatedAt": "2026-01-05T03:56:30.798Z",
+      "generatedAt": "2026-01-06T01:16:12.899Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13441,7 +13459,7 @@ const engineeringMetadata = {
     },
     "notificationUnified": {
       "name": "notificationUnified",
-      "generatedAt": "2026-01-05T03:56:31.172Z",
+      "generatedAt": "2026-01-06T01:16:13.513Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13581,7 +13599,7 @@ const engineeringMetadata = {
     },
     "notificationWorkflow": {
       "name": "notificationWorkflow",
-      "generatedAt": "2026-01-05T03:56:31.506Z",
+      "generatedAt": "2026-01-06T01:16:14.136Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13665,12 +13683,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 2292,
-      "lastModified": "2026-01-05T02:50:33.836Z",
+      "lastModified": "2026-01-06T00:13:51.416Z",
       "complexity": "complex"
     },
     "offlineSync": {
       "name": "offlineSync",
-      "generatedAt": "2026-01-05T03:56:31.951Z",
+      "generatedAt": "2026-01-06T01:16:14.755Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13729,7 +13747,7 @@ const engineeringMetadata = {
     },
     "onboarding": {
       "name": "onboarding",
-      "generatedAt": "2026-01-05T03:56:32.288Z",
+      "generatedAt": "2026-01-06T01:16:15.401Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -13831,7 +13849,7 @@ const engineeringMetadata = {
     },
     "organizational": {
       "name": "organizational",
-      "generatedAt": "2026-01-05T03:56:32.648Z",
+      "generatedAt": "2026-01-06T01:16:16.006Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14084,7 +14102,7 @@ const engineeringMetadata = {
     },
     "partnerCommission": {
       "name": "partnerCommission",
-      "generatedAt": "2026-01-05T03:56:33.141Z",
+      "generatedAt": "2026-01-06T01:16:16.626Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14166,7 +14184,7 @@ const engineeringMetadata = {
     },
     "partner": {
       "name": "partner",
-      "generatedAt": "2026-01-05T03:56:33.564Z",
+      "generatedAt": "2026-01-06T01:16:17.312Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14330,7 +14348,7 @@ const engineeringMetadata = {
     },
     "paymentOrder": {
       "name": "paymentOrder",
-      "generatedAt": "2026-01-05T03:56:34.009Z",
+      "generatedAt": "2026-01-06T01:16:17.980Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -14609,12 +14627,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 2638,
-      "lastModified": "2026-01-05T02:58:20.615Z",
+      "lastModified": "2026-01-05T11:40:10.267Z",
       "complexity": "complex"
     },
     "payroll": {
       "name": "payroll",
-      "generatedAt": "2026-01-05T03:56:34.522Z",
+      "generatedAt": "2026-01-06T01:16:18.626Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15092,7 +15110,7 @@ const engineeringMetadata = {
     },
     "payrollTemplates": {
       "name": "payrollTemplates",
-      "generatedAt": "2026-01-05T03:56:35.818Z",
+      "generatedAt": "2026-01-06T01:16:19.274Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15170,7 +15188,7 @@ const engineeringMetadata = {
     },
     "permissions": {
       "name": "permissions",
-      "generatedAt": "2026-01-05T03:56:36.264Z",
+      "generatedAt": "2026-01-06T01:16:19.883Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15244,7 +15262,7 @@ const engineeringMetadata = {
     },
     "phase4": {
       "name": "phase4",
-      "generatedAt": "2026-01-05T03:56:36.603Z",
+      "generatedAt": "2026-01-06T01:16:20.603Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15297,7 +15315,7 @@ const engineeringMetadata = {
     },
     "postgresql-partitioning": {
       "name": "postgresql-partitioning",
-      "generatedAt": "2026-01-05T03:56:36.956Z",
+      "generatedAt": "2026-01-06T01:16:21.222Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15363,7 +15381,7 @@ const engineeringMetadata = {
     },
     "predictiveWorkforce": {
       "name": "predictiveWorkforce",
-      "generatedAt": "2026-01-05T03:56:37.504Z",
+      "generatedAt": "2026-01-06T01:16:21.801Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15428,7 +15446,7 @@ const engineeringMetadata = {
     },
     "pricing": {
       "name": "pricing",
-      "generatedAt": "2026-01-05T03:56:37.863Z",
+      "generatedAt": "2026-01-06T01:16:22.423Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15466,7 +15484,7 @@ const engineeringMetadata = {
     },
     "privacyRegulation": {
       "name": "privacyRegulation",
-      "generatedAt": "2026-01-05T03:56:38.212Z",
+      "generatedAt": "2026-01-06T01:16:23.045Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15550,7 +15568,7 @@ const engineeringMetadata = {
     },
     "proactive": {
       "name": "proactive",
-      "generatedAt": "2026-01-05T03:56:38.728Z",
+      "generatedAt": "2026-01-06T01:16:23.632Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15618,7 +15636,7 @@ const engineeringMetadata = {
     },
     "procedures": {
       "name": "procedures",
-      "generatedAt": "2026-01-05T03:56:39.087Z",
+      "generatedAt": "2026-01-06T01:16:24.222Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15854,7 +15872,7 @@ const engineeringMetadata = {
     },
     "processChain": {
       "name": "processChain",
-      "generatedAt": "2026-01-05T03:56:39.509Z",
+      "generatedAt": "2026-01-06T01:16:24.809Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -15963,7 +15981,7 @@ const engineeringMetadata = {
     },
     "procurement": {
       "name": "procurement",
-      "generatedAt": "2026-01-05T03:56:40.097Z",
+      "generatedAt": "2026-01-06T01:16:25.459Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16494,12 +16512,12 @@ const engineeringMetadata = {
       "progress": 75,
       "uxTestResults": null,
       "linesOfCode": 9145,
-      "lastModified": "2026-01-05T02:59:20.424Z",
+      "lastModified": "2026-01-05T11:40:10.259Z",
       "complexity": "complex"
     },
     "quotes": {
       "name": "quotes",
-      "generatedAt": "2026-01-05T03:56:40.668Z",
+      "generatedAt": "2026-01-06T01:16:26.297Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16573,7 +16591,7 @@ const engineeringMetadata = {
     },
     "report": {
       "name": "report",
-      "generatedAt": "2026-01-05T03:56:41.307Z",
+      "generatedAt": "2026-01-06T01:16:27.069Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16626,7 +16644,7 @@ const engineeringMetadata = {
     },
     "resourceCenter": {
       "name": "resourceCenter",
-      "generatedAt": "2026-01-05T03:56:41.686Z",
+      "generatedAt": "2026-01-06T01:16:27.707Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16704,7 +16722,7 @@ const engineeringMetadata = {
     },
     "retailAnalytics": {
       "name": "retailAnalytics",
-      "generatedAt": "2026-01-05T03:56:42.367Z",
+      "generatedAt": "2026-01-06T01:16:28.270Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16839,7 +16857,7 @@ const engineeringMetadata = {
     },
     "riskIntelligence": {
       "name": "riskIntelligence",
-      "generatedAt": "2026-01-05T03:56:42.795Z",
+      "generatedAt": "2026-01-06T01:16:28.868Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -16988,7 +17006,7 @@ const engineeringMetadata = {
     },
     "salaryAdvanced": {
       "name": "salaryAdvanced",
-      "generatedAt": "2026-01-05T03:56:43.267Z",
+      "generatedAt": "2026-01-06T01:16:29.431Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17095,7 +17113,7 @@ const engineeringMetadata = {
     },
     "salesOrchestration": {
       "name": "salesOrchestration",
-      "generatedAt": "2026-01-05T03:56:43.958Z",
+      "generatedAt": "2026-01-06T01:16:30.009Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17299,7 +17317,7 @@ const engineeringMetadata = {
     },
     "sanction": {
       "name": "sanction",
-      "generatedAt": "2026-01-05T03:56:44.361Z",
+      "generatedAt": "2026-01-06T01:16:30.678Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17463,7 +17481,7 @@ const engineeringMetadata = {
     },
     "seedDemo": {
       "name": "seedDemo",
-      "generatedAt": "2026-01-05T03:56:44.902Z",
+      "generatedAt": "2026-01-06T01:16:31.280Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17489,7 +17507,7 @@ const engineeringMetadata = {
     },
     "shift-calendar-": {
       "name": "shift-calendar-",
-      "generatedAt": "2026-01-05T03:56:45.404Z",
+      "generatedAt": "2026-01-06T01:16:31.865Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17523,7 +17541,7 @@ const engineeringMetadata = {
     },
     "shift": {
       "name": "shift",
-      "generatedAt": "2026-01-05T03:56:45.789Z",
+      "generatedAt": "2026-01-06T01:16:32.420Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17606,7 +17624,7 @@ const engineeringMetadata = {
     },
     "sla": {
       "name": "sla",
-      "generatedAt": "2026-01-05T03:56:46.132Z",
+      "generatedAt": "2026-01-06T01:16:32.961Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17685,7 +17703,7 @@ const engineeringMetadata = {
     },
     "staffCommissions": {
       "name": "staffCommissions",
-      "generatedAt": "2026-01-05T03:56:46.488Z",
+      "generatedAt": "2026-01-06T01:16:33.427Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -17757,12 +17775,90 @@ const engineeringMetadata = {
       "lastModified": "2025-12-16T13:34:18.972Z",
       "complexity": "complex"
     },
-    "supplierPortal": {
-      "name": "supplierPortal",
-      "generatedAt": "2026-01-05T03:56:46.928Z",
+    "supplierPortalAttachments": {
+      "name": "supplierPortalAttachments",
+      "generatedAt": "2026-01-06T01:16:33.877Z",
       "source": "live-introspection",
       "files": {
         "backend": [
+          "src\\routes\\supplierPortalAttachments.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "database"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "POST",
+          "path": "/api/supplierPortalAttachments/rfq/:rfqId/company-attachments",
+          "file": "supplierPortalAttachments.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortalAttachments/rfq/:rfqId/company-attachments",
+          "file": "supplierPortalAttachments.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortalAttachments/rfq/:rfqId/company-attachments/:attachmentId/download",
+          "file": "supplierPortalAttachments.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortalAttachments/rfq/:rfqId/company-attachments/:attachmentId/acknowledge",
+          "file": "supplierPortalAttachments.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortalAttachments/purchase-order/:poId/attachments",
+          "file": "supplierPortalAttachments.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortalAttachments/purchase-order/:poId/attachments",
+          "file": "supplierPortalAttachments.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortalAttachments/purchase-order/:poId/attachments/:attachmentId/download",
+          "file": "supplierPortalAttachments.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortalAttachments/invoice/upload",
+          "file": "supplierPortalAttachments.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/supplierPortalAttachments/invoice/:invoiceId/validate",
+          "file": "supplierPortalAttachments.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/supplierPortalAttachments/rfq/:rfqId/check-required-downloads",
+          "file": "supplierPortalAttachments.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 600,
+      "lastModified": "2026-01-06T00:10:46.312Z",
+      "complexity": "complex"
+    },
+    "supplierPortal": {
+      "name": "supplierPortal",
+      "generatedAt": "2026-01-06T01:16:34.316Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\routes\\supplierPortalAttachments.js",
           "src\\routes\\supplierPortalRoutes.js",
           "src\\services\\SupplierPortalService.js"
         ],
@@ -17770,15 +17866,9 @@ const engineeringMetadata = {
       },
       "dependencies": {
         "required": [
-          "SupplierPortalService",
-          "SupplierDocumentService",
-          "supplierUpload",
-          "database",
-          "DMSIntegrationService"
+          "database"
         ],
-        "optional": [
-          "DMSIntegrationService"
-        ],
+        "optional": [],
         "integrates_with": [],
         "provides_to": []
       },
@@ -17972,13 +18062,13 @@ const engineeringMetadata = {
       "databaseTables": [],
       "progress": 50,
       "uxTestResults": null,
-      "linesOfCode": 2235,
-      "lastModified": "2026-01-05T02:36:14.901Z",
+      "linesOfCode": 2835,
+      "lastModified": "2026-01-06T00:10:46.312Z",
       "complexity": "complex"
     },
     "supportEscalation": {
       "name": "supportEscalation",
-      "generatedAt": "2026-01-05T03:56:47.229Z",
+      "generatedAt": "2026-01-06T01:16:34.748Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18035,7 +18125,7 @@ const engineeringMetadata = {
     },
     "supportRoutesV2": {
       "name": "supportRoutesV2",
-      "generatedAt": "2026-01-05T03:56:47.696Z",
+      "generatedAt": "2026-01-06T01:16:35.172Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18151,7 +18241,7 @@ const engineeringMetadata = {
     },
     "synapseCentral": {
       "name": "synapseCentral",
-      "generatedAt": "2026-01-05T03:56:48.115Z",
+      "generatedAt": "2026-01-06T01:16:35.591Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18239,7 +18329,7 @@ const engineeringMetadata = {
     },
     "taskIntelligence": {
       "name": "taskIntelligence",
-      "generatedAt": "2026-01-05T03:56:48.515Z",
+      "generatedAt": "2026-01-06T01:16:36.039Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18305,7 +18395,7 @@ const engineeringMetadata = {
     },
     "technologyStack": {
       "name": "technologyStack",
-      "generatedAt": "2026-01-05T03:56:49.021Z",
+      "generatedAt": "2026-01-06T01:16:36.492Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18345,7 +18435,7 @@ const engineeringMetadata = {
     },
     "temporaryAccess": {
       "name": "temporaryAccess",
-      "generatedAt": "2026-01-05T03:56:49.360Z",
+      "generatedAt": "2026-01-06T01:16:36.960Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18469,7 +18559,7 @@ const engineeringMetadata = {
     },
     "tempRegisterOHModule": {
       "name": "tempRegisterOHModule",
-      "generatedAt": "2026-01-05T03:56:49.710Z",
+      "generatedAt": "2026-01-06T01:16:37.482Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18499,12 +18589,13 @@ const engineeringMetadata = {
     },
     "testing": {
       "name": "testing",
-      "generatedAt": "2026-01-05T03:56:50.125Z",
+      "generatedAt": "2026-01-06T01:16:37.900Z",
       "source": "live-introspection",
       "files": {
         "backend": [
           "src\\auditor\\ai\\AITestingEngine.js",
           "src\\auditor\\core\\IntelligentTestingOrchestrator.js",
+          "src\\auditor\\core\\UltimateTestingEngine.js",
           "src\\routes\\e2eTestingAdvancedRoutes.js",
           "src\\routes\\e2eTestingRoutes.js",
           "src\\routes\\testingRoutes.js"
@@ -18534,13 +18625,13 @@ const engineeringMetadata = {
       "databaseTables": [],
       "progress": 50,
       "uxTestResults": null,
-      "linesOfCode": 2509,
-      "lastModified": "2026-01-04T02:13:03.252Z",
+      "linesOfCode": 3229,
+      "lastModified": "2026-01-05T19:49:46.935Z",
       "complexity": "complex"
     },
     "trainingKnowledge": {
       "name": "trainingKnowledge",
-      "generatedAt": "2026-01-05T03:56:50.785Z",
+      "generatedAt": "2026-01-06T01:16:38.308Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18638,7 +18729,7 @@ const engineeringMetadata = {
     },
     "training": {
       "name": "training",
-      "generatedAt": "2026-01-05T03:56:51.348Z",
+      "generatedAt": "2026-01-06T01:16:38.709Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18715,7 +18806,7 @@ const engineeringMetadata = {
     },
     "transportFleet": {
       "name": "transportFleet",
-      "generatedAt": "2026-01-05T03:56:52.202Z",
+      "generatedAt": "2026-01-06T01:16:39.116Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18765,7 +18856,7 @@ const engineeringMetadata = {
     },
     "transport": {
       "name": "transport",
-      "generatedAt": "2026-01-05T03:56:52.667Z",
+      "generatedAt": "2026-01-06T01:16:39.483Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18812,7 +18903,7 @@ const engineeringMetadata = {
     },
     "transportTrips": {
       "name": "transportTrips",
-      "generatedAt": "2026-01-05T03:56:53.047Z",
+      "generatedAt": "2026-01-06T01:16:39.840Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18862,7 +18953,7 @@ const engineeringMetadata = {
     },
     "trials": {
       "name": "trials",
-      "generatedAt": "2026-01-05T03:56:53.592Z",
+      "generatedAt": "2026-01-06T01:16:40.194Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18931,7 +19022,7 @@ const engineeringMetadata = {
     },
     "tutorial": {
       "name": "tutorial",
-      "generatedAt": "2026-01-05T03:56:54.055Z",
+      "generatedAt": "2026-01-06T01:16:40.555Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -18985,9 +19076,70 @@ const engineeringMetadata = {
       "lastModified": "2026-01-04T02:13:01.988Z",
       "complexity": "complex"
     },
+    "ultimateTest": {
+      "name": "ultimateTest",
+      "generatedAt": "2026-01-06T01:16:40.920Z",
+      "source": "live-introspection",
+      "files": {
+        "backend": [
+          "src\\auditor\\core\\UltimateTestingEngine.js",
+          "src\\routes\\ultimateTestRoutes.js"
+        ],
+        "frontend": []
+      },
+      "dependencies": {
+        "required": [
+          "Phase4TestOrchestrator",
+          "IntelligentTestingOrchestrator",
+          "EndpointCollector",
+          "DatabaseCollector",
+          "FrontendCollector",
+          "IntegrationCollector",
+          "E2ECollector",
+          "RealUserExperienceCollector",
+          "AdvancedUserSimulationCollector"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "apiEndpoints": [
+        {
+          "method": "POST",
+          "path": "/api/ultimateTest/run",
+          "file": "ultimateTestRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/ultimateTest/status",
+          "file": "ultimateTestRoutes.js"
+        },
+        {
+          "method": "POST",
+          "path": "/api/ultimateTest/stop",
+          "file": "ultimateTestRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/ultimateTest/results",
+          "file": "ultimateTestRoutes.js"
+        },
+        {
+          "method": "GET",
+          "path": "/api/ultimateTest/results/:executionId",
+          "file": "ultimateTestRoutes.js"
+        }
+      ],
+      "databaseTables": [],
+      "progress": 50,
+      "uxTestResults": null,
+      "linesOfCode": 1043,
+      "lastModified": "2026-01-05T17:38:58.245Z",
+      "complexity": "complex"
+    },
     "unifiedHelp": {
       "name": "unifiedHelp",
-      "generatedAt": "2026-01-05T03:56:54.392Z",
+      "generatedAt": "2026-01-06T01:16:41.281Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19075,7 +19227,7 @@ const engineeringMetadata = {
     },
     "upload": {
       "name": "upload",
-      "generatedAt": "2026-01-05T03:56:54.718Z",
+      "generatedAt": "2026-01-06T01:16:41.634Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19117,12 +19269,12 @@ const engineeringMetadata = {
       "progress": 50,
       "uxTestResults": null,
       "linesOfCode": 646,
-      "lastModified": "2026-01-05T02:27:48.771Z",
+      "lastModified": "2026-01-05T11:40:10.253Z",
       "complexity": "complex"
     },
     "user-calendar-": {
       "name": "user-calendar-",
-      "generatedAt": "2026-01-05T03:56:55.058Z",
+      "generatedAt": "2026-01-06T01:16:42.050Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19161,7 +19313,7 @@ const engineeringMetadata = {
     },
     "userAdmin": {
       "name": "userAdmin",
-      "generatedAt": "2026-01-05T03:56:55.365Z",
+      "generatedAt": "2026-01-06T01:16:42.410Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19260,7 +19412,7 @@ const engineeringMetadata = {
     },
     "userAssignedTask": {
       "name": "userAssignedTask",
-      "generatedAt": "2026-01-05T03:56:55.762Z",
+      "generatedAt": "2026-01-06T01:16:42.756Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19322,7 +19474,7 @@ const engineeringMetadata = {
     },
     "userDocuments": {
       "name": "userDocuments",
-      "generatedAt": "2026-01-05T03:56:56.446Z",
+      "generatedAt": "2026-01-06T01:16:43.145Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19386,7 +19538,7 @@ const engineeringMetadata = {
     },
     "userDriverLicense": {
       "name": "userDriverLicense",
-      "generatedAt": "2026-01-05T03:56:56.830Z",
+      "generatedAt": "2026-01-06T01:16:43.512Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19443,7 +19595,7 @@ const engineeringMetadata = {
     },
     "userLegalIssue": {
       "name": "userLegalIssue",
-      "generatedAt": "2026-01-05T03:56:57.198Z",
+      "generatedAt": "2026-01-06T01:16:43.876Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19500,7 +19652,7 @@ const engineeringMetadata = {
     },
     "userMedicalExams": {
       "name": "userMedicalExams",
-      "generatedAt": "2026-01-05T03:56:57.712Z",
+      "generatedAt": "2026-01-06T01:16:44.268Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19569,7 +19721,7 @@ const engineeringMetadata = {
     },
     "userMedical": {
       "name": "userMedical",
-      "generatedAt": "2026-01-05T03:56:58.107Z",
+      "generatedAt": "2026-01-06T01:16:44.630Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19784,7 +19936,7 @@ const engineeringMetadata = {
     },
     "userProfessionalLicense": {
       "name": "userProfessionalLicense",
-      "generatedAt": "2026-01-05T03:56:58.879Z",
+      "generatedAt": "2026-01-06T01:16:45.003Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19841,7 +19993,7 @@ const engineeringMetadata = {
     },
     "userProfile": {
       "name": "userProfile",
-      "generatedAt": "2026-01-05T03:56:59.261Z",
+      "generatedAt": "2026-01-06T01:16:45.393Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -19962,7 +20114,7 @@ const engineeringMetadata = {
     },
     "user": {
       "name": "user",
-      "generatedAt": "2026-01-05T03:56:59.555Z",
+      "generatedAt": "2026-01-06T01:16:45.765Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -20297,13 +20449,13 @@ const engineeringMetadata = {
       ],
       "progress": 75,
       "uxTestResults": null,
-      "linesOfCode": 22346,
-      "lastModified": "2026-01-04T21:58:11.335Z",
+      "linesOfCode": 22348,
+      "lastModified": "2026-01-05T16:31:38.768Z",
       "complexity": "complex"
     },
     "userSalaryConfig": {
       "name": "userSalaryConfig",
-      "generatedAt": "2026-01-05T03:56:59.981Z",
+      "generatedAt": "2026-01-06T01:16:46.150Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -20355,7 +20507,7 @@ const engineeringMetadata = {
     },
     "userSocioEnvironmental": {
       "name": "userSocioEnvironmental",
-      "generatedAt": "2026-01-05T03:57:00.411Z",
+      "generatedAt": "2026-01-06T01:16:46.528Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -20428,7 +20580,7 @@ const engineeringMetadata = {
     },
     "usersSimple": {
       "name": "usersSimple",
-      "generatedAt": "2026-01-05T03:57:00.790Z",
+      "generatedAt": "2026-01-06T01:16:46.898Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -20463,7 +20615,7 @@ const engineeringMetadata = {
     },
     "userUnionAffiliation": {
       "name": "userUnionAffiliation",
-      "generatedAt": "2026-01-05T03:57:01.256Z",
+      "generatedAt": "2026-01-06T01:16:47.270Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -20520,7 +20672,7 @@ const engineeringMetadata = {
     },
     "userWorkHistory": {
       "name": "userWorkHistory",
-      "generatedAt": "2026-01-05T03:57:01.580Z",
+      "generatedAt": "2026-01-06T01:16:47.693Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -20599,7 +20751,7 @@ const engineeringMetadata = {
     },
     "vacation": {
       "name": "vacation",
-      "generatedAt": "2026-01-05T03:57:01.946Z",
+      "generatedAt": "2026-01-06T01:16:48.059Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -20731,7 +20883,7 @@ const engineeringMetadata = {
     },
     "vendorAutomation": {
       "name": "vendorAutomation",
-      "generatedAt": "2026-01-05T03:57:02.446Z",
+      "generatedAt": "2026-01-06T01:16:48.443Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -20910,7 +21062,7 @@ const engineeringMetadata = {
     },
     "vendorCommissions": {
       "name": "vendorCommissions",
-      "generatedAt": "2026-01-05T03:57:02.787Z",
+      "generatedAt": "2026-01-06T01:16:48.826Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -21034,7 +21186,7 @@ const engineeringMetadata = {
     },
     "vendor": {
       "name": "vendor",
-      "generatedAt": "2026-01-05T03:57:03.129Z",
+      "generatedAt": "2026-01-06T01:16:49.237Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -21124,7 +21276,7 @@ const engineeringMetadata = {
     },
     "visitor": {
       "name": "visitor",
-      "generatedAt": "2026-01-05T03:57:03.966Z",
+      "generatedAt": "2026-01-06T01:16:49.607Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -21207,7 +21359,7 @@ const engineeringMetadata = {
     },
     "voicePlatform": {
       "name": "voicePlatform",
-      "generatedAt": "2026-01-05T03:57:04.476Z",
+      "generatedAt": "2026-01-06T01:16:50.043Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -21322,7 +21474,7 @@ const engineeringMetadata = {
     },
     "warehouse": {
       "name": "warehouse",
-      "generatedAt": "2026-01-05T03:57:04.866Z",
+      "generatedAt": "2026-01-06T01:16:50.393Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -21983,7 +22135,7 @@ const engineeringMetadata = {
     },
     "workArrangement": {
       "name": "workArrangement",
-      "generatedAt": "2026-01-05T03:57:05.190Z",
+      "generatedAt": "2026-01-06T01:16:50.938Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -22106,7 +22258,7 @@ const engineeringMetadata = {
     },
     "workflowIntrospection": {
       "name": "workflowIntrospection",
-      "generatedAt": "2026-01-05T03:57:05.512Z",
+      "generatedAt": "2026-01-06T01:16:51.313Z",
       "source": "live-introspection",
       "files": {
         "backend": [
@@ -22184,22 +22336,22 @@ const engineeringMetadata = {
     }
   },
   "stats": {
-    "totalModules": 209,
+    "totalModules": 211,
     "averageProgress": 61,
-    "totalLinesOfCode": 471318,
-    "totalEndpoints": 2806,
-    "totalTables": 317,
+    "totalLinesOfCode": 475017,
+    "totalEndpoints": 2821,
+    "totalTables": 320,
     "modulesByComplexity": {
       "simple": 9,
       "moderate": 41,
-      "complex": 159
+      "complex": 161
     }
   }
 };
 
 // Agregar timestamp de generación
-engineeringMetadata.generated_at = '2026-01-05T03:57:05.926Z';
+engineeringMetadata.generated_at = '2026-01-06T01:16:51.714Z';
 engineeringMetadata.auto_generated = true;
-engineeringMetadata.update_count = 14;
+engineeringMetadata.update_count = 669;
 
 module.exports = engineeringMetadata;

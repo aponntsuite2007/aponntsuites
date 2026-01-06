@@ -10,6 +10,40 @@ window.FinanceReports = (function() {
     let currentReport = null;
     let reportData = null;
 
+    // ============================================================================
+    // 💡 SISTEMA DE AYUDA CONTEXTUAL
+    // ============================================================================
+    if (typeof ModuleHelpSystem !== 'undefined') {
+        ModuleHelpSystem.registerModule('finance-reports', {
+            moduleName: 'Informes Financieros',
+            moduleDescription: 'Generación de reportes contables: Balance, Estado de Resultados, Flujo de Efectivo',
+            contexts: {
+                reports: {
+                    title: 'Informes Contables',
+                    description: 'Generador de reportes financieros estándar',
+                    tips: [
+                        'Selecciona el tipo de reporte y el período deseado',
+                        'Puedes exportar a PDF o Excel',
+                        'Los reportes se generan en tiempo real desde la BD'
+                    ],
+                    warnings: ['Verifica que todos los asientos estén aprobados antes de generar reportes oficiales'],
+                    helpTopics: ['¿Qué es un Balance General?', '¿Qué es el Estado de Resultados?', '¿Qué es el Flujo de Efectivo?'],
+                    fieldHelp: {
+                        reportType: 'Tipo de reporte: Balance, P&L, Flujo de Caja',
+                        period: 'Período de análisis (mes, trimestre, año)',
+                        format: 'Formato de exportación (PDF, Excel)'
+                    }
+                }
+            },
+            fallbackResponses: {
+                'balance': 'El Balance General muestra activos, pasivos y patrimonio en un momento dado.',
+                'estado de resultados': 'El Estado de Resultados (P&L) muestra ingresos y gastos de un período.',
+                'flujo': 'El Flujo de Efectivo muestra entradas y salidas de efectivo.',
+                'exportar': 'Usa los botones de exportar para descargar en PDF o Excel.'
+            }
+        });
+    }
+
     // =============================================
     // INICIALIZACIÓN
     // =============================================
@@ -19,6 +53,11 @@ window.FinanceReports = (function() {
 
         container.innerHTML = renderStructure();
         setupEventListeners();
+
+        // Inicializar sistema de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('finance-reports');
+        }
 
         console.log('✅ Reportes Financieros inicializado');
     }
@@ -49,6 +88,8 @@ window.FinanceReports = (function() {
                         </button>
                     </div>
                 </div>
+
+                ${typeof ModuleHelpSystem !== 'undefined' ? ModuleHelpSystem.renderBanner('reports') : ''}
 
                 <div class="module-content">
                     <div class="reports-grid">

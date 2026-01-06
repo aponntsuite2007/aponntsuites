@@ -93,11 +93,11 @@ module.exports = (database) => {
       // ✅ HABILITADO: EmployeeProfileCollector - Tests de perfil de empleado desde frontend
       auditorEngine.registerCollector('employee-profile', new EmployeeProfileCollector(database, systemRegistry));
 
-      // ⚠️ DESHABILITADOS: Los siguientes collectors abren navegadores adicionales (múltiples Chrome)
-      // Descomentar solo si se necesitan tests E2E/UX avanzados
-      // auditorEngine.registerCollector('e2e', new E2ECollector(database, systemRegistry));
-      // auditorEngine.registerCollector('real-ux', new RealUserExperienceCollector(database, systemRegistry));
-      // auditorEngine.registerCollector('advanced-sim', new AdvancedUserSimulationCollector(database, systemRegistry));
+      // ✅ RE-HABILITADOS (2026-01-05): Collectors E2E/UX/Simulation necesarios para ULTIMATE TESTING ENGINE
+      // Ahora gestionados por UltimateTestingEngine con un solo navegador compartido
+      auditorEngine.registerCollector('e2e', new E2ECollector(database, systemRegistry));
+      auditorEngine.registerCollector('real-ux', new RealUserExperienceCollector(database, systemRegistry));
+      auditorEngine.registerCollector('advanced-sim', new AdvancedUserSimulationCollector(database, systemRegistry));
 
       // Registrar healers (orden: advanced primero, hybrid como fallback)
       auditorEngine.registerHealer('advanced', new AdvancedHealer(database, systemRegistry));

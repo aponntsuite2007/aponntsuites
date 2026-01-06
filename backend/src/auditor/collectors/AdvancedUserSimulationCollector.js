@@ -103,7 +103,8 @@ class AdvancedUserSimulationCollector {
 
     const context = await this.browser.newContext({ viewport: null });
         this.page = await context.newPage();
-    await this.page.setCacheEnabled(false);
+    // NOTA: page.setCacheEnabled() NO existe en Playwright
+    // await this.page.setCacheEnabled(false);
   }
 
   async loginAsRealUser(config) {

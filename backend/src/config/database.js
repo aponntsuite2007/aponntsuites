@@ -373,6 +373,17 @@ const HseCompanyConfig = require('../models/HseCompanyConfig')(sequelize);
 
 // SuperUser eliminado - se unificó con tabla User
 
+// ✅ MODELOS - Portal de Proveedores (Sistema de Adjuntos y Clasificación)
+const RfqCompanyAttachment = require('../models/RfqCompanyAttachment')(sequelize);
+const PurchaseOrderAttachment = require('../models/PurchaseOrderAttachment')(sequelize);
+const PurchaseOrder = require('../models/PurchaseOrder')(sequelize);
+const PurchaseOrderItem = require('../models/PurchaseOrderItem')(sequelize);
+const RequestForQuotation = require('../models/RequestForQuotation')(sequelize);
+const RfqItem = require('../models/RfqItem')(sequelize);
+const RfqAttachment = require('../models/RfqAttachment')(sequelize);
+const SupplierInvoice = require('../models/SupplierInvoice')(sequelize);
+const SupplierInvoiceItem = require('../models/SupplierInvoiceItem')(sequelize);
+
 // Definir asociaciones
 // IMPORTANTE: User tiene 'user_id' como PK, NO 'id' - siempre especificar sourceKey
 User.hasMany(Attendance, { foreignKey: 'user_id', sourceKey: 'user_id' });
@@ -1648,6 +1659,90 @@ FinanceBudget.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company
 FinanceBudgetLine.belongsTo(FinanceBudget, { foreignKey: 'budget_id', as: 'budget' });
 FinanceBudget.hasMany(FinanceBudgetLine, { foreignKey: 'budget_id', as: 'lines' });
 
+// =========================================================================
+// ✅ ASOCIACIONES - Portal de Proveedores (Adjuntos y Clasificación)
+// =========================================================================
+
+// RequestForQuotation <-> Company
+RequestForQuotation.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+Company.hasMany(RequestForQuotation, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'rfqs' });
+
+// RequestForQuotation <-> RfqItem
+RequestForQuotation.hasMany(RfqItem, { foreignKey: 'rfq_id', as: 'items' });
+RfqItem.belongsTo(RequestForQuotation, { foreignKey: 'rfq_id', as: 'rfq' });
+
+// RequestForQuotation <-> RfqCompanyAttachment
+RequestForQuotation.hasMany(RfqCompanyAttachment, { foreignKey: 'rfq_id', as: 'companyAttachments' });
+RfqCompanyAttachment.belongsTo(RequestForQuotation, { foreignKey: 'rfq_id', as: 'rfq' });
+
+// RfqCompanyAttachment <-> Company
+RfqCompanyAttachment.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+Company.hasMany(RfqCompanyAttachment, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'rfqCompanyAttachments' });
+
+// RfqCompanyAttachment <-> User (uploader)
+RfqCompanyAttachment.belongsTo(User, { foreignKey: 'uploaded_by', targetKey: 'user_id', as: 'uploader' });
+User.hasMany(RfqCompanyAttachment, { foreignKey: 'uploaded_by', sourceKey: 'user_id', as: 'uploadedRfqAttachments' });
+
+// RfqAttachment <-> RfqCompanyAttachment (respuesta a adjunto contractual)
+RfqAttachment.belongsTo(RfqCompanyAttachment, { foreignKey: 'company_attachment_id', as: 'companyAttachment' });
+RfqCompanyAttachment.hasMany(RfqAttachment, { foreignKey: 'company_attachment_id', as: 'supplierResponses' });
+
+// RfqItem <-> FinanceChartOfAccounts (cuenta contable)
+if (FinanceChartOfAccounts) {
+  RfqItem.belongsTo(FinanceChartOfAccounts, { foreignKey: 'accounting_account_id', as: 'accountingAccount' });
+  FinanceChartOfAccounts.hasMany(RfqItem, { foreignKey: 'accounting_account_id', as: 'rfqItems' });
+}
+
+// PurchaseOrder <-> Company
+PurchaseOrder.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+Company.hasMany(PurchaseOrder, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'purchaseOrders' });
+
+// PurchaseOrder <-> PurchaseOrderItem
+PurchaseOrder.hasMany(PurchaseOrderItem, { foreignKey: 'purchase_order_id', as: 'items' });
+PurchaseOrderItem.belongsTo(PurchaseOrder, { foreignKey: 'purchase_order_id', as: 'purchaseOrder' });
+
+// PurchaseOrder <-> PurchaseOrderAttachment
+PurchaseOrder.hasMany(PurchaseOrderAttachment, { foreignKey: 'purchase_order_id', as: 'attachments' });
+PurchaseOrderAttachment.belongsTo(PurchaseOrder, { foreignKey: 'purchase_order_id', as: 'purchaseOrder' });
+
+// PurchaseOrder <-> User (creator, approver)
+PurchaseOrder.belongsTo(User, { foreignKey: 'created_by', targetKey: 'user_id', as: 'creator' });
+User.hasMany(PurchaseOrder, { foreignKey: 'created_by', sourceKey: 'user_id', as: 'createdPurchaseOrders' });
+PurchaseOrder.belongsTo(User, { foreignKey: 'approved_by', targetKey: 'user_id', as: 'approver' });
+User.hasMany(PurchaseOrder, { foreignKey: 'approved_by', sourceKey: 'user_id', as: 'approvedPurchaseOrders' });
+
+// PurchaseOrderAttachment <-> Company
+PurchaseOrderAttachment.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+Company.hasMany(PurchaseOrderAttachment, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'purchaseOrderAttachments' });
+
+// PurchaseOrderAttachment <-> User (uploader)
+PurchaseOrderAttachment.belongsTo(User, { foreignKey: 'uploaded_by', targetKey: 'user_id', as: 'uploader' });
+User.hasMany(PurchaseOrderAttachment, { foreignKey: 'uploaded_by', sourceKey: 'user_id', as: 'uploadedPurchaseOrderAttachments' });
+
+// PurchaseOrderItem <-> FinanceChartOfAccounts (cuenta contable)
+if (FinanceChartOfAccounts) {
+  PurchaseOrderItem.belongsTo(FinanceChartOfAccounts, { foreignKey: 'accounting_account_id', as: 'accountingAccount' });
+  FinanceChartOfAccounts.hasMany(PurchaseOrderItem, { foreignKey: 'accounting_account_id', as: 'purchaseOrderItems' });
+}
+
+// SupplierInvoice <-> Company
+SupplierInvoice.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+Company.hasMany(SupplierInvoice, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'supplierInvoices' });
+
+// SupplierInvoice <-> PurchaseOrder
+SupplierInvoice.belongsTo(PurchaseOrder, { foreignKey: 'purchase_order_id', as: 'purchaseOrder' });
+PurchaseOrder.hasMany(SupplierInvoice, { foreignKey: 'purchase_order_id', as: 'invoices' });
+
+// SupplierInvoice <-> SupplierInvoiceItem
+SupplierInvoice.hasMany(SupplierInvoiceItem, { foreignKey: 'invoice_id', as: 'items' });
+SupplierInvoiceItem.belongsTo(SupplierInvoice, { foreignKey: 'invoice_id', as: 'invoice' });
+
+// SupplierInvoice <-> User (uploader, validator)
+SupplierInvoice.belongsTo(User, { foreignKey: 'uploaded_by', targetKey: 'user_id', as: 'uploader' });
+User.hasMany(SupplierInvoice, { foreignKey: 'uploaded_by', sourceKey: 'user_id', as: 'uploadedInvoices' });
+SupplierInvoice.belongsTo(User, { foreignKey: 'validated_by', targetKey: 'user_id', as: 'validator' });
+User.hasMany(SupplierInvoice, { foreignKey: 'validated_by', sourceKey: 'user_id', as: 'validatedInvoices' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -1858,6 +1953,17 @@ module.exports = {
   EppDelivery,
   EppInspection,
   HseCompanyConfig,
+
+  // ✅ EXPORTS - Portal de Proveedores (Adjuntos y Clasificación Contractual)
+  RfqCompanyAttachment,
+  PurchaseOrderAttachment,
+  PurchaseOrder,
+  PurchaseOrderItem,
+  RequestForQuotation,
+  RfqItem,
+  RfqAttachment,
+  SupplierInvoice,
+  SupplierInvoiceItem,
 
   // ✅ EXPORTS - Finance Enterprise System (39 modelos)
   FinanceChartOfAccounts,

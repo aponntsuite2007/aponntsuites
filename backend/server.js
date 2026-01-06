@@ -2603,6 +2603,15 @@ try {
     console.log('⚠️ [SUPPLIER-PORTAL] Routes not available:', e.message);
 }
 
+// 📎 IMPORTAR RUTAS DE ADJUNTOS PORTAL DE PROVEEDORES - OPCIONAL EN PRODUCCIÓN
+let supplierPortalAttachmentsRoutes = null;
+try {
+    supplierPortalAttachmentsRoutes = require('./src/routes/supplierPortalAttachments');
+    console.log('✅ [SUPPLIER-PORTAL-ATTACHMENTS] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [SUPPLIER-PORTAL-ATTACHMENTS] Routes not available:', e.message);
+}
+
 // 💰 IMPORTAR RUTAS DE FINANZAS (Finance Enterprise) - OPCIONAL EN PRODUCCIÓN
 let financeRoutes = null;
 try {
@@ -3003,6 +3012,21 @@ try {
 } catch (e) {
     console.log('⚠️ [AUTO-HEALING] Routes not available (optional in production)');
 }
+
+// ✅ CONFIGURAR ULTIMATE TESTING ENGINE - UN SOLO MEGA TEST (Enero 2026)
+try {
+    const ultimateTestRoutes = require('./src/routes/ultimateTestRoutes');
+    app.use('/api/ultimate-test', ultimateTestRoutes);
+    console.log('✅ [ULTIMATE-TEST] UN SOLO MEGA TEST integrado y activo');
+    console.log('   🚀 POST /api/ultimate-test/run - Ejecutar batería completa');
+    console.log('   📊 GET  /api/ultimate-test/status - Estado en tiempo real');
+    console.log('   🛑 POST /api/ultimate-test/stop - Detener ejecución');
+    console.log('   📋 GET  /api/ultimate-test/results - Historial de ejecuciones');
+    console.log('   📈 GET  /api/ultimate-test/results/:executionId - Detalle de ejecución');
+} catch (e) {
+    console.log('⚠️ [ULTIMATE-TEST] Routes not available (optional in production):', e.message);
+}
+
 // app.use('/api/engineering-live', engineeringMetadataRoutes); // Moved to line 3342+ area
 // app.use('/api/process-chain', processChainRoutes); // Moved to line 3131 (after declaration)
 
@@ -3617,6 +3641,17 @@ if (supplierPortalRoutes) {
     console.log('   📍 POST /api/supplier-portal/auth/login - Login portal');
     console.log('   📍 GET  /api/supplier-portal/dashboard - Dashboard proveedor');
     console.log('   📍 GET  /api/supplier-portal/offers - Ofertas disponibles');
+}
+
+// 📎 PORTAL DE PROVEEDORES - ADJUNTOS Y CLASIFICACIÓN - Enero 2026 - Solo si está disponible
+if (supplierPortalAttachmentsRoutes) {
+    app.use('/api/supplier-portal/attachments', supplierPortalAttachmentsRoutes);
+    console.log('📎 [SUPPLIER-PORTAL-ATTACHMENTS] Rutas de adjuntos configuradas');
+    console.log('   📍 POST /api/supplier-portal/attachments/rfq/:rfqId/company-attachments - Upload adjunto empresa→proveedor');
+    console.log('   📍 GET  /api/supplier-portal/attachments/rfq/:rfqId/company-attachments - Listar adjuntos');
+    console.log('   📍 GET  /api/supplier-portal/attachments/rfq/:rfqId/company-attachments/:attachmentId/download - Descargar adjunto');
+    console.log('   📍 POST /api/supplier-portal/attachments/invoice/upload - Upload factura proveedor');
+    console.log('   📍 POST /api/supplier-portal/attachments/invoice/:invoiceId/validate - Validar factura');
 }
 
 // 💰 FINANCE ENTERPRISE (Finanzas Empresariales) - Enero 2026 - Solo si está disponible

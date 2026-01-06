@@ -415,6 +415,9 @@ const EngineeringDashboard = {
           <button class="btn-llm-context" id="btn-regenerate-llm-context" title="Regenerar llm-context.json para IAs">
             🤖 Regenerar LLM Context
           </button>
+          <button class="btn-ultimate-test" id="btn-ultimate-test" title="Ejecutar ULTIMATE TEST - Batería completa integrada">
+            🚀 ULTIMATE TEST
+          </button>
         </div>
       </div>
     `;
@@ -3911,6 +3914,14 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
       });
     }
 
+    // ULTIMATE TEST (2026-01-05)
+    const btnUltimateTest = document.getElementById('btn-ultimate-test');
+    if (btnUltimateTest) {
+      btnUltimateTest.addEventListener('click', async () => {
+        await this.runUltimateTest();
+      });
+    }
+
     // Ver Detalles Completos buttons (Applications y Modules)
     document.querySelectorAll('.btn-view-details').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -5891,6 +5902,145 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
           <button onclick="location.reload()">Recargar Página</button>
         </div>
       `;
+    }
+  },
+
+  /**
+   * ========================================================================
+   * ⚡ ULTIMATE TEST - UN SOLO MEGA TEST (2026-01-05)
+   * ========================================================================
+   * Ejecuta la batería completa de testing integrada
+   */
+  async runUltimateTest() {
+    const btn = document.getElementById('btn-ultimate-test');
+    const originalText = btn.innerHTML;
+
+    try {
+      btn.innerHTML = '⏳ Ejecutando...';
+      btn.disabled = true;
+
+      console.log('🚀 [ULTIMATE-TEST] Iniciando batería completa...');
+
+      // 1. Ejecutar ULTIMATE TEST
+      const response = await fetch('/api/ultimate-test/run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          modules: 'all',           // Todos los módulos
+          headless: false,          // Ver navegador (útil en local)
+          includePerformance: true,
+          includeSimulation: true,
+          includeSecurity: false    // Security tests opcionales
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ [ULTIMATE-TEST] Iniciado correctamente');
+
+        // 2. Mostrar modal con link a resultados en tiempo real
+        this.showSuccessModal('🚀 ULTIMATE TEST Iniciado', `
+          <div style="padding: 20px;">
+            <p style="margin-bottom: 20px;">
+              La batería completa de testing se está ejecutando en background.
+            </p>
+
+            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #3b82f6;">
+              <h4 style="margin: 0 0 10px 0; color: #1e40af;">📊 Progreso en Tiempo Real</h4>
+              <p style="margin: 0; font-size: 0.9rem;">
+                Puedes ver el progreso en:
+                <br><br>
+                <a href="/api/ultimate-test/status" target="_blank" style="color: #3b82f6; text-decoration: underline;">
+                  🔗 Ver Estado Actual (JSON)
+                </a>
+              </p>
+            </div>
+
+            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+              <h4 style="margin: 0 0 10px 0; color: #92400e;">⚡ Fases de Testing</h4>
+              <ol style="margin: 0; padding-left: 20px; font-size: 0.9rem;">
+                <li>Structural Tests (Endpoints, BD)</li>
+                <li>Functional Tests (CRUD, Módulos)</li>
+                <li>Performance Tests (Load Times, Queries)</li>
+                <li>UX Tests (Console Errors, Network)</li>
+                <li>Simulation Tests (Monkey Testing)</li>
+                <li>Auto-Healing (Si detecta errores)</li>
+                <li>Guarantees (Verificación final)</li>
+                <li>Brain Sync (Actualizar knowledge)</li>
+              </ol>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center; background: #f0fdf4; padding: 15px; border-radius: 8px;">
+              <p style="margin: 0; color: #15803d; font-weight: 600;">
+                ⏱️ Tiempo estimado: 10-30 minutos
+              </p>
+              <p style="margin: 10px 0 0 0; color: #166534; font-size: 0.875rem;">
+                Se te notificará cuando termine
+              </p>
+            </div>
+          </div>
+        `);
+
+        // 3. Polling para actualizar estado (cada 5 segundos)
+        const checkStatus = setInterval(async () => {
+          try {
+            const statusResponse = await fetch('/api/ultimate-test/status', {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const statusResult = await statusResponse.json();
+
+            if (!statusResult.execution.isRunning) {
+              clearInterval(checkStatus);
+
+              // Mostrar resultados finales
+              const executionId = statusResult.execution.executionId;
+              if (executionId) {
+                const resultsResponse = await fetch(`/api/ultimate-test/results/${executionId}`, {
+                  headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const resultsData = await resultsResponse.json();
+
+                this.showSuccessModal('✅ ULTIMATE TEST Completado', `
+                  <div style="padding: 20px;">
+                    <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                      <h4 style="margin: 0 0 10px 0; color: #15803d;">📊 Resultados</h4>
+                      <ul style="margin: 0; padding-left: 20px;">
+                        <li>Total tests: <strong>${resultsData.execution.totalTests}</strong></li>
+                        <li>Passed: <strong style="color: #10b981;">${resultsData.execution.passed}</strong></li>
+                        <li>Failed: <strong style="color: #ef4444;">${resultsData.execution.failed}</strong></li>
+                        <li>Success rate: <strong>${resultsData.execution.successRate}</strong></li>
+                      </ul>
+                    </div>
+                    <div style="text-align: center;">
+                      <a href="/api/ultimate-test/results/${executionId}" target="_blank" style="color: #3b82f6; text-decoration: underline;">
+                        📄 Ver Reporte Completo (JSON)
+                      </a>
+                    </div>
+                  </div>
+                `);
+              }
+            }
+          } catch (error) {
+            console.error('❌ [ULTIMATE-TEST] Error checking status:', error);
+            clearInterval(checkStatus);
+          }
+        }, 5000); // Check cada 5 segundos
+
+      } else {
+        console.error('❌ [ULTIMATE-TEST] Error:', result.message);
+        this.showErrorModal('Error Ejecutando ULTIMATE TEST', result.message);
+      }
+
+    } catch (error) {
+      console.error('❌ [ULTIMATE-TEST] Error en ejecución:', error);
+      this.showErrorModal('Error Ejecutando ULTIMATE TEST', error.message);
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
     }
   }
 };

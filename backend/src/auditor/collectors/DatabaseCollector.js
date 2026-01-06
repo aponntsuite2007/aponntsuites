@@ -20,6 +20,9 @@ class DatabaseCollector {
   async collect(execution_id, config) {
     console.log('  🗄️  [DATABASE] Iniciando validación de base de datos...');
 
+    // ✅ GUARDAR company_id para uso posterior (CRÍTICO para audit_test_logs)
+    this.company_id = config.company_id;
+
     const results = [];
 
     // Test 1: Verificar conexión
@@ -44,6 +47,7 @@ class DatabaseCollector {
     const { AuditLog } = this.database;
     const log = await AuditLog.create({
       execution_id,
+      company_id: this.company_id, // ← CRÍTICO: Incluir company_id
       test_type: 'database',
       module_name: 'database',
       test_name: 'Conexión a Base de Datos',
@@ -85,6 +89,7 @@ class DatabaseCollector {
       for (const tableInfo of module.database_tables) {
         const log = await AuditLog.create({
           execution_id,
+          company_id: this.company_id, // ← CRÍTICO: Incluir company_id
           test_type: 'database',
           module_name: module.id,
           test_name: `Tabla ${tableInfo.table} existe`,
@@ -134,6 +139,7 @@ class DatabaseCollector {
       for (const relation of module.relationships) {
         const log = await AuditLog.create({
           execution_id,
+          company_id: this.company_id, // ← CRÍTICO: Incluir company_id
           test_type: 'relation',
           module_name: module.id,
           test_name: `Relación ${module.id} → ${relation.model}`,
@@ -176,6 +182,7 @@ class DatabaseCollector {
     // Test común: Usuarios sin empresa
     const log = await AuditLog.create({
       execution_id,
+      company_id: this.company_id, // ← CRÍTICO: Incluir company_id
       test_type: 'database',
       module_name: 'users',
       test_name: 'Usuarios huérfanos (sin empresa)',

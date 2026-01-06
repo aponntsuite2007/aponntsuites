@@ -4,6 +4,40 @@
  * Dark Theme - Enterprise Level
  */
 
+// ============================================================================
+// 💡 SISTEMA DE AYUDA CONTEXTUAL
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('finance-executive-dashboard', {
+        moduleName: 'Dashboard Ejecutivo',
+        moduleDescription: 'Panel ejecutivo con KPIs financieros y análisis de desempeño',
+        contexts: {
+            dashboard: {
+                title: 'Dashboard Ejecutivo',
+                description: 'Vista ejecutiva de métricas financieras clave',
+                tips: [
+                    'Revisa los KPIs principales en tiempo real',
+                    'Usa los filtros de período para análisis comparativos',
+                    'Los gráficos son interactivos, click para ver detalles'
+                ],
+                warnings: ['Los datos se actualizan cada hora'],
+                helpTopics: ['¿Cómo interpretar los KPIs?', '¿Qué es EBITDA?', '¿Cómo se calcula el ROI?'],
+                fieldHelp: {
+                    revenue: 'Ingresos totales del período',
+                    expenses: 'Gastos totales del período',
+                    ebitda: 'Earnings Before Interest, Taxes, Depreciation and Amortization',
+                    roi: 'Return on Investment - Retorno sobre inversión'
+                }
+            }
+        },
+        fallbackResponses: {
+            'kpi': 'Los KPIs principales incluyen: ingresos, gastos, EBITDA, margen neto, ROI.',
+            'filtro': 'Usa los filtros superiores para cambiar el período de análisis.',
+            'gráfico': 'Click en los gráficos para ver detalles y drill-down.'
+        }
+    });
+}
+
 const FinanceExecutiveDashboard = {
     name: 'finance-executive-dashboard',
     currentView: 'overview',
@@ -607,6 +641,11 @@ const FinanceExecutiveDashboard = {
         this.render();
         this.loadDashboardData();
         this.startAutoRefresh();
+
+        // Initialize help system
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('finance-executive-dashboard');
+        }
     },
 
     injectStyles() {
@@ -750,6 +789,8 @@ const FinanceExecutiveDashboard = {
         if (!data) return this.renderLoading();
 
         return `
+            ${typeof ModuleHelpSystem !== 'undefined' ? ModuleHelpSystem.renderBanner('dashboard') : ''}
+
             <!-- KPIs -->
             <div class="finance-kpi-grid">
                 ${this.renderKpiCard('Ingresos Hoy', this.formatCurrency(data.totalIncomeToday || 0), 'income', 'fas fa-arrow-down')}

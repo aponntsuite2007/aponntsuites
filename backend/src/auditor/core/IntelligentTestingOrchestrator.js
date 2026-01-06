@@ -331,10 +331,15 @@ class IntelligentTestingOrchestrator {
      * Ejecutar test de un solo módulo (con reintentos)
      */
     async runSingleModule(execution_id, companyId, moduleName, maxRetries = 0, externalPage = null) {
-        const CollectorClass = this.collectors.get(moduleName);
+        let CollectorClass = this.collectors.get(moduleName);
+        let useUniversalCollector = false;
 
+        // ✅ FALLBACK: Si no existe collector específico, usar UniversalModuleCollector genérico
         if (!CollectorClass) {
-            throw new Error(`Collector no encontrado para módulo: ${moduleName}`);
+            console.log(`   ⚠️  No hay collector específico para ${moduleName}, usando UniversalModuleCollector genérico`);
+            const UniversalModuleCollector = require('../collectors/UniversalModuleCollector');
+            CollectorClass = UniversalModuleCollector;
+            useUniversalCollector = true;
         }
 
         let attempt = 0;
@@ -347,7 +352,10 @@ class IntelligentTestingOrchestrator {
                 }
 
                 // ⚡ PASAR BASE URL AL COLLECTOR (hereda puerto auto-detectado)
-                const collector = new CollectorClass(this.database, this.systemRegistry, this.baseURL);
+                // ✅ Si es UniversalModuleCollector, pasar también el moduleName
+                const collector = useUniversalCollector
+                    ? new CollectorClass(this.database, this.systemRegistry, this.baseURL, moduleName)
+                    : new CollectorClass(this.database, this.systemRegistry, this.baseURL);
                 const config = { company_id: companyId };
 
                 // Si hay un navegador externo, usarlo (skip login)

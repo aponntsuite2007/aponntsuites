@@ -22,6 +22,9 @@ class EndpointCollector {
   async collect(execution_id, config) {
     console.log('  🌐 [ENDPOINT] Iniciando pruebas de endpoints...');
 
+    // ✅ GUARDAR company_id para uso posterior (CRÍTICO para audit_test_logs)
+    this.company_id = config.company_id;
+
     const results = [];
     const modules = config.moduleFilter ?
       [this.systemRegistry.getModule(config.moduleFilter)] :
@@ -53,6 +56,7 @@ class EndpointCollector {
     // Crear log de inicio
     const log = await AuditLog.create({
       execution_id,
+      company_id: this.company_id, // ← CRÍTICO: Incluir company_id
       test_type: 'endpoint',
       module_name: moduleId,
       test_name: `${endpoint.method} ${endpoint.path}`,

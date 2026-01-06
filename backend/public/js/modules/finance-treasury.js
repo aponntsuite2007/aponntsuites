@@ -3,6 +3,122 @@
  * Tesorería: Cuentas Bancarias, Transacciones, Conciliación
  */
 
+// ============================================================================
+// 💡 SISTEMA DE AYUDA CONTEXTUAL
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('finance-treasury', {
+        moduleName: 'Tesorería',
+        moduleDescription: 'Gestión de caja y bancos, conciliación bancaria y movimientos de tesorería',
+        contexts: {
+            accounts: {
+                title: 'Cuentas de Tesorería',
+                description: 'Gestión de cuentas de caja y bancos',
+                tips: [
+                    'Registra todas las cuentas bancarias y cajas de la empresa',
+                    'Concilia movimientos bancarios mensualmente para detectar diferencias',
+                    'Revisa saldos diarios para control de liquidez y planificación financiera'
+                ],
+                warnings: ['Concilia tus cuentas al menos una vez al mes para evitar descuadres'],
+                helpTopics: [
+                    '¿Qué es una conciliación bancaria?',
+                    '¿Cómo registrar movimientos?',
+                    '¿Qué diferencia hay entre Cuenta Corriente y Caja de Ahorro?'
+                ],
+                fieldHelp: {
+                    account_code: 'Código único de la cuenta (ej: BCO-001, CAJA-01)',
+                    account_name: 'Nombre descriptivo de la cuenta (Banco Nación - Cuenta Corriente)',
+                    bank_name: 'Nombre del banco o entidad financiera',
+                    account_number: 'Número de cuenta bancaria o código de identificación',
+                    cbu: 'Clave Bancaria Uniforme (22 dígitos) para transferencias',
+                    alias: 'Alias CBU para facilitar transferencias (ej: MI.EMPRESA.PESOS)',
+                    currency: 'Moneda de la cuenta (ARS, USD, EUR)',
+                    current_balance: 'Saldo inicial o actual de la cuenta',
+                    is_primary: 'Marca esta cuenta como la principal para operaciones por defecto'
+                }
+            },
+            transactions: {
+                title: 'Movimientos de Tesorería',
+                description: 'Registro de ingresos y egresos de efectivo',
+                tips: [
+                    'Registra todos los movimientos inmediatamente para mantener saldos actualizados',
+                    'Adjunta comprobantes a cada movimiento importante (facturas, recibos)',
+                    'Clasifica correctamente: ingreso (positivo) o egreso (negativo)'
+                ],
+                warnings: [
+                    'Los movimientos afectan directamente el saldo de la cuenta',
+                    'Verifica el tipo de transacción antes de guardar'
+                ],
+                helpTopics: [
+                    '¿Cómo registrar un cobro de cliente?',
+                    '¿Cómo registrar un pago a proveedor?',
+                    '¿Qué son las comisiones y cargos bancarios?'
+                ],
+                fieldHelp: {
+                    transaction_type: 'Tipo de movimiento: depósito, extracción, transferencia, comisión o interés',
+                    amount: 'Monto del movimiento (positivo para entradas, negativo para salidas)',
+                    description: 'Descripción clara del movimiento (ej: Cobro Factura #001)',
+                    reference: 'Número de cheque, transferencia o comprobante bancario',
+                    transaction_date: 'Fecha en que se realizó el movimiento'
+                }
+            },
+            reconciliation: {
+                title: 'Conciliación Bancaria',
+                description: 'Conciliación de extractos bancarios con registros contables',
+                tips: [
+                    'La conciliación compara tu saldo contable vs. el extracto del banco',
+                    'Usa auto-conciliación para transacciones con coincidencia >= 90%',
+                    'Revisa manualmente las sugerencias antes de conciliar'
+                ],
+                warnings: [
+                    'Diferencias en conciliación pueden indicar errores u omisiones',
+                    'Verifica el score de coincidencia antes de auto-conciliar'
+                ],
+                helpTopics: [
+                    '¿Qué es una conciliación bancaria?',
+                    '¿Cómo funciona la auto-conciliación?',
+                    '¿Por qué hay diferencias entre mi saldo y el banco?'
+                ],
+                fieldHelp: {
+                    score: 'Porcentaje de coincidencia entre transacción y movimiento bancario',
+                    auto_reconcile: 'Concilia automáticamente transacciones con score >= 90%'
+                }
+            },
+            cashflow: {
+                title: 'Flujo de Caja',
+                description: 'Proyección y análisis de flujo de efectivo',
+                tips: [
+                    'El flujo de caja proyecta saldos futuros basado en movimientos históricos',
+                    'Escenario optimista: considera ingresos esperados completos',
+                    'Escenario pesimista: ajusta por cobros demorados o gastos inesperados'
+                ],
+                warnings: [
+                    'Las proyecciones son estimaciones basadas en datos históricos',
+                    'Actualiza tus movimientos regularmente para mejorar precisión'
+                ],
+                helpTopics: [
+                    '¿Cómo se calcula el flujo de caja proyectado?',
+                    '¿Qué significan los escenarios optimista/pesimista?'
+                ],
+                fieldHelp: {
+                    optimistic: 'Proyección asumiendo el mejor escenario posible',
+                    base: 'Proyección basada en tendencias actuales',
+                    pessimistic: 'Proyección considerando retrasos y gastos adicionales'
+                }
+            }
+        },
+        fallbackResponses: {
+            'conciliación': 'La conciliación bancaria compara tu saldo contable vs. el extracto del banco para detectar diferencias.',
+            'movimiento': 'Registra movimientos desde la pestaña "Transacciones". Clasifica como ingreso (positivo) o egreso (negativo).',
+            'saldo': 'El saldo se actualiza automáticamente con cada movimiento registrado en la cuenta.',
+            'cbu': 'El CBU es la Clave Bancaria Uniforme (22 dígitos) necesaria para transferencias electrónicas.',
+            'alias': 'El alias CBU es un nombre fácil de recordar que reemplaza el CBU (ej: MI.EMPRESA.PESOS).',
+            'transferencia': 'Registra transferencias como "Transferencia Saliente" (egreso) o "Transferencia Entrante" (ingreso).',
+            'flujo': 'El flujo de caja proyecta saldos futuros basado en movimientos históricos y tendencias.'
+        }
+    });
+}
+
 window.FinanceTreasury = (function() {
     'use strict';
 
@@ -16,6 +132,11 @@ window.FinanceTreasury = (function() {
 
     async function init(container) {
         console.log('🏦 Inicializando Tesorería...');
+
+        // Inicializar sistema de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('finance-treasury');
+        }
 
         container.innerHTML = renderStructure();
         await loadBankAccounts();
@@ -284,6 +405,11 @@ window.FinanceTreasury = (function() {
         });
         event?.target?.classList.add('active');
 
+        // Cambiar contexto de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.setContext(tabName);
+        }
+
         const content = document.getElementById('treasury-content');
 
         switch (tabName) {
@@ -303,8 +429,13 @@ window.FinanceTreasury = (function() {
     }
 
     function renderAccountsTab(container) {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('accounts')
+            : '';
+
         if (bankAccounts.length === 0) {
             container.innerHTML = `
+                ${helpBanner}
                 <div style="text-align: center; padding: 60px; color: #999;">
                     <div style="font-size: 48px; margin-bottom: 16px;">🏦</div>
                     <p>No hay cuentas bancarias registradas</p>
@@ -317,6 +448,7 @@ window.FinanceTreasury = (function() {
         }
 
         container.innerHTML = `
+            ${helpBanner}
             <div class="accounts-grid">
                 ${bankAccounts.map(account => `
                     <div class="account-card ${account.is_primary ? 'primary' : ''}" onclick="FinanceTreasury.selectAccount(${account.id})">
@@ -337,7 +469,12 @@ window.FinanceTreasury = (function() {
     }
 
     async function renderTransactionsTab(container) {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('transactions')
+            : '';
+
         container.innerHTML = `
+            ${helpBanner}
             <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
                 <div style="display: flex; gap: 12px;">
                     <select id="tx-account-filter" class="filter-select" onchange="FinanceTreasury.loadTransactions()">
@@ -424,7 +561,12 @@ window.FinanceTreasury = (function() {
     }
 
     async function renderReconciliationTab(container) {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('reconciliation')
+            : '';
+
         container.innerHTML = `
+            ${helpBanner}
             <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
                 <div>
                     <select id="recon-account" class="filter-select">
@@ -507,7 +649,11 @@ window.FinanceTreasury = (function() {
     }
 
     async function renderCashFlowTab(container) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px;">Cargando proyección de flujo de caja...</div>';
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('cashflow')
+            : '';
+
+        container.innerHTML = `${helpBanner}<div style="text-align: center; padding: 40px;">Cargando proyección de flujo de caja...</div>`;
 
         try {
             const token = localStorage.getItem('token');
@@ -519,6 +665,7 @@ window.FinanceTreasury = (function() {
 
             if (result.success) {
                 container.innerHTML = `
+                    ${helpBanner}
                     <h4>📈 Proyección de Flujo de Caja - Próximos 30 días</h4>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;">
                         <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; text-align: center;">
@@ -543,7 +690,10 @@ window.FinanceTreasury = (function() {
                 `;
             }
         } catch (error) {
-            container.innerHTML = '<div style="color: red; padding: 20px;">Error al cargar proyección</div>';
+            const errorBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('cashflow')
+                : '';
+            container.innerHTML = `${errorBanner}<div style="color: red; padding: 20px;">Error al cargar proyección</div>`;
         }
     }
 

@@ -76,7 +76,8 @@ class RealUserExperienceCollector {
 
     const context = await this.browser.newContext({ viewport: null });
         this.page = await context.newPage();
-    await this.page.setCacheEnabled(false);
+    // NOTA: page.setCacheEnabled() NO existe en Playwright
+    // await this.page.setCacheEnabled(false);
 
     // Capturar errores de red (401, 403, 500)
     this.page.on('response', response => {
@@ -93,7 +94,7 @@ class RealUserExperienceCollector {
 
     // Capturar errores de consola
     this.page.on('console', msg => {
-      if (msg.fill() === 'error') {
+      if (msg.type() === 'error') {
         const error = msg.text();
         this.consoleErrors.push({
           message: error, timestamp: new Date()

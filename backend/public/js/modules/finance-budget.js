@@ -3,6 +3,137 @@
  * Presupuestos con generación inteligente, inflación e inversiones
  */
 
+// ============================================================================
+// 💡 SISTEMA DE AYUDA CONTEXTUAL
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('finance-budget', {
+        moduleName: 'Presupuestos Financieros',
+        moduleDescription: 'Gestión de presupuestos con generación inteligente, inflación e inversiones',
+        contexts: {
+            list: {
+                title: 'Lista de Presupuestos',
+                description: 'Vista general de todos los presupuestos creados',
+                tips: [
+                    'Filtra presupuestos por año usando el selector superior',
+                    'Puedes generar un presupuesto automáticamente desde datos históricos',
+                    'Click en un presupuesto para ver su detalle y ejecución'
+                ],
+                warnings: [
+                    'Los presupuestos generados automáticamente requieren revisión antes de aprobar'
+                ],
+                helpTopics: [
+                    '¿Cómo crear un nuevo presupuesto?',
+                    '¿Qué es la generación inteligente?',
+                    '¿Cómo funciona el ajuste por inflación?'
+                ],
+                fieldHelp: {}
+            },
+            lines: {
+                title: 'Líneas Presupuestarias',
+                description: 'Detalle de ingresos y gastos por cuenta contable',
+                tips: [
+                    'Cada línea representa un rubro de ingreso o gasto',
+                    'Puedes modificar los montos mensuales individualmente',
+                    'Los totales se calculan automáticamente'
+                ],
+                warnings: [
+                    'Verifica que las cuentas contables estén creadas antes de agregar líneas'
+                ],
+                helpTopics: [
+                    '¿Cómo agregar una nueva línea?',
+                    '¿Cómo distribuir un monto anualmente?',
+                    '¿Qué es el plan de cuentas?'
+                ],
+                fieldHelp: {
+                    account: 'Cuenta contable del plan de cuentas (ingresos o gastos)',
+                    type: 'Tipo de línea: ingreso o gasto',
+                    monthly: 'Monto presupuestado para cada mes',
+                    total: 'Total anual de la línea presupuestaria'
+                }
+            },
+            investments: {
+                title: 'Inversiones de Capital',
+                description: 'Gestión de inversiones e CAPEX (Capital Expenditure)',
+                tips: [
+                    'Registra inversiones en activos fijos: maquinaria, equipos, infraestructura',
+                    'Define la depreciación para distribuir el costo en el tiempo',
+                    'Las inversiones impactan el flujo de caja pero no el P&L inmediato'
+                ],
+                warnings: [
+                    'Las inversiones afectan el flujo de caja en el mes de compra',
+                    'La depreciación se calcula automáticamente según vida útil'
+                ],
+                helpTopics: [
+                    '¿Qué es una inversión de capital?',
+                    '¿Cómo se calcula la depreciación?',
+                    '¿Cómo afecta el presupuesto?'
+                ],
+                fieldHelp: {
+                    description: 'Descripción del activo a adquirir',
+                    amount: 'Monto total de la inversión',
+                    date: 'Fecha estimada de compra',
+                    usefulLife: 'Vida útil en años para depreciación',
+                    depreciation: 'Método de depreciación (lineal, acelerada)'
+                }
+            },
+            execution: {
+                title: 'Ejecución Presupuestaria',
+                description: 'Seguimiento de presupuesto vs. real',
+                tips: [
+                    'Compara los montos presupuestados vs. gastos/ingresos reales',
+                    'Los porcentajes de ejecución muestran el avance',
+                    'Las variaciones se destacan en rojo (sobregasto) o verde (ahorro)'
+                ],
+                warnings: [
+                    'Las variaciones superiores al 10% requieren justificación'
+                ],
+                helpTopics: [
+                    '¿Cómo se calcula la ejecución?',
+                    '¿Qué hacer ante sobregiros?',
+                    '¿Cómo generar reportes de ejecución?'
+                ],
+                fieldHelp: {
+                    budgeted: 'Monto presupuestado originalmente',
+                    actual: 'Gasto o ingreso real registrado',
+                    variance: 'Diferencia entre presupuestado y real',
+                    percentage: 'Porcentaje de ejecución del presupuesto'
+                }
+            },
+            projection: {
+                title: 'Proyección Financiera',
+                description: 'Proyecciones y escenarios futuros con inflación',
+                tips: [
+                    'Proyecta el presupuesto a 12, 24 o 36 meses',
+                    'Aplica tasas de inflación estimadas por categoría',
+                    'Compara escenarios: optimista, base, pesimista'
+                ],
+                warnings: [
+                    'Las proyecciones son estimaciones basadas en datos históricos',
+                    'Revisa periódicamente y ajusta según contexto económico'
+                ],
+                helpTopics: [
+                    '¿Cómo generar una proyección?',
+                    '¿Qué es el análisis de escenarios?',
+                    '¿Cómo ajustar por inflación?'
+                ],
+                fieldHelp: {
+                    inflationRate: 'Tasa de inflación anual estimada (%)',
+                    growthRate: 'Tasa de crecimiento de ingresos (%)',
+                    scenario: 'Escenario de proyección (optimista, base, pesimista)'
+                }
+            }
+        },
+        fallbackResponses: {
+            'generar': 'Usa el botón "Generar desde Histórico" para crear un presupuesto basado en datos del año anterior con ajuste por inflación.',
+            'inflación': 'El sistema puede ajustar los montos automáticamente según una tasa de inflación estimada. Define la tasa al generar o proyectar.',
+            'inversión': 'Las inversiones de capital se registran en la pestaña "Inversiones". Afectan el flujo de caja pero se deprecian en el tiempo.',
+            'ejecución': 'Revisa la ejecución en la pestaña "Ejecución" para comparar presupuesto vs. real.',
+            'proyección': 'En la pestaña "Proyección" puedes simular escenarios futuros con diferentes tasas de inflación y crecimiento.'
+        }
+    });
+}
+
 window.FinanceBudget = (function() {
     'use strict';
 
@@ -16,6 +147,11 @@ window.FinanceBudget = (function() {
 
     async function init(container) {
         console.log('📈 Inicializando Presupuestos...');
+
+        // Inicializar sistema de ayuda contextual
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('finance-budget');
+        }
 
         container.innerHTML = renderStructure();
         await loadBudgets();
@@ -415,6 +551,11 @@ window.FinanceBudget = (function() {
     }
 
     function switchTab(tabName) {
+        // Cambiar contexto de ayuda
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.setContext(tabName);
+        }
+
         // Update tab buttons
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -443,9 +584,13 @@ window.FinanceBudget = (function() {
 
     function renderLinesTab(container) {
         const lines = currentBudget?.lines || [];
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('lines')
+            : '';
 
         if (lines.length === 0) {
             container.innerHTML = `
+                ${helpBanner}
                 <div style="text-align: center; padding: 60px; color: #999;">
                     <p>No hay líneas de presupuesto</p>
                     <button onclick="FinanceBudget.showAddLineModal()" class="btn-primary">
@@ -457,6 +602,7 @@ window.FinanceBudget = (function() {
         }
 
         container.innerHTML = `
+            ${helpBanner}
             <table class="data-table">
                 <thead>
                     <tr>
@@ -486,8 +632,11 @@ window.FinanceBudget = (function() {
 
     function renderInvestmentsTab(container) {
         const investments = currentBudget?.investments || [];
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('investments')
+            : '';
 
-        container.innerHTML = investments.length ? `
+        container.innerHTML = `${helpBanner}` + (investments.length ? `
             <div class="investments-grid">
                 ${investments.map(inv => `
                     <div class="investment-card">
@@ -503,7 +652,7 @@ window.FinanceBudget = (function() {
                     </div>
                 `).join('')}
             </div>
-        ` : '<div style="text-align: center; padding: 60px; color: #999;">No hay inversiones registradas</div>';
+        ` : '<div style="text-align: center; padding: 60px; color: #999;">No hay inversiones registradas</div>');
     }
 
     async function renderExecutionTab(container) {
@@ -518,7 +667,12 @@ window.FinanceBudget = (function() {
             const result = await response.json();
             if (result.success) {
                 const data = result.data;
+                const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                    ? ModuleHelpSystem.renderBanner('execution')
+                    : '';
+
                 container.innerHTML = `
+                    ${helpBanner}
                     <div class="execution-summary">
                         <div class="exec-stat">
                             <div class="exec-value">${formatCurrency(data.summary?.total_budget)}</div>
@@ -556,7 +710,12 @@ window.FinanceBudget = (function() {
             const result = await response.json();
             if (result.success && result.data) {
                 const data = result.data;
+                const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                    ? ModuleHelpSystem.renderBanner('projection')
+                    : '';
+
                 container.innerHTML = `
+                    ${helpBanner}
                     <div class="projection-content">
                         <h4>🔮 Proyección de Fin de Año</h4>
                         <p>Basado en datos hasta el mes ${data.current_month}</p>

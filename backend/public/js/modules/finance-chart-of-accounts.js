@@ -3,6 +3,40 @@
  * Plan de Cuentas con estructura jerárquica 1XXX-7XXX
  */
 
+// ============================================================================
+// 💡 SISTEMA DE AYUDA CONTEXTUAL
+// ============================================================================
+if (typeof ModuleHelpSystem !== 'undefined') {
+    ModuleHelpSystem.registerModule('finance-chart-of-accounts', {
+        moduleName: 'Plan de Cuentas',
+        moduleDescription: 'Gestión del catálogo de cuentas contables con jerarquía y clasificación',
+        contexts: {
+            list: {
+                title: 'Lista de Cuentas',
+                description: 'Catálogo completo de cuentas contables',
+                tips: [
+                    'Las cuentas se organizan jerárquicamente por código',
+                    'Filtra por tipo: activos, pasivos, patrimonio, ingresos, gastos',
+                    'Click en una cuenta para ver sus subcuentas'
+                ],
+                warnings: ['No elimines cuentas con movimientos registrados'],
+                helpTopics: ['¿Cómo crear una cuenta?', '¿Qué es la jerarquía de cuentas?'],
+                fieldHelp: {
+                    code: 'Código numérico único (ej: 1.1.01.001)',
+                    name: 'Nombre descriptivo de la cuenta',
+                    type: 'Tipo: activo, pasivo, patrimonio, ingreso, gasto',
+                    category: 'Categoría contable para clasificación'
+                }
+            }
+        },
+        fallbackResponses: {
+            'crear': 'Usa el botón "+ Nueva Cuenta" para agregar una cuenta al plan.',
+            'código': 'El código debe seguir la jerarquía: 1=Activo, 2=Pasivo, 3=Patrimonio, 4=Ingresos, 5=Gastos.',
+            'tipo': 'Los tipos de cuenta son: activo, pasivo, patrimonio, ingreso, gasto.'
+        }
+    });
+}
+
 window.FinanceChartOfAccounts = (function() {
     'use strict';
 
@@ -17,6 +51,11 @@ window.FinanceChartOfAccounts = (function() {
     async function init(container) {
         console.log('📋 Inicializando Plan de Cuentas...');
 
+        // Inicializar sistema de ayuda contextual
+        if (typeof ModuleHelpSystem !== 'undefined') {
+            ModuleHelpSystem.init('finance-chart-of-accounts');
+        }
+
         container.innerHTML = renderStructure();
         await loadAccounts();
 
@@ -24,8 +63,13 @@ window.FinanceChartOfAccounts = (function() {
     }
 
     function renderStructure() {
+        const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+            ? ModuleHelpSystem.renderBanner('list')
+            : '';
+
         return `
             <div class="finance-module">
+                ${helpBanner}
                 <div class="module-header">
                     <div style="display: flex; align-items: center; gap: 16px;">
                         <button onclick="window.showModuleContent('finance-dashboard', 'Finance Dashboard')" class="finance-back-btn">

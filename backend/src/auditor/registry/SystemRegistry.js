@@ -243,6 +243,10 @@ class SystemRegistry {
           if (fileModule.help) {
             existingModule.help = fileModule.help;
           }
+          // ✅ CRÍTICO: Agregar parent_module para navegación correcta de submódulos
+          if (fileModule.parent_module !== undefined) {
+            existingModule.parent_module = fileModule.parent_module;
+          }
         } else {
           // ⚠️ FIX SSOT: Módulo en JSON pero NO en BD = fantasma, NO registrar
           // La BD es la única fuente de verdad para módulos

@@ -51,19 +51,19 @@ class FrontendCollector {
       // Login - pasar el token si está disponible
       await this.login(config.company_id, config.authToken);
 
-      // ✅✅✅ MEGA-UPGRADE: ESCUCHAR ERRORES DINÁMICOS POST-LOGIN (60s) ✅✅✅
-      console.log(`  ⏳ [POST-LOGIN LISTENER] Escuchando errores dinámicos por 60 segundos...`);
+      // ✅✅✅ MEGA-UPGRADE: ESCUCHAR ERRORES DINÁMICOS POST-LOGIN (5s) ✅✅✅
+      console.log(`  ⏳ [POST-LOGIN LISTENER] Escuchando errores dinámicos por 5 segundos...`);
       console.log(`     (Esto capturará errores de módulos que se cargan DESPUÉS del login)`);
 
-      const postLoginErrors = await this.listenForDynamicErrors(60000); // 60 segundos
+      const postLoginErrors = await this.listenForDynamicErrors(5000); // 5 segundos (reducido de 60s)
 
       console.log(`  ✅ [POST-LOGIN LISTENER] Completado - ${postLoginErrors.console} console, ${postLoginErrors.network} network, ${postLoginErrors.page} page errors capturados`);
 
       // ✅✅✅ NOTIFICAR ERRORES EN BATCH A WEBSOCKET ✅✅✅
       if (postLoginErrors.total > 0) {
         await this.notifyErrorsBatchToWebSocket({
-          phase: 'post-login-60s',
-          duration_ms: 60000,
+          phase: 'post-login-5s',
+          duration_ms: 5000,
           errors: this.consoleErrors.concat(this.pageErrors.map(e => ({
             type: 'exception',
             category: e.category,
@@ -89,6 +89,7 @@ class FrontendCollector {
         if (!module) continue;
 
         console.log(`    🧪 [FRONTEND] Testeando módulo: ${module.name}`);
+        console.log(`    🔍 [DEBUG] module.parent_module = ${module.parent_module || 'NULL'}`);
 
         const testResult = await this.testModule(module, execution_id);
         results.push(testResult);
@@ -961,6 +962,42 @@ class FrontendCollector {
 
   async testNavigation(module) {
     try {
+      // ✅ SKIP: kiosks-apk es una APK Android, no un módulo del panel-empresa
+      if (module.id === 'kiosks-apk') {
+        console.log(`      ⏭️  [SKIP] ${module.id} es una APK Android, no testeable desde panel-empresa`);
+        return false;
+      }
+
+      // ✅ NAVEGACIÓN PARENT → CHILD para submódulos
+      if (module.parent_module && module.parent_module !== null) {
+        console.log(`      👨‍👦 [SUBMODULE] ${module.id} tiene parent: ${module.parent_module}`);
+        console.log(`      1️⃣ Navegando primero al módulo padre: ${module.parent_module}...`);
+
+        // Cargar módulo padre primero
+        const parentLoaded = await this.page.evaluate(async (parentId) => {
+          if (typeof window.loadModuleContent !== 'function') {
+            return { success: false, reason: 'no_loadModuleContent' };
+          }
+
+          try {
+            await window.loadModuleContent(parentId);
+            return { success: true, reason: 'parent_loaded' };
+          } catch (error) {
+            return { success: false, reason: 'parent_load_failed', error: error.message };
+          }
+        }, module.parent_module);
+
+        if (!parentLoaded.success) {
+          console.log(`      ❌ [PARENT-LOAD] Falló carga del padre ${module.parent_module}: ${parentLoaded.reason}`);
+          return false;
+        }
+
+        console.log(`      ✅ [PARENT-LOAD] Módulo padre ${module.parent_module} cargado`);
+        await this.page.waitForTimeout(1500); // Esperar que el padre renderice
+
+        console.log(`      2️⃣ Ahora navegando al submódulo hijo: ${module.id}...`);
+      }
+
       // ✅✅✅ MEGA-FIX: Esperar carga dinámica de módulos ANTES de navegar
       console.log(`      📦 [DYNAMIC-LOAD] Esperando carga dinámica del módulo ${module.id}...`);
 
@@ -1009,17 +1046,40 @@ class FrontendCollector {
 
       console.log(`      ✅ [DYNAMIC-LOAD] Módulo ${module.id} cargado (${moduleLoaded.reason})`);
 
-      // Esperar a que las funciones del módulo estén disponibles (1s adicional)
-      await this.page.waitForTimeout(1000);
+      // Esperar a que las funciones del módulo estén disponibles Y que el contenido renderice (3s)
+      await this.page.waitForTimeout(3000);
 
-      // Intentar navegar usando openModule()
-      await this.page.evaluate((moduleId, moduleName) => {
-        if (typeof window.openModuleDirect === 'function') {
-          window.openModuleDirect(moduleId, moduleName);
-          return true;
+      // ✅ FIX #9: LLAMAR showModuleContent() para inicializar el módulo
+      // loadModuleContent() solo carga el .js, showModuleContent() lo inicializa
+      console.log(`      🚀 [FIX-9] Llamando showModuleContent('${module.id}', '${module.name}')...`);
+      const moduleInitialized = await this.page.evaluate(({ moduleId, moduleName }) => {
+        if (typeof window.showModuleContent !== 'function') {
+          return { success: false, reason: 'no_showModuleContent_function' };
         }
-        return false;
-      }, module.id, module.name);
+
+        try {
+          window.showModuleContent(moduleId, moduleName);
+          return { success: true, reason: 'initialized' };
+        } catch (error) {
+          return { success: false, reason: 'init_error', error: error.message };
+        }
+      }, { moduleId: module.id, moduleName: module.name });
+
+      if (!moduleInitialized.success) {
+        console.log(`      ⚠️  [FIX-9] No se pudo inicializar con showModuleContent: ${moduleInitialized.reason}`);
+        console.log(`      🔄 [FIX-9] Intentando navegación alternativa con openModuleDirect...`);
+
+        // Fallback: Intentar navegar usando openModule()
+        await this.page.evaluate(({ moduleId, moduleName }) => {
+          if (typeof window.openModuleDirect === 'function') {
+            window.openModuleDirect(moduleId, moduleName);
+            return true;
+          }
+          return false;
+        }, { moduleId: module.id, moduleName: module.name });
+      } else {
+        console.log(`      ✅ [FIX-9] Módulo ${module.id} inicializado exitosamente con showModuleContent()`);
+      }
 
       // ✅ FIX 12: DETECCIÓN INTELIGENTE DE CARGA INFINITA
       // En lugar de esperar fijo 2s, verificar estado de carga cada 500ms
@@ -1100,44 +1160,96 @@ class FrontendCollector {
         });
       }
 
+      // ✅ FIX #8: CAPTURAR HTML COMPLETO DE #mainContent PARA DEBUGGING
+      const debugInfo = await this.page.evaluate(() => {
+        const mainContent = document.getElementById('mainContent');
+        if (!mainContent) return { exists: false };
+
+        const html = mainContent.innerHTML;
+        const text = mainContent.textContent || '';
+        const children = mainContent.children.length;
+
+        return {
+          exists: true,
+          html_length: html.length,
+          text_length: text.trim().length,
+          children_count: children,
+          html_preview: html.substring(0, 500),
+          text_preview: text.substring(0, 300),
+          classes: mainContent.className,
+          style: mainContent.getAttribute('style')
+        };
+      });
+
+      console.log(`      🔍 [DEBUG-CONTENT] Estado de #mainContent:`);
+      console.log(`         Existe: ${debugInfo.exists}`);
+      if (debugInfo.exists) {
+        console.log(`         HTML length: ${debugInfo.html_length} chars`);
+        console.log(`         Text length: ${debugInfo.text_length} chars`);
+        console.log(`         Children: ${debugInfo.children_count}`);
+        console.log(`         Classes: "${debugInfo.classes}"`);
+        console.log(`         HTML preview: "${debugInfo.html_preview}"`);
+        console.log(`         Text preview: "${debugInfo.text_preview}"`);
+      }
+
       // Verificar que el módulo está visible
       // ✅ FIX: Verificación inteligente - no buscar moduleId literal, sino contenido válido
-      const isVisible = await this.page.evaluate((moduleId, moduleName) => {
+      const verificationResult = await this.page.evaluate(({ moduleId, moduleName }) => {
         const content = document.getElementById('mainContent');
-        if (!content) return false;
+        if (!content) return { visible: false, reason: 'NO_MAINCONTENT' };
 
         const html = content.innerHTML;
+        const textContent = content.textContent || '';
+        const textLength = textContent.trim().length;
 
         // Verificar que NO esté en loading infinito
         if (html.includes('🔄 Cargando funcionalidades') || html.includes('Loading features')) {
-          return false;
+          return { visible: false, reason: 'LOADING_INFINITE', text_length: textLength };
         }
 
         // Verificar que tenga contenido real (más de 100 caracteres)
-        const textContent = content.textContent || '';
-        if (textContent.trim().length < 100) {
-          return false; // Muy poco contenido, probablemente vacío o error
+        if (textLength < 100) {
+          return { visible: false, reason: 'TOO_SHORT', text_length: textLength, sample: textContent.substring(0, 200) };
         }
 
         // Verificar que NO sea solo un mensaje de error
+        const hasErrorIcon = html.includes('❌');
+        const hasTable = html.includes('<table');
+        const hasButton = html.includes('<button');
+        const hasCard = html.includes('class="card"');
+
         const isOnlyError = (
-          html.includes('❌') &&
-          textContent.trim().length < 300 &&
-          !html.includes('<table') &&
-          !html.includes('<button') &&
-          !html.includes('class="card"')
+          hasErrorIcon &&
+          textLength < 300 &&
+          !hasTable &&
+          !hasButton &&
+          !hasCard
         );
 
         if (isOnlyError) {
-          return false;
+          return { visible: false, reason: 'ONLY_ERROR', text_length: textLength, sample: textContent.substring(0, 200) };
         }
 
         // Si llegamos aquí: tiene contenido, no está loading, no es solo error → OK
-        return true;
-      }, module.id, module.name);
+        return { visible: true, reason: 'OK', text_length: textLength, has_table: hasTable, has_button: hasButton, has_card: hasCard };
+      }, { moduleId: module.id, moduleName: module.name });
 
-      return isVisible;
+      // Log del resultado para debugging
+      if (!verificationResult.visible) {
+        console.log(`      ❌ [VERIFICATION] Módulo ${module.id} rechazado:`);
+        console.log(`         Razón: ${verificationResult.reason}`);
+        console.log(`         Text length: ${verificationResult.text_length}`);
+        if (verificationResult.sample) {
+          console.log(`         Sample: "${verificationResult.sample.substring(0, 150)}..."`);
+        }
+      } else {
+        console.log(`      ✅ [VERIFICATION] Módulo ${module.id} APROBADO (${verificationResult.text_length} chars, table=${verificationResult.has_table}, button=${verificationResult.has_button}, card=${verificationResult.has_card})`);
+      }
+
+      return verificationResult.visible;
     } catch (error) {
+      console.log(`      ❌ [VERIFICATION] ERROR EXCEPTION: ${error.message}`);
+      console.log(`      Stack: ${error.stack}`);
       return false;
     }
   }

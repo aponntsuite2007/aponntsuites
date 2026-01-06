@@ -34,6 +34,13 @@ class AttendanceModuleCollector extends BaseModuleCollector {
             moduleName: 'attendance',
             moduleURL: '/panel-empresa.html',
             testCategories: [
+                // ⚡ NUEVO (2026-01-05): TESTS PROFUNDOS DE TABS
+                { name: 'attendance_tab1_deep', func: this.testTab1Deep.bind(this) },
+                { name: 'attendance_tab2_deep', func: this.testTab2Deep.bind(this) },
+                { name: 'attendance_tab3_deep', func: this.testTab3Deep.bind(this) },
+                { name: 'attendance_tab4_deep', func: this.testTab4Deep.bind(this) },
+                { name: 'attendance_tab5_deep', func: this.testTab5Deep.bind(this) },
+
                 // ✅ CRUD COMPLETO (siguiendo patrón de UsersModuleCollector)
                 { name: 'attendance_crud_create', func: this.testAttendanceCRUD.bind(this) },
                 { name: 'attendance_crud_update', func: this.testAttendanceUpdate.bind(this) },
@@ -921,6 +928,283 @@ class AttendanceModuleCollector extends BaseModuleCollector {
             console.error('❌ TEST STATS FAILED:', error.message);
 
             return await this.createTestLog(execution_id, 'attendance_stats', 'failed', {
+                error_message: error.message,
+                error_stack: error.stack
+            });
+        }
+    }
+
+    /**
+     * ========================================================================
+     * ⚡ NUEVOS TESTS PROFUNDOS DE TABS (2026-01-05)
+     * ========================================================================
+     * Tests que REALMENTE verifican funcionalidad, no solo navegación
+     */
+
+    /**
+     * HELPER: Navegación profunda a tab con medición de performance
+     */
+    async navigateToTabDeep(tabSelector, tabName, dataSelector, expectedLoadTime = 5000) {
+        console.log(`\n📂 [DEEP TEST] Navegando a tab: ${tabName}...`);
+
+        // 1. Capturar errores de consola
+        const consoleErrors = [];
+        this.page.on('console', msg => {
+            if (msg.type() === 'error') {
+                consoleErrors.push(msg.text());
+            }
+        });
+
+        // 2. Capturar requests para detectar queries sin fecha
+        const slowQueries = [];
+        const requests = [];
+        this.page.on('request', request => {
+            if (request.url().includes('/api/')) {
+                requests.push({
+                    url: request.url(),
+                    method: request.method(),
+                    timestamp: Date.now()
+                });
+            }
+        });
+
+        this.page.on('response', async response => {
+            if (response.url().includes('/api/')) {
+                const duration = Date.now() - (requests.find(r => r.url === response.url())?.timestamp || Date.now());
+
+                if (duration > 5000) {
+                    slowQueries.push({
+                        url: response.url(),
+                        duration,
+                        status: response.status()
+                    });
+                }
+            }
+        });
+
+        // 3. Medir tiempo de carga REAL
+        const startTime = Date.now();
+
+        // Click en tab
+        await this.page.waitForSelector(tabSelector, { timeout: 5000 });
+        await this.clickElement(tabSelector, `tab ${tabName}`);
+
+        // 4. Esperar a que los DATOS se carguen (no solo timeout fijo)
+        try {
+            await this.page.waitForSelector(dataSelector, {
+                state: 'visible',
+                timeout: expectedLoadTime
+            });
+        } catch (error) {
+            // Si no se cargaron los datos en el tiempo esperado
+            const loadTime = Date.now() - startTime;
+            console.error(`❌ [DEEP TEST] Tab ${tabName} NO cargó datos en ${loadTime}ms`);
+
+            return {
+                success: false,
+                loadTime,
+                consoleErrors,
+                slowQueries,
+                error: `Datos no cargaron en ${expectedLoadTime}ms`
+            };
+        }
+
+        const loadTime = Date.now() - startTime;
+
+        // 5. Verificar que hay datos reales
+        const hasData = await this.page.evaluate((sel) => {
+            const element = document.querySelector(sel);
+            return element && element.children.length > 0;
+        }, dataSelector);
+
+        // 6. Resultado
+        const success = loadTime < expectedLoadTime && !consoleErrors.length && hasData;
+
+        console.log(`   ⏱️  Load time: ${loadTime}ms (límite: ${expectedLoadTime}ms)`);
+        console.log(`   📊 Datos cargados: ${hasData ? 'SÍ' : 'NO'}`);
+        console.log(`   ⚠️  Errores consola: ${consoleErrors.length}`);
+        console.log(`   🐌 Queries lentas: ${slowQueries.length}`);
+
+        if (success) {
+            console.log(`✅ Tab ${tabName} funcionando correctamente\n`);
+        } else {
+            console.log(`❌ Tab ${tabName} con problemas detectados\n`);
+        }
+
+        return {
+            success,
+            loadTime,
+            hasData,
+            consoleErrors,
+            slowQueries
+        };
+    }
+
+    /**
+     * TEST PROFUNDO: TAB 1 - Lista principal de asistencias
+     */
+    async testTab1Deep(execution_id) {
+        console.log('\n🧪 [DEEP TEST] TAB 1: Lista Principal...\n');
+
+        try {
+            // Tab 1 es la que se carga por defecto, solo verificamos
+            const result = await this.navigateToTabDeep(
+                'button[data-tab="tab1"]',  // Selector del botón tab 1
+                'Lista Principal',
+                '#attendanceTableBody',      // Selector de la tabla de datos
+                5000                         // Máximo 5 segundos
+            );
+
+            if (!result.success) {
+                return await this.createTestLog(execution_id, 'attendance_tab1_deep', 'failed', {
+                    error_message: `Tab 1 falló: ${result.error || 'Ver metadata'}`,
+                    metadata: result
+                });
+            }
+
+            return await this.createTestLog(execution_id, 'attendance_tab1_deep', 'passed', {
+                metadata: result
+            });
+
+        } catch (error) {
+            console.error('❌ TEST TAB 1 DEEP FAILED:', error.message);
+            return await this.createTestLog(execution_id, 'attendance_tab1_deep', 'failed', {
+                error_message: error.message,
+                error_stack: error.stack
+            });
+        }
+    }
+
+    /**
+     * TEST PROFUNDO: TAB 2 - Reportes/Métricas
+     */
+    async testTab2Deep(execution_id) {
+        console.log('\n🧪 [DEEP TEST] TAB 2: Reportes/Métricas...\n');
+
+        try {
+            const result = await this.navigateToTabDeep(
+                'button[data-tab="tab2"]',
+                'Reportes',
+                '.metrics-container',  // O el selector que tenga la tab 2
+                10000  // 10 segundos porque puede tener gráficos
+            );
+
+            if (!result.success) {
+                return await this.createTestLog(execution_id, 'attendance_tab2_deep', 'failed', {
+                    error_message: `Tab 2 falló: ${result.error || 'Ver metadata'}`,
+                    metadata: result
+                });
+            }
+
+            return await this.createTestLog(execution_id, 'attendance_tab2_deep', 'passed', {
+                metadata: result
+            });
+
+        } catch (error) {
+            console.error('❌ TEST TAB 2 DEEP FAILED:', error.message);
+            return await this.createTestLog(execution_id, 'attendance_tab2_deep', 'failed', {
+                error_message: error.message,
+                error_stack: error.stack
+            });
+        }
+    }
+
+    /**
+     * TEST PROFUNDO: TAB 3
+     */
+    async testTab3Deep(execution_id) {
+        console.log('\n🧪 [DEEP TEST] TAB 3...\n');
+
+        try {
+            const result = await this.navigateToTabDeep(
+                'button[data-tab="tab3"]',
+                'Tab 3',
+                '.tab3-content',
+                5000
+            );
+
+            if (!result.success) {
+                return await this.createTestLog(execution_id, 'attendance_tab3_deep', 'failed', {
+                    error_message: `Tab 3 falló: ${result.error || 'Ver metadata'}`,
+                    metadata: result
+                });
+            }
+
+            return await this.createTestLog(execution_id, 'attendance_tab3_deep', 'passed', {
+                metadata: result
+            });
+
+        } catch (error) {
+            console.error('❌ TEST TAB 3 DEEP FAILED:', error.message);
+            return await this.createTestLog(execution_id, 'attendance_tab3_deep', 'failed', {
+                error_message: error.message,
+                error_stack: error.stack
+            });
+        }
+    }
+
+    /**
+     * TEST PROFUNDO: TAB 4
+     */
+    async testTab4Deep(execution_id) {
+        console.log('\n🧪 [DEEP TEST] TAB 4...\n');
+
+        try {
+            const result = await this.navigateToTabDeep(
+                'button[data-tab="tab4"]',
+                'Tab 4',
+                '.tab4-content',
+                5000
+            );
+
+            if (!result.success) {
+                return await this.createTestLog(execution_id, 'attendance_tab4_deep', 'failed', {
+                    error_message: `Tab 4 falló: ${result.error || 'Ver metadata'}`,
+                    metadata: result
+                });
+            }
+
+            return await this.createTestLog(execution_id, 'attendance_tab4_deep', 'passed', {
+                metadata: result
+            });
+
+        } catch (error) {
+            console.error('❌ TEST TAB 4 DEEP FAILED:', error.message);
+            return await this.createTestLog(execution_id, 'attendance_tab4_deep', 'failed', {
+                error_message: error.message,
+                error_stack: error.stack
+            });
+        }
+    }
+
+    /**
+     * TEST PROFUNDO: TAB 5
+     */
+    async testTab5Deep(execution_id) {
+        console.log('\n🧪 [DEEP TEST] TAB 5...\n');
+
+        try {
+            const result = await this.navigateToTabDeep(
+                'button[data-tab="tab5"]',
+                'Tab 5',
+                '.tab5-content',
+                5000
+            );
+
+            if (!result.success) {
+                return await this.createTestLog(execution_id, 'attendance_tab5_deep', 'failed', {
+                    error_message: `Tab 5 falló: ${result.error || 'Ver metadata'}`,
+                    metadata: result
+                });
+            }
+
+            return await this.createTestLog(execution_id, 'attendance_tab5_deep', 'passed', {
+                metadata: result
+            });
+
+        } catch (error) {
+            console.error('❌ TEST TAB 5 DEEP FAILED:', error.message);
+            return await this.createTestLog(execution_id, 'attendance_tab5_deep', 'failed', {
                 error_message: error.message,
                 error_stack: error.stack
             });
