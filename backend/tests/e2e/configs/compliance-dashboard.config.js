@@ -9,7 +9,7 @@ module.exports = {
   isDelegated: true,
   delegationReason: 'Dashboard de visualizacion',
   moduleKey: 'compliance-dashboard',
-  moduleName: 'Risk Intelligence Dashboard',
+  moduleName: 'Inteligencia de Riesgos',
   category: 'empresa',
   baseUrl: 'http://localhost:9998/panel-empresa.html',
 

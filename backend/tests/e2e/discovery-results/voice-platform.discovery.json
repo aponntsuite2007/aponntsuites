@@ -2,7 +2,7 @@
   "module": "voice-platform",
   "discoveredAt": "2025-12-30T18:10:49.087Z",
   "entryPoint": {
-    "text": "🎤\n                            Voice Platform 🎤\n                            Sistema de Experiencias del Empleado con IA - Captura sugerencias, problemas y soluciones. Clustering semántico, gamificación y analytics.",
+    "text": "🎤\n                            Voz del Empleado 🎤\n                            Sistema de Experiencias del Empleado con IA - Captura sugerencias, problemas y soluciones. Clustering semántico, gamificación y analytics.",
     "onclick": "showTab('voice-platform', this)",
     "dataModule": null,
     "id": null,

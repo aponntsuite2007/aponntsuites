@@ -2440,7 +2440,7 @@
           "entry_point": "BIOMETRIC_CAPTURE",
           "final_states": [],
           "auto_generated": true,
-          "generated_at": "2026-01-06T01:53:15.079Z",
+          "generated_at": "2026-01-06T23:08:22.161Z",
           "stats": {
             "total": 152,
             "core": 37,
@@ -2450,7 +2450,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2026-01-06T01:53:15.087Z"
+      "lastBrainUpdate": "2026-01-06T23:08:22.172Z"
     },
     {
       "id": "legal-dashboard",
@@ -2514,7 +2514,7 @@
             "CASE_ARCHIVED"
           ],
           "auto_generated": true,
-          "generated_at": "2026-01-06T01:53:15.096Z",
+          "generated_at": "2026-01-06T23:08:22.192Z",
           "stats": {
             "total": 43,
             "core": 3,
@@ -2524,7 +2524,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2026-01-06T01:53:15.102Z"
+      "lastBrainUpdate": "2026-01-06T23:08:22.199Z"
     },
     {
       "id": "kiosks",
@@ -4351,7 +4351,7 @@
     },
     {
       "id": "compliance-dashboard",
-      "name": "Risk Intelligence Dashboard",
+      "name": "Inteligencia de Riesgos",
       "category": "compliance",
       "version": "2.0.0",
       "description": "[COMMERCIAL] Cumplimiento normativo, auditorías, riesgos",
@@ -6020,7 +6020,7 @@
     },
     {
       "id": "voice-platform",
-      "name": "Voice Platform 🎤",
+      "name": "Voz del Empleado 🎤",
       "category": "rrhh",
       "version": "1.0.0",
       "description": "Sistema de Experiencias del Empleado con IA - Captura sugerencias, problemas y soluciones. Clustering semántico, gamificación y analytics.",

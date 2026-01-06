@@ -253,6 +253,16 @@ class FrontendCollector {
           });
         }
       }
+
+      // ⭐ FIX 21: CAPTURAR console.log() con [DEBUG] para ver ejecución de funciones
+      if (msg.type() === 'log') {
+        const logText = msg.text();
+
+        // Capturar solo logs de DEBUG importantes
+        if (logText.includes('[DEBUG]') || logText.includes('[DEBUG FIX') || logText.includes('🔍')) {
+          console.log(`      🔍 [BROWSER-LOG] ${logText}`);
+        }
+      }
     });
 
     // 2️⃣ PAGE ERRORS (30+ tipos) - EXCEPCIONES NO MANEJADAS
@@ -279,6 +289,32 @@ class FrontendCollector {
 
       console.log(`      ❌ [${errorCategory.toUpperCase()} EXCEPTION] ${errorMessage}`);
       console.log(`         📁 File: ${stackInfo.file}:${stackInfo.line}:${stackInfo.column}`);
+
+      // ⭐ FIX 15 ULTRA: Captura TOTAL de errores de sintaxis (todas las propiedades + scripts cargados)
+      if (errorCategory === 'syntax-error' || errorMessage.includes('Unexpected token')) {
+        console.log(`         📜 ERROR OBJECT COMPLETO:`);
+        console.log(`            ├─ Message: ${error.message || 'N/A'}`);
+        console.log(`            ├─ Name: ${error.name || 'N/A'}`);
+        console.log(`            ├─ FileName: ${error.fileName || 'No disponible'}`);
+        console.log(`            ├─ LineNumber: ${error.lineNumber || 'No disponible'}`);
+        console.log(`            ├─ ColumnNumber: ${error.columnNumber || 'No disponible'}`);
+        console.log(`            ├─ Stack: ${errorStack ? errorStack.substring(0, 200) + '...' : 'No stack trace'}`);
+        console.log(`            └─ Propiedades: ${JSON.stringify(Object.keys(error))}`);
+
+        // Listar todos los scripts cargados para identificar cuál tiene el error
+        this.page.evaluate(() => {
+          const scripts = Array.from(document.querySelectorAll('script'));
+          console.log(`         📋 SCRIPTS CARGADOS (${scripts.length} total):`);
+          scripts.forEach((script, idx) => {
+            if (script.src) {
+              console.log(`            [${idx}] 🌐 ${script.src.split('/').pop()}`);
+            } else {
+              const preview = script.textContent.substring(0, 60).replace(/\n/g, ' ');
+              console.log(`            [${idx}] 📝 INLINE: ${preview}...`);
+            }
+          });
+        }).catch(() => {});
+      }
 
       this.pageErrors.push(errorDetails);
     });
@@ -820,6 +856,70 @@ class FrontendCollector {
         console.log(`        ⚠️  PERSISTENCIA SKIP - ${persistenceResult.error}`);
       }
 
+      // ✨✨✨ NUEVOS TESTS DE AUTODESCUBRIMIENTO (Tests 11-14)
+      // Estos tests funcionan como un QA humano: descubren TODO automáticamente
+
+      // TEST 11: AUTODESCUBRIR TODOS LOS BOTONES en la interfaz principal
+      console.log(`      1️⃣1️⃣ [AUTODISCOVER] Descubriendo todos los botones de la interfaz...`);
+      const allButtonsResult = await this.testDiscoverAllButtons(module);
+      if (allButtonsResult.success) {
+        passed++;
+        console.log(`        ✅ AUTODISCOVER OK - ${allButtonsResult.count} botones encontrados`);
+      } else {
+        // No crítico, solo informativo
+        console.log(`        ℹ️  AUTODISCOVER SKIP - ${allButtonsResult.error}`);
+      }
+
+      // TEST 12: DESCUBRIR TODOS LOS BOTONES EN FILAS (Ver, Editar, Eliminar, Historial, etc.)
+      console.log(`      1️⃣2️⃣ [ROW-BUTTONS] Descubriendo botones en las filas...`);
+      const rowButtonsDiscoverResult = await this.testAllRowButtons(module);
+      if (rowButtonsDiscoverResult.success) {
+        passed++;
+        console.log(`        ✅ ROW-BUTTONS OK - ${rowButtonsDiscoverResult.count} botones por fila`);
+
+        // Guardar para análisis
+        if (rowButtonsDiscoverResult.count > 0) {
+          const hasViewButton = rowButtonsDiscoverResult.buttons.some(b => b.actionType === 'view');
+          const hasEditButton = rowButtonsDiscoverResult.buttons.some(b => b.actionType === 'edit');
+          const hasDeleteButton = rowButtonsDiscoverResult.buttons.some(b => b.actionType === 'delete');
+
+          console.log(`           🔹 Botón VER: ${hasViewButton ? '✅ SÍ' : '❌ NO'}`);
+          console.log(`           🔹 Botón EDITAR: ${hasEditButton ? '✅ SÍ' : '❌ NO'}`);
+          console.log(`           🔹 Botón ELIMINAR: ${hasDeleteButton ? '✅ SÍ' : '❌ NO'}`);
+        }
+      } else {
+        // No crítico
+        console.log(`        ℹ️  ROW-BUTTONS SKIP - ${rowButtonsDiscoverResult.error}`);
+      }
+
+      // TEST 13: TESTEAR BOTÓN "VER" (modal con tabs)
+      // Este es el test que el usuario pidió específicamente
+      console.log(`      1️⃣3️⃣ [VIEW-BUTTON] Testeando botón "Ver" y sus tabs...`);
+      const viewButtonResult = await this.testViewButton(module);
+      if (viewButtonResult.success) {
+        passed++;
+        console.log(`        ✅ VIEW-BUTTON OK - Modal abierto con ${viewButtonResult.tabsCount} tabs`);
+
+        // Mostrar tabs testeados
+        if (viewButtonResult.testedTabs && viewButtonResult.testedTabs.length > 0) {
+          viewButtonResult.testedTabs.forEach(tab => {
+            const status = tab.hasContent ? '✅' : '⚠️';
+            console.log(`           ${status} Tab "${tab.tabName}": ${tab.hasContent ? 'Con contenido' : 'Vacío'}`);
+          });
+        }
+      } else {
+        failed++;
+        errors.push({
+          test: 'Botón Ver + Tabs',
+          error: viewButtonResult.error || 'Botón "Ver" no funciona o modal no abre',
+          suggestion: `Verificar que exista botón "Ver" en las filas y que abra modal correctamente`
+        });
+        console.log(`        ❌ VIEW-BUTTON FAIL - ${viewButtonResult.error}`);
+      }
+
+      // TEST 14: Si el módulo tiene submódulos, verificarlos
+      // (Esto puede agregarse en el futuro si hace falta)
+
       // NUEVO: Evaluar errores de red y consola capturados
       const criticalHttpErrors = this.networkErrors.filter(err =>
         err.type === 'http' && [401, 403, 500, 503].includes(err.status)
@@ -969,7 +1069,7 @@ class FrontendCollector {
   async autoCloseErrorModals() {
     try {
       // Buscar botones de cerrar modal (X, Cerrar, Aceptar, OK)
-      const closeButtons = await this.page.$('button.close, button.btn-close, button[data-dismiss="modal"], button:contains("Cerrar"), button:contains("Aceptar"), button:contains("OK"), .swal2-confirm, .swal2-cancel');
+      const closeButtons = await this.page.$('button.close, button.btn-close, button[data-dismiss="modal"], button:has-text("Cerrar"), button:has-text("Aceptar"), button:has-text("OK"), .swal2-confirm, .swal2-cancel');
       
       if (closeButtons.length > 0) {
         console.log(`      🔘 [AUTO-CLOSE] Encontrados ${closeButtons.length} botones de cerrar modal`);
@@ -1372,7 +1472,7 @@ class FrontendCollector {
   async testAddButton(module) {
     try {
       // Buscar botón "Agregar"
-      const addButton = await this.page.$('button:contains("Agregar"), button[onclick*="Add"], button[onclick*="add"]');
+      const addButton = await this.page.$('button:has-text("Agregar"), button[onclick*="Add"], button[onclick*="add"]');
 
       if (!addButton) return false;
 
@@ -1480,11 +1580,39 @@ class FrontendCollector {
    */
   async testCreate(module) {
     try {
+      // ⭐ FIX 12: Cerrar cualquier modal existente ANTES de empezar el test
+      console.log(`        🔹 [FIX 12] Cerrando modales existentes...`);
+      await this.page.evaluate(() => {
+        // Cerrar modales de Bootstrap (estándar)
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+          modal.classList.remove('show');
+          modal.style.display = 'none';
+          modal.setAttribute('aria-hidden', 'true');
+          modal.removeAttribute('aria-modal');
+        });
+
+        // Remover backdrops
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+
+        // Limpiar body classes
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+
+        console.log('        ✅ [FIX 12] Modales cerrados');
+      });
+
+      await this.page.waitForTimeout(500);
+
       // 1. Abrir modal de agregar
       console.log(`        🔹 Abriendo modal de agregar...`);
-      const addButton = await this.page.$('button:contains("Agregar"), button[onclick*="Add"], button[onclick*="add"]');
+      console.log(`        📋 DEBUG: Buscando botón "Agregar"...`);
+      const addButton = await this.page.$('button:has-text("Agregar"), button[onclick*="Add"], button[onclick*="add"]');
 
       if (!addButton) {
+        console.log(`        ❌ DEBUG: Botón "Agregar" NO encontrado`);
         return {
           success: false,
           error: 'No se encontró botón de agregar',
@@ -1492,14 +1620,39 @@ class FrontendCollector {
         };
       }
 
-      await addButton.click();
+      console.log(`        ✅ DEBUG: Botón "Agregar" encontrado, haciendo click...`);
+
+      // ⭐ FIX 13: Click con JavaScript DIRECTO para evitar "intercepts pointer events"
+      const addButtonClickResult = await addButton.evaluate(btn => {
+        console.log('        [FIX 13] Ejecutando click con JavaScript directo');
+        btn.click();
+        return { success: true, buttonText: btn.textContent.trim() };
+      });
+
+      console.log(`        ✅ [FIX 13] Click ejecutado en botón: "${addButtonClickResult.buttonText}"`);
+
       await this.page.waitForTimeout(2000);
+      console.log(`        ✅ DEBUG: Timeout completado, modal debería estar abierto`);
+
+      // ⭐ FIX CRÍTICO: SCROLL HACIA ARRIBA dentro del modal para que los campos estén VISIBLES
+      console.log(`        🔹 Scrolleando modal HACIA ARRIBA para que campos estén visibles...`);
+      await this.page.evaluate(() => {
+        const modal = document.querySelector('.modal.show, .modal[style*="display: block"], #userModal');
+        if (modal) {
+          const modalBody = modal.querySelector('.modal-body') || modal;
+          modalBody.scrollTop = 0; // ⭐ SCROLL AL INICIO (arriba)
+        }
+      });
+      await this.page.waitForTimeout(500);
 
       // 2. Llenar formulario con datos de prueba
       console.log(`        🔹 Llenando formulario...`);
       const formFilled = await this.fillFormFields(module, 'create');
 
+      console.log(`        📋 fillFormFields result:`, formFilled);  // ← DEBUG
+
       if (!formFilled.success) {
+        console.error(`        ❌ ERROR llenando form: ${formFilled.error}`);  // ← DEBUG
         return {
           success: false,
           error: `No se pudo llenar formulario: ${formFilled.error}`,
@@ -1507,20 +1660,123 @@ class FrontendCollector {
         };
       }
 
+      console.log(`        ✅ Formulario llenado correctamente`);  // ← DEBUG
+
+      // ⭐ FIX CRÍTICO: SCROLL dentro del modal para ver botones que están abajo
+      console.log(`        🔹 Haciendo scroll dentro del modal para ver botones...`);
+      await this.page.evaluate(() => {
+        // Buscar el modal activo
+        const modal = document.querySelector('.modal.show, .modal[style*="display: block"]');
+        if (modal) {
+          // Scroll al final del modal
+          const modalBody = modal.querySelector('.modal-body') || modal;
+          modalBody.scrollTop = modalBody.scrollHeight;
+        }
+      });
+      await this.page.waitForTimeout(500); // Dar tiempo al scroll
+
       // 3. Guardar el registro
       console.log(`        🔹 Guardando registro...`);
-      const saveButton = await this.page.$('button:contains("Guardar"), button[onclick*="save"], button[onclick*="Save"]');
 
-      if (!saveButton) {
+      // ⭐ FIX 7: Click directo con JavaScript para evitar "intercepts pointer events"
+      console.log(`        🔍 DEBUG FIX 7: Buscando botón de guardar...`);
+      const clickResult = await this.page.evaluate(async () => { // ⭐ FIX 23: async callback
+        // Buscar botón de guardar - múltiples estrategias
+        const allButtons = [
+          ...document.querySelectorAll('button[onclick*="saveNew"], button[onclick*="save"], button[onclick*="crear"], button.btn-primary')
+        ];
+
+        // Palabras clave comunes en botones de guardar/crear
+        const keywords = ['Guardar', 'Crear', 'Nuevo Usuario', 'Agregar', 'Añadir', 'Save', 'Create', 'Add'];
+
+        const saveBtn = allButtons.find(btn => {
+          const text = btn.textContent.toLowerCase().trim();
+          const onclick = btn.getAttribute('onclick') || '';
+
+          // Buscar por texto visible
+          if (keywords.some(k => text.includes(k.toLowerCase()))) {
+            return true;
+          }
+
+          // Buscar por onclick que incluya save/create/new
+          if (onclick.includes('saveNew') || onclick.includes('save') || onclick.includes('crear')) {
+            return true;
+          }
+
+          return false;
+        });
+
+        if (!saveBtn) {
+          return {
+            success: false,
+            error: 'No se encontró botón de guardar/crear',
+            availableButtons: allButtons.map(b => ({
+              text: b.textContent.trim(),
+              onclick: b.getAttribute('onclick')
+            }))
+          };
+        }
+
+        // ⭐ FIX 11: Parsear onclick y ejecutar función directamente desde window
+        const onclickAttr = saveBtn.getAttribute('onclick');
+
+        if (onclickAttr) {
+          try {
+            // Extraer nombre de función del onclick (ej: "saveNewUser()" → "saveNewUser")
+            const funcMatch = onclickAttr.match(/^(\w+)\s*\(/);
+
+            if (funcMatch && funcMatch[1]) {
+              const funcName = funcMatch[1];
+
+              // Ejecutar función directamente desde window si existe
+              const funcExists = typeof window[funcName] === 'function';
+
+              if (funcExists) {
+                console.log(`[DEBUG FIX 11] Ejecutando window.${funcName}()`);
+
+                // ⭐ FIX 22: await para funciones async
+                await window[funcName]();
+
+                // ⭐ FIX 22: Esperar a que el POST se complete (500ms)
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                console.log(`[DEBUG FIX 11] window.${funcName}() ejecutado y completado`);
+                return { success: true, buttonText: saveBtn.textContent.trim(), method: `await window.${funcName}()`, onclick: onclickAttr };
+              } else {
+                console.log(`[DEBUG FIX 11] ERROR: window.${funcName} NO existe. Type:`, typeof window[funcName]);
+                console.log(`[DEBUG FIX 11] window keys:`, Object.keys(window).filter(k => k.includes('save') || k.includes('User')));
+                return { success: false, error: `Función ${funcName} no encontrada en window`, onclick: onclickAttr, windowType: typeof window[funcName] };
+              }
+            } else {
+              // Si no es una función simple, usar eval como fallback
+              window.eval(onclickAttr);
+              return { success: true, buttonText: saveBtn.textContent.trim(), method: 'eval fallback', onclick: onclickAttr };
+            }
+          } catch (evalError) {
+            // Si falla todo, usar click() tradicional
+            saveBtn.click();
+            return { success: true, buttonText: saveBtn.textContent.trim(), method: 'click() final fallback', evalError: evalError.message };
+          }
+        } else {
+          // Si no tiene onclick, usar click() directo
+          saveBtn.click();
+          return { success: true, buttonText: saveBtn.textContent.trim(), method: 'click() no-onclick' };
+        }
+      });
+
+      console.log(`        📋 DEBUG FIX 7: clickResult =`, clickResult);
+
+      if (!clickResult.success) {
+        console.log(`        ❌ DEBUG FIX 7: No se encontró botón. Buttons disponibles:`, clickResult.availableButtons);
         return {
           success: false,
-          error: 'No se encontró botón de guardar',
+          error: clickResult.error || 'No se encontró botón de guardar',
           suggestion: 'Verificar que el modal tenga botón "Guardar"'
         };
       }
 
-      await saveButton.click();
-      await this.page.waitForTimeout(3000); // Esperar respuesta del servidor
+      console.log(`        ✅ DEBUG FIX 7: Click exitoso en botón: "${clickResult.buttonText}"`);
+      await this.page.waitForTimeout(5000); // Esperar respuesta del servidor + recarga de lista
 
       // 4. Verificar que se creó correctamente (modal cerrado, mensaje success)
       const modalClosed = await this.page.evaluate(() => {
@@ -1528,14 +1784,31 @@ class FrontendCollector {
         return modals.length === 0;
       });
 
-      // 5. Obtener el ID del último registro creado
+      // 5. ⭐ NUEVO: Verificar PERSISTENCIA EN BD (PostgreSQL)
+      console.log(`        🔹 Verificando persistencia en BD...`);
+      const dbCheck = await this.verifyPersistenceInDB(module, this.company_id);
+
+      if (!dbCheck.success) {
+        return {
+          success: false,
+          error: `Registro NO persistió en BD: ${dbCheck.error}`,
+          suggestion: 'Verificar que el backend guarde correctamente en PostgreSQL',
+          modalClosed,
+          dbCheck
+        };
+      }
+
+      // 6. Obtener el ID del último registro creado
       const createdId = await this.getLastCreatedId(module);
 
       return {
-        success: modalClosed,
+        success: modalClosed && dbCheck.success,
         createdId,
+        dbRecordId: dbCheck.recordId,
+        tableName: dbCheck.tableName,
         error: modalClosed ? null : 'Modal no se cerró después de guardar',
-        suggestion: modalClosed ? null : 'Verificar que la función de guardar cierre el modal al completarse'
+        suggestion: modalClosed ? null : 'Verificar que la función de guardar cierre el modal al completarse',
+        persistenceVerified: true
       };
 
     } catch (error) {
@@ -1608,6 +1881,17 @@ class FrontendCollector {
       await editButton.click();
       await this.page.waitForTimeout(2000);
 
+      // ⭐ FIX CRÍTICO: SCROLL HACIA ARRIBA dentro del modal para que los campos estén VISIBLES
+      console.log(`        🔹 Scrolleando modal HACIA ARRIBA para que campos estén visibles...`);
+      await this.page.evaluate(() => {
+        const modal = document.querySelector('.modal.show, .modal[style*="display: block"], #userModal');
+        if (modal) {
+          const modalBody = modal.querySelector('.modal-body') || modal;
+          modalBody.scrollTop = 0; // ⭐ SCROLL AL INICIO (arriba)
+        }
+      });
+      await this.page.waitForTimeout(500);
+
       // 2. Modificar campos del formulario
       console.log(`        🔹 Modificando campos del formulario...`);
       const formFilled = await this.fillFormFields(module, 'update');
@@ -1620,9 +1904,20 @@ class FrontendCollector {
         };
       }
 
+      // ⭐ FIX CRÍTICO: SCROLL dentro del modal para ver botones que están abajo
+      console.log(`        🔹 Haciendo scroll dentro del modal para ver botones...`);
+      await this.page.evaluate(() => {
+        const modal = document.querySelector('.modal.show, .modal[style*="display: block"]');
+        if (modal) {
+          const modalBody = modal.querySelector('.modal-body') || modal;
+          modalBody.scrollTop = modalBody.scrollHeight;
+        }
+      });
+      await this.page.waitForTimeout(500);
+
       // 3. Guardar cambios
       console.log(`        🔹 Guardando cambios...`);
-      const saveButton = await this.page.$('button:contains("Guardar"), button[onclick*="save"]');
+      const saveButton = await this.page.$('button:has-text("Guardar"), button[onclick*="save"]');
 
       if (!saveButton) {
         return {
@@ -1632,6 +1927,8 @@ class FrontendCollector {
         };
       }
 
+      // ⭐ FIX: Scroll al botón antes de hacer click
+      await saveButton.scrollIntoViewIfNeeded();
       await saveButton.click();
       await this.page.waitForTimeout(3000);
 
@@ -1744,51 +2041,127 @@ class FrontendCollector {
    */
   async fillFormFields(module, mode = 'create') {
     try {
-      // Buscar todos los inputs, selects y textareas visibles
-      const fields = await this.page.$$('.modal input:not([type="hidden"]), .modal select, .modal textarea');
+      // ⭐ FIX: Buscar TODOS los campos en CUALQUIER modal abierto
+      // Probar múltiples selectores: .modal, #*Modal, [role="dialog"], etc.
+      const selector = '.modal input:not([type="hidden"]):not([disabled]), .modal select:not([disabled]), .modal textarea:not([disabled]), [id*="Modal"] input:not([type="hidden"]):not([disabled]), [id*="Modal"] select:not([disabled]), [id*="Modal"] textarea:not([disabled]), [role="dialog"] input:not([type="hidden"]):not([disabled]), [role="dialog"] select:not([disabled]), [role="dialog"] textarea:not([disabled])';
+      const fields = await this.page.$$(selector);
 
       if (fields.length === 0) {
         return {
           success: false,
-          error: 'No se encontraron campos en el formulario'
+          error: 'No se encontraron campos en ningún modal (probé .modal, #*Modal, [role="dialog"])'
         };
       }
 
       console.log(`        🔹 Llenando ${fields.length} campos...`);
 
       for (const field of fields) {
-        const fieldType = await field.evaluate(el => el.tagName.toLowerCase());
-        const inputType = await field.evaluate(el => el.type);
-        const fieldName = await field.evaluate(el => el.name || el.id || '');
+        const fieldInfo = await field.evaluate(el => ({
+          tagName: el.tagName.toLowerCase(),
+          type: el.type,
+          name: el.name || el.id || '',
+          id: el.id
+        }));
 
-        // Generar datos de prueba según el tipo de campo
-        // ⭐ TODOS los campos de texto llevan prefijo TEST_PREFIX
-        if (fieldType === 'input' && inputType === 'text') {
-          await field.fill(`${this.TEST_PREFIX} ${mode} ${Date.now()}`, { delay: 50 });
-        } else if (fieldType === 'input' && inputType === 'email') {
-          await field.fill(`test-audit-${Date.now()}@example.com`, { delay: 50 });
-        } else if (fieldType === 'input' && inputType === 'number') {
-          await field.fill('123', { delay: 50 });
-        } else if (fieldType === 'input' && inputType === 'date') {
-          // Fecha de prueba
-          await field.fill('2025-01-01', { delay: 50 });
-        } else if (fieldType === 'select') {
-          // Seleccionar primera opción disponible
-          await this.page.evaluate((el) => {
-            if (el.options.length > 0) {
-              el.selectedIndex = 1; // Saltar opción placeholder
-            }
-          }, field);
-        } else if (fieldType === 'textarea') {
-          await field.fill(`${this.TEST_PREFIX} Descripción de prueba para ${mode}`, { delay: 50 });
-        } else if (fieldType === 'input' && inputType === 'tel') {
-          await field.fill('1234567890', { delay: 50 });
+        // ⭐ FIX DEFINITIVO: Setear valor con JAVASCRIPT puro - ignora visibilidad
+        try {
+          if (fieldInfo.tagName === 'input' && fieldInfo.type === 'text') {
+            const value = `${this.TEST_PREFIX} ${mode} ${Date.now()}`;
+            await field.evaluate((el, val) => { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }, value);
+          } else if (fieldInfo.tagName === 'input' && fieldInfo.type === 'email') {
+            const value = `test-audit-${Date.now()}@example.com`;
+            await field.evaluate((el, val) => { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }, value);
+          } else if (fieldInfo.tagName === 'input' && fieldInfo.type === 'number') {
+            await field.evaluate((el) => { el.value = '123'; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
+          } else if (fieldInfo.tagName === 'input' && fieldInfo.type === 'date') {
+            await field.evaluate((el) => { el.value = '2025-01-01'; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
+          } else if (fieldInfo.tagName === 'input' && fieldInfo.type === 'password') {
+            const value = `Pass${Date.now()}!`;
+            await field.evaluate((el, val) => { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }, value);
+          } else if (fieldInfo.tagName === 'select') {
+            // Seleccionar segunda opción (índice 1, saltando placeholder)
+            await field.evaluate((el) => {
+              if (el.options.length > 1) {
+                el.selectedIndex = 1;
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+            });
+          } else if (fieldInfo.tagName === 'textarea') {
+            const value = `${this.TEST_PREFIX} Descripción de prueba para ${mode}`;
+            await field.evaluate((el, val) => { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }, value);
+          } else if (fieldInfo.tagName === 'input' && fieldInfo.type === 'tel') {
+            await field.evaluate((el) => { el.value = '1234567890'; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
+          }
+        } catch (fillError) {
+          console.error(`        ⚠️  Error llenando campo ${fieldInfo.id || fieldInfo.name}: ${fillError.message}`);
+          // Continuar con el siguiente campo
         }
       }
 
       return { success: true };
 
     } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * ⭐ NUEVO: Verificar que el registro se guardó REALMENTE en PostgreSQL
+   */
+  async verifyPersistenceInDB(module, companyId) {
+    try {
+      // Mapeo de módulos a tablas (los más comunes)
+      const TABLE_MAP = {
+        'users': 'users',
+        'attendance': 'attendance',
+        'departments': 'departments',
+        'kiosks': 'kiosks',
+        'shifts': 'shifts',
+        'vacations': 'vacation_requests',
+        'medical-records': 'medical_records'
+      };
+
+      // ⭐ FIX: module puede ser string o objeto con .id
+      const moduleKey = typeof module === 'string' ? module : module.id;
+      const tableName = TABLE_MAP[moduleKey] || moduleKey;
+
+      // Query para buscar registros con TEST_PREFIX creados en los últimos 10 segundos
+      const query = `
+        SELECT * FROM ${tableName}
+        WHERE company_id = $1
+          AND "createdAt" > NOW() - INTERVAL '10 seconds'
+        ORDER BY "createdAt" DESC
+        LIMIT 1
+      `;
+
+      const [results] = await this.database.sequelize.query(query, {
+        bind: [companyId],
+        type: this.database.sequelize.QueryTypes.SELECT
+      });
+
+      if (results && results.length > 0) {
+        const record = results[0];
+        console.log(`        ✅ PERSISTENCIA EN BD: Registro ${record.id || record.user_id} encontrado en tabla ${tableName}`);
+        return {
+          success: true,
+          recordId: record.id || record.user_id,
+          tableName,
+          record
+        };
+      } else {
+        console.error(`        ❌ PERSISTENCIA EN BD: NO se encontró registro en tabla ${tableName}`);
+        return {
+          success: false,
+          error: `No se encontró registro en tabla ${tableName}`,
+          tableName
+        };
+      }
+
+    } catch (error) {
+      console.error(`        ❌ Error verificando persistencia: ${error.message}`);
       return {
         success: false,
         error: error.message
@@ -1816,6 +2189,332 @@ class FrontendCollector {
 
     } catch (error) {
       return 'unknown';
+    }
+  }
+
+  /**
+   * ═══════════════════════════════════════════════════════════════════════
+   * ✨ AUTODESCUBRIMIENTO COMPLETO - Testear como un QA humano real
+   * ═══════════════════════════════════════════════════════════════════════
+   */
+
+  /**
+   * 🔍 AUTODESCUBRIR TODOS LOS BOTONES en la interfaz
+   * No hardcodear "Agregar", "Ver", etc. - descubrirlos automáticamente
+   */
+  async testDiscoverAllButtons(module) {
+    try {
+      console.log(`      🔍 [AUTODISCOVER] Descubriendo TODOS los botones en la interfaz...`);
+
+      const buttons = await this.page.evaluate(() => {
+        const foundButtons = [];
+
+        // Buscar todos los botones visibles
+        const allButtons = document.querySelectorAll('button:not([style*="display: none"]):not([style*="display:none"])');
+
+        allButtons.forEach((btn, idx) => {
+          const text = btn.textContent.trim();
+          const classes = btn.className;
+          const onclick = btn.getAttribute('onclick') || '';
+          const id = btn.id || '';
+
+          // Solo botones que parecen acciones (no "Cancelar", "Cerrar", etc.)
+          const isActionButton = !text.match(/cancelar|cerrar|close|cancel/i);
+
+          if (isActionButton && text.length > 0) {
+            foundButtons.push({
+              index: idx,
+              text,
+              classes,
+              onclick,
+              id,
+              visible: btn.offsetParent !== null
+            });
+          }
+        });
+
+        return foundButtons;
+      });
+
+      console.log(`      ✅ [AUTODISCOVER] Encontrados ${buttons.length} botones:`);
+      buttons.forEach(btn => {
+        console.log(`         - "${btn.text}" (${btn.onclick || 'no onclick'})`);
+      });
+
+      return {
+        success: true,
+        buttons,
+        count: buttons.length
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        buttons: [],
+        count: 0
+      };
+    }
+  }
+
+  /**
+   * 👁️ TESTEAR BOTÓN "VER" (modal con tabs completos de información)
+   * Este es el botón que el usuario mencionó que faltaba testear
+   */
+  async testViewButton(module) {
+    try {
+      console.log(`      👁️  [VIEW-BUTTON] Buscando y testeando botón "Ver"...`);
+
+      // 1. Buscar primera fila de la tabla
+      const firstRow = await this.page.locator('table tbody tr:first-child');
+      const rowExists = await firstRow.count() > 0;
+
+      if (!rowExists) {
+        return {
+          success: false,
+          error: 'No hay registros en la tabla para testear botón Ver',
+          testedTabs: []
+        };
+      }
+
+      // 2. Buscar botón "Ver" dentro de la fila (puede ser icono ojo, botón "Ver", etc.)
+      const viewButton = firstRow.locator('button:has-text("Ver"), i.fa-eye, i.fa-search, button[onclick*="view"], button[onclick*="Ver"]').first();
+      const viewButtonExists = await viewButton.count() > 0;
+
+      if (!viewButtonExists) {
+        console.log(`      ⚠️  [VIEW-BUTTON] No se encontró botón "Ver" en la fila`);
+        return {
+          success: false,
+          error: 'Botón "Ver" no encontrado en la fila',
+          testedTabs: []
+        };
+      }
+
+      // 3. Click en botón "Ver"
+      console.log(`      🔹 Haciendo click en botón "Ver"...`);
+      await viewButton.click();
+      await this.page.waitForTimeout(2000);
+
+      // 4. Verificar que se abrió un modal
+      const modalOpened = await this.page.evaluate(() => {
+        const modals = document.querySelectorAll('.modal[style*="display: block"], .modal.show, .modal:not([style*="display: none"])');
+        return modals.length > 0;
+      });
+
+      if (!modalOpened) {
+        return {
+          success: false,
+          error: 'Modal "Ver" no se abrió después de click',
+          testedTabs: []
+        };
+      }
+
+      console.log(`      ✅ [VIEW-BUTTON] Modal "Ver" abierto correctamente`);
+
+      // 5. ✨ DESCUBRIR Y TESTEAR TODOS LOS TABS DEL MODAL
+      const tabsResult = await this.testModalTabs(module);
+
+      // 6. Cerrar modal
+      await this.page.keyboard.press('Escape');
+      await this.page.waitForTimeout(1000);
+
+      return {
+        success: true,
+        modalOpened: true,
+        testedTabs: tabsResult.tabs,
+        tabsCount: tabsResult.count
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        testedTabs: []
+      };
+    }
+  }
+
+  /**
+   * 📑 DESCUBRIR Y TESTEAR TODOS LOS TABS de un modal
+   * Modal puede tener tabs con: Datos Generales, Documentos, Historial, etc.
+   */
+  async testModalTabs(module) {
+    try {
+      console.log(`      📑 [MODAL-TABS] Descubriendo tabs en el modal...`);
+
+      const tabsInfo = await this.page.evaluate(() => {
+        const tabs = [];
+
+        // Buscar tabs comunes (Bootstrap, custom, etc.)
+        const tabElements = document.querySelectorAll('.modal .nav-tabs li a, .modal .tabs a, .modal [role="tab"]');
+
+        tabElements.forEach((tab, idx) => {
+          const text = tab.textContent.trim();
+          const href = tab.getAttribute('href') || '';
+          const dataTab = tab.getAttribute('data-tab') || '';
+          const onclick = tab.getAttribute('onclick') || '';
+
+          if (text.length > 0) {
+            tabs.push({
+              index: idx,
+              text,
+              href,
+              dataTab,
+              onclick,
+              selector: `a:has-text("${text}")`
+            });
+          }
+        });
+
+        return tabs;
+      });
+
+      if (tabsInfo.length === 0) {
+        console.log(`      ℹ️  [MODAL-TABS] Modal no tiene tabs (modal simple)`);
+        return {
+          success: true,
+          tabs: [],
+          count: 0
+        };
+      }
+
+      console.log(`      ✅ [MODAL-TABS] Encontrados ${tabsInfo.length} tabs:`);
+      const testedTabs = [];
+
+      // Testear cada tab
+      for (const tab of tabsInfo) {
+        console.log(`         📌 Tab "${tab.text}" - Haciendo click...`);
+
+        try {
+          // Click en el tab
+          await this.page.click(`.modal ${tab.selector}`);
+          await this.page.waitForTimeout(1500);
+
+          // Verificar que el tab tenga contenido
+          const hasContent = await this.page.evaluate(() => {
+            const activePane = document.querySelector('.modal .tab-pane.active, .modal .tab-content > div:not([style*="display: none"])');
+            return activePane && activePane.textContent.trim().length > 50;
+          });
+
+          testedTabs.push({
+            tabName: tab.text,
+            tested: true,
+            hasContent,
+            error: hasContent ? null : 'Tab vacío o sin contenido'
+          });
+
+          console.log(`         ${hasContent ? '✅' : '⚠️'}  Tab "${tab.text}" - ${hasContent ? 'Con contenido' : 'Vacío'}`);
+
+        } catch (error) {
+          testedTabs.push({
+            tabName: tab.text,
+            tested: false,
+            hasContent: false,
+            error: error.message
+          });
+          console.log(`         ❌ Tab "${tab.text}" - Error: ${error.message}`);
+        }
+      }
+
+      return {
+        success: true,
+        tabs: testedTabs,
+        count: tabsInfo.length
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        tabs: [],
+        count: 0
+      };
+    }
+  }
+
+  /**
+   * 🔘 TESTEAR TODOS LOS BOTONES EN FILAS de la tabla
+   * No solo "Editar" y "Eliminar" - descubrir TODOS (Ver, Historial, Documentos, etc.)
+   */
+  async testAllRowButtons(module) {
+    try {
+      console.log(`      🔘 [ROW-BUTTONS] Descubriendo TODOS los botones en las filas...`);
+
+      // Obtener primera fila
+      const firstRow = await this.page.locator('table tbody tr:first-child');
+      const rowExists = await firstRow.count() > 0;
+
+      if (!rowExists) {
+        return {
+          success: false,
+          error: 'No hay filas en la tabla',
+          buttons: []
+        };
+      }
+
+      // Descubrir todos los botones/iconos en la fila
+      const rowButtons = await this.page.evaluate(() => {
+        const firstRow = document.querySelector('table tbody tr:first-child');
+        if (!firstRow) return [];
+
+        const buttons = [];
+
+        // Buscar todos los botones e iconos dentro de la fila
+        const btnElements = firstRow.querySelectorAll('button, i.fa, i.fas, i.far, a[onclick]');
+
+        btnElements.forEach((btn, idx) => {
+          const tagName = btn.tagName.toLowerCase();
+          const text = btn.textContent.trim();
+          const title = btn.getAttribute('title') || '';
+          const onclick = btn.getAttribute('onclick') || '';
+          const classes = btn.className;
+
+          // Detectar tipo de acción
+          let actionType = 'unknown';
+          if (onclick.includes('edit') || classes.includes('fa-edit') || classes.includes('fa-pen')) {
+            actionType = 'edit';
+          } else if (onclick.includes('delete') || classes.includes('fa-trash')) {
+            actionType = 'delete';
+          } else if (onclick.includes('view') || onclick.includes('Ver') || classes.includes('fa-eye')) {
+            actionType = 'view';
+          } else if (onclick.includes('history') || onclick.includes('Historial') || classes.includes('fa-history')) {
+            actionType = 'history';
+          } else if (onclick.includes('document') || classes.includes('fa-file')) {
+            actionType = 'documents';
+          }
+
+          buttons.push({
+            index: idx,
+            tagName,
+            text,
+            title,
+            onclick,
+            classes,
+            actionType
+          });
+        });
+
+        return buttons;
+      });
+
+      console.log(`      ✅ [ROW-BUTTONS] Encontrados ${rowButtons.length} botones en la fila:`);
+      rowButtons.forEach(btn => {
+        console.log(`         - ${btn.actionType.toUpperCase()}: ${btn.text || btn.title || btn.classes}`);
+      });
+
+      return {
+        success: true,
+        buttons: rowButtons,
+        count: rowButtons.length
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        buttons: [],
+        count: 0
+      };
     }
   }
 

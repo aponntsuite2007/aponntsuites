@@ -296,7 +296,7 @@ class AdvancedUserSimulationCollector {
   async fillFormWithRandomData(module, data) {
     try {
       // Buscar botón "Agregar" y hacer click
-      const addButton = await this.page.$('button:contains("Agregar"), .btn-add, [onclick*="Add"]');
+      const addButton = await this.page.$('button:has-text("Agregar"), .btn-add, [onclick*="Add"]');
       if (!addButton) {
         return { success: false, error: 'No se encontró botón Agregar', issue: 'missing_add_button' };
       }
@@ -342,8 +342,8 @@ class AdvancedUserSimulationCollector {
 
       // Intentar guardar
       const saveSelectors = [
-        'button:contains("Guardar")',
-        'button:contains("Crear")',
+        'button:has-text("Guardar")',
+        'button:has-text("Crear")',
         '.btn-save',
         '.btn-primary',
         '[onclick*="save"]',
@@ -493,7 +493,7 @@ class AdvancedUserSimulationCollector {
       console.log(`          ➕ [CRUD-CREATE] Creando ${module.entityName}...`);
 
       // 1. Buscar y hacer click en botón "Agregar"
-      const addButton = await this.page.$('button:contains("Agregar"), .btn-add, [onclick*="Add"], [onclick*="add"]');
+      const addButton = await this.page.$('button:has-text("Agregar"), .btn-add, [onclick*="Add"], [onclick*="add"]');
       if (!addButton) {
         return { success: false, error: 'Botón Agregar no encontrado' };
       }
@@ -576,7 +576,7 @@ class AdvancedUserSimulationCollector {
       console.log(`          ✏️  [CRUD-UPDATE] Editando ${module.entityName}...`);
 
       // 1. Buscar botón "Editar" en la fila del registro
-      const editButton = await this.page.$('button:contains("Editar"), .btn-edit, [onclick*="edit"], [onclick*="Edit"]');
+      const editButton = await this.page.$('button:has-text("Editar"), .btn-edit, [onclick*="edit"], [onclick*="Edit"]');
       if (!editButton) {
         return { success: false, error: 'Botón Editar no encontrado' };
       }
@@ -627,7 +627,7 @@ class AdvancedUserSimulationCollector {
       console.log(`          🗑️  [CRUD-DELETE] Eliminando ${module.entityName}...`);
 
       // 1. Buscar botón "Eliminar"
-      const deleteButton = await this.page.$('button:contains("Eliminar"), .btn-delete, [onclick*="delete"], [onclick*="Delete"]');
+      const deleteButton = await this.page.$('button:has-text("Eliminar"), .btn-delete, [onclick*="delete"], [onclick*="Delete"]');
       if (!deleteButton) {
         return { success: false, error: 'Botón Eliminar no encontrado' };
       }
@@ -639,7 +639,7 @@ class AdvancedUserSimulationCollector {
       // 2. Confirmar eliminación si aparece diálogo
       await this.humanDelay('thought');
       try {
-        const confirmButton = await this.page.$('button:contains("Confirmar"), button:contains("Sí"), button:contains("Aceptar"), .btn-confirm');
+        const confirmButton = await this.page.$('button:has-text("Confirmar"), button:has-text("Sí"), button:has-text("Aceptar"), .btn-confirm');
         if (confirmButton) {
           await this.humanDelay('action');
           await confirmButton.click();
@@ -1224,9 +1224,9 @@ class AdvancedUserSimulationCollector {
 
   async clickSaveButton() {
     const saveSelectors = [
-      'button:contains("Guardar")',
-      'button:contains("Crear")',
-      'button:contains("Actualizar")',
+      'button:has-text("Guardar")',
+      'button:has-text("Crear")',
+      'button:has-text("Actualizar")',
       '.btn-save',
       '.btn-primary',
       '[onclick*="save"]',

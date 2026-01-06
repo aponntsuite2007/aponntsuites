@@ -20,12 +20,14 @@
 const database = require('../../config/database');
 const { SupportTicketV2, SupportTicketMessage, User, Company } = database;
 const OllamaAnalyzer = require('./OllamaAnalyzer');
-const ClaudeCodeRepairAgent = require('./ClaudeCodeRepairAgent');
+// ⚠️ TEMPORALMENTE DESHABILITADO - ClaudeCodeRepairAgent pendiente de implementar
+// const ClaudeCodeRepairAgent = require('./ClaudeCodeRepairAgent');
 
 class AutoAuditTicketSystem {
   constructor() {
     this.ollamaAnalyzer = new OllamaAnalyzer();
-    this.claudeRepairAgent = new ClaudeCodeRepairAgent();
+    // ⚠️ TEMPORALMENTE DESHABILITADO - ClaudeCodeRepairAgent pendiente de implementar
+    // this.claudeRepairAgent = new ClaudeCodeRepairAgent();
     this.systemUserId = null; // Usuario "Auditor System"
     this.maxRepairAttempts = 3;
   }
@@ -43,12 +45,15 @@ class AutoAuditTicketSystem {
 
       if (!systemUser) {
         systemUser = await User.create({
-          company_id: 1, // Aponnt
+          employeeId: 'AUDITOR-SYS-001', // ✅ Campo obligatorio
+          usuario: 'auditor-system', // ✅ Campo obligatorio (username)
+          companyId: 1, // ✅ Aponnt (camelCase correcto)
           email: 'auditor-system@aponnt.internal',
-          password: 'N/A', // No tiene password real
+          password: 'AUDITOR_SYSTEM_NO_LOGIN_123456', // ✅ Mínimo 6 caracteres
           firstName: 'Auditor',
           lastName: 'System',
-          role: 'support', // Rol de soporte para poder ser asignado a tickets
+          role: 'admin', // ✅ Cambiado de 'support' a 'admin' (rol válido)
+          dni: '00000000', // ✅ Campo obligatorio NOT NULL
           is_active: true,
           phone: '000000000'
         });

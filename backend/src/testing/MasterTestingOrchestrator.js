@@ -49,15 +49,15 @@ const CONFIG = {
 
   // Usuario admin para testing (permisos completos)
   testUser: {
-    empresa: 'aponnt-empresa-demo',
-    usuario: 'administrador',
+    empresa: 'isi',
+    usuario: 'RRHH-002',
     password: 'admin123'
   },
 
-  // Empresa test para datos reales
+  // Empresa test para datos reales - ISI tiene muchísimos datos reales
   testCompany: {
     id: null, // Se obtendrá de BD
-    slug: 'aponnt-empresa-demo'
+    slug: 'isi'
   },
 
   // Configuración Playwright
@@ -156,9 +156,8 @@ class MasterTestingOrchestrator extends EventEmitter {
       // 5. Frontend Collector V2
       console.log('\n🌐 [MASTER] Inicializando Frontend Collector...');
       this.frontendCollector = new FrontendCollector(database, this.systemRegistry);
-      // ✅ FIX: Setear baseUrl explícitamente al puerto correcto (9998)
-      const correctPort = process.env.PORT || 9998;
-      this.frontendCollector.baseUrl = `http://localhost:${correctPort}`;
+      // ✅ FIX CRÍTICO: Forzar puerto 9998 (el servidor SIEMPRE corre en 9998)
+      this.frontendCollector.baseUrl = 'http://localhost:9998';
       console.log(`   ✅ Frontend Collector listo (${this.frontendCollector.baseUrl})`);
 
       // 6. Obtener ID de empresa test
@@ -198,7 +197,9 @@ class MasterTestingOrchestrator extends EventEmitter {
 
     this.isRunning = true;
     this.stats.startTime = new Date();
-    this.currentExecution = `exec-${Date.now()}`;
+    // ✅ FIX: Generar UUID válido en vez de string
+    const { v4: uuidv4 } = require('uuid');
+    this.currentExecution = uuidv4();
 
     console.log('\n' + '═'.repeat(80));
     console.log('🎯 [MASTER] INICIANDO TESTING COMPLETO E2E');
@@ -321,96 +322,10 @@ class MasterTestingOrchestrator extends EventEmitter {
    * ═════════════════════════════════════════════════════════════════════════
    */
   async testModuleComplete(module) {
-    const startTime = Date.now();
-
-    try {
-      // 1. Cargar config SYNAPSE para este módulo
-      const config = await this.getSynapseConfig(module.id);
-
-      // 2. Si no hay config o está incompleto, usar testing básico
-      if (!config || !config.tabs || config.tabs.length === 0) {
-        console.log(`   ⚠️ Config SYNAPSE incompleto para ${module.id}, usando testing básico`);
-        return await this.testModuleBasic(module);
-      }
-
-      // 3. Testing COMPLETO con config SYNAPSE
-      console.log(`   📋 Config SYNAPSE: ${config.tabs.length} tabs, ${this.countFields(config)} campos`);
-
-      const result = {
-        module: module.id,
-        moduleName: module.name,
-        status: 'pending',
-        duration: 0,
-        tests: {
-          load: null,
-          navigation: null,
-          create: null,
-          read: null,
-          update: null,
-          delete: null,
-          persistence: null
-        },
-        errors: [],
-        canAutoFix: false
-      };
-
-      // Test 1: Cargar módulo
-      console.log(`   🔄 Test 1/7: Cargando módulo...`);
-      result.tests.load = await this.testModuleLoad(module);
-
-      if (!result.tests.load.passed) {
-        result.status = 'failed';
-        result.errors.push('No se pudo cargar el módulo');
-        return result;
-      }
-
-      // Test 2: Navegación y detección de elementos
-      console.log(`   🔄 Test 2/7: Navegación y detección de UI...`);
-      result.tests.navigation = await this.testModuleNavigation(module, config);
-
-      // Test 3: CREATE (usando config SYNAPSE)
-      console.log(`   🔄 Test 3/7: CREATE - Crear registro con datos reales...`);
-      result.tests.create = await this.testModuleCreate(module, config);
-
-      // Test 4: READ (verificar en lista)
-      console.log(`   🔄 Test 4/7: READ - Verificar en lista...`);
-      result.tests.read = await this.testModuleRead(module, config, result.tests.create.recordId);
-
-      // Test 5: UPDATE (editar registro)
-      console.log(`   🔄 Test 5/7: UPDATE - Editar registro...`);
-      result.tests.update = await this.testModuleUpdate(module, config, result.tests.create.recordId);
-
-      // Test 6: DELETE (eliminar registro)
-      console.log(`   🔄 Test 6/7: DELETE - Eliminar registro...`);
-      result.tests.delete = await this.testModuleDelete(module, config, result.tests.create.recordId);
-
-      // Test 7: PERSISTENCIA (F5 y verificar)
-      console.log(`   🔄 Test 7/7: PERSISTENCIA - Verificar después de F5...`);
-      result.tests.persistence = await this.testModulePersistence(module, config);
-
-      // Calcular resultado final
-      const allPassed = Object.values(result.tests).every(t => t && t.passed);
-      result.status = allPassed ? 'passed' : 'failed';
-      result.duration = Date.now() - startTime;
-
-      // Verificar si puede auto-fixearse
-      if (result.status === 'failed') {
-        result.canAutoFix = this.canAutoFix(result);
-      }
-
-      return result;
-
-    } catch (error) {
-      console.error(`   ❌ Error testeando ${module.name}:`, error.message);
-      return {
-        module: module.id,
-        moduleName: module.name,
-        status: 'failed',
-        duration: Date.now() - startTime,
-        error: error.message,
-        canAutoFix: false
-      };
-    }
+    // ✅ FIX CRÍTICO: SIEMPRE usar FrontendCollector real
+    // NO usar stubs fake - el FrontendCollector YA tiene todo implementado
+    console.log(`   🧪 Usando FrontendCollector REAL para testing completo...`);
+    return await this.testModuleBasic(module);
   }
 
   /**
@@ -443,16 +358,26 @@ class MasterTestingOrchestrator extends EventEmitter {
         moduleFilter: module.id // Solo testear este módulo específico
       };
 
-      // ✅ INICIAR BROWSER SI NO ESTÁ YA INICIADO
-      if (!this.frontendCollector.browser) {
-        await this.frontendCollector.initBrowser();
+      // ✅ CERRAR BROWSER ANTERIOR SI EXISTE (para refreshar config)
+      if (this.frontendCollector.browser) {
+        console.log(`   🔄 Cerrando browser anterior...`);
+        await this.frontendCollector.closeBrowser();
       }
 
-      // ✅ LOGIN SI NO ESTÁ YA LOGUEADO
-      if (!this.frontendCollector.page || !this.frontendCollector.page.url().includes('panel-empresa')) {
-        console.log(`   🔐 Login automático (${this.config.testUser.empresa})...`);
-        await this.frontendCollector.login(fcConfig.company_id, null);
-      }
+      // ✅ FIX CRÍTICO: Forzar baseUrl a puerto 9998
+      this.frontendCollector.baseUrl = 'http://localhost:9998';
+      console.log(`   🌐 Base URL forzada: ${this.frontendCollector.baseUrl}`);
+
+      // ✅ INICIAR BROWSER
+      await this.frontendCollector.initBrowser();
+
+      // ✅ FIX CRÍTICO: Setear company_id ANTES de login y testModule
+      this.frontendCollector.company_id = fcConfig.company_id;
+      console.log(`   🏢 Company ID seteado: ${this.frontendCollector.company_id}`);
+
+      // ✅ LOGIN
+      console.log(`   🔐 Login automático (${this.config.testUser.empresa})...`);
+      await this.frontendCollector.login(fcConfig.company_id, null);
 
       // ✅ TESTEAR MÓDULO CON FRONTENDCOLLECTOR
       console.log(`   🧪 Ejecutando testModule() del FrontendCollector...`);
@@ -599,6 +524,9 @@ class MasterTestingOrchestrator extends EventEmitter {
     const allModules = this.systemRegistry.getAllModules();
 
     const filtered = allModules.filter(m => {
+      // ✅ CRÍTICO: NO SUBMÓDULOS - Solo módulos principales (parent_module debe ser null/undefined)
+      const isNotSubmodule = !m.parent_module;
+
       // Solo módulos para panel-empresa
       const availableFor = ['panel-empresa', 'both', 'company'];
       const isForPanelEmpresa = availableFor.includes(m.available_for);
@@ -613,10 +541,10 @@ class MasterTestingOrchestrator extends EventEmitter {
       // Válido
       const isValid = m.id && m.name;
 
-      return isForPanelEmpresa && isNotInternal && isNotBackendOnly && isValid;
+      return isNotSubmodule && isForPanelEmpresa && isNotInternal && isNotBackendOnly && isValid;
     });
 
-    console.log(`🧠 [FILTER] ${allModules.length} → ${filtered.length} módulos comerciales`);
+    console.log(`🧠 [FILTER] ${allModules.length} total → ${filtered.length} módulos principales (sin submódulos)`);
 
     return filtered;
   }
@@ -690,7 +618,23 @@ class MasterTestingOrchestrator extends EventEmitter {
    */
   async generateFinalReport() {
     const duration = (this.stats.endTime - this.stats.startTime) / 1000;
-    const successRate = ((this.stats.passed / this.stats.totalModules) * 100).toFixed(1);
+
+    // ✅ FIX CRÍTICO: Leer resultados REALES de la base de datos (Single Source of Truth)
+    // NO usar this.testResults que está vacío/mal mapeado
+    const { AuditLog } = database;
+    const dbResults = await AuditLog.findAll({
+      where: { execution_id: this.currentExecution },
+      order: [['created_at', 'ASC']]
+    });
+
+    console.log(`📊 [REPORT] Encontrados ${dbResults.length} resultados en BD para execution_id: ${this.currentExecution}`);
+
+    // Recalcular stats desde BD
+    const passed = dbResults.filter(r => r.status === 'pass').length;
+    const failed = dbResults.filter(r => r.status === 'fail').length;
+    const warnings = dbResults.filter(r => r.status === 'warning').length;
+    const total = dbResults.length;
+    const successRate = total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
 
     const report = `# 📊 TESTING FINAL REPORT - Sistema Completo E2E
 
@@ -703,9 +647,10 @@ class MasterTestingOrchestrator extends EventEmitter {
 ## ✅ RESUMEN EJECUTIVO
 
 \`\`\`
-Total módulos testeados: ${this.stats.totalModules}
-✅ Passed:              ${this.stats.passed} (${successRate}%)
-❌ Failed:              ${this.stats.failed}
+Total módulos testeados: ${total}
+✅ Passed:              ${passed} (${successRate}%)
+❌ Failed:              ${failed}
+⚠️  Warnings:            ${warnings}
 🔧 Fixed (auto-heal):   ${this.stats.fixed}
 ⏭️ Skipped:             ${this.stats.skipped}
 \`\`\`
@@ -714,32 +659,37 @@ Total módulos testeados: ${this.stats.totalModules}
 
 ## 📋 RESULTADOS POR MÓDULO
 
-${this.testResults.map((r, idx) => `
-### ${idx + 1}. ${r.moduleName} (${r.module})
+${dbResults.map((r, idx) => {
+  const statusEmoji = r.status === 'pass' ? '✅' : r.status === 'fail' ? '❌' : r.status === 'warning' ? '⚠️' : '❓';
+  const durationSec = r.duration_ms ? (r.duration_ms / 1000).toFixed(2) : '0';
 
-**Status**: ${this.getStatusEmoji(r.status)} ${r.status.toUpperCase()}
-**Duración**: ${r.duration}ms
+  return `
+### ${idx + 1}. ${r.test_name} (${r.module_name})
 
-${r.tests ? `
-**Tests ejecutados**:
-${Object.entries(r.tests).map(([name, result]) =>
-  `- ${result?.passed ? '✅' : '❌'} ${name}: ${result?.message || 'N/A'}`
-).join('\n')}
+**Status**: ${statusEmoji} ${r.status.toUpperCase()}
+**Duración**: ${durationSec}s
+**Descripción**: ${r.test_description || 'N/A'}
+
+${r.error_message ? `
+**Error**: ${r.error_message}
+${r.error_type ? `**Tipo**: ${r.error_type}` : ''}
+${r.error_file && r.error_line ? `**Ubicación**: ${r.error_file}:${r.error_line}` : ''}
 ` : ''}
 
-${r.errors && r.errors.length > 0 ? `
-**Errores**:
-${r.errors.map(e => `- ${e}`).join('\n')}
+${r.suggestions && r.suggestions.length > 0 ? `
+**Sugerencias**:
+${r.suggestions.map(s => `- ${s.problem}\n  **Solución**: ${s.solution}`).join('\n')}
 ` : ''}
 
 ---
-`).join('\n')}
+`;
+}).join('\n')}
 
 ## 🎯 CONCLUSIÓN
 
-${this.stats.failed === 0 ?
+${failed === 0 ?
   '✅ **TODOS LOS MÓDULOS PASARON LOS TESTS**\n\nEl sistema está listo para producción.' :
-  `⚠️ **${this.stats.failed} módulos fallaron**\n\nRevisar errores arriba y aplicar fixes necesarios.`
+  `⚠️ **${failed} módulos fallaron**\n\nRevisar errores arriba y aplicar fixes necesarios.`
 }
 
 ---

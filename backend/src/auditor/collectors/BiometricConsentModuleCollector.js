@@ -314,7 +314,8 @@ class BiometricConsentModuleCollector extends BaseModuleCollector {
 
             // Probar click en filtro "Pendiente"
             await this.page.evaluate(() => {
-                const pendienteBtn = document.querySelector('[data-filter-status="pendiente"], .bc-filter-btn:contains("Pendiente")');
+                const pendienteBtn = document.querySelector('[data-filter-status="pendiente"]') ||
+                                    Array.from(document.querySelectorAll('.bc-filter-btn')).find(btn => btn.textContent.includes('Pendiente'));
                 if (pendienteBtn) pendienteBtn.click();
             });
 

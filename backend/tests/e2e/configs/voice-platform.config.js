@@ -6,7 +6,7 @@
 
 module.exports = {
   moduleKey: 'voice-platform',
-  moduleName: 'Voice Platform 🎤',
+  moduleName: 'Voz del Empleado 🎤',
   category: 'empresa',
   baseUrl: 'http://localhost:9998/panel-empresa.html',
 

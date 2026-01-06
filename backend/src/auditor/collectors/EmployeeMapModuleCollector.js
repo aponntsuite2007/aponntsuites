@@ -699,8 +699,10 @@ class EmployeeMapModuleCollector extends BaseModuleCollector {
 
         try {
             const exportButtons = await this.page.evaluate(() => {
-                const pdfBtn = document.querySelector('[data-export="pdf"], .export-pdf-btn, button:contains("PDF")');
-                const excelBtn = document.querySelector('[data-export="excel"], .export-excel-btn, button:contains("Excel")');
+                const pdfBtn = document.querySelector('[data-export="pdf"], .export-pdf-btn') ||
+                              Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('PDF'));
+                const excelBtn = document.querySelector('[data-export="excel"], .export-excel-btn') ||
+                                Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Excel'));
                 return {
                     hasPDFExport: !!pdfBtn,
                     hasExcelExport: !!excelBtn
