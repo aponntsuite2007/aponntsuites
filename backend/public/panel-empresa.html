@@ -4193,6 +4193,9 @@
             'medical': 'SALUD',
             'medical-dashboard': 'SALUD',
             'legal-dashboard': 'LEGAL',
+            'compliance-dashboard': 'RIESGOS',
+            'hse-management': 'SEGURIDAD',
+            'sla-tracking': 'MONITOREO',
             'training-management': 'FORMACIÓN',
             'documents': 'ARCHIVOS',
             'job-postings': 'BÚSQUEDAS',
@@ -5275,8 +5278,9 @@
             { id: 'art-management', name: 'ART', icon: '🏥' },
             { id: 'dms-dashboard', name: 'Gestión Documental (DMS)', icon: '📁' },
             { id: 'legal-dashboard', name: 'Gestión Legal', icon: '⚖️' },
-            { id: 'compliance-dashboard', name: 'Compliance Legal', icon: '⚖️' },
-            { id: 'sla-tracking', name: 'SLA Tracking', icon: '⏱️' },
+            { id: 'compliance-dashboard', name: 'Inteligencia de Riesgos', icon: '🛡️' },
+            { id: 'hse-management', name: 'Seguridad e Higiene Laboral (HSE)', icon: '🛡️' },
+            { id: 'sla-tracking', name: 'Seguimiento de SLA', icon: '⏱️' },
             { id: 'audit-reports', name: 'Reportes Auditoría', icon: '📄' },
             { id: 'payroll-liquidation', name: 'Liquidación', icon: '💰' },
             { id: 'employee-map', name: 'Mapa Empleados', icon: '🗺️' },
@@ -5285,7 +5289,7 @@
             { id: 'settings', name: 'Configuración', icon: '⚙️' },
             { id: 'reports', name: 'Reportes', icon: '📊' },
             { id: 'psychological-assessment', name: 'Evaluación Psicológica', icon: '🧠' },
-            { id: 'sanctions-management', name: 'Gestión de Sanciones', icon: '⚖️' },
+            { id: 'sanctions-management', name: 'Gestión de Sanciones', icon: '🚫' },
             { id: 'vacation-management', name: 'Gestión de Vacaciones', icon: '🏖️' },
             { id: 'user-support', name: 'Soporte / Tickets', icon: '🎫' }
         ];
@@ -5609,7 +5613,7 @@
                     // COMPLIANCE (3)
                     { id: 'biometric-consent', name: 'Consentimientos Biométricos', icon: '📋' },
                     { id: 'legal-dashboard', name: 'Gestión Legal', icon: '⚖️' },
-                    { id: 'compliance-dashboard', name: 'Compliance Legal', icon: '⚖️' },
+                    { id: 'compliance-dashboard', name: 'Inteligencia de Riesgos', icon: '🛡️' },
 
                     // COMMUNICATION (1)
                     { id: 'notifications-enterprise', name: 'Notificaciones Enterprise V3.0', icon: '🔔' },
@@ -5618,16 +5622,19 @@
                     { id: 'medical', name: 'Gestión Médica', icon: '👩‍⚕️' },
                     { id: 'art-management', name: 'ART', icon: '🏥' },
 
+                    // SECURITY (1)
+                    { id: 'hse-management', name: 'Seguridad e Higiene Laboral (HSE)', icon: '🛡️' },
+
                     // RRHH (7)
                     { id: 'training-management', name: 'Gestión Capacitaciones', icon: '📚' },
                     { id: 'job-postings', name: 'Avisos de Empleo', icon: '💼' },
                     { id: 'vacation-management', name: 'Gestión de Vacaciones', icon: '🏖️' },
                     { id: 'vacation', name: 'Vacaciones', icon: '🏖️' },
-                    { id: 'sanctions-management', name: 'Gestión de Sanciones', icon: '⚖️' },
+                    { id: 'sanctions-management', name: 'Gestión de Sanciones', icon: '🚫' },
                     { id: 'psychological-assessment', name: 'Evaluación Psicológica', icon: '🧠' },
 
                     // MONITORING (1)
-                    { id: 'sla-tracking', name: 'SLA Tracking', icon: '⏱️' },
+                    { id: 'sla-tracking', name: 'Seguimiento de SLA', icon: '⏱️' },
 
                     // REPORTS (1)
                     { id: 'audit-reports', name: 'Reportes Auditoría', icon: '📄' },

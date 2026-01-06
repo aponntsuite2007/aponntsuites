@@ -39,7 +39,7 @@ const ISI_MODULES_REAL = [
     { key: "payroll-liquidation", name: "Liquidación de Sueldos", icon: "💰", color: "#4CAF50", category: "payroll" },
     { key: "employee-map", name: "Mapa de Empleados", icon: "🗺️", color: "#8BC34A", category: "analytics" },
     { key: "plantillas-fiscales", name: "Plantillas Fiscales", icon: "📋", color: "#9b59b6", category: "siac" },
-    { key: "compliance-dashboard", name: "Risk Intelligence Dashboard", icon: "⚖️", color: "#e94560", category: "compliance" },
+    { key: "compliance-dashboard", name: "Inteligencia de Riesgos", icon: "🛡️", color: "#e94560", category: "compliance" },
     { key: "occupational-health-phase2", name: "Salud Ocupacional", icon: "🏥", color: "#00897B", category: "medical" },
     { key: "permissions-test", name: "Test de Permisos", icon: "🧪", color: "#4B0082", category: "testing" }
 ];
