@@ -200,7 +200,8 @@
       "Bash(cmd //c \"taskkill /F /PID 49928\")",
       "Bash(PGPASSWORD=\"Aedr15150302\" '/c/Program Files/PostgreSQL/16/bin/psql.exe' -h localhost -p 5432 -U postgres -d attendance_system -t -c \"SELECT available_in, COUNT\\(*\\) FROM system_modules WHERE is_active = true GROUP BY available_in ORDER BY available_in;\")",
       "Bash(cmd //c \"taskkill /F /PID 53384\")",
-      "Bash(PGPASSWORD=\"Aedr15150302\" '/c/Program Files/PostgreSQL/16/bin/psql.exe' -h localhost -p 5432 -U postgres -d attendance_system -c \"UPDATE users SET password = ''$2b$10$rKZLvXH7zQY4Z9Y5xJ8qVuGxVK4qJ9nZ6Y5xJ8qVuGxVK4qJ9nZ6Y'' WHERE \"\"employeeId\"\" = ''RRHH-002'' AND company_id = 11;\")"
+      "Bash(PGPASSWORD=\"Aedr15150302\" '/c/Program Files/PostgreSQL/16/bin/psql.exe' -h localhost -p 5432 -U postgres -d attendance_system -c \"UPDATE users SET password = ''$2b$10$rKZLvXH7zQY4Z9Y5xJ8qVuGxVK4qJ9nZ6Y5xJ8qVuGxVK4qJ9nZ6Y'' WHERE \"\"employeeId\"\" = ''RRHH-002'' AND company_id = 11;\")",
+      "Bash(node scripts/run-master-testing.js:*)"
     ],
     "deny": [],
     "ask": []

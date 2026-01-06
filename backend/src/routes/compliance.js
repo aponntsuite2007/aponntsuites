@@ -248,7 +248,7 @@ router.get('/metrics/:type', requireRRHH, async (req, res) => {
 
 /**
  * GET /api/compliance/risk-dashboard
- * Dashboard completo de Risk Intelligence
+ * Dashboard completo de Inteligencia de Riesgos
  */
 router.get('/risk-dashboard', requireRRHH, async (req, res) => {
     try {
