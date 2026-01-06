@@ -159,7 +159,7 @@ class EmployeeProfileCollector {
 
         // Auto-aceptar dialogs
         this.page.on('dialog', async dialog => {
-            console.log(`🔔 [AUTO-DIALOG] ${dialog.fill()}: ${dialog.message().substring(0, 100)}`);
+            console.log(`🔔 [AUTO-DIALOG] ${dialog.type()}: ${dialog.message().substring(0, 100)}`);
             await dialog.accept();
         });
 

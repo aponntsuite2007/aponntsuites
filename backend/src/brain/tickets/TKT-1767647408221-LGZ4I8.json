@@ -1,0 +1,59 @@
+{
+  "id": "TKT-1767647408221-LGZ4I8",
+  "incidentId": "INC-1767647408087-0q5puhvnu",
+  "createdAt": "2026-01-05T21:10:08.221Z",
+  "priority": "urgent",
+  "status": "open",
+  "assignedTo": null,
+  "title": "[BRAIN AUTO-DETECT] uncaughtException en services/EcosystemBrainService",
+  "description": "## Problema Detectado Automaticamente por Brain\n\n**Tipo:** uncaughtException\n**Modulo:** services/EcosystemBrainService\n**Severidad:** critical\n**Detectado:** 2026-01-05T21:10:08.087Z\n\n### Mensaje de Error\n```\nEPIPE: broken pipe, write\n```\n\n### Stack Trace\n```\nError: EPIPE: broken pipe, write\n    at Socket._write (node:internal/net:63:18)\n    at writeOrBuffer (node:internal/streams/writable:572:12)\n    at _write (node:internal/streams/writable:501:10)\n    at Writable.write (node:internal/streams/writable:510:10)\n    at console.value (node:internal/console/constructor:298:16)\n    at console.log (node:internal/console/constructor:384:26)\n    at EcosystemBrainService.generateLiveModuleMetadata (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\EcosystemBrainService.js:3489:15)\n    at async EcosystemBrainService.generateFullEngineeringMetadata (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\EcosystemBrainService.js:3545:32)\n    at async MetadataWriter.updateNow (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\brain\\services\\MetadataWriter.js:109:30)\n```\n\n### Diagnostico IA (Ollama)\n**Causa raiz probable:** Error en test E2E\n**Solucion sugerida:** Revisar el código del test y el frontend\n**Confianza:** N/A\n\n### Intentos de Auto-Reparacion\nSe intentaron 0 reparaciones automaticas sin exito.\n\n### Timeline\n- **detected** (6:10:08 p.m.)\n- **diagnosis** (6:10:08 p.m.)\n- **escalation_started** (6:10:08 p.m.)",
+  "technical": {
+    "module": "services/EcosystemBrainService",
+    "errorType": "uncaughtException",
+    "errorMessage": "EPIPE: broken pipe, write",
+    "errorStack": "Error: EPIPE: broken pipe, write\n    at Socket._write (node:internal/net:63:18)\n    at writeOrBuffer (node:internal/streams/writable:572:12)\n    at _write (node:internal/streams/writable:501:10)\n    at Writable.write (node:internal/streams/writable:510:10)\n    at console.value (node:internal/console/constructor:298:16)\n    at console.log (node:internal/console/constructor:384:26)\n    at EcosystemBrainService.generateLiveModuleMetadata (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\EcosystemBrainService.js:3489:15)\n    at async EcosystemBrainService.generateFullEngineeringMetadata (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\EcosystemBrainService.js:3545:32)\n    at async MetadataWriter.updateNow (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\brain\\services\\MetadataWriter.js:109:30)",
+    "timestamp": "2026-01-05T21:10:08.087Z",
+    "aiDiagnosis": {
+      "rootCause": "Error en test E2E",
+      "suggestedFix": "Revisar el código del test y el frontend"
+    },
+    "autoRepairAttempts": 0,
+    "timeline": [
+      {
+        "action": "detected",
+        "timestamp": "2026-01-05T21:10:08.087Z",
+        "details": {
+          "type": "uncaughtException",
+          "module": "services/EcosystemBrainService",
+          "severity": "critical",
+          "message": "EPIPE: broken pipe, write",
+          "stack": "Error: EPIPE: broken pipe, write\n    at Socket._write (node:internal/net:63:18)\n    at writeOrBuffer (node:internal/streams/writable:572:12)\n    at _write (node:internal/streams/writable:501:10)\n    at Writable.write (node:internal/streams/writable:510:10)\n    at console.value (node:internal/console/constructor:298:16)\n    at console.log (node:internal/console/constructor:384:26)\n    at EcosystemBrainService.generateLiveModuleMetadata (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\EcosystemBrainService.js:3489:15)\n    at async EcosystemBrainService.generateFullEngineeringMetadata (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\EcosystemBrainService.js:3545:32)\n    at async MetadataWriter.updateNow (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\brain\\services\\MetadataWriter.js:109:30)"
+        }
+      },
+      {
+        "action": "diagnosis",
+        "timestamp": "2026-01-05T21:10:08.088Z",
+        "details": {
+          "diagnosis": {
+            "root_cause": "Error en test E2E",
+            "suggested_fix": "Revisar el código del test y el frontend",
+            "files_to_modify": [],
+            "fix_code_example": ""
+          }
+        }
+      },
+      {
+        "action": "escalation_started",
+        "timestamp": "2026-01-05T21:10:08.089Z",
+        "details": {
+          "reason": "auto_repair_failed_or_not_possible"
+        }
+      }
+    ]
+  },
+  "claudeCodeContext": {
+    "prompt": "## Contexto del Problema\n\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\n\n**Modulo afectado:** services/EcosystemBrainService\n**Tipo de error:** uncaughtException\n\n### Error\n```\nEPIPE: broken pipe, write\n```\n\n### Stack Trace\n```\nError: EPIPE: broken pipe, write\n    at Socket._write (node:internal/net:63:18)\n    at writeOrBuffer (node:internal/streams/writable:572:12)\n    at _write (node:internal/streams/writable:501:10)\n    at Writable.write (node:internal/streams/writable:510:10)\n    at console.value (node:internal/console/constructor:298:16)\n    at console.log (node:internal/console/constructor:384:26)\n    at EcosystemBrainService.generateLiveModuleMetadata (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\EcosystemBrainService.js:3489:15)\n    at async EcosystemBrainService.generateFullEngineeringMetadata (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\EcosystemBrainService.js:3545:32)\n    at async MetadataWriter.updateNow (C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\brain\\services\\MetadataWriter.js:109:30)\n```\n\n\n### Diagnostico IA\n- **Causa probable:** Error en test E2E\n- **Solucion sugerida:** Revisar el código del test y el frontend\n\n\n### Tarea\n1. Analiza el error y su contexto\n2. Identifica la causa raiz\n3. Implementa la solucion minima necesaria\n4. Ejecuta los tests para verificar la correccion\n5. Si el problema persiste, documenta los hallazgos\n\n### Notas\n- Este ticket fue generado automaticamente por el sistema Brain\n- Se intentaron 0 auto-reparaciones sin exito\n- El problema tiene severidad: critical",
+    "files": [],
+    "testToRun": null
+  }
+}

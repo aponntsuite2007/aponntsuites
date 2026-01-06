@@ -134,7 +134,7 @@ class SystemRegistry {
    * @private
    */
   _buildModuleData(mod) {
-    return {
+    const moduleData = {
       id: mod.moduleKey,
       name: mod.name,
       category: mod.category,
@@ -187,9 +187,24 @@ class SystemRegistry {
         enhances_modules: mod.integratesWith || []
       },
 
+      // ✅ FIX #13: MAPEAR available_in → available_for (para compatibilidad con filtros)
+      available_for: mod.availableIn, // BD usa 'available_in', filtros usan 'available_for'
+
+      // ✅ FIX #13: MAPEAR is_internal desde module_type
+      // Módulos internos son: api-integration, web-widget
+      is_internal: ['api-integration', 'web-widget'].includes(mod.moduleType),
+
+      // ✅ FIX #13: MAPEAR parent_module desde BD
+      parent_module: mod.parentModuleKey,
+
+      // ✅ FIX #13: MAPEAR module_type desde BD
+      module_type: mod.moduleType,
+
       // Metadata adicional
       metadata: mod.metadata || {}
     };
+
+    return moduleData;
   }
 
   async loadFromFile() {
@@ -243,9 +258,18 @@ class SystemRegistry {
           if (fileModule.help) {
             existingModule.help = fileModule.help;
           }
-          // ✅ CRÍTICO: Agregar parent_module para navegación correcta de submódulos
-          if (fileModule.parent_module !== undefined) {
+
+          // ✅ FIX #14: NO sobre-escribir parent_module, available_for, is_internal, module_type
+          // Estos campos YA vienen correctamente de la BD en _buildModuleData()
+          // SOLO agregar si la BD NO los tiene (undefined)
+          if (fileModule.parent_module !== undefined && existingModule.parent_module === undefined) {
             existingModule.parent_module = fileModule.parent_module;
+          }
+          if (fileModule.available_for !== undefined && existingModule.available_for === undefined) {
+            existingModule.available_for = fileModule.available_for;
+          }
+          if (fileModule.is_internal !== undefined && existingModule.is_internal === undefined) {
+            existingModule.is_internal = fileModule.is_internal;
           }
         } else {
           // ⚠️ FIX SSOT: Módulo en JSON pero NO en BD = fantasma, NO registrar

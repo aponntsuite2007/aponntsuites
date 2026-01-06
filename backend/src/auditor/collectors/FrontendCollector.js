@@ -22,7 +22,7 @@ class FrontendCollector {
     this.systemRegistry = systemRegistry;
     this.learningEngine = new LearningEngine(); // ⭐ SISTEMA AUTO-EVOLUTIVO
     // Detectar puerto dinámicamente del servidor actual
-    const port = process.env.PORT || '9999';
+    const port = process.env.PORT || '9998';
     this.baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
     this.browser = null;
     this.page = null;
@@ -77,10 +77,39 @@ class FrontendCollector {
         });
       }
 
-      // Obtener módulos a testear - TODOS los módulos del registry
-      const modules = config.moduleFilter ?
-        [this.systemRegistry.getModule(config.moduleFilter)] :
-        this.systemRegistry.getAllModules(); // TODOS los 45 módulos
+      // ✅ FIX #12: FILTRAR MÓDULOS INTELIGENTEMENTE usando Brain/SystemRegistry
+      // Solo testear módulos comerciales con frontend (no técnicos, no backend-only)
+      let modules;
+
+      if (config.moduleFilter) {
+        // Si hay filtro específico, usar solo ese módulo
+        modules = [this.systemRegistry.getModule(config.moduleFilter)];
+      } else {
+        // Obtener TODOS y filtrar inteligentemente
+        const allModules = this.systemRegistry.getAllModules();
+
+        modules = allModules.filter(m => {
+          // ✅ FILTRO 1: Solo módulos disponibles para panel-empresa
+          // Acepta: "panel-empresa", "both", "company" (NOT "admin")
+          const availableForValues = ['panel-empresa', 'both', 'company'];
+          const isForPanelEmpresa = availableForValues.includes(m.available_for);
+
+          // ✅ FILTRO 2: NO módulos internos/técnicos
+          // Acepta: is_internal === false O is_internal === null (por defecto es comercial)
+          const isNotInternal = m.is_internal !== true;
+
+          // ✅ FILTRO 3: NO módulos backend-only (lista explícita)
+          const backendOnlyModules = ['kiosks-apk', 'api-gateway', 'webhooks', 'integrations-api'];
+          const isNotBackendOnly = !backendOnlyModules.includes(m.id);
+
+          // ✅ FILTRO 4: Módulo tiene nombre e ID válidos
+          const isValid = m.id && m.name;
+
+          return isForPanelEmpresa && isNotInternal && isNotBackendOnly && isValid;
+        });
+
+        console.log(`  🧠 [BRAIN-FILTER] Registry tiene ${allModules.length} módulos, filtrados a ${modules.length} comerciales con frontend`);
+      }
 
       console.log(`  📋 [FRONTEND] Testeando ${modules.length} módulos del registry...`);
 
@@ -152,7 +181,7 @@ class FrontendCollector {
 
     // ✅ AUTO-ACEPTAR TODOS LOS DIÁLOGOS (alert, confirm, prompt)
     this.page.on('dialog', async dialog => {
-      console.log(`      🔔 [AUTO-DIALOG] Tipo: ${dialog.fill()} - Mensaje: "${dialog.message().substring(0, 100)}..."`);
+      console.log(`      🔔 [AUTO-DIALOG] Tipo: ${dialog.type()} - Mensaje: "${dialog.message().substring(0, 100)}..."`);
       await dialog.accept(); // Aceptar automáticamente
       console.log(`      ✅ [AUTO-DIALOG] Diálogo aceptado automáticamente`);
     });
@@ -349,25 +378,23 @@ class FrontendCollector {
     await this.page.waitForTimeout(3000);
 
     try {
-      // ✅ Obtener slug de la empresa por company_id
+      // ✅ FIX #15: Usar Sequelize (ya conectado) en vez de crear nueva conexión PG con SSL
       console.log(`    📋 Obteniendo slug de empresa con company_id: ${company_id}`);
 
-      const { Client } = require('pg');
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }
-      });
-      await client.connect();
+      const [results] = await this.database.sequelize.query(
+        'SELECT slug FROM companies WHERE company_id = $1',
+        {
+          bind: [company_id],
+          type: this.database.sequelize.QueryTypes.SELECT
+        }
+      );
 
-      const result = await client.query('SELECT slug FROM companies WHERE company_id = $1', [company_id]);
-      await client.end();
-
-      if (!result.rows || result.rows.length === 0) {
+      if (!results || !results.slug) {
         console.error(`    ❌ No se encontró empresa con ID ${company_id}`);
         return;
       }
 
-      const companySlug = result.rows[0].slug;
+      const companySlug = results.slug;
       console.log(`    ✅ Empresa encontrada: ${companySlug}`);
 
       // Esperar a que cargue el formulario de login
@@ -392,9 +419,9 @@ class FrontendCollector {
       console.log(`    🏢 Seleccionando empresa: ${companySlug}`);
       await this.page.selectOption('#companySelect', companySlug);
 
-      // Esperar a que JavaScript termine de ejecutarse (networkidle)
+      // ✅ FIX #16: Usar waitForLoadState('networkidle') en vez de waitForNetworkIdle()
       console.log('    ⏳ Esperando que JavaScript termine de ejecutarse...');
-      await this.page.waitForNetworkIdle({ timeout: 10000 }).catch(() => {
+      await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
         console.log('    ⚠️  Timeout waiting for network idle (no crítico)');
       });
 
