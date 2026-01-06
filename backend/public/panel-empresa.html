@@ -391,27 +391,36 @@
                             if (loadingDiv) loadingDiv.style.display = 'none';
                             // CREAR MÓDULOS DINÁMICAMENTE - SIMPLE Y DIRECTO
                             if (window.companyModules && window.companyModules.length > 0) {
-                                // 🎨 Helper function: Convert icon name to FontAwesome HTML with colors
+                                // 🎨 Helper function: Convert icon name to colorful emojis or FontAwesome
                                 const renderIcon = (icon) => {
                                     if (!icon) return '📦'; // Default emoji
                                     // If it's a FontAwesome icon name (e.g., "warehouse", "shopping-cart", "truck")
                                     if (typeof icon === 'string' && !icon.includes('<') && !icon.match(/[\u{1F000}-\u{1F9FF}]/u)) {
-                                        // Color mapping for common icons
-                                        const iconColors = {
-                                            'warehouse': '#4a90e2',      // Azul almacén
-                                            'shopping-cart': '#28a745',   // Verde compras
-                                            'truck': '#ff8c42',           // Naranja logística
-                                            'box': '#7952b3',             // Púrpura inventario
-                                            'boxes': '#7952b3',           // Púrpura inventario
-                                            'clipboard-list': '#17a2b8',  // Cyan listas
-                                            'file-invoice': '#20c997',    // Verde factura
-                                            'dollar-sign': '#ffc107',     // Amarillo finanzas
-                                            'chart-line': '#e83e8c',      // Rosa gráficos
-                                            'users': '#6f42c1',           // Púrpura usuarios
-                                            'cog': '#6c757d',             // Gris configuración
-                                            'wrench': '#fd7e14'           // Naranja herramientas
+                                        // Emoji mapping for colorful icons
+                                        const emojiMap = {
+                                            'warehouse': '🏭',        // Almacén colorido
+                                            'shopping-cart': '🛒',    // Carrito colorido
+                                            'truck': '🚚',            // Camión colorido
+                                            'box': '📦',              // Caja colorida
+                                            'boxes': '📦',            // Cajas coloridas
+                                            'clipboard-list': '📋',   // Lista colorida
+                                            'file-invoice': '🧾',     // Factura colorida
+                                            'dollar-sign': '💰',      // Dinero colorido
+                                            'chart-line': '📈',       // Gráfico colorido
+                                            'users': '👥',            // Usuarios coloridos
+                                            'cog': '⚙️',              // Configuración
+                                            'wrench': '🔧'            // Herramienta colorida
                                         };
-                                        const color = iconColors[icon] || '#667eea'; // Default purple-blue
+                                        // Si hay emoji para este icono, usarlo
+                                        if (emojiMap[icon]) {
+                                            return emojiMap[icon];
+                                        }
+                                        // Sino, usar FontAwesome con color
+                                        const iconColors = {
+                                            'users': '#6f42c1',
+                                            'cog': '#6c757d'
+                                        };
+                                        const color = iconColors[icon] || '#667eea';
                                         return `<i class="fas fa-${icon}" style="color: ${color};"></i>`;
                                     }
                                     return icon; // Return as-is (emoji or HTML)
@@ -4297,27 +4306,36 @@
 
     // FUNCIÓN AUXILIAR PARA CREAR UNA TARJETA INDIVIDUAL
     function createSingleModuleCard(systemModule, contractedModulesMap) {
-        // 🎨 Helper function: Convert icon name to FontAwesome HTML with colors
+        // 🎨 Helper function: Convert icon name to colorful emojis or FontAwesome
         const renderIcon = (icon) => {
             if (!icon) return '📊'; // Default emoji
             // If it's a FontAwesome icon name (e.g., "warehouse", "shopping-cart", "truck")
             if (typeof icon === 'string' && !icon.includes('<') && !icon.match(/[\u{1F000}-\u{1F9FF}]/u)) {
-                // Color mapping for common icons
-                const iconColors = {
-                    'warehouse': '#4a90e2',      // Azul almacén
-                    'shopping-cart': '#28a745',   // Verde compras
-                    'truck': '#ff8c42',           // Naranja logística
-                    'box': '#7952b3',             // Púrpura inventario
-                    'boxes': '#7952b3',           // Púrpura inventario
-                    'clipboard-list': '#17a2b8',  // Cyan listas
-                    'file-invoice': '#20c997',    // Verde factura
-                    'dollar-sign': '#ffc107',     // Amarillo finanzas
-                    'chart-line': '#e83e8c',      // Rosa gráficos
-                    'users': '#6f42c1',           // Púrpura usuarios
-                    'cog': '#6c757d',             // Gris configuración
-                    'wrench': '#fd7e14'           // Naranja herramientas
+                // Emoji mapping for colorful icons
+                const emojiMap = {
+                    'warehouse': '🏭',        // Almacén colorido
+                    'shopping-cart': '🛒',    // Carrito colorido
+                    'truck': '🚚',            // Camión colorido
+                    'box': '📦',              // Caja colorida
+                    'boxes': '📦',            // Cajas coloridas
+                    'clipboard-list': '📋',   // Lista colorida
+                    'file-invoice': '🧾',     // Factura colorida
+                    'dollar-sign': '💰',      // Dinero colorido
+                    'chart-line': '📈',       // Gráfico colorido
+                    'users': '👥',            // Usuarios coloridos
+                    'cog': '⚙️',              // Configuración
+                    'wrench': '🔧'            // Herramienta colorida
                 };
-                const color = iconColors[icon] || '#667eea'; // Default purple-blue
+                // Si hay emoji para este icono, usarlo
+                if (emojiMap[icon]) {
+                    return emojiMap[icon];
+                }
+                // Sino, usar FontAwesome con color
+                const iconColors = {
+                    'users': '#6f42c1',
+                    'cog': '#6c757d'
+                };
+                const color = iconColors[icon] || '#667eea';
                 return `<i class="fas fa-${icon}" style="color: ${color};"></i>`;
             }
             return icon; // Return as-is (emoji or HTML)
@@ -5686,27 +5704,36 @@
 
                 console.log('📦 [MODULES] Módulos procesados:', modules.length);
 
-                // 🎨 Helper function: Convert icon name to FontAwesome HTML with colors
+                // 🎨 Helper function: Convert icon name to colorful emojis or FontAwesome
                 const renderIcon = (icon) => {
                     if (!icon) return '📦'; // Default emoji
                     // If it's a FontAwesome icon name (e.g., "warehouse", "shopping-cart", "truck")
                     if (typeof icon === 'string' && !icon.includes('<') && !icon.match(/[\u{1F000}-\u{1F9FF}]/u)) {
-                        // Color mapping for common icons
-                        const iconColors = {
-                            'warehouse': '#4a90e2',      // Azul almacén
-                            'shopping-cart': '#28a745',   // Verde compras
-                            'truck': '#ff8c42',           // Naranja logística
-                            'box': '#7952b3',             // Púrpura inventario
-                            'boxes': '#7952b3',           // Púrpura inventario
-                            'clipboard-list': '#17a2b8',  // Cyan listas
-                            'file-invoice': '#20c997',    // Verde factura
-                            'dollar-sign': '#ffc107',     // Amarillo finanzas
-                            'chart-line': '#e83e8c',      // Rosa gráficos
-                            'users': '#6f42c1',           // Púrpura usuarios
-                            'cog': '#6c757d',             // Gris configuración
-                            'wrench': '#fd7e14'           // Naranja herramientas
+                        // Emoji mapping for colorful icons
+                        const emojiMap = {
+                            'warehouse': '🏭',        // Almacén colorido
+                            'shopping-cart': '🛒',    // Carrito colorido
+                            'truck': '🚚',            // Camión colorido
+                            'box': '📦',              // Caja colorida
+                            'boxes': '📦',            // Cajas coloridas
+                            'clipboard-list': '📋',   // Lista colorida
+                            'file-invoice': '🧾',     // Factura colorida
+                            'dollar-sign': '💰',      // Dinero colorido
+                            'chart-line': '📈',       // Gráfico colorido
+                            'users': '👥',            // Usuarios coloridos
+                            'cog': '⚙️',              // Configuración
+                            'wrench': '🔧'            // Herramienta colorida
                         };
-                        const color = iconColors[icon] || '#667eea'; // Default purple-blue
+                        // Si hay emoji para este icono, usarlo
+                        if (emojiMap[icon]) {
+                            return emojiMap[icon];
+                        }
+                        // Sino, usar FontAwesome con color
+                        const iconColors = {
+                            'users': '#6f42c1',
+                            'cog': '#6c757d'
+                        };
+                        const color = iconColors[icon] || '#667eea';
                         return `<i class="fas fa-${icon}" style="color: ${color};"></i>`;
                     }
                     return icon; // Return as-is (emoji or HTML)
