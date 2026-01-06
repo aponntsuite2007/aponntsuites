@@ -391,12 +391,28 @@
                             if (loadingDiv) loadingDiv.style.display = 'none';
                             // CREAR MÓDULOS DINÁMICAMENTE - SIMPLE Y DIRECTO
                             if (window.companyModules && window.companyModules.length > 0) {
-                                // 🎨 Helper function: Convert icon name to FontAwesome HTML
+                                // 🎨 Helper function: Convert icon name to FontAwesome HTML with colors
                                 const renderIcon = (icon) => {
                                     if (!icon) return '📦'; // Default emoji
                                     // If it's a FontAwesome icon name (e.g., "warehouse", "shopping-cart", "truck")
                                     if (typeof icon === 'string' && !icon.includes('<') && !icon.match(/[\u{1F000}-\u{1F9FF}]/u)) {
-                                        return `<i class="fas fa-${icon}"></i>`;
+                                        // Color mapping for common icons
+                                        const iconColors = {
+                                            'warehouse': '#4a90e2',      // Azul almacén
+                                            'shopping-cart': '#28a745',   // Verde compras
+                                            'truck': '#ff8c42',           // Naranja logística
+                                            'box': '#7952b3',             // Púrpura inventario
+                                            'boxes': '#7952b3',           // Púrpura inventario
+                                            'clipboard-list': '#17a2b8',  // Cyan listas
+                                            'file-invoice': '#20c997',    // Verde factura
+                                            'dollar-sign': '#ffc107',     // Amarillo finanzas
+                                            'chart-line': '#e83e8c',      // Rosa gráficos
+                                            'users': '#6f42c1',           // Púrpura usuarios
+                                            'cog': '#6c757d',             // Gris configuración
+                                            'wrench': '#fd7e14'           // Naranja herramientas
+                                        };
+                                        const color = iconColors[icon] || '#667eea'; // Default purple-blue
+                                        return `<i class="fas fa-${icon}" style="color: ${color};"></i>`;
                                     }
                                     return icon; // Return as-is (emoji or HTML)
                                 };
@@ -4281,12 +4297,28 @@
 
     // FUNCIÓN AUXILIAR PARA CREAR UNA TARJETA INDIVIDUAL
     function createSingleModuleCard(systemModule, contractedModulesMap) {
-        // 🎨 Helper function: Convert icon name to FontAwesome HTML
+        // 🎨 Helper function: Convert icon name to FontAwesome HTML with colors
         const renderIcon = (icon) => {
             if (!icon) return '📊'; // Default emoji
             // If it's a FontAwesome icon name (e.g., "warehouse", "shopping-cart", "truck")
             if (typeof icon === 'string' && !icon.includes('<') && !icon.match(/[\u{1F000}-\u{1F9FF}]/u)) {
-                return `<i class="fas fa-${icon}"></i>`;
+                // Color mapping for common icons
+                const iconColors = {
+                    'warehouse': '#4a90e2',      // Azul almacén
+                    'shopping-cart': '#28a745',   // Verde compras
+                    'truck': '#ff8c42',           // Naranja logística
+                    'box': '#7952b3',             // Púrpura inventario
+                    'boxes': '#7952b3',           // Púrpura inventario
+                    'clipboard-list': '#17a2b8',  // Cyan listas
+                    'file-invoice': '#20c997',    // Verde factura
+                    'dollar-sign': '#ffc107',     // Amarillo finanzas
+                    'chart-line': '#e83e8c',      // Rosa gráficos
+                    'users': '#6f42c1',           // Púrpura usuarios
+                    'cog': '#6c757d',             // Gris configuración
+                    'wrench': '#fd7e14'           // Naranja herramientas
+                };
+                const color = iconColors[icon] || '#667eea'; // Default purple-blue
+                return `<i class="fas fa-${icon}" style="color: ${color};"></i>`;
             }
             return icon; // Return as-is (emoji or HTML)
         };
@@ -5654,12 +5686,28 @@
 
                 console.log('📦 [MODULES] Módulos procesados:', modules.length);
 
-                // 🎨 Helper function: Convert icon name to FontAwesome HTML
+                // 🎨 Helper function: Convert icon name to FontAwesome HTML with colors
                 const renderIcon = (icon) => {
                     if (!icon) return '📦'; // Default emoji
                     // If it's a FontAwesome icon name (e.g., "warehouse", "shopping-cart", "truck")
                     if (typeof icon === 'string' && !icon.includes('<') && !icon.match(/[\u{1F000}-\u{1F9FF}]/u)) {
-                        return `<i class="fas fa-${icon}"></i>`;
+                        // Color mapping for common icons
+                        const iconColors = {
+                            'warehouse': '#4a90e2',      // Azul almacén
+                            'shopping-cart': '#28a745',   // Verde compras
+                            'truck': '#ff8c42',           // Naranja logística
+                            'box': '#7952b3',             // Púrpura inventario
+                            'boxes': '#7952b3',           // Púrpura inventario
+                            'clipboard-list': '#17a2b8',  // Cyan listas
+                            'file-invoice': '#20c997',    // Verde factura
+                            'dollar-sign': '#ffc107',     // Amarillo finanzas
+                            'chart-line': '#e83e8c',      // Rosa gráficos
+                            'users': '#6f42c1',           // Púrpura usuarios
+                            'cog': '#6c757d',             // Gris configuración
+                            'wrench': '#fd7e14'           // Naranja herramientas
+                        };
+                        const color = iconColors[icon] || '#667eea'; // Default purple-blue
+                        return `<i class="fas fa-${icon}" style="color: ${color};"></i>`;
                     }
                     return icon; // Return as-is (emoji or HTML)
                 };
