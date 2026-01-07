@@ -185,7 +185,7 @@ router.get('/sla-performance', async (req, res) => {
                 COUNT(*) FILTER (WHERE sla_breached = FALSE AND sla_hours IS NOT NULL)::INTEGER as total_met,
                 ROUND((COUNT(*) FILTER (WHERE sla_breached = FALSE AND sla_hours IS NOT NULL)::DECIMAL /
                        NULLIF(COUNT(*) FILTER (WHERE sla_hours IS NOT NULL), 0) * 100), 2) as compliance_rate,
-                ROUND(AVG(EXTRACT(EPOCH FROM (action_completed_at - created_at))/3600), 2) as avg_completion_hours
+                ROUND(AVG(EXTRACT(EPOCH FROM (action_taken_at - created_at))/3600), 2) as avg_completion_hours
             FROM unified_notifications
             WHERE created_at >= NOW() - MAKE_INTERVAL(days => :days)
               AND requires_action = TRUE
