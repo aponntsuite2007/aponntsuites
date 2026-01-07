@@ -2026,11 +2026,26 @@ class FrontendCollector {
           window.showModuleContent(moduleData.key, moduleData.name);
         }
       }, { key: module.id, name: module.name });
-      await this.page.waitForTimeout(2000);
+
+      // ⭐ FIX 26: Esperar a que la tabla se cargue con datos (timeout 10s)
+      // showUsersContent() llama loadUsers() en setTimeout(500ms)
+      // loadUsers() hace fetch() que puede tardar 1-3s
+      console.log(`        ⏳ Esperando que la tabla se cargue con datos (max 10s)...`);
+      const tableLoaded = await this.page.waitForFunction(
+        () => {
+          const rows = document.querySelectorAll('table tbody tr');
+          // Verificar que hay filas Y no es mensaje de "Cargando..."
+          if (rows.length === 0) return false;
+          const firstRowText = rows[0].textContent || '';
+          return !firstRowText.includes('Cargando') && !firstRowText.includes('No hay');
+        },
+        { timeout: 10000, polling: 500 }
+      ).catch(() => false);
 
       // Verificar que la lista todavía tiene datos
       const hasData = await this.page.evaluate(() => {
         const rows = document.querySelectorAll('table tbody tr');
+        console.log(`🔍 [PERSISTENCIA-CHECK] Filas encontradas: ${rows.length}`);
         return rows.length > 0;
       });
 
