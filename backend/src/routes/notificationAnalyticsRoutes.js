@@ -220,17 +220,17 @@ router.get('/top-recipients', async (req, res) => {
         const topRecipients = await sequelize.query(`
             SELECT
                 un.recipient_id,
-                u.name as user_name,
+                COALESCE(u.display_name, CONCAT(u."firstName", ' ', u."lastName"), u.email, un.recipient_name) as user_name,
                 u.email as user_email,
                 COUNT(*)::INTEGER as total_notifications,
                 COUNT(*) FILTER (WHERE un.read_at IS NOT NULL)::INTEGER as total_read,
                 ROUND((COUNT(*) FILTER (WHERE un.read_at IS NOT NULL)::DECIMAL / NULLIF(COUNT(*), 0) * 100), 2) as read_rate
             FROM unified_notifications un
-            LEFT JOIN users u ON u.id = un.recipient_id
-            WHERE un.created_at >= NOW() - INTERVAL ':days days'
+            LEFT JOIN users u ON u.user_id::text = un.recipient_id
+            WHERE un.created_at >= NOW() - MAKE_INTERVAL(days => :days)
               AND un.deleted_at IS NULL
               ${whereCompany}
-            GROUP BY un.recipient_id, u.name, u.email
+            GROUP BY un.recipient_id, u.display_name, u."firstName", u."lastName", u.email, un.recipient_name
             ORDER BY total_notifications DESC
             LIMIT :limit
         `, {
