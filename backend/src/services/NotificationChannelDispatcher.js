@@ -27,6 +27,9 @@ const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const EmailConfigService = require('./EmailConfigService');
 const CompanyEmailProcessService = require('./CompanyEmailProcessService');
+const FirebasePushService = require('./FirebasePushService');
+const TwilioMessagingService = require('./TwilioMessagingService');
+const NotificationWebSocketService = require('./NotificationWebSocketService');
 
 class NotificationChannelDispatcher {
 
@@ -528,7 +531,7 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
 
     /**
      * ========================================================================
-     * SEND SMS - Enviar SMS (integración pendiente)
+     * SEND SMS - Enviar SMS vía Twilio
      * ========================================================================
      */
     async sendSMS(params) {
@@ -536,19 +539,62 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
 
         console.log(`💬 [SMS] Sending to: ${recipient.phone}`);
 
-        // TODO: Integrar con Twilio, Nexmo, o proveedor local
-        // Por ahora simular envío exitoso
+        try {
+            // Obtener número de teléfono del recipient
+            let phoneNumber = recipient.phone;
 
-        return {
-            provider: 'twilio',
-            messageId: `sms_${Date.now()}`,
-            status: 'simulated'
-        };
+            // Si no tiene phone en recipient, buscar en BD
+            if (!phoneNumber && recipient.user_id) {
+                const userPhone = await sequelize.query(`
+                    SELECT phone, mobile_phone
+                    FROM users
+                    WHERE id = :userId
+                      AND deleted_at IS NULL
+                `, {
+                    replacements: { userId: recipient.user_id },
+                    type: QueryTypes.SELECT
+                });
+
+                if (userPhone && userPhone.length > 0) {
+                    phoneNumber = userPhone[0].mobile_phone || userPhone[0].phone;
+                }
+            }
+
+            if (!phoneNumber) {
+                console.warn(`⚠️  [SMS] Usuario ${recipient.user_id} no tiene número de teléfono`);
+                return {
+                    provider: 'twilio_sms',
+                    status: 'no_phone',
+                    messageId: null
+                };
+            }
+
+            // Enviar SMS vía Twilio
+            const result = await TwilioMessagingService.sendSMS({
+                to: phoneNumber,
+                body: message
+            });
+
+            return {
+                provider: 'twilio_sms',
+                messageId: result.messageSid || `sms_${Date.now()}`,
+                status: result.success ? 'sent' : 'failed',
+                details: result
+            };
+
+        } catch (error) {
+            console.error('❌ [SMS] Error enviando SMS:', error);
+            return {
+                provider: 'twilio_sms',
+                status: 'failed',
+                error: error.message
+            };
+        }
     }
 
     /**
      * ========================================================================
-     * SEND WHATSAPP - Enviar WhatsApp (integración pendiente)
+     * SEND WHATSAPP - Enviar WhatsApp vía Twilio
      * ========================================================================
      */
     async sendWhatsApp(params) {
@@ -556,19 +602,62 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
 
         console.log(`📱 [WHATSAPP] Sending to: ${recipient.phone}`);
 
-        // TODO: Integrar con API de WhatsApp Business
-        // Por ahora simular envío exitoso
+        try {
+            // Obtener número de teléfono del recipient
+            let phoneNumber = recipient.phone;
 
-        return {
-            provider: 'whatsapp_business',
-            messageId: `wa_${Date.now()}`,
-            status: 'simulated'
-        };
+            // Si no tiene phone en recipient, buscar en BD
+            if (!phoneNumber && recipient.user_id) {
+                const userPhone = await sequelize.query(`
+                    SELECT phone, mobile_phone, whatsapp_phone
+                    FROM users
+                    WHERE id = :userId
+                      AND deleted_at IS NULL
+                `, {
+                    replacements: { userId: recipient.user_id },
+                    type: QueryTypes.SELECT
+                });
+
+                if (userPhone && userPhone.length > 0) {
+                    phoneNumber = userPhone[0].whatsapp_phone || userPhone[0].mobile_phone || userPhone[0].phone;
+                }
+            }
+
+            if (!phoneNumber) {
+                console.warn(`⚠️  [WHATSAPP] Usuario ${recipient.user_id} no tiene número de teléfono`);
+                return {
+                    provider: 'twilio_whatsapp',
+                    status: 'no_phone',
+                    messageId: null
+                };
+            }
+
+            // Enviar WhatsApp vía Twilio
+            const result = await TwilioMessagingService.sendWhatsApp({
+                to: phoneNumber,
+                body: message
+            });
+
+            return {
+                provider: 'twilio_whatsapp',
+                messageId: result.messageSid || `wa_${Date.now()}`,
+                status: result.success ? 'sent' : 'failed',
+                details: result
+            };
+
+        } catch (error) {
+            console.error('❌ [WHATSAPP] Error enviando WhatsApp:', error);
+            return {
+                provider: 'twilio_whatsapp',
+                status: 'failed',
+                error: error.message
+            };
+        }
     }
 
     /**
      * ========================================================================
-     * SEND PUSH - Enviar push notification (integración pendiente)
+     * SEND PUSH - Enviar push notification vía Firebase Cloud Messaging
      * ========================================================================
      */
     async sendPush(params) {
@@ -576,19 +665,94 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
 
         console.log(`🔔 [PUSH] Sending to user: ${recipient.user_id}`);
 
-        // TODO: Integrar con Firebase Cloud Messaging (FCM)
-        // Por ahora simular envío exitoso
+        try {
+            // Obtener push token del usuario desde BD
+            const userTokens = await sequelize.query(`
+                SELECT push_token, push_token_ios, push_token_android
+                FROM users
+                WHERE id = :userId
+                  AND deleted_at IS NULL
+                  AND (push_token IS NOT NULL
+                    OR push_token_ios IS NOT NULL
+                    OR push_token_android IS NOT NULL)
+            `, {
+                replacements: { userId: recipient.user_id },
+                type: QueryTypes.SELECT
+            });
 
-        return {
-            provider: 'fcm',
-            messageId: `push_${Date.now()}`,
-            status: 'simulated'
-        };
+            if (!userTokens || userTokens.length === 0) {
+                console.warn(`⚠️  [PUSH] Usuario ${recipient.user_id} no tiene push tokens registrados`);
+                return {
+                    provider: 'fcm',
+                    status: 'no_token',
+                    messageId: null
+                };
+            }
+
+            const user = userTokens[0];
+            const tokens = [
+                user.push_token,
+                user.push_token_ios,
+                user.push_token_android
+            ].filter(Boolean);
+
+            if (tokens.length === 0) {
+                console.warn(`⚠️  [PUSH] Usuario ${recipient.user_id} no tiene push tokens válidos`);
+                return {
+                    provider: 'fcm',
+                    status: 'no_token',
+                    messageId: null
+                };
+            }
+
+            // Preparar data adicional
+            const data = {
+                notification_id: logId || '',
+                module: metadata?.module || '',
+                origin_type: metadata?.origin_type || '',
+                origin_id: metadata?.origin_id || '',
+                action_required: metadata?.requires_action ? 'true' : 'false',
+                ...metadata
+            };
+
+            // Enviar a todos los tokens del usuario
+            let result;
+            if (tokens.length === 1) {
+                result = await FirebasePushService.sendToDevice({
+                    token: tokens[0],
+                    title,
+                    body: message,
+                    data
+                });
+            } else {
+                result = await FirebasePushService.sendToMultipleDevices({
+                    tokens,
+                    title,
+                    body: message,
+                    data
+                });
+            }
+
+            return {
+                provider: 'fcm',
+                messageId: result.messageId || `push_${Date.now()}`,
+                status: result.success ? 'sent' : 'failed',
+                details: result
+            };
+
+        } catch (error) {
+            console.error('❌ [PUSH] Error enviando push notification:', error);
+            return {
+                provider: 'fcm',
+                status: 'failed',
+                error: error.message
+            };
+        }
     }
 
     /**
      * ========================================================================
-     * SEND WEBSOCKET - Enviar por WebSocket (integración pendiente)
+     * SEND WEBSOCKET - Enviar por WebSocket vía Socket.IO
      * ========================================================================
      */
     async sendWebSocket(params) {
@@ -596,14 +760,45 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
 
         console.log(`🌐 [WEBSOCKET] Sending to user: ${recipient.user_id}`);
 
-        // TODO: Integrar con Socket.IO o WebSocket server
-        // Por ahora simular envío exitoso
+        try {
+            // Preparar payload de notificación
+            const notification = {
+                id: logId,
+                title,
+                message,
+                priority: metadata?.priority || 'normal',
+                category: metadata?.category || 'info',
+                requiresAction: metadata?.requires_action || false,
+                actionType: metadata?.action_type,
+                module: metadata?.module,
+                originType: metadata?.origin_type,
+                originId: metadata?.origin_id,
+                metadata
+            };
 
-        return {
-            provider: 'websocket',
-            messageId: `ws_${Date.now()}`,
-            status: 'simulated'
-        };
+            // Enviar via WebSocket
+            const result = await NotificationWebSocketService.sendToUser(
+                recipient.user_id,
+                notification
+            );
+
+            return {
+                provider: 'websocket',
+                messageId: result.messageId || `ws_${Date.now()}`,
+                status: result.success ? 'sent' : result.status,
+                isOnline: result.status !== 'user_offline',
+                details: result
+            };
+
+        } catch (error) {
+            console.error('❌ [WEBSOCKET] Error enviando por WebSocket:', error);
+            return {
+                provider: 'websocket',
+                status: 'failed',
+                error: error.message,
+                isOnline: false
+            };
+        }
     }
 
     /**

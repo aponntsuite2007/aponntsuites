@@ -33,6 +33,11 @@ const { auth } = require('./src/middleware/auth');
 const app = express();
 const server = http.createServer(app);
 
+// ✅ INICIALIZAR WEBSOCKET SERVICE PARA NOTIFICACIONES REAL-TIME
+const NotificationWebSocketService = require('./src/services/NotificationWebSocketService');
+NotificationWebSocketService.initialize(server);
+console.log('🌐 [WEBSOCKET] Socket.IO integrado con servidor HTTP');
+
 // Registrar sequelize en la app para acceso desde rutas (usado por Procurement, Finance, etc.)
 app.set('sequelize', database.sequelize);
 
@@ -3120,6 +3125,29 @@ console.log('   ✅ 78 procesos: 56 Aponnt (global) + 22 Empresas (multi-tenant)
 console.log('   🌐 Canales: Email, WhatsApp, SMS, Push (extensible)');
 console.log('   ⚡ Workflows con respuesta automática (SI/NO, ACEPTO/RECHAZO)');
 
+// ⏰ CONFIGURAR RUTAS DE NOTIFICATION CRON JOBS
+const notificationCronRoutes = require('./src/routes/notificationCronRoutes');
+app.use('/api/notifications/cron', notificationCronRoutes);
+
+console.log('\n⏰ [NOTIFICATION-CRON] API de Control de Cron Jobs ACTIVO:');
+console.log('   📊 GET    /api/notifications/cron/status - Estado de cron jobs');
+console.log('   ▶️  POST   /api/notifications/cron/start - Iniciar cron jobs');
+console.log('   ⏸️  POST   /api/notifications/cron/stop - Detener cron jobs');
+console.log('   🚀 POST   /api/notifications/cron/run/:jobName - Ejecutar job manual');
+console.log('   📝 Jobs disponibles: sla, warnings, cleanup, proactive');
+
+// 📊 CONFIGURAR RUTAS DE NOTIFICATION ANALYTICS
+const notificationAnalyticsRoutes = require('./src/routes/notificationAnalyticsRoutes');
+app.use('/api/notifications/analytics', notificationAnalyticsRoutes);
+
+console.log('\n📊 [NOTIFICATION-ANALYTICS] API de Analytics y Métricas ACTIVO:');
+console.log('   📈 GET    /api/notifications/analytics/overview - Vista general de métricas');
+console.log('   📡 GET    /api/notifications/analytics/by-channel - Métricas por canal');
+console.log('   🎯 GET    /api/notifications/analytics/by-module - Métricas por módulo');
+console.log('   ⏰ GET    /api/notifications/analytics/timeline - Timeline de notificaciones');
+console.log('   ⚡ GET    /api/notifications/analytics/sla-performance - Performance de SLA');
+console.log('   👥 GET    /api/notifications/analytics/top-recipients - Top destinatarios');
+
 // 🔗 CONFIGURAR COMPANY EMAIL PROCESS MAPPING - Asignación de emails a procesos (multi-tenant)
 const companyEmailProcessRoutes = require('./src/routes/companyEmailProcessRoutes');
 app.use('/api/company-email-process', companyEmailProcessRoutes);
@@ -4084,6 +4112,26 @@ async function startServer() {
     } catch (billingCronError) {
       console.warn('⚠️  [BILLING-CRON] Error iniciando cron jobs de facturación:', billingCronError.message);
       console.warn('⚠️  [BILLING-CRON] El servidor continuará sin facturación automática.\n');
+    }
+
+    // ✅ INICIALIZAR CRON JOBS DE NOTIFICACIONES
+    console.log('⏰ [NOTIF-CRON] Inicializando cron jobs de notificaciones...');
+    try {
+      const notificationCronService = require('./src/services/NotificationCronService');
+      notificationCronService.start();
+
+      // Hacer disponible en toda la aplicación
+      app.locals.notificationCronService = notificationCronService;
+      global.notificationCronService = notificationCronService;
+
+      console.log('✅ [NOTIF-CRON] Cron jobs de notificaciones iniciados correctamente');
+      console.log('   • Job 1: Escalamiento SLA - Cada 5 minutos');
+      console.log('   • Job 2: Advertencias SLA - Cada 15 minutos');
+      console.log('   • Job 3: Limpieza de notificaciones - Diario 3:00 AM');
+      console.log('   • Job 4: Alertas proactivas - Cada 6 horas\n');
+    } catch (notifCronError) {
+      console.warn('⚠️  [NOTIF-CRON] Error iniciando cron jobs de notificaciones:', notifCronError.message);
+      console.warn('⚠️  [NOTIF-CRON] El servidor continuará sin cron jobs de notificaciones.\n');
     }
 
     // Iniciar servidor HTTP
