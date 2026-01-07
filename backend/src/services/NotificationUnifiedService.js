@@ -1,23 +1,51 @@
 /**
  * ============================================================================
- * NOTIFICATION UNIFIED SERVICE v3.0
+ * NOTIFICATION UNIFIED SERVICE v3.0 - DEPRECADO
  * ============================================================================
- * Sistema unificado de notificaciones para todo el ecosistema:
- * - Panel Administrativo (Aponnt)
- * - Panel Empresa
- * - APKs Flutter
  *
- * Caracteristicas:
- * - Multi-tenant
- * - Workflows multi-nivel
- * - AI Integration (Ollama)
- * - SLA y escalamiento automatico
- * - Soporte para conversaciones/threads
+ * ⚠️ DEPRECATION NOTICE (Enero 2025):
+ * Este servicio está DEPRECADO. Usa NotificationCentralExchange.send() en su lugar.
+ *
+ * Todos los métodos de este servicio ahora delegan a NotificationCentralExchange
+ * para mantener backward compatibility 100%.
+ *
+ * ANTES (deprecado):
+ * ```javascript
+ * await notificationUnifiedService.send({
+ *   companyId: 11,
+ *   originType: 'purchase_order',
+ *   originId: 'PO-123',
+ *   recipientType: 'user',
+ *   recipientId: 'uuid-456',
+ *   category: 'approval_request',
+ *   module: 'procurement',
+ *   title: 'Nueva orden de compra',
+ *   message: 'Requiere aprobación'
+ * });
+ * ```
+ *
+ * AHORA (recomendado):
+ * ```javascript
+ * await NCE.send({
+ *   companyId: 11,
+ *   module: 'procurement',
+ *   workflowKey: 'procurement.order_approval',
+ *   originType: 'purchase_order',
+ *   originId: 'PO-123',
+ *   recipientType: 'user',
+ *   recipientId: 'uuid-456',
+ *   title: 'Nueva orden de compra',
+ *   message: 'Requiere aprobación',
+ *   priority: 'high'
+ * });
+ * ```
+ *
  * ============================================================================
  */
 
 const { sequelize } = require('../config/database');
 const { QueryTypes, Op } = require('sequelize');
+const NCE = require('./NotificationCentralExchange');
 
 class NotificationUnifiedService {
     constructor() {
@@ -188,8 +216,17 @@ class NotificationUnifiedService {
 
     /**
      * Enviar notificacion (metodo principal)
+     *
+     * ⚠️ DEPRECADO: Usa NotificationCentralExchange.send() en su lugar.
+     *
+     * Este método ahora delega a NCE.send() para backward compatibility.
+     *
+     * @deprecated Usar NotificationCentralExchange.send() directamente
      */
     async send(data) {
+        console.warn(`⚠️ [UNIFIED-SERVICE-DEPRECATED] NotificationUnifiedService.send() is deprecated. Use NCE.send() instead.`);
+        console.log(`🔀 [UNIFIED-SERVICE-DEPRECATED] Delegating to NCE.send() for module: ${data.module || 'unknown'}`);
+
         const {
             companyId,
             threadId = null,
@@ -222,81 +259,110 @@ class NotificationUnifiedService {
             createdBy = null
         } = data;
 
-        // Calcular SLA deadline
-        let slaDeadline = null;
-        if (slaHours) {
-            slaDeadline = new Date(Date.now() + slaHours * 60 * 60 * 1000);
-        } else if (actionDeadline) {
-            slaDeadline = new Date(actionDeadline);
-        }
+        try {
+            // Construir workflowKey si no está especificado
+            let workflowKey = data.workflowKey;
+            if (!workflowKey && module && notificationType) {
+                workflowKey = `${module}.${notificationType}`;
+            } else if (!workflowKey && category) {
+                workflowKey = `unified.${category}`;
+            } else if (!workflowKey) {
+                workflowKey = 'unified.general';
+            }
 
-        // Obtener siguiente numero de secuencia en thread
-        let sequenceInThread = 1;
-        if (threadId) {
-            const [result] = await sequelize.query(`
-                SELECT COALESCE(MAX(sequence_in_thread), 0) + 1 as next_seq
-                FROM unified_notifications WHERE thread_id = :threadId
-            `, { replacements: { threadId }, type: QueryTypes.SELECT });
-            sequenceInThread = result.next_seq;
-        }
+            // Mapear parámetros legacy a formato NCE
+            const nceParams = {
+                companyId,
+                module: module || 'unified',
+                workflowKey,
+                threadId,
 
-        const query = `
-            INSERT INTO unified_notifications (
-                company_id, thread_id, sequence_in_thread,
-                origin_type, origin_id, origin_name, origin_role,
-                recipient_type, recipient_id, recipient_name, recipient_role,
-                recipient_department_id, recipient_hierarchy_level,
-                category, module, notification_type, priority,
-                title, message, short_message, metadata,
-                related_entity_type, related_entity_id,
-                requires_action, action_type, action_options, action_deadline,
-                sla_hours, sla_deadline, channels, created_by
-            ) VALUES (
-                :companyId, :threadId, :sequenceInThread,
-                :originType, :originId, :originName, :originRole,
-                :recipientType, :recipientId, :recipientName, :recipientRole,
-                :recipientDepartmentId, :recipientHierarchyLevel,
-                :category, :module, :notificationType, :priority,
-                :title, :message, :shortMessage, :metadata,
-                :relatedEntityType, :relatedEntityId,
-                :requiresAction, :actionType, :actionOptions, :actionDeadline,
-                :slaHours, :slaDeadline, :channels, :createdBy
-            ) RETURNING *
-        `;
+                // Origen
+                originType,
+                originId,
 
-        const [notification] = await sequelize.query(query, {
-            replacements: {
-                companyId, threadId, sequenceInThread,
-                originType, originId, originName, originRole,
-                recipientType, recipientId, recipientName, recipientRole,
-                recipientDepartmentId, recipientHierarchyLevel,
-                category, module, notificationType, priority,
-                title, message, shortMessage: shortMessage || message.substring(0, 280),
-                metadata: JSON.stringify(metadata),
-                relatedEntityType, relatedEntityId,
-                requiresAction, actionType,
-                actionOptions: JSON.stringify(actionOptions),
-                actionDeadline,
-                slaHours, slaDeadline,
-                channels: JSON.stringify(channels),
+                // Destinatario
+                recipientType,
+                recipientId,
+
+                // Contenido
+                title,
+                message,
+
+                // Metadata
+                metadata: {
+                    ...metadata,
+                    originName,
+                    originRole,
+                    recipientName,
+                    recipientRole,
+                    recipientDepartmentId,
+                    recipientHierarchyLevel,
+                    category,
+                    notificationType,
+                    shortMessage,
+                    relatedEntityType,
+                    relatedEntityId,
+                    actionOptions,
+                    actionDeadline,
+                    _legacy_source: 'NotificationUnifiedService.send'
+                },
+
+                // Opciones
+                priority,
+                channels: channels.map(ch => ch === 'app' ? 'inbox' : ch), // Mapear 'app' a 'inbox'
+                requiresAction,
+                actionType,
+                slaHours,
                 createdBy
-            },
-            type: QueryTypes.INSERT
-        });
+            };
 
-        const result = notification[0] || notification;
+            // Delegar a NCE
+            const result = await NCE.send(nceParams);
 
-        // Registrar accion
-        await this.logAction(result.id, threadId, companyId, 'created', createdBy, null, null, 'pending');
+            console.log(`✅ [UNIFIED-SERVICE-DEPRECATED] Delegación exitosa a NCE. Notification ID: ${result.notificationId}`);
 
-        // Intentar respuesta AI si esta habilitado
-        if (category !== 'system') {
-            this.tryAIResponse(result).catch(err =>
-                console.error('[NOTIFICATION-UNIFIED] Error en AI:', err.message)
-            );
+            // Retornar objeto compatible con estructura legacy (unified_notifications)
+            return {
+                id: result.notificationId,
+                company_id: companyId,
+                thread_id: threadId || result.threadId,
+                origin_type: originType,
+                origin_id: originId,
+                origin_name: originName,
+                origin_role: originRole,
+                recipient_type: recipientType,
+                recipient_id: recipientId,
+                recipient_name: recipientName,
+                recipient_role: recipientRole,
+                recipient_department_id: recipientDepartmentId,
+                recipient_hierarchy_level: recipientHierarchyLevel,
+                category,
+                module,
+                notification_type: notificationType,
+                priority,
+                title,
+                message,
+                short_message: shortMessage || message.substring(0, 280),
+                metadata,
+                related_entity_type: relatedEntityType,
+                related_entity_id: relatedEntityId,
+                requires_action: requiresAction,
+                action_type: actionType,
+                action_options: actionOptions,
+                action_deadline: actionDeadline,
+                sla_hours: slaHours,
+                channels,
+                created_by: createdBy,
+                created_at: new Date(),
+                _delegated_to: 'NotificationCentralExchange',
+                _nce_result: result
+            };
+
+        } catch (error) {
+            console.error('[UNIFIED-SERVICE-DEPRECATED] Error delegating to NCE:', error);
+            throw error;
         }
-
-        return result;
     }
 
     /**

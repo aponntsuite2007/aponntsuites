@@ -608,7 +608,9 @@ ${incident.diagnosis ? `### Diagnostico IA
      */
     async createSupportNotification(incident, ticket, supportStaff) {
         try {
-            const notificationService = new NotificationUnifiedService();
+            // NotificationUnifiedService es un singleton (instancia), no una clase
+            // No se puede hacer 'new', usar directamente la instancia
+            const notificationService = NotificationUnifiedService;
 
             for (const staff of supportStaff.slice(0, 3)) {
                 await sequelize.query(`

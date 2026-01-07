@@ -425,6 +425,58 @@
             color: var(--accent-cyan);
         }
 
+        .btn-secondary-dark {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary-dark:hover {
+            background: var(--bg-card);
+            border-color: var(--accent-cyan);
+        }
+
+        /* TABS */
+        .btn-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-tab:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-tab.active {
+            background: var(--bg-tertiary);
+            color: var(--accent-cyan);
+            border-bottom: 2px solid var(--accent-cyan);
+        }
+
+        .profile-tab-content,
+        .messages-tab-content {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* MODALS */
         .modal-overlay {
             display: none;
@@ -449,6 +501,16 @@
             overflow-y: auto;
         }
 
+        .modal-content-large {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
         .modal-header {
             padding: 20px;
             border-bottom: 1px solid var(--border-color);
@@ -468,6 +530,27 @@
             color: var(--text-secondary);
             font-size: 1.5rem;
             cursor: pointer;
+        }
+
+        .close-modal-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .close-modal-btn:hover {
+            color: var(--accent-red);
+            background: rgba(248, 81, 73, 0.1);
+            border-radius: 4px;
         }
 
         .modal-body { padding: 20px; }
@@ -657,6 +740,17 @@
                 <a class="nav-item" data-section="statistics">
                     <i class="fas fa-chart-bar"></i>
                     <span>Estadísticas</span>
+                </a>
+
+                <div class="nav-section-title">Configuración</div>
+                <a class="nav-item" data-section="messages">
+                    <i class="fas fa-envelope"></i>
+                    <span>Mensajes</span>
+                    <span class="nav-badge hidden" id="messagesBadge">0</span>
+                </a>
+                <a class="nav-item" data-section="profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Mi Perfil</span>
                 </a>
             </nav>
 
@@ -885,6 +979,245 @@
                                     Métricas de Rendimiento
                                 </h5>
                                 <div id="performanceMetrics"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PROFILE SECTION -->
+                <section id="section-profile" class="content-section hidden">
+                    <div class="stat-card">
+                        <h5 style="margin-bottom: 30px; color: var(--text-primary);">
+                            <i class="fas fa-user-circle" style="color: var(--accent-purple);"></i>
+                            Mi Perfil
+                        </h5>
+
+                        <!-- Profile Tabs -->
+                        <div style="display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                            <button class="btn-tab active" data-profile-tab="info">
+                                <i class="fas fa-info-circle"></i> Información
+                            </button>
+                            <button class="btn-tab" data-profile-tab="password">
+                                <i class="fas fa-key"></i> Cambiar Contraseña
+                            </button>
+                            <button class="btn-tab" data-profile-tab="banking">
+                                <i class="fas fa-university"></i> Datos Bancarios
+                            </button>
+                            <button class="btn-tab" data-profile-tab="compliance">
+                                <i class="fas fa-clipboard-check"></i> Compliance
+                            </button>
+                        </div>
+
+                        <!-- Info Tab -->
+                        <div id="profile-tab-info" class="profile-tab-content">
+                            <form id="profileForm">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nombre de la Empresa *</label>
+                                        <input type="text" class="form-control-dark" id="profileName" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email de Contacto *</label>
+                                        <input type="email" class="form-control-dark" id="profileEmail" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Teléfono</label>
+                                        <input type="text" class="form-control-dark" id="profilePhone">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">CUIT/RUC</label>
+                                        <input type="text" class="form-control-dark" id="profileTaxId" readonly>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Dirección</label>
+                                        <input type="text" class="form-control-dark" id="profileAddress">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Ciudad</label>
+                                        <input type="text" class="form-control-dark" id="profileCity">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Estado/Provincia</label>
+                                        <input type="text" class="form-control-dark" id="profileState">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">País</label>
+                                        <input type="text" class="form-control-dark" id="profileCountry">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <button type="submit" class="btn-primary-dark">
+                                            <i class="fas fa-save"></i> Guardar Cambios
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Password Tab -->
+                        <div id="profile-tab-password" class="profile-tab-content hidden">
+                            <div class="alert-info" style="margin-bottom: 20px; padding: 15px; background: rgba(88, 166, 255, 0.1); border-left: 3px solid var(--accent-blue); border-radius: 4px;">
+                                <i class="fas fa-info-circle"></i> La contraseña debe tener al menos 8 caracteres
+                            </div>
+                            <form id="passwordForm">
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Contraseña Actual *</label>
+                                        <input type="password" class="form-control-dark" id="currentPassword" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nueva Contraseña *</label>
+                                        <input type="password" class="form-control-dark" id="newPassword" required minlength="8">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Confirmar Nueva Contraseña *</label>
+                                        <input type="password" class="form-control-dark" id="confirmPassword" required minlength="8">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <button type="submit" class="btn-primary-dark">
+                                            <i class="fas fa-key"></i> Cambiar Contraseña
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Banking Tab -->
+                        <div id="profile-tab-banking" class="profile-tab-content hidden">
+                            <form id="bankingForm">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Banco</label>
+                                        <input type="text" class="form-control-dark" id="bankName">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Número de Cuenta</label>
+                                        <input type="text" class="form-control-dark" id="bankAccount">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">CBU/CVU (22 dígitos)</label>
+                                        <input type="text" class="form-control-dark" id="bankCbuCvu" maxlength="22" pattern="\d{22}">
+                                        <small style="color: var(--text-muted);">Ejemplo: 0170091540000003912345</small>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <button type="submit" class="btn-primary-dark">
+                                            <i class="fas fa-save"></i> Guardar Datos Bancarios
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Compliance Tab -->
+                        <div id="profile-tab-compliance" class="profile-tab-content hidden">
+                            <div id="complianceStatus"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MESSAGES SECTION -->
+                <section id="section-messages" class="content-section hidden">
+                    <div class="stat-card">
+                        <h5 style="margin-bottom: 30px; color: var(--text-primary);">
+                            <i class="fas fa-envelope" style="color: var(--accent-cyan);"></i>
+                            Mensajes
+                        </h5>
+
+                        <!-- Messages Tabs -->
+                        <div style="display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                            <button class="btn-tab active" data-messages-tab="inbox">
+                                <i class="fas fa-inbox"></i> Bandeja de Entrada
+                                <span class="nav-badge hidden" id="inboxUnreadBadge">0</span>
+                            </button>
+                            <button class="btn-tab" data-messages-tab="sent">
+                                <i class="fas fa-paper-plane"></i> Enviados
+                            </button>
+                            <button class="btn-tab" data-messages-tab="compose">
+                                <i class="fas fa-edit"></i> Nuevo Mensaje
+                            </button>
+                        </div>
+
+                        <!-- Inbox Tab -->
+                        <div id="messages-tab-inbox" class="messages-tab-content">
+                            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <label class="form-label" style="display: inline; margin-right: 10px;">Filtro:</label>
+                                    <select id="inboxFilter" class="form-control-dark" style="width: auto; display: inline-block;">
+                                        <option value="">Todos</option>
+                                        <option value="unread">No leídos</option>
+                                    </select>
+                                </div>
+                                <button class="btn-secondary-dark" onclick="SupplierPortal.loadMessages()">
+                                    <i class="fas fa-sync"></i> Actualizar
+                                </button>
+                            </div>
+                            <div id="inboxList"></div>
+                        </div>
+
+                        <!-- Sent Tab -->
+                        <div id="messages-tab-sent" class="messages-tab-content hidden">
+                            <div id="sentList"></div>
+                        </div>
+
+                        <!-- Compose Tab -->
+                        <div id="messages-tab-compose" class="messages-tab-content hidden">
+                            <form id="composeForm">
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Empresa Destinataria *</label>
+                                        <select class="form-control-dark" id="companySelect" required>
+                                            <option value="">Seleccione...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Contexto</label>
+                                        <select class="form-control-dark" id="contextType">
+                                            <option value="general">General</option>
+                                            <option value="rfq">RFQ</option>
+                                            <option value="purchase_order">Orden de Compra</option>
+                                            <option value="invoice">Factura</option>
+                                            <option value="claim">Reclamo</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Prioridad</label>
+                                        <select class="form-control-dark" id="messagePriority">
+                                            <option value="normal">Normal</option>
+                                            <option value="high">Alta</option>
+                                            <option value="urgent">Urgente</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Asunto *</label>
+                                        <input type="text" class="form-control-dark" id="messageSubject" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Mensaje *</label>
+                                        <textarea class="form-control-dark" id="messageBody" rows="6" required></textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Adjuntos (Opcional)</label>
+                                        <input type="file" class="form-control-dark" id="messageAttachments" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip">
+                                        <small style="color: var(--text-muted);">Máximo 5 archivos, 50MB cada uno</small>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <button type="submit" class="btn-primary-dark">
+                                            <i class="fas fa-paper-plane"></i> Enviar Mensaje
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Message Detail Modal -->
+                    <div id="messageDetailModal" class="modal-overlay hidden">
+                        <div class="modal-content-large">
+                            <div class="modal-header">
+                                <h5 id="messageDetailSubject">Detalle del Mensaje</h5>
+                                <button class="close-modal-btn" onclick="document.getElementById('messageDetailModal').classList.add('hidden')">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="messageDetailContent"></div>
                             </div>
                         </div>
                     </div>
@@ -1286,6 +1619,23 @@
             // Filters
             document.getElementById('rfqStatusFilter')?.addEventListener('change', () => this.loadRfqs());
             document.getElementById('orderStatusFilter')?.addEventListener('change', () => this.loadOrders());
+            document.getElementById('inboxFilter')?.addEventListener('change', () => this.loadMessages());
+
+            // Messages tabs
+            document.querySelectorAll('[data-messages-tab]').forEach(btn => {
+                btn.addEventListener('click', () => this.switchMessagesTab(btn.dataset.messagesTab));
+            });
+
+            // Compose form
+            document.getElementById('composeForm')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.sendMessage();
+            });
+
+            // Update messages badge every 30 seconds
+            setInterval(() => {
+                if (this.token) this.updateMessagesBadge();
+            }, 30000);
         },
 
         async login() {
@@ -1383,7 +1733,9 @@
                 payments: 'Pagos',
                 claims: 'Reclamos',
                 offers: 'Ofertas y Promociones',
-                statistics: 'Estadísticas'
+                statistics: 'Estadísticas',
+                messages: 'Mensajes',
+                profile: 'Mi Perfil'
             };
             document.getElementById('pageTitle').textContent = titles[section] || section;
 
@@ -1407,6 +1759,8 @@
                 case 'claims': this.loadClaims(); break;
                 case 'offers': this.loadOffers(); break;
                 case 'statistics': this.loadStatistics(); break;
+                case 'messages': this.loadMessages(); break;
+                case 'profile': this.loadProfile(); break;
             }
         },
 
@@ -1633,10 +1987,43 @@
                     <div style="margin-bottom: 25px;">
                         <h6 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center;">
                             <i class="fas fa-paperclip" style="margin-right: 8px;"></i>
-                            Documentación Adjunta
+                            Documentación Adjunta (Empresa)
                             ${attachments.length > 0 ? `<span class="status-badge" style="margin-left: 10px; background: rgba(88,166,255,0.2); color: var(--accent-blue);">${attachments.length}</span>` : ''}
                         </h6>
                         ${this.renderAttachments(attachments)}
+                    </div>
+
+                    <!-- MIS ADJUNTOS (PROVEEDOR) -->
+                    <div style="margin-bottom: 25px; padding: 15px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border-color);">
+                        <h6 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center;">
+                            <i class="fas fa-upload" style="margin-right: 8px; color: var(--accent-green);"></i>
+                            Mis Adjuntos
+                            <small style="margin-left: auto; color: var(--text-muted); font-weight: normal;">Propuesta técnica, certificados, etc.</small>
+                        </h6>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Documento</label>
+                                <select class="form-control-dark" id="supplierAttachmentType">
+                                    <option value="proposal">Propuesta Técnica</option>
+                                    <option value="technical_specs">Especificaciones Técnicas</option>
+                                    <option value="certificate">Certificado</option>
+                                    <option value="sample">Muestra/Demo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Archivos</label>
+                                <input type="file" class="form-control-dark" id="supplierAttachmentFiles" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip">
+                                <small style="color: var(--text-muted);">Máximo 10 archivos, 50MB cada uno</small>
+                            </div>
+                            <div class="col-12">
+                                <button class="btn-primary-dark" onclick="SupplierPortal.uploadSupplierAttachments(${rfqId})">
+                                    <i class="fas fa-upload"></i> Subir Adjuntos
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="supplierAttachmentsList"></div>
                     </div>
 
                     <h6 style="margin-bottom: 15px;">Productos Solicitados</h6>
@@ -1706,6 +2093,9 @@
                 document.getElementById('validUntil').value = validUntil.toISOString().split('T')[0];
 
                 this.openModal('rfqModal');
+
+                // Load supplier's existing attachments
+                await this.loadSupplierAttachments(rfqId);
 
             } catch (error) {
                 console.error('Error loading RFQ:', error);
@@ -2770,6 +3160,573 @@
                 case 'payment':
                     this.navigateTo('payments');
                     break;
+            }
+        },
+
+        // ============================================================================
+        // PROFILE MANAGEMENT
+        // ============================================================================
+
+        async loadProfile() {
+            try {
+                const profile = await this.apiCall('/profile');
+
+                // Fill info form
+                document.getElementById('profileName').value = profile.name || '';
+                document.getElementById('profileEmail').value = profile.email || '';
+                document.getElementById('profilePhone').value = profile.phone || '';
+                document.getElementById('profileTaxId').value = profile.tax_id || '';
+                document.getElementById('profileAddress').value = profile.address || '';
+                document.getElementById('profileCity').value = profile.city || '';
+                document.getElementById('profileState').value = profile.state || '';
+                document.getElementById('profileCountry').value = profile.country || '';
+
+                // Fill banking form
+                document.getElementById('bankName').value = profile.bank_name || '';
+                document.getElementById('bankAccount').value = profile.bank_account || '';
+                document.getElementById('bankCbuCvu').value = profile.bank_cbu_cvu || '';
+
+                // Setup form handlers
+                this.setupProfileForms();
+                this.loadComplianceStatus();
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                alert('Error al cargar perfil');
+            }
+        },
+
+        setupProfileForms() {
+            // Profile form
+            document.getElementById('profileForm').onsubmit = async (e) => {
+                e.preventDefault();
+                await this.updateProfile();
+            };
+
+            // Password form
+            document.getElementById('passwordForm').onsubmit = async (e) => {
+                e.preventDefault();
+                await this.changePassword();
+            };
+
+            // Banking form
+            document.getElementById('bankingForm').onsubmit = async (e) => {
+                e.preventDefault();
+                await this.updateBanking();
+            };
+
+            // Profile tabs
+            document.querySelectorAll('[data-profile-tab]').forEach(btn => {
+                btn.onclick = () => this.switchProfileTab(btn.dataset.profileTab);
+            });
+        },
+
+        async updateProfile() {
+            try {
+                const data = {
+                    name: document.getElementById('profileName').value,
+                    email: document.getElementById('profileEmail').value,
+                    phone: document.getElementById('profilePhone').value,
+                    address: document.getElementById('profileAddress').value,
+                    city: document.getElementById('profileCity').value,
+                    state: document.getElementById('profileState').value,
+                    country: document.getElementById('profileCountry').value
+                };
+
+                await this.apiCall('/profile', {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+
+                alert('✅ Perfil actualizado correctamente');
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert(error.message || 'Error al actualizar perfil');
+            }
+        },
+
+        async changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                alert('❌ Las contraseñas nuevas no coinciden');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                alert('❌ La contraseña debe tener al menos 8 caracteres');
+                return;
+            }
+
+            try {
+                await this.apiCall('/profile/change-password', {
+                    method: 'POST',
+                    body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+                });
+
+                alert('✅ Contraseña actualizada correctamente');
+                document.getElementById('passwordForm').reset();
+            } catch (error) {
+                console.error('Error changing password:', error);
+                alert(error.message || 'Error al cambiar contraseña');
+            }
+        },
+
+        async updateBanking() {
+            const bankCbuCvu = document.getElementById('bankCbuCvu').value;
+
+            if (bankCbuCvu && !/^\d{22}$/.test(bankCbuCvu)) {
+                alert('❌ El CBU/CVU debe tener exactamente 22 dígitos');
+                return;
+            }
+
+            try {
+                const data = {
+                    bank_name: document.getElementById('bankName').value,
+                    bank_account: document.getElementById('bankAccount').value,
+                    bank_cbu_cvu: bankCbuCvu
+                };
+
+                await this.apiCall('/profile/banking', {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+
+                alert('✅ Datos bancarios actualizados correctamente');
+            } catch (error) {
+                console.error('Error updating banking:', error);
+                alert(error.message || 'Error al actualizar datos bancarios');
+            }
+        },
+
+        async loadComplianceStatus() {
+            try {
+                const status = await this.apiCall('/profile/compliance-status');
+
+                let html = `
+                    <div class="alert-dark ${status.is_compliant ? 'alert-success' : 'alert-warning'}">
+                        <h6 style="margin-bottom: 15px;">
+                            <i class="fas fa-${status.is_compliant ? 'check-circle' : 'exclamation-triangle'}"></i>
+                            Estado de Compliance
+                        </h6>
+                        <p><strong>Nivel:</strong> ${status.compliance_level || 'N/A'}</p>
+                        <p><strong>Última verificación:</strong> ${status.last_verification ? this.formatDate(status.last_verification) : 'Nunca'}</p>
+                        ${status.pending_documents && status.pending_documents.length > 0 ? `
+                            <hr style="margin: 15px 0; border-color: var(--border-color);">
+                            <h6 style="color: var(--accent-orange);">Documentos Pendientes:</h6>
+                            <ul>
+                                ${status.pending_documents.map(doc => `<li>${doc}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                `;
+
+                document.getElementById('complianceStatus').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading compliance:', error);
+                document.getElementById('complianceStatus').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-info-circle"></i>
+                        <p>No se pudo cargar estado de compliance</p>
+                    </div>
+                `;
+            }
+        },
+
+        switchProfileTab(tab) {
+            // Update buttons
+            document.querySelectorAll('[data-profile-tab]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.profileTab === tab);
+            });
+
+            // Show/hide content
+            document.querySelectorAll('.profile-tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`profile-tab-${tab}`).classList.remove('hidden');
+        },
+
+        // ============================================================================
+        // MESSAGES MANAGEMENT
+        // ============================================================================
+
+        async loadMessages() {
+            const unreadOnly = document.getElementById('inboxFilter')?.value === 'unread';
+
+            try {
+                const response = await this.apiCall(`/api/supplier-messages/inbox?unreadOnly=${unreadOnly}`);
+
+                let html = '';
+                if (response.messages.length === 0) {
+                    html = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No hay mensajes</p>
+                        </div>
+                    `;
+                } else {
+                    html = response.messages.map(msg => `
+                        <div class="stat-card" style="margin-bottom: 15px; cursor: pointer; ${!msg.is_read ? 'border-left: 3px solid var(--accent-cyan);' : ''}"
+                             onclick="SupplierPortal.viewMessage(${msg.id})">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                        ${!msg.is_read ? '<span class="status-badge status-active">Nuevo</span>' : ''}
+                                        ${msg.priority === 'urgent' ? '<span class="status-badge status-urgent">Urgente</span>' :
+                                          msg.priority === 'high' ? '<span class="status-badge" style="background: rgba(210,153,34,0.2); color: var(--accent-orange);">Alta</span>' : ''}
+                                        <strong style="color: var(--text-primary);">${msg.subject}</strong>
+                                    </div>
+                                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 5px;">
+                                        ${msg.Company ? msg.Company.name : 'Empresa'}
+                                    </p>
+                                    <p style="color: var(--text-muted); font-size: 0.85rem;">
+                                        ${msg.message.substring(0, 100)}${msg.message.length > 100 ? '...' : ''}
+                                    </p>
+                                </div>
+                                <div style="text-align: right; min-width: 120px;">
+                                    <div style="color: var(--text-muted); font-size: 0.85rem;">${this.formatDate(msg.created_at)}</div>
+                                    ${msg.has_attachments ? '<i class="fas fa-paperclip" style="color: var(--accent-cyan); margin-top: 5px;"></i>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                document.getElementById('inboxList').innerHTML = html;
+
+                // Update badge
+                const badge = document.getElementById('inboxUnreadBadge');
+                if (response.unreadCount > 0) {
+                    badge.textContent = response.unreadCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+
+                this.updateMessagesBadge();
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                document.getElementById('inboxList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Error al cargar mensajes</p>
+                    </div>
+                `;
+            }
+        },
+
+        async loadSentMessages() {
+            try {
+                const response = await this.apiCall('/api/supplier-messages/sent');
+
+                let html = '';
+                if (response.messages.length === 0) {
+                    html = `
+                        <div class="empty-state">
+                            <i class="fas fa-paper-plane"></i>
+                            <p>No hay mensajes enviados</p>
+                        </div>
+                    `;
+                } else {
+                    html = response.messages.map(msg => `
+                        <div class="stat-card" style="margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <div style="flex: 1;">
+                                    <strong style="color: var(--text-primary);">${msg.subject}</strong>
+                                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                                        Para: ${msg.Company ? msg.Company.name : 'Empresa'}
+                                    </p>
+                                    <p style="color: var(--text-muted); font-size: 0.85rem;">
+                                        ${msg.message.substring(0, 100)}${msg.message.length > 100 ? '...' : ''}
+                                    </p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="color: var(--text-muted); font-size: 0.85rem;">${this.formatDate(msg.created_at)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                document.getElementById('sentList').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading sent messages:', error);
+            }
+        },
+
+        async viewMessage(messageId) {
+            try {
+                const response = await this.apiCall(`/api/supplier-messages/${messageId}`);
+                const msg = response.message;
+
+                // Mark as read
+                if (!msg.is_read) {
+                    await this.apiCall(`/api/supplier-messages/${messageId}/mark-read`, { method: 'POST' });
+                }
+
+                let html = `
+                    <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                            <div>
+                                <h5 style="color: var(--text-primary); margin-bottom: 10px;">${msg.subject}</h5>
+                                <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                                    <strong>De:</strong> ${msg.Company ? msg.Company.name : 'Empresa'}<br>
+                                    <strong>Fecha:</strong> ${this.formatDate(msg.created_at)}
+                                </div>
+                            </div>
+                            <div>
+                                ${msg.priority === 'urgent' ? '<span class="status-badge status-urgent">Urgente</span>' :
+                                  msg.priority === 'high' ? '<span class="status-badge" style="background: rgba(210,153,34,0.2); color: var(--accent-orange);">Alta</span>' : ''}
+                            </div>
+                        </div>
+                        <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; white-space: pre-wrap;">
+                            ${msg.message}
+                        </div>
+                    </div>
+
+                    ${msg.attachments && msg.attachments.length > 0 ? `
+                        <div>
+                            <h6 style="margin-bottom: 10px;">Adjuntos (${msg.attachments.length})</h6>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">
+                                ${msg.attachments.map(att => `
+                                    <div style="padding: 10px; background: var(--bg-tertiary); border-radius: 6px; border: 1px solid var(--border-color);">
+                                        <div style="margin-bottom: 8px;">
+                                            <strong style="font-size: 0.9rem;"><i class="fas fa-file"></i> ${att.original_name}</strong><br>
+                                            <small style="color: var(--text-muted);">${(att.file_size / 1024).toFixed(2)} KB</small>
+                                        </div>
+                                        <button class="btn-primary-dark" style="width: 100%; padding: 5px;" onclick="window.open('/api/supplier-messages/attachments/${att.id}/download', '_blank')">
+                                            <i class="fas fa-download"></i> Descargar
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+
+                document.getElementById('messageDetailContent').innerHTML = html;
+                document.getElementById('messageDetailSubject').textContent = msg.subject;
+                document.getElementById('messageDetailModal').classList.remove('hidden');
+                document.getElementById('messageDetailModal').style.display = 'flex';
+
+                // Reload inbox to update read status
+                setTimeout(() => this.loadMessages(), 500);
+            } catch (error) {
+                console.error('Error viewing message:', error);
+                alert('Error al cargar mensaje');
+            }
+        },
+
+        async sendMessage() {
+            const companyId = document.getElementById('companySelect').value;
+            const subject = document.getElementById('messageSubject').value;
+            const message = document.getElementById('messageBody').value;
+            const contextType = document.getElementById('contextType').value;
+            const priority = document.getElementById('messagePriority').value;
+            const files = document.getElementById('messageAttachments').files;
+
+            if (!companyId || !subject || !message) {
+                alert('❌ Complete los campos obligatorios');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('companyId', companyId);
+                formData.append('subject', subject);
+                formData.append('message', message);
+                formData.append('contextType', contextType);
+                formData.append('priority', priority);
+
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('attachments', files[i]);
+                }
+
+                const response = await fetch('/api/supplier-messages/send', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${this.token}` },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Error al enviar mensaje');
+
+                alert('✅ Mensaje enviado correctamente');
+                document.getElementById('composeForm').reset();
+                this.switchMessagesTab('sent');
+                this.loadSentMessages();
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Error al enviar mensaje');
+            }
+        },
+
+        switchMessagesTab(tab) {
+            // Update buttons
+            document.querySelectorAll('[data-messages-tab]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.messagesTab === tab);
+            });
+
+            // Show/hide content
+            document.querySelectorAll('.messages-tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`messages-tab-${tab}`).classList.remove('hidden');
+
+            // Load data
+            if (tab === 'inbox') this.loadMessages();
+            if (tab === 'sent') this.loadSentMessages();
+            if (tab === 'compose') this.loadCompanySelect();
+        },
+
+        async loadCompanySelect() {
+            try {
+                // Get companies from user's suppliers
+                const select = document.getElementById('companySelect');
+                if (this.user && this.user.supplierId) {
+                    // Company ID should be in user object
+                    select.innerHTML = `<option value="${this.user.companyId || ''}">${this.user.companyName || 'Mi Cliente'}</option>`;
+                }
+            } catch (error) {
+                console.error('Error loading companies:', error);
+            }
+        },
+
+        async updateMessagesBadge() {
+            try {
+                const response = await this.apiCall('/api/supplier-messages/unread-count');
+                const badge = document.getElementById('messagesBadge');
+
+                if (response.unreadCount > 0) {
+                    badge.textContent = response.unreadCount;
+                    badge.classList.remove('hidden');
+
+                    // Also update notification badge
+                    document.getElementById('notificationBadge').textContent = response.unreadCount;
+                } else {
+                    badge.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error updating messages badge:', error);
+            }
+        },
+
+        // ============================================================================
+        // FILE UPLOADS FOR RFQs/POs
+        // ============================================================================
+
+        async uploadSupplierAttachments(rfqId) {
+            const files = document.getElementById('supplierAttachmentFiles').files;
+            const type = document.getElementById('supplierAttachmentType').value;
+
+            if (!files || files.length === 0) {
+                alert('❌ Seleccione al menos un archivo');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('attachment_type', type);
+
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('files', files[i]);
+                }
+
+                const response = await fetch(`/api/supplier-portal/attachments/rfq/${rfqId}/supplier-upload`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${this.token}` },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Error al subir archivos');
+
+                alert(`✅ ${files.length} archivo(s) subido(s) correctamente`);
+
+                // Clear file input
+                document.getElementById('supplierAttachmentFiles').value = '';
+
+                // Reload supplier attachments
+                await this.loadSupplierAttachments(rfqId);
+            } catch (error) {
+                console.error('Error uploading attachment:', error);
+                alert('Error al subir archivo');
+            }
+        },
+
+        async loadSupplierAttachments(rfqId) {
+            try {
+                const response = await this.apiCall(`/attachments/rfq/${rfqId}/my-uploads`);
+                const attachments = await response.json();
+
+                const container = document.getElementById('supplierAttachmentsList');
+
+                if (attachments.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                            <p>No has subido adjuntos aún</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const typeLabels = {
+                    proposal: 'Propuesta Técnica',
+                    technical_specs: 'Especificaciones',
+                    certificate: 'Certificado',
+                    sample: 'Muestra'
+                };
+
+                container.innerHTML = `
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px;">
+                        <h6 style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-secondary);">
+                            Archivos Subidos (${attachments.length})
+                        </h6>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">
+                            ${attachments.map(att => `
+                                <div style="padding: 10px; background: var(--bg-card); border-radius: 6px; border: 1px solid var(--border-color);">
+                                    <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 8px;">
+                                        <div style="flex: 1;">
+                                            <strong style="font-size: 0.9rem; color: var(--text-primary);">
+                                                <i class="fas fa-file"></i> ${att.original_name}
+                                            </strong>
+                                            <br>
+                                            <small style="color: var(--text-muted);">
+                                                ${typeLabels[att.attachment_type] || att.attachment_type} • ${(att.file_size / 1024).toFixed(2)} KB
+                                            </small>
+                                        </div>
+                                        <button class="btn-outline-dark" style="padding: 5px 10px; font-size: 0.8rem;"
+                                                onclick="SupplierPortal.deleteSupplierAttachment(${rfqId}, ${att.id})"
+                                                title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading supplier attachments:', error);
+            }
+        },
+
+        async deleteSupplierAttachment(rfqId, attachmentId) {
+            if (!confirm('¿Eliminar este archivo?')) return;
+
+            try {
+                const response = await fetch(`/api/supplier-portal/attachments/rfq/${rfqId}/${attachmentId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${this.token}` }
+                });
+
+                if (!response.ok) throw new Error('Error al eliminar');
+
+                alert('✅ Archivo eliminado');
+                await this.loadSupplierAttachments(rfqId);
+            } catch (error) {
+                console.error('Error deleting attachment:', error);
+                alert('Error al eliminar archivo');
             }
         }
     };

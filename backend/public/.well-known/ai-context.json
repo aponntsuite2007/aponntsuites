@@ -2015,7 +2015,7 @@
       },
       {
         "id": "compliance-dashboard",
-        "name": "Risk Intelligence Dashboard",
+        "name": "Inteligencia de Riesgos",
         "description": "Monitoreo de cumplimiento normativo y reglas LCT (Ley de Contrato de Trabajo)",
         "category": "compliance",
         "version": "1.0.0",
@@ -9895,7 +9895,7 @@
         "modules": [
           "Reportes de Auditoría",
           "Consentimientos y Privacidad",
-          "Risk Intelligence Dashboard",
+          "Inteligencia de Riesgos",
           "Seguridad e Higiene Laboral (HSE)",
           "Gestión Legal"
         ]

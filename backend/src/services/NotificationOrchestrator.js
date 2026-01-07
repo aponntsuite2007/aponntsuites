@@ -1,24 +1,32 @@
 /**
  * ============================================================================
- * NOTIFICATION ORCHESTRATOR - SSOT del Sistema de Notificaciones
+ * NOTIFICATION ORCHESTRATOR - DEPRECADO
  * ============================================================================
  *
- * Orquestador central de workflows de notificaciones multi-canal.
+ * ⚠️ DEPRECATION NOTICE (Enero 2025):
+ * Este servicio está DEPRECADO. Usa NotificationCentralExchange.send() en su lugar.
  *
- * RESPONSABILIDADES:
- * - Disparar workflows basado en process_key
- * - Ejecutar steps secuenciales del workflow
- * - Enviar notificaciones por múltiples canales (email, whatsapp, sms, push)
- * - Trackear entrega, lectura y respuesta
- * - Procesar respuestas automáticas (botones SI/NO, ACEPTO/RECHAZO, etc.)
- * - Manejar timeouts y escalamientos
- * - Generar métricas en tiempo real
+ * Todos los métodos de este servicio ahora delegan a NotificationCentralExchange
+ * para mantener backward compatibility 100%.
  *
- * USO:
+ * ANTES (deprecado):
  * ```javascript
  * await NotificationOrchestrator.trigger('payroll_receipt', {
  *   companyId: 11,
- *   employeeId: 'uuid-123',
+ *   recipientId: 'uuid-123',
+ *   metadata: { period: '2025-12', amount: 5000 }
+ * });
+ * ```
+ *
+ * AHORA (recomendado):
+ * ```javascript
+ * await NCE.send({
+ *   companyId: 11,
+ *   workflowKey: 'payroll_receipt',
+ *   recipientType: 'user',
+ *   recipientId: 'uuid-123',
+ *   title: 'Recibo de nómina disponible',
+ *   message: 'Tu recibo del período 2025-12 está listo',
  *   metadata: { period: '2025-12', amount: 5000 }
  * });
  * ```
@@ -29,6 +37,7 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const nodemailer = require('nodemailer');
+const NCE = require('./NotificationCentralExchange');
 
 class NotificationOrchestrator {
 
@@ -37,8 +46,11 @@ class NotificationOrchestrator {
      * TRIGGER - Punto de entrada principal
      * ========================================================================
      *
-     * Dispara un workflow de notificación
+     * ⚠️ DEPRECADO: Usa NotificationCentralExchange.send() en su lugar.
      *
+     * Este método ahora delega a NCE.send() para backward compatibility.
+     *
+     * @deprecated Usar NotificationCentralExchange.send() directamente
      * @param {string} processKey - Identificador del proceso (ej: 'payroll_receipt')
      * @param {object} options - Opciones de ejecución
      * @param {number} options.companyId - ID de la empresa (solo para scope='company')
@@ -46,37 +58,62 @@ class NotificationOrchestrator {
      * @param {string} options.recipientType - Tipo: 'employee', 'user', 'partner', 'staff'
      * @param {object} options.metadata - Metadata específica del proceso
      * @param {object} options.templateVars - Variables para el template
+     * @param {string} options.title - Título de la notificación
+     * @param {string} options.message - Mensaje de la notificación
      * @returns {Promise<object>} Resultado del workflow
      */
     static async trigger(processKey, options = {}) {
-        console.log(`\n🎯 [ORCHESTRATOR] Triggering workflow: ${processKey}`);
-        console.log('📋 [ORCHESTRATOR] Options:', JSON.stringify(options, null, 2));
+        console.warn(`⚠️ [ORCHESTRATOR-DEPRECATED] NotificationOrchestrator.trigger() is deprecated. Use NCE.send() instead.`);
+        console.log(`🔀 [ORCHESTRATOR-DEPRECATED] Delegating to NCE.send() for workflow: ${processKey}`);
 
         try {
-            // 1. Buscar el workflow en BD
-            const workflow = await this.getWorkflow(processKey, options.companyId);
+            // Mapear parámetros legacy a formato NCE
+            const nceParams = {
+                companyId: options.companyId,
+                workflowKey: processKey,
+                module: options.module || 'legacy',
 
-            if (!workflow) {
-                throw new Error(`Workflow '${processKey}' no encontrado`);
-            }
+                // Destinatario
+                recipientType: options.recipientType || 'user',
+                recipientId: options.recipientId,
 
-            if (!workflow.is_active) {
-                throw new Error(`Workflow '${processKey}' está inactivo`);
-            }
+                // Contenido (usar templateVars si está disponible)
+                title: options.title || options.templateVars?.title || `Notificación: ${processKey}`,
+                message: options.message || options.templateVars?.message || 'Contenido de notificación',
 
-            console.log(`✅ [ORCHESTRATOR] Workflow encontrado: ${workflow.process_name}`);
-            console.log(`📦 [ORCHESTRATOR] Scope: ${workflow.scope}, Module: ${workflow.module}`);
+                // Metadata
+                metadata: {
+                    ...options.metadata,
+                    ...options.templateVars,
+                    _legacy_source: 'NotificationOrchestrator.trigger',
+                    _legacy_processKey: processKey
+                },
 
-            // 2. Ejecutar workflow
-            const result = await this.executeWorkflow(workflow, options);
+                // Opciones adicionales
+                priority: options.priority || 'normal',
+                channels: options.channels,
+                requiresAction: options.requiresAction,
+                slaHours: options.slaHours
+            };
 
-            console.log(`🎉 [ORCHESTRATOR] Workflow completado exitosamente`);
-            console.log(`📊 [ORCHESTRATOR] Result:`, result);
+            // Delegar a NCE
+            const result = await NCE.send(nceParams);
 
-            return result;
+            console.log(`✅ [ORCHESTRATOR-DEPRECATED] Delegación exitosa a NCE. Notification ID: ${result.notificationId}`);
+
+            // Retornar en formato legacy compatible
+            return {
+                success: result.success,
+                notificationId: result.notificationId,
+                workflowKey: processKey,
+                recipients: result.recipients,
+                channels: result.channels,
+                dispatchSummary: result.dispatchSummary,
+                _delegated_to: 'NotificationCentralExchange'
+            };
 
         } catch (error) {
-            console.error(`❌ [ORCHESTRATOR] Error executing workflow '${processKey}':`, error.message);
+            console.error(`❌ [ORCHESTRATOR-DEPRECATED] Error delegating to NCE:`, error.message);
             throw error;
         }
     }

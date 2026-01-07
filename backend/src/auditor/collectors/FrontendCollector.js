@@ -2019,13 +2019,13 @@ class FrontendCollector {
       await this.page.reload({ waitUntil: 'networkidle0', timeout: 10000 });
       await this.page.waitForTimeout(3000);
 
-      // ⭐ FIX 25: Volver al módulo después del reload
+      // ⭐ FIX 25 (CORREGIDO): Volver al módulo después del reload
       console.log(`        🔹 Navegando de vuelta al módulo ${module.id}...`);
-      await this.page.evaluate((moduleKey, moduleName) => {
+      await this.page.evaluate((moduleData) => {
         if (typeof window.showModuleContent === 'function') {
-          window.showModuleContent(moduleKey, moduleName);
+          window.showModuleContent(moduleData.key, moduleData.name);
         }
-      }, module.id, module.name);
+      }, { key: module.id, name: module.name });
       await this.page.waitForTimeout(2000);
 
       // Verificar que la lista todavía tiene datos

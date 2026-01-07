@@ -7,10 +7,14 @@
  * - Confirmaciones de órdenes
  * - Alertas de reclamos
  * - Notificaciones de pagos programados
+ *
+ * 🔥 MIGRADO A NCE (Notification Central Exchange)
  */
 
 const nodemailer = require('nodemailer');
 const { Pool } = require('pg');
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+const NCE = require('./NotificationCentralExchange');
 
 class SupplierEmailService {
     constructor() {
@@ -329,11 +333,47 @@ class SupplierEmailService {
                 </p>
             `;
 
-            const result = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to: email,
-                subject: `[RFQ] Nueva solicitud de cotización: ${rfqNumber}`,
-                html: this.getBaseTemplate(content, 'Nueva Solicitud de Cotización')
+            // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+            const companyId = rfq.company_id;
+            const rfqId = typeof dataOrRfqId === 'object' ? rfq.id : dataOrRfqId;
+
+            const result = await NCE.send({
+                // CONTEXTO
+                companyId: companyId,
+                module: 'suppliers',
+                originType: 'rfq_invitation',
+                originId: rfqId,
+
+                // WORKFLOW
+                workflowKey: 'suppliers.rfq_invitation',
+
+                // DESTINATARIO (associate = proveedor)
+                recipientType: 'associate',
+                recipientId: supplier.id,
+                recipientEmail: email,
+
+                // CONTENIDO
+                title: `[RFQ] Nueva solicitud de cotización: ${rfqNumber}`,
+                message: `${companyName} le invita a presentar cotización para: ${rfqTitle}`,
+                metadata: {
+                    rfqId,
+                    rfqNumber,
+                    rfqTitle,
+                    rfqDescription,
+                    supplierName,
+                    companyName,
+                    deadline,
+                    portalUrl: this.portalUrl
+                },
+
+                // COMPORTAMIENTO
+                priority: 'high',
+                requiresAction: true,
+                actionType: 'response',
+                slaHours: 72,  // 72 horas para responder RFQ (típico)
+
+                // CANALES
+                channels: ['email'],
             });
 
             // Solo actualizar BD si se llamó con el formato antiguo

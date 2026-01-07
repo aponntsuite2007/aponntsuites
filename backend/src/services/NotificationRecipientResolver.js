@@ -1,21 +1,49 @@
 /**
- * NotificationRecipientResolver
- * ==============================
- * Servicio SSOT para resolver destinatarios de notificaciones
- * cuando se envían a departamentos como entidad (ej: "RRHH", "Legal", etc.)
+ * ============================================================================
+ * NOTIFICATION RECIPIENT RESOLVER v2.0
+ * ============================================================================
  *
- * Uso:
- *   const recipients = await NotificationRecipientResolver.resolve(companyId, 'RRHH');
- *   // Retorna: [{ userId: 'uuid', role: 'primary' }, ...]
+ * Resuelve destinatarios de forma dinámica e inteligente
  *
- * Estrategia de resolución (orden de prioridad):
- *   1. notification_recipients configurados en el departamento
- *   2. manager_user_id del departamento
- *   3. Usuarios con rol 'admin' o 'manager' de la empresa (fallback)
+ * TIPOS DE DESTINATARIOS SOPORTADOS:
+ * - 'user' - Usuario específico por ID
+ * - 'role' - Todos los usuarios con un rol (admin, manager, etc.)
+ * - 'hierarchy' - Resolución jerárquica (supervisor → manager → RRHH → admin)
+ * - 'group' - Grupo/departamento/shift
+ * - 'department' - Departamento específico
+ * - 'shift' - Turno específico
+ * - 'dynamic' - Resolución basada en reglas custom
  *
- * @module NotificationRecipientResolver
- * @version 1.0.0
- * @date 2025-12-16
+ * EJEMPLOS:
+ * ```javascript
+ * // Usuario específico
+ * await resolver.resolve({ recipientType: 'user', recipientId: 'uuid-123', companyId: 11 })
+ * // → [{ user_id: 'uuid-123', email: 'user@example.com', ... }]
+ *
+ * // Por rol
+ * await resolver.resolve({ recipientType: 'role', recipientId: 'manager', companyId: 11 })
+ * // → [{ user_id: 'uuid-456', ... }, { user_id: 'uuid-789', ... }]
+ *
+ * // Jerarquía organizacional
+ * await resolver.resolve({ recipientType: 'hierarchy', recipientId: 'employee-uuid', companyId: 11 })
+ * // → [{ user_id: 'supervisor-uuid', ... }] // Supervisor directo
+ *
+ * // Departamento completo
+ * await resolver.resolve({ recipientType: 'group', recipientId: 'department:5', companyId: 11 })
+ * // → [{ user_id: 'user1', ... }, { user_id: 'user2', ... }]
+ * ```
+ *
+ * INTEGRACIÓN CON:
+ * - organizational_hierarchy (jerarquía dinámica)
+ * - users table (roles, departamentos, shifts)
+ * - OrganizationalHierarchyService (escalamiento)
+ * - department_aliases (aliases de departamentos)
+ *
+ * BACKWARD COMPATIBILITY:
+ * - Método estático resolve(companyId, departmentIdentifier) se mantiene
+ * - Nuevos métodos de instancia para NCE
+ *
+ * ============================================================================
  */
 
 const { sequelize } = require('../config/database');
@@ -27,14 +55,373 @@ const LEGAL_ALIASES = ['legal', 'legales', 'juridico', 'jurídico'];
 
 class NotificationRecipientResolver {
 
+    constructor() {
+        console.log('[RecipientResolver] Inicializado (v2.0)');
+    }
+
+    // ========================================================================
+    // MÉTODO PRINCIPAL - RESOLUCIÓN DINÁMICA (para NCE)
+    // ========================================================================
+
     /**
-     * Resolver destinatarios para un departamento
-     * @param {number} companyId - ID de la empresa
-     * @param {string} departmentIdentifier - Nombre o alias del departamento (ej: "RRHH")
-     * @param {Object} options - Opciones adicionales
-     * @returns {Promise<Array>} Lista de destinatarios [{userId, role, name, email}]
+     * RESOLVER DESTINATARIOS - Método principal
+     *
+     * @param {Object} params - Parámetros de resolución
+     * @param {string} params.recipientType - Tipo: user, role, hierarchy, group, dynamic
+     * @param {string} params.recipientId - ID del destinatario (depende del tipo)
+     * @param {number} params.companyId - ID de la empresa (multi-tenant)
+     * @param {string} [params.module] - Módulo (opcional, para reglas custom)
+     * @param {Object} [params.context] - Contexto adicional para resolución dinámica
+     * @returns {Promise<Array>} Lista de usuarios destinatarios
+     */
+    async resolve(params) {
+        const { recipientType, recipientId, companyId, module, context } = params;
+
+        console.log(`[RecipientResolver] Resolviendo: ${recipientType}:${recipientId} (company: ${companyId})`);
+
+        try {
+            let recipients = [];
+
+            switch (recipientType) {
+                case 'user':
+                    recipients = await this._resolveUser(recipientId, companyId);
+                    break;
+
+                case 'role':
+                    recipients = await this._resolveRole(recipientId, companyId);
+                    break;
+
+                case 'hierarchy':
+                    recipients = await this._resolveHierarchy(recipientId, companyId, context);
+                    break;
+
+                case 'group':
+                    recipients = await this._resolveGroup(recipientId, companyId);
+                    break;
+
+                case 'department':
+                    recipients = await this._resolveDepartment(recipientId, companyId);
+                    break;
+
+                case 'shift':
+                    recipients = await this._resolveShift(recipientId, companyId);
+                    break;
+
+                case 'dynamic':
+                    recipients = await this._resolveDynamic(recipientId, companyId, module, context);
+                    break;
+
+                default:
+                    throw new Error(`Tipo de destinatario no soportado: ${recipientType}`);
+            }
+
+            // Validar que hay destinatarios
+            if (!recipients || recipients.length === 0) {
+                console.warn(`[RecipientResolver] No se encontraron destinatarios para ${recipientType}:${recipientId}`);
+                throw new Error(`No se encontraron destinatarios para ${recipientType}:${recipientId}`);
+            }
+
+            // Filtrar usuarios inactivos
+            recipients = recipients.filter(r => r.account_status === 'active' || r.status === 'active');
+
+            console.log(`[RecipientResolver] Resueltos ${recipients.length} destinatario(s)`);
+
+            return recipients;
+
+        } catch (error) {
+            console.error(`[RecipientResolver] Error:`, error.message);
+            throw error;
+        }
+    }
+
+    // ========================================================================
+    // RESOLVERS POR TIPO (métodos de instancia)
+    // ========================================================================
+
+    /**
+     * Resolver usuario específico por ID
+     */
+    async _resolveUser(userId, companyId) {
+        const query = `
+            SELECT
+                user_id,
+                "employeeId",
+                email,
+                first_name,
+                last_name,
+                (first_name || ' ' || last_name) as full_name,
+                role,
+                department_id,
+                shift_id,
+                phone,
+                account_status,
+                email_verified
+            FROM users
+            WHERE user_id = :userId
+              AND company_id = :companyId
+              AND account_status = 'active'
+            LIMIT 1
+        `;
+
+        const users = await sequelize.query(query, {
+            replacements: { userId, companyId },
+            type: QueryTypes.SELECT
+        });
+
+        return users;
+    }
+
+    /**
+     * Resolver todos los usuarios con un rol específico
+     */
+    async _resolveRole(roleName, companyId) {
+        const query = `
+            SELECT
+                user_id,
+                "employeeId",
+                email,
+                first_name,
+                last_name,
+                (first_name || ' ' || last_name) as full_name,
+                role,
+                department_id,
+                shift_id,
+                phone,
+                account_status,
+                email_verified
+            FROM users
+            WHERE role = :roleName
+              AND company_id = :companyId
+              AND account_status = 'active'
+            ORDER BY first_name, last_name
+        `;
+
+        const users = await sequelize.query(query, {
+            replacements: { roleName, companyId },
+            type: QueryTypes.SELECT
+        });
+
+        return users;
+    }
+
+    /**
+     * Resolver jerarquía organizacional (supervisor → manager → RRHH → admin)
+     */
+    async _resolveHierarchy(employeeId, companyId, context) {
+        console.log(`[RecipientResolver] Resolviendo jerarquía para employee: ${employeeId}`);
+
+        // Estrategia:
+        // 1. Buscar supervisor directo en organizational_hierarchy
+        // 2. Si no hay, buscar manager del departamento
+        // 3. Si no hay, buscar RRHH
+        // 4. Si no hay, buscar admin
+
+        // PASO 1: Buscar supervisor directo
+        let supervisor = await this._getSupervisor(employeeId, companyId);
+        if (supervisor) {
+            console.log(`[RecipientResolver] Supervisor encontrado: ${supervisor.full_name}`);
+            return [supervisor];
+        }
+
+        // PASO 2: Buscar manager del departamento
+        const employee = await this._resolveUser(employeeId, companyId);
+        if (employee[0] && employee[0].department_id) {
+            const manager = await this._getDepartmentManager(employee[0].department_id, companyId);
+            if (manager) {
+                console.log(`[RecipientResolver] Manager de departamento encontrado: ${manager.full_name}`);
+                return [manager];
+            }
+        }
+
+        // PASO 3: Buscar RRHH
+        const rrhh = await this._resolveRole('rrhh', companyId);
+        if (rrhh.length > 0) {
+            console.log(`[RecipientResolver] RRHH encontrado: ${rrhh.length} usuario(s)`);
+            return rrhh;
+        }
+
+        // PASO 4: Buscar admin como último recurso
+        const admins = await this._resolveRole('admin', companyId);
+        console.log(`[RecipientResolver] Admin como fallback: ${admins.length} usuario(s)`);
+        return admins;
+    }
+
+    /**
+     * Obtener supervisor directo de organizational_hierarchy
+     */
+    async _getSupervisor(employeeId, companyId) {
+        const query = `
+            SELECT
+                u.user_id,
+                u."employeeId",
+                u.email,
+                u.first_name,
+                u.last_name,
+                (u.first_name || ' ' || u.last_name) as full_name,
+                u.role,
+                u.phone,
+                u.account_status
+            FROM organizational_hierarchy oh
+            INNER JOIN users u ON oh.supervisor_id = u.user_id
+            WHERE oh.employee_id = :employeeId
+              AND oh.company_id = :companyId
+              AND oh.is_active = TRUE
+              AND u.account_status = 'active'
+            LIMIT 1
+        `;
+
+        const [supervisor] = await sequelize.query(query, {
+            replacements: { employeeId, companyId },
+            type: QueryTypes.SELECT
+        });
+
+        return supervisor;
+    }
+
+    /**
+     * Obtener manager de departamento
+     */
+    async _getDepartmentManager(departmentId, companyId) {
+        const query = `
+            SELECT
+                u.user_id,
+                u."employeeId",
+                u.email,
+                u.first_name,
+                u.last_name,
+                (u.first_name || ' ' || u.last_name) as full_name,
+                u.role,
+                u.phone,
+                u.account_status
+            FROM users u
+            WHERE u.department_id = :departmentId
+              AND u.company_id = :companyId
+              AND u.role IN ('manager', 'supervisor', 'admin')
+              AND u.account_status = 'active'
+            ORDER BY
+                CASE u.role
+                    WHEN 'manager' THEN 1
+                    WHEN 'supervisor' THEN 2
+                    WHEN 'admin' THEN 3
+                    ELSE 4
+                END
+            LIMIT 1
+        `;
+
+        const [manager] = await sequelize.query(query, {
+            replacements: { departmentId, companyId },
+            type: QueryTypes.SELECT
+        });
+
+        return manager;
+    }
+
+    /**
+     * Resolver grupo (departamento, shift, o custom)
+     */
+    async _resolveGroup(groupId, companyId) {
+        // Formato: "department:5" o "shift:3" o custom ID
+        const [groupType, id] = groupId.split(':');
+
+        if (groupType === 'department') {
+            return this._resolveDepartment(id, companyId);
+        } else if (groupType === 'shift') {
+            return this._resolveShift(id, companyId);
+        } else {
+            throw new Error(`Tipo de grupo no soportado: ${groupType}`);
+        }
+    }
+
+    /**
+     * Resolver todos los usuarios de un departamento
+     */
+    async _resolveDepartment(departmentId, companyId) {
+        const query = `
+            SELECT
+                user_id,
+                "employeeId",
+                email,
+                first_name,
+                last_name,
+                (first_name || ' ' || last_name) as full_name,
+                role,
+                department_id,
+                shift_id,
+                phone,
+                account_status,
+                email_verified
+            FROM users
+            WHERE department_id = :departmentId
+              AND company_id = :companyId
+              AND account_status = 'active'
+            ORDER BY first_name, last_name
+        `;
+
+        const users = await sequelize.query(query, {
+            replacements: { departmentId, companyId },
+            type: QueryTypes.SELECT
+        });
+
+        return users;
+    }
+
+    /**
+     * Resolver todos los usuarios de un shift
+     */
+    async _resolveShift(shiftId, companyId) {
+        const query = `
+            SELECT
+                user_id,
+                "employeeId",
+                email,
+                first_name,
+                last_name,
+                (first_name || ' ' || last_name) as full_name,
+                role,
+                department_id,
+                shift_id,
+                phone,
+                account_status,
+                email_verified
+            FROM users
+            WHERE shift_id = :shiftId
+              AND company_id = :companyId
+              AND account_status = 'active'
+            ORDER BY first_name, last_name
+        `;
+
+        const users = await sequelize.query(query, {
+            replacements: { shiftId, companyId },
+            type: QueryTypes.SELECT
+        });
+
+        return users;
+    }
+
+    /**
+     * Resolver dinámicamente basado en reglas custom
+     */
+    async _resolveDynamic(ruleKey, companyId, module, context) {
+        console.log(`[RecipientResolver] Resolución dinámica: ${ruleKey}`);
+
+        // TODO: Implementar lógica de reglas dinámicas
+        // Por ejemplo: "approver_for_amount_over_10000" → Buscar aprobador nivel 2
+        // Por ahora, stub que busca admin
+
+        return this._resolveRole('admin', companyId);
+    }
+
+    // ========================================================================
+    // MÉTODOS ESTÁTICOS - BACKWARD COMPATIBILITY (Legacy API)
+    // ========================================================================
+
+    /**
+     * Resolver destinatarios para un departamento (LEGACY)
+     * @deprecated Usar instance method resolve() en su lugar
      */
     static async resolve(companyId, departmentIdentifier, options = {}) {
+        console.warn('[RecipientResolver] DEPRECATED: Usar instance method resolve() en su lugar');
+
         const {
             maxRecipients = 5,
             includeUserDetails = true,
@@ -83,17 +470,14 @@ class NotificationRecipientResolver {
     }
 
     /**
-     * Resolver destinatarios para RRHH específicamente
-     * Atajo conveniente para el caso más común
+     * Resolver destinatarios para RRHH específicamente (LEGACY)
      */
     static async resolveRRHH(companyId, options = {}) {
         return this.resolve(companyId, 'RRHH', options);
     }
 
     /**
-     * Configurar destinatarios para un departamento
-     * @param {number} departmentId - ID del departamento
-     * @param {Array} recipients - Array de {userId, role: 'primary'|'backup'|'cc'}
+     * Configurar destinatarios para un departamento (LEGACY)
      */
     static async configureRecipients(departmentId, recipients) {
         const jsonRecipients = JSON.stringify(recipients.map(r => ({
@@ -114,10 +498,7 @@ class NotificationRecipientResolver {
     }
 
     /**
-     * Agregar alias para un departamento
-     * @param {number} companyId - ID de la empresa
-     * @param {number} departmentId - ID del departamento
-     * @param {string} alias - Alias a agregar (ej: "RRHH")
+     * Agregar alias para un departamento (LEGACY)
      */
     static async addAlias(companyId, departmentId, alias) {
         await sequelize.query(`
@@ -131,8 +512,7 @@ class NotificationRecipientResolver {
     }
 
     /**
-     * Obtener todos los destinatarios configurados para una empresa
-     * Útil para panel de administración
+     * Obtener todos los destinatarios configurados para una empresa (LEGACY)
      */
     static async getAllConfigured(companyId) {
         const results = await sequelize.query(`
@@ -166,7 +546,7 @@ class NotificationRecipientResolver {
     }
 
     // ========================================================================
-    // MÉTODOS PRIVADOS
+    // MÉTODOS PRIVADOS ESTÁTICOS (para Legacy API)
     // ========================================================================
 
     static async _findDepartment(companyId, normalizedIdentifier) {

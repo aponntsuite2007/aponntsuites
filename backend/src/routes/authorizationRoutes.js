@@ -225,7 +225,8 @@ router.post('/approve/:token', async (req, res) => {
       employeeData,
       authorizerData,
       status: 'approved',
-      notes
+      notes,
+      companyId: attendance.company_id  // 🔥 NCE: Pasar companyId
     });
 
     console.log(`✅ Late arrival APPROVED by ${authorizerData.first_name} ${authorizerData.last_name} for employee ${employeeData.first_name} ${employeeData.last_name}`);
@@ -459,7 +460,8 @@ router.post('/reject/:token', async (req, res) => {
       employeeData,
       authorizerData,
       status: 'rejected',
-      notes
+      notes,
+      companyId: attendance.company_id  // 🔥 NCE: Pasar companyId
     });
 
     console.log(`❌ Late arrival REJECTED by ${authorizerData.first_name} ${authorizerData.last_name} for employee ${employeeData.first_name} ${employeeData.last_name}`);

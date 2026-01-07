@@ -1,0 +1,1416 @@
+🧠 [SYNAPSE] Central Hub inicializado
+🧠 [BRAIN-ESCALATION] BrainEscalationService inicializado
+🧠 [NERVOUS-SYSTEM] Brain Nervous System inicializado
+🧠 [SYNAPSE] Conectado a Brain Nervous System
+🔍 [DEBUG] DATABASE_URL exists? false
+🔍 [DEBUG] DATABASE_URL value: NOT SET
+🔍 [DEBUG] NODE_ENV: development
+💻 Conectando a PostgreSQL local
+🐘 Configuración PostgreSQL - Sistema Optimizado
+
+════════════════════════════════════════════════════════════════════════════════
+🎯 TESTING PROFUNDO - Módulo: users
+════════════════════════════════════════════════════════════════════════════════
+
+⚙️ CONFIGURACIÓN:
+   Empresa: ISI (datos reales)
+   Usuario: RRHH-002
+   Browser: VISIBLE
+   Auto-healing: DESACTIVADO (para ver errores reales)
+
+════════════════════════════════════════════════════════════════════════════════
+
+🎯 [MASTER] Master Testing Orchestrator inicializado
+🔧 Inicializando ecosistema...
+
+
+════════════════════════════════════════════════════════════════════════════════
+🚀 [MASTER] INICIALIZANDO ECOSISTEMA DE TESTING COMPLETO
+════════════════════════════════════════════════════════════════════════════════
+
+📚 [MASTER] Inicializando SystemRegistry...
+🧠 [REGISTRY] Inicializando Sistema de Auto-Conocimiento...
+📊 [REGISTRY] Cargando 72 módulos desde BD...
+✅ [REGISTRY] 72 módulos cargados desde BD
+✅ [REGISTRY] 72 módulos enriquecidos con UI metadata desde archivo
+⚠️  [REGISTRY] 25 problemas de integridad detectados
+  - users: Dependencia biometric-enterprise declarada pero no existe en registry
+  - dashboard: Dependencia vacation declarada pero no existe en registry
+  - attendance: Dependencia vacation declarada pero no existe en registry
+  - attendance: Dependencia legal declarada pero no existe en registry
+  - legal-dashboard: Dependencia document-management declarada pero no existe en registry
+  - kiosks: Dependencia biometric-enterprise declarada pero no existe en registry
+  - employee-360: Dependencia medical-dashboard declarada pero no existe en registry
+  - medical: Dependencia notifications-enterprise declarada pero no existe en registry
+  - procurement-management: Dependencia finance declarada pero no existe en registry
+  - procurement-management: Dependencia siac-commercial declarada pero no existe en registry
+  - payroll-liquidation: Dependencia vacation declarada pero no existe en registry
+  - art-management: Dependencia medical-dashboard declarada pero no existe en registry
+  - compliance-dashboard: Dependencia legal declarada pero no existe en registry
+  - visitors: Dependencia access-control declarada pero no existe en registry
+  - visitors: Dependencia biometric-enterprise declarada pero no existe en registry
+  - emotional-analysis: Dependencia biometric-enterprise declarada pero no existe en registry
+  - sanctions-management: Dependencia legal declarada pero no existe en registry
+  - sla-tracking: Dependencia notifications-enterprise declarada pero no existe en registry
+  - audit-reports: Dependencia legal declarada pero no existe en registry
+  - company-account: Dependencia legal declarada pero no existe en registry
+  - siac-commercial-dashboard: Dependencia clientes declarada pero no existe en registry
+  - voice-platform: Dependencia PostgreSQL 12+ declarada pero no existe en registry
+  - voice-platform: Dependencia Python 3.8+ (NLP service) declarada pero no existe en registry
+  - voice-platform: Dependencia Min 50 empleados (recomendado) declarada pero no existe en registry
+  - procedures-manual: Dependencia notifications-enterprise declarada pero no existe en registry
+✅ [REGISTRY] 72 módulos registrados
+   ✅ 72 módulos cargados desde PostgreSQL
+
+🧠 [MASTER] Inicializando SYNAPSE Central Hub...
+🧠 [SYNAPSE] Conectado a Brain Nervous System
+   ✅ SYNAPSE Central Hub listo
+
+🔬 [MASTER] Conectando con Brain Nervous System...
+   ✅ Brain Nervous System conectado
+
+⚙️ [MASTER] Inicializando Phase4 Test Orchestrator...
+📋 [SCHEMA-VALIDATOR] Registry cargado: 72 módulos
+✅ [SCHEMA-VALIDATOR] Inicializado con SSOT
+   📦 Módulos cargados: 72
+   ✅ Phase4 Test Orchestrator listo
+
+🌐 [MASTER] Inicializando Frontend Collector...
+  🔧 [FRONTEND] Base URL: http://localhost:9999
+   ✅ Frontend Collector listo (http://localhost:9998)
+
+🏢 [MASTER] Obteniendo empresa test...
+   ✅ Empresa test: ISI (ID: 11)
+
+📋 [MASTER] Cargando configs SYNAPSE...
+   ✅ 60 configs cargados
+
+════════════════════════════════════════════════════════════════════════════════
+✅ [MASTER] ECOSISTEMA INICIALIZADO COMPLETAMENTE
+════════════════════════════════════════════════════════════════════════════════
+
+🧪 Testeando módulo: users
+
+
+════════════════════════════════════════════════════════════════════════════════
+🎯 [MASTER] INICIANDO TESTING COMPLETO E2E
+════════════════════════════════════════════════════════════════════════════════
+   Execution ID: 8e3f210b-4812-45b5-a21c-af0db454a218
+   Módulos a testear: users
+   Auto-healing: DESACTIVADO
+════════════════════════════════════════════════════════════════════════════════
+
+🔬 [MASTER] Iniciando monitoreo Brain Nervous System...
+
+================================================================================
+🧠 [NERVOUS-SYSTEM] INICIANDO SISTEMA NERVIOSO DEL BRAIN
+================================================================================
+🧠 [BRAIN-ESCALATION] Inicializando conexiones...
+[NOTIFICATION-UNIFIED] Servicio inicializado
+⚠️ [BRAIN-ESCALATION] AutonomousRepairAgent no disponible, continuando sin auto-repair
+✅ [BRAIN-ESCALATION] Conexiones inicializadas
+   👁️ Interceptores de errores configurados
+✅ [NERVOUS-SYSTEM] Sistema nervioso ACTIVO
+   🔍 Health checks: cada 60s
+   🧪 SSOT tests: cada 300s
+================================================================================
+
+   ✅ Brain monitoreando en background
+
+📋 [MASTER] 1 módulos comerciales para testear:
+
+   1. Gestión de Usuarios (users)
+
+
+────────────────────────────────────────────────────────────────────────────────
+🧪 [MASTER] MÓDULO 1/1: Gestión de Usuarios
+────────────────────────────────────────────────────────────────────────────────
+   🧪 Usando FrontendCollector REAL para testing completo...
+   🔍 Testing básico (FrontendCollector) para Gestión de Usuarios...
+   🌐 Base URL forzada: http://localhost:9998
+    🌐 [BROWSER] Abriendo navegador VISIBLE...
+    📐 [BROWSER] Viewport configurado a 1366x768 (responsive estándar)
+    🚫 [BROWSER] Cache control (native Playwright behavior)
+   🏢 Company ID seteado: 11
+   🔐 Login automático (isi)...
+    🔐 [LOGIN] Iniciando login automático...
+    📋 [LOGIN] Company ID recibido: 11
+      ❌ [UNKNOWN-ERROR EXCEPTION] Unexpected token ')'
+         📁 File: unknown:null:null
+      ⚠️  [401] http-401-unauthorized → http://localhost:9998/api/inbox/pending-badge
+      ❌ [HTTP-FAILED-TO-LOAD] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+         📁 File: pending-badge:null:null
+      ❌ [HTTP-404] Failed to load resource: the server responded with a status of 404 (Not Found)
+         📁 File: favicon.ico:null:null
+⚠️ [NERVOUS-SYSTEM] Health check: 1 problemas detectados
+
+================================================================================
+🔔 [BRAIN-ESCALATION] PROBLEMA DETECTADO - INC-1767719921471-wfozykz9b
+================================================================================
+   Tipo: health_check_failed
+   Modulo: system/eventLoop
+   Severidad: medium
+   Mensaje: eventLoop health check failed
+🧠 [BRAIN-ESCALATION] Analizando problema con Ollama...
+
+🧠 [OLLAMA DIAGNOSIS] Analizando test fallido: health_check_failed...
+
+❌ [DIAGNOSIS] Error en análisis Ollama: this.query is not a function
+🔍 [PATTERN DIAGNOSIS] Error en test E2E
+   💡 Diagnostico: Error en test E2E
+
+────────────────────────────────────────────────────────────────────────────────
+🚨 [BRAIN-ESCALATION] ESCALANDO INCIDENTE INC-1767719921471-wfozykz9b A SOPORTE
+────────────────────────────────────────────────────────────────────────────────
+   📋 Staff de soporte encontrado: 1 personas
+      - Dirección General (Gerente General, Nivel 1)
+   💾 Ticket TKT-1767719921500-TPHOI2 registrado
+❌ [BRAIN-ESCALATION] Error creando notificacion: Error
+    at Query.run (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\sequelize\lib\dialects\postgres\query.js:50:25)
+    at C:\Bio\sistema_asistencia_biometrico\backend\node_modules\sequelize\lib\sequelize.js:315:28
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BrainEscalationService.createSupportNotification (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:616:17)
+    at async BrainEscalationService.escalateToSupport (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:386:13)
+    at async BrainEscalationService.processIncident (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:225:13)
+    at async BrainEscalationService.onProblemDetected (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:154:9)
+    at async BrainNervousSystem.runHealthCheck (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainNervousSystem.js:378:21) {
+  name: 'SequelizeDatabaseError',
+  parent: error: la sintaxis de entrada no es válida para tipo uuid: «brain_escalation_service»
+      at Parser.parseErrorMessage (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:285:98)
+      at Parser.handlePacket (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:122:29)
+      at Parser.parse (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:35:38)
+      at Socket.<anonymous> (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\index.js:11:42)
+      at Socket.emit (node:events:519:28)
+      at addChunk (node:internal/streams/readable:561:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+      at Readable.push (node:internal/streams/readable:392:5)
+      at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+      at TCP.callbackTrampoline (node:internal/async_hooks:130:17) {
+    length: 143,
+    severity: 'ERROR',
+    code: '22P02',
+    detail: undefined,
+    hint: undefined,
+    position: '726',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'uuid.c',
+    line: '136',
+    routine: 'string_to_uuid',
+    sql: 'INSERT INTO unified_notifications (\n' +
+      '                        company_id, thread_id,\n' +
+      '                        origin_type, origin_id, origin_name,\n' +
+      '                        recipient_type, recipient_id, recipient_name,\n' +
+      '                        category, module, notification_type, priority,\n' +
+      '                        title, message, short_message,\n' +
+      '                        requires_action, metadata, created_by\n' +
+      '                    ) VALUES (\n' +
+      '                        NULL, $1,\n' +
+      "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+      "                        'staff', $2, $3,\n" +
+      "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+      '                        $5, $6, $7,\n' +
+      "                        TRUE, $8, 'brain_escalation_service'\n" +
+      '                    )',
+    parameters: [
+      'TKT-1767719921500-TPHOI2',
+      'd68e095e-8761-4848-9040-4a5b3361caed',
+      'Dirección General',
+      'normal',
+      '[BRAIN AUTO-DETECT] health_check_failed en system/eventLoop',
+      '## Problema Detectado Automaticamente por Brain\n' +
+        '\n' +
+        '**Tipo:** health_check_failed\n' +
+        '**Modulo:** system/eventLoop\n' +
+        '**Severidad:** medium\n' +
+        '**Detectado:** 2026-01-06T17:18:41.471Z\n' +
+        '\n' +
+        '### Mensaje de Error\n' +
+        '```\n' +
+        'eventLoop health check failed\n' +
+        '```\n' +
+        '\n' +
+        '### Diagnostico IA (Ollama)\n' +
+        '**Causa raiz probable:** Error en test E2E\n' +
+        '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+        '**Confianza:** N/A\n' +
+        '\n' +
+        '### Intentos de Auto-Reparacion\n' +
+        'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+        '\n' +
+        '### Timeline\n' +
+        '- **detected** (2:18:41 p.m.)\n' +
+        '- **diagnosis** (2:18:41 p.m.)\n' +
+        '- **escalation_started** (2:18:41 p.m.)',
+      'Incidente Brain #INC-17677199',
+      '{"incidentId":"INC-1767719921471-wfozykz9b","ticketId":"TKT-1767719921500-TPHOI2","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/eventLoop\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\neventLoop health check failed\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: medium"}'
+    ]
+  },
+  original: error: la sintaxis de entrada no es válida para tipo uuid: «brain_escalation_service»
+      at Parser.parseErrorMessage (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:285:98)
+      at Parser.handlePacket (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:122:29)
+      at Parser.parse (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:35:38)
+      at Socket.<anonymous> (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\index.js:11:42)
+      at Socket.emit (node:events:519:28)
+      at addChunk (node:internal/streams/readable:561:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+      at Readable.push (node:internal/streams/readable:392:5)
+      at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+      at TCP.callbackTrampoline (node:internal/async_hooks:130:17) {
+    length: 143,
+    severity: 'ERROR',
+    code: '22P02',
+    detail: undefined,
+    hint: undefined,
+    position: '726',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'uuid.c',
+    line: '136',
+    routine: 'string_to_uuid',
+    sql: 'INSERT INTO unified_notifications (\n' +
+      '                        company_id, thread_id,\n' +
+      '                        origin_type, origin_id, origin_name,\n' +
+      '                        recipient_type, recipient_id, recipient_name,\n' +
+      '                        category, module, notification_type, priority,\n' +
+      '                        title, message, short_message,\n' +
+      '                        requires_action, metadata, created_by\n' +
+      '                    ) VALUES (\n' +
+      '                        NULL, $1,\n' +
+      "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+      "                        'staff', $2, $3,\n" +
+      "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+      '                        $5, $6, $7,\n' +
+      "                        TRUE, $8, 'brain_escalation_service'\n" +
+      '                    )',
+    parameters: [
+      'TKT-1767719921500-TPHOI2',
+      'd68e095e-8761-4848-9040-4a5b3361caed',
+      'Dirección General',
+      'normal',
+      '[BRAIN AUTO-DETECT] health_check_failed en system/eventLoop',
+      '## Problema Detectado Automaticamente por Brain\n' +
+        '\n' +
+        '**Tipo:** health_check_failed\n' +
+        '**Modulo:** system/eventLoop\n' +
+        '**Severidad:** medium\n' +
+        '**Detectado:** 2026-01-06T17:18:41.471Z\n' +
+        '\n' +
+        '### Mensaje de Error\n' +
+        '```\n' +
+        'eventLoop health check failed\n' +
+        '```\n' +
+        '\n' +
+        '### Diagnostico IA (Ollama)\n' +
+        '**Causa raiz probable:** Error en test E2E\n' +
+        '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+        '**Confianza:** N/A\n' +
+        '\n' +
+        '### Intentos de Auto-Reparacion\n' +
+        'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+        '\n' +
+        '### Timeline\n' +
+        '- **detected** (2:18:41 p.m.)\n' +
+        '- **diagnosis** (2:18:41 p.m.)\n' +
+        '- **escalation_started** (2:18:41 p.m.)',
+      'Incidente Brain #INC-17677199',
+      '{"incidentId":"INC-1767719921471-wfozykz9b","ticketId":"TKT-1767719921500-TPHOI2","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/eventLoop\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\neventLoop health check failed\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: medium"}'
+    ]
+  },
+  sql: 'INSERT INTO unified_notifications (\n' +
+    '                        company_id, thread_id,\n' +
+    '                        origin_type, origin_id, origin_name,\n' +
+    '                        recipient_type, recipient_id, recipient_name,\n' +
+    '                        category, module, notification_type, priority,\n' +
+    '                        title, message, short_message,\n' +
+    '                        requires_action, metadata, created_by\n' +
+    '                    ) VALUES (\n' +
+    '                        NULL, $1,\n' +
+    "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+    "                        'staff', $2, $3,\n" +
+    "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+    '                        $5, $6, $7,\n' +
+    "                        TRUE, $8, 'brain_escalation_service'\n" +
+    '                    )',
+  parameters: [
+    'TKT-1767719921500-TPHOI2',
+    'd68e095e-8761-4848-9040-4a5b3361caed',
+    'Dirección General',
+    'normal',
+    '[BRAIN AUTO-DETECT] health_check_failed en system/eventLoop',
+    '## Problema Detectado Automaticamente por Brain\n' +
+      '\n' +
+      '**Tipo:** health_check_failed\n' +
+      '**Modulo:** system/eventLoop\n' +
+      '**Severidad:** medium\n' +
+      '**Detectado:** 2026-01-06T17:18:41.471Z\n' +
+      '\n' +
+      '### Mensaje de Error\n' +
+      '```\n' +
+      'eventLoop health check failed\n' +
+      '```\n' +
+      '\n' +
+      '### Diagnostico IA (Ollama)\n' +
+      '**Causa raiz probable:** Error en test E2E\n' +
+      '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+      '**Confianza:** N/A\n' +
+      '\n' +
+      '### Intentos de Auto-Reparacion\n' +
+      'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+      '\n' +
+      '### Timeline\n' +
+      '- **detected** (2:18:41 p.m.)\n' +
+      '- **diagnosis** (2:18:41 p.m.)\n' +
+      '- **escalation_started** (2:18:41 p.m.)',
+    'Incidente Brain #INC-17677199',
+    '{"incidentId":"INC-1767719921471-wfozykz9b","ticketId":"TKT-1767719921500-TPHOI2","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/eventLoop\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\neventLoop health check failed\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: medium"}'
+  ]
+}
+📧 [APONNT] Enviando email tipo: transactional a: aponntsuite@gmail.com
+✅ [EMAIL-CONFIG] Tabla de auditoría inicializada
+❌ [EMAIL-CONFIG] Error desencriptando: Formato de password encriptado inválido
+❌ [EMAIL-CONFIG] Error obteniendo config transactional: Error: Error desencriptando password
+    at EmailConfigService.decrypt (C:\Bio\sistema_asistencia_biometrico\backend\src\services\EmailConfigService.js:83:19)
+    at EmailConfigService.getConfigByType (C:\Bio\sistema_asistencia_biometrico\backend\src\services\EmailConfigService.js:194:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async EmailService._getAponntTransporter (C:\Bio\sistema_asistencia_biometrico\backend\src\services\EmailService.js:496:31)
+    at async EmailService.sendFromAponnt (C:\Bio\sistema_asistencia_biometrico\backend\src\services\EmailService.js:62:33)
+    at async BrainEscalationService.sendEscalationEmail (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:667:17)
+    at async BrainEscalationService.escalateToSupport (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:389:13)
+    at async BrainEscalationService.processIncident (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:225:13)
+    at async BrainEscalationService.onProblemDetected (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:154:9)
+    at async BrainNervousSystem.runHealthCheck (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainNervousSystem.js:378:21)
+⚠️ [EMAIL] No se pudo obtener config de EmailConfigService, usando config directa: Error desencriptando password
+✅ [EMAIL] Transporter creado para: transactional
+❌ [APONNT] Error enviando email: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-121f24984b0sm6564084c88.14 - gsmtp
+❌ Error logging email: Named replacement ":has_attachments" has no entry in the replacement map.
+❌ [BRAIN-ESCALATION] Error enviando email: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-121f24984b0sm6564084c88.14 - gsmtp
+✅ [BRAIN-ESCALATION] Escalamiento completado - Ticket: TKT-1767719921500-TPHOI2
+    📋 Obteniendo slug de empresa con company_id: 11
+    ✅ Empresa encontrada: isi
+    ✅ Formulario de login cargado
+    ⏳ Esperando que dropdown tenga opciones cargadas...
+    ✅ Dropdown con opciones cargadas
+    🏢 Seleccionando empresa: isi
+    ⏳ Esperando que JavaScript termine de ejecutarse...
+    ⏳ Esperando que se habilite campo de usuario...
+    ✅ Campo de usuario habilitado correctamente
+    👤 Ingresando usuario: soporte
+    ✅ Usuario ingresado: "soporte"
+    ⏳ Esperando que se habilite campo de contraseña...
+    ✅ Campo de contraseña habilitado correctamente
+    🔑 Ingresando contraseña: admin123
+    🚀 Haciendo click en botón Ingresar...
+    ✅ Botón de login habilitado correctamente
+    ⏳ Esperando a que se complete la autenticación...
+    ✅ [LOGIN] Login completado exitosamente - Empresa: ISI
+    🤖 Cerrando modal del AI Assistant si está abierto...
+   🧪 Ejecutando testModule() del FrontendCollector...
+      1️⃣ Navegando a módulo users...
+      📦 [DYNAMIC-LOAD] Esperando carga dinámica del módulo users...
+      ✅ [DYNAMIC-LOAD] Módulo users cargado (loaded_now)
+      🚀 [FIX-9] Llamando showModuleContent('users', 'Gestión de Usuarios')...
+      ✅ [FIX-9] Módulo users inicializado exitosamente con showModuleContent()
+      🔴 [ERROR DETECTADO] 2 mensajes de error visibles:
+         ❌ "🎤
+                            Voice Platform 🎤
+                            Sistema de Experiencias del Empleado con IA - Captura sugerencias, problemas y soluciones. Clustering semántico, gamificaci" (id: N/A)
+         ❌ "Sistema de Experiencias del Empleado con IA - Captura sugerencias, problemas y soluciones. Clustering semántico, gamificación y analytics." (id: N/A)
+      🔍 [DEBUG-CONTENT] Estado de #mainContent:
+         Existe: true
+         HTML length: 20020 chars
+         Text length: 7129 chars
+         Children: 1
+         Classes: "content authenticated"
+         HTML preview: "
+        <div class="users-dashboard">
+            <!-- Fila 1: Métricas compactas + Botón Agregar -->
+            <div class="users-top-bar">
+                <div class="users-stats-inline" id="user-stats">
+                    <div class="users-stat-mini purple">
+                        <i class="fas fa-users" style="color: #8b5cf6;"></i>
+                        <span class="stat-value" id="total-users">25</span>
+                        <span class="stat-label">Total</span>
+                    "
+         Text preview: "
+        
+            
+            
+                
+                    
+                        
+                        25
+                        Total
+                    
+                    
+                        
+                        22
+                        Activos
+                  "
+      ✅ [VERIFICATION] Módulo users APROBADO (7129 chars, table=true, button=true, card=false)
+      2️⃣ Verificando carga de lista...
+      3️⃣ Testeando botón Agregar...
+      4️⃣ [CREATE] Testeando creación de registro...
+        🔹 Abriendo modal de agregar...
+        📋 DEBUG: Buscando botón "Agregar"...
+        ✅ DEBUG: Botón "Agregar" encontrado, haciendo click...
+        ❌ DEBUG: Error en click: elementHandle.click: Timeout 5000ms exceeded.
+Call log:
+[2m  - attempting click action[22m
+[2m    - waiting for element to be visible, enabled and stable[22m
+[2m    - element is visible, enabled and stable[22m
+[2m    - scrolling into view if needed[22m
+[2m    - done scrolling[22m
+[2m    - <input type="text" required="" id="newUserName" placeholder="Ej: Juan Pérez"/> from <div id="userModal">…</div> subtree intercepts pointer events[22m
+[2m  - retrying click action[22m
+[2m    - waiting for element to be visible, enabled and stable[22m
+[2m    - element is visible, enabled and stable[22m
+[2m    - scrolling into view if needed[22m
+[2m    - done scrolling[22m
+[2m    - <select id="newUserRole">…</select> from <div id="userModal">…</div> subtree intercepts pointer events[22m
+[2m  - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    - waiting for element to be visible, enabled and stable[22m
+[2m    - element is visible, enabled and stable[22m
+[2m    - scrolling into view if needed[22m
+[2m    - done scrolling[22m
+[2m    - <div>…</div> from <div id="userModal">…</div> subtree intercepts pointer events[22m
+[2m  2 × retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div id="userModal">…</div> intercepts pointer events[22m
+[2m  2 × retrying click action[22m
+[2m      - waiting 500ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <select id="newUserRole">…</select> from <div id="userModal">…</div> subtree intercepts pointer events[22m
+[2m    - retrying click action[22m
+[2m      - waiting 500ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div>…</div> from <div id="userModal">…</div> subtree intercepts pointer events[22m
+[2m    - retrying click action[22m
+[2m      - waiting 500ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div id="userModal">…</div> intercepts pointer events[22m
+[2m    - retrying click action[22m
+[2m      - waiting 500ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div id="userModal">…</div> intercepts pointer events[22m
+[2m  - retrying click action[22m
+[2m    - waiting 500ms[22m
+
+        🔄 DEBUG: Reintentando click con force: true...
+        ✅ DEBUG: Click forzado realizado
+        ✅ DEBUG: Timeout completado, modal debería estar abierto
+        🔹 Scrolleando modal HACIA ARRIBA para que campos estén visibles...
+        🔹 Llenando formulario...
+        🔹 Llenando 11 campos...
+        📋 fillFormFields result: { success: true }
+        ✅ Formulario llenado correctamente
+        🔹 Haciendo scroll dentro del modal para ver botones...
+        🔹 Guardando registro...
+        🔹 Verificando persistencia en BD...
+        ❌ Error verificando persistencia: no existe la relación «undefined»
+      5️⃣ [READ] Verificando registro en lista...
+        🔹 Recargando lista...
+      6️⃣ [UPDATE] Testeando edición de registro...
+        🔹 Abriendo modal de editar para ID undefined...
+⚠️ [NERVOUS-SYSTEM] Health check: 2 problemas detectados
+
+================================================================================
+🔔 [BRAIN-ESCALATION] PROBLEMA DETECTADO - INC-1767719976552-gyi2uk6e6
+================================================================================
+   Tipo: health_check_failed
+   Modulo: system/memory
+   Severidad: high
+   Mensaje: High memory usage: 95.0% (53MB / 56MB)
+🧠 [BRAIN-ESCALATION] Analizando problema con Ollama...
+
+🧠 [OLLAMA DIAGNOSIS] Analizando test fallido: health_check_failed...
+
+❌ [DIAGNOSIS] Error en análisis Ollama: this.query is not a function
+🔍 [PATTERN DIAGNOSIS] Error en test E2E
+   💡 Diagnostico: Error en test E2E
+
+────────────────────────────────────────────────────────────────────────────────
+🚨 [BRAIN-ESCALATION] ESCALANDO INCIDENTE INC-1767719976552-gyi2uk6e6 A SOPORTE
+────────────────────────────────────────────────────────────────────────────────
+   📋 Staff de soporte encontrado: 1 personas
+      - Dirección General (Gerente General, Nivel 1)
+   💾 Ticket TKT-1767719976570-V9PY6U registrado
+❌ [BRAIN-ESCALATION] Error creando notificacion: Error
+    at Query.run (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\sequelize\lib\dialects\postgres\query.js:50:25)
+    at C:\Bio\sistema_asistencia_biometrico\backend\node_modules\sequelize\lib\sequelize.js:315:28
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BrainEscalationService.createSupportNotification (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:616:17)
+    at async BrainEscalationService.escalateToSupport (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:386:13)
+    at async BrainEscalationService.processIncident (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:225:13)
+    at async BrainEscalationService.onProblemDetected (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:154:9)
+    at async BrainNervousSystem.runHealthCheck (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainNervousSystem.js:378:21)
+    at async Timeout._onTimeout (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainNervousSystem.js:351:13) {
+  name: 'SequelizeDatabaseError',
+  parent: error: la sintaxis de entrada no es válida para tipo uuid: «brain_escalation_service»
+      at Parser.parseErrorMessage (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:285:98)
+      at Parser.handlePacket (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:122:29)
+      at Parser.parse (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:35:38)
+      at Socket.<anonymous> (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\index.js:11:42)
+      at Socket.emit (node:events:519:28)
+      at addChunk (node:internal/streams/readable:561:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+      at Readable.push (node:internal/streams/readable:392:5)
+      at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+      at TCP.callbackTrampoline (node:internal/async_hooks:130:17) {
+    length: 143,
+    severity: 'ERROR',
+    code: '22P02',
+    detail: undefined,
+    hint: undefined,
+    position: '726',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'uuid.c',
+    line: '136',
+    routine: 'string_to_uuid',
+    sql: 'INSERT INTO unified_notifications (\n' +
+      '                        company_id, thread_id,\n' +
+      '                        origin_type, origin_id, origin_name,\n' +
+      '                        recipient_type, recipient_id, recipient_name,\n' +
+      '                        category, module, notification_type, priority,\n' +
+      '                        title, message, short_message,\n' +
+      '                        requires_action, metadata, created_by\n' +
+      '                    ) VALUES (\n' +
+      '                        NULL, $1,\n' +
+      "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+      "                        'staff', $2, $3,\n" +
+      "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+      '                        $5, $6, $7,\n' +
+      "                        TRUE, $8, 'brain_escalation_service'\n" +
+      '                    )',
+    parameters: [
+      'TKT-1767719976570-V9PY6U',
+      'd68e095e-8761-4848-9040-4a5b3361caed',
+      'Dirección General',
+      'high',
+      '[BRAIN AUTO-DETECT] health_check_failed en system/memory',
+      '## Problema Detectado Automaticamente por Brain\n' +
+        '\n' +
+        '**Tipo:** health_check_failed\n' +
+        '**Modulo:** system/memory\n' +
+        '**Severidad:** high\n' +
+        '**Detectado:** 2026-01-06T17:19:36.552Z\n' +
+        '\n' +
+        '### Mensaje de Error\n' +
+        '```\n' +
+        'High memory usage: 95.0% (53MB / 56MB)\n' +
+        '```\n' +
+        '\n' +
+        '### Diagnostico IA (Ollama)\n' +
+        '**Causa raiz probable:** Error en test E2E\n' +
+        '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+        '**Confianza:** N/A\n' +
+        '\n' +
+        '### Intentos de Auto-Reparacion\n' +
+        'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+        '\n' +
+        '### Timeline\n' +
+        '- **detected** (2:19:36 p.m.)\n' +
+        '- **diagnosis** (2:19:36 p.m.)\n' +
+        '- **escalation_started** (2:19:36 p.m.)',
+      'Incidente Brain #INC-17677199',
+      '{"incidentId":"INC-1767719976552-gyi2uk6e6","ticketId":"TKT-1767719976570-V9PY6U","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/memory\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\nHigh memory usage: 95.0% (53MB / 56MB)\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: high"}'
+    ]
+  },
+  original: error: la sintaxis de entrada no es válida para tipo uuid: «brain_escalation_service»
+      at Parser.parseErrorMessage (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:285:98)
+      at Parser.handlePacket (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:122:29)
+      at Parser.parse (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:35:38)
+      at Socket.<anonymous> (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\index.js:11:42)
+      at Socket.emit (node:events:519:28)
+      at addChunk (node:internal/streams/readable:561:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+      at Readable.push (node:internal/streams/readable:392:5)
+      at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+      at TCP.callbackTrampoline (node:internal/async_hooks:130:17) {
+    length: 143,
+    severity: 'ERROR',
+    code: '22P02',
+    detail: undefined,
+    hint: undefined,
+    position: '726',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'uuid.c',
+    line: '136',
+    routine: 'string_to_uuid',
+    sql: 'INSERT INTO unified_notifications (\n' +
+      '                        company_id, thread_id,\n' +
+      '                        origin_type, origin_id, origin_name,\n' +
+      '                        recipient_type, recipient_id, recipient_name,\n' +
+      '                        category, module, notification_type, priority,\n' +
+      '                        title, message, short_message,\n' +
+      '                        requires_action, metadata, created_by\n' +
+      '                    ) VALUES (\n' +
+      '                        NULL, $1,\n' +
+      "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+      "                        'staff', $2, $3,\n" +
+      "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+      '                        $5, $6, $7,\n' +
+      "                        TRUE, $8, 'brain_escalation_service'\n" +
+      '                    )',
+    parameters: [
+      'TKT-1767719976570-V9PY6U',
+      'd68e095e-8761-4848-9040-4a5b3361caed',
+      'Dirección General',
+      'high',
+      '[BRAIN AUTO-DETECT] health_check_failed en system/memory',
+      '## Problema Detectado Automaticamente por Brain\n' +
+        '\n' +
+        '**Tipo:** health_check_failed\n' +
+        '**Modulo:** system/memory\n' +
+        '**Severidad:** high\n' +
+        '**Detectado:** 2026-01-06T17:19:36.552Z\n' +
+        '\n' +
+        '### Mensaje de Error\n' +
+        '```\n' +
+        'High memory usage: 95.0% (53MB / 56MB)\n' +
+        '```\n' +
+        '\n' +
+        '### Diagnostico IA (Ollama)\n' +
+        '**Causa raiz probable:** Error en test E2E\n' +
+        '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+        '**Confianza:** N/A\n' +
+        '\n' +
+        '### Intentos de Auto-Reparacion\n' +
+        'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+        '\n' +
+        '### Timeline\n' +
+        '- **detected** (2:19:36 p.m.)\n' +
+        '- **diagnosis** (2:19:36 p.m.)\n' +
+        '- **escalation_started** (2:19:36 p.m.)',
+      'Incidente Brain #INC-17677199',
+      '{"incidentId":"INC-1767719976552-gyi2uk6e6","ticketId":"TKT-1767719976570-V9PY6U","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/memory\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\nHigh memory usage: 95.0% (53MB / 56MB)\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: high"}'
+    ]
+  },
+  sql: 'INSERT INTO unified_notifications (\n' +
+    '                        company_id, thread_id,\n' +
+    '                        origin_type, origin_id, origin_name,\n' +
+    '                        recipient_type, recipient_id, recipient_name,\n' +
+    '                        category, module, notification_type, priority,\n' +
+    '                        title, message, short_message,\n' +
+    '                        requires_action, metadata, created_by\n' +
+    '                    ) VALUES (\n' +
+    '                        NULL, $1,\n' +
+    "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+    "                        'staff', $2, $3,\n" +
+    "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+    '                        $5, $6, $7,\n' +
+    "                        TRUE, $8, 'brain_escalation_service'\n" +
+    '                    )',
+  parameters: [
+    'TKT-1767719976570-V9PY6U',
+    'd68e095e-8761-4848-9040-4a5b3361caed',
+    'Dirección General',
+    'high',
+    '[BRAIN AUTO-DETECT] health_check_failed en system/memory',
+    '## Problema Detectado Automaticamente por Brain\n' +
+      '\n' +
+      '**Tipo:** health_check_failed\n' +
+      '**Modulo:** system/memory\n' +
+      '**Severidad:** high\n' +
+      '**Detectado:** 2026-01-06T17:19:36.552Z\n' +
+      '\n' +
+      '### Mensaje de Error\n' +
+      '```\n' +
+      'High memory usage: 95.0% (53MB / 56MB)\n' +
+      '```\n' +
+      '\n' +
+      '### Diagnostico IA (Ollama)\n' +
+      '**Causa raiz probable:** Error en test E2E\n' +
+      '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+      '**Confianza:** N/A\n' +
+      '\n' +
+      '### Intentos de Auto-Reparacion\n' +
+      'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+      '\n' +
+      '### Timeline\n' +
+      '- **detected** (2:19:36 p.m.)\n' +
+      '- **diagnosis** (2:19:36 p.m.)\n' +
+      '- **escalation_started** (2:19:36 p.m.)',
+    'Incidente Brain #INC-17677199',
+    '{"incidentId":"INC-1767719976552-gyi2uk6e6","ticketId":"TKT-1767719976570-V9PY6U","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/memory\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\nHigh memory usage: 95.0% (53MB / 56MB)\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: high"}'
+  ]
+}
+📧 [APONNT] Enviando email tipo: transactional a: aponntsuite@gmail.com
+❌ [APONNT] Error enviando email: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2b1707da231sm4498924eec.34 - gsmtp
+❌ Error logging email: Named replacement ":has_attachments" has no entry in the replacement map.
+❌ [BRAIN-ESCALATION] Error enviando email: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2b1707da231sm4498924eec.34 - gsmtp
+✅ [BRAIN-ESCALATION] Escalamiento completado - Ticket: TKT-1767719976570-V9PY6U
+
+================================================================================
+🔔 [BRAIN-ESCALATION] PROBLEMA DETECTADO - INC-1767719977622-dcfqv29wh
+================================================================================
+   Tipo: health_check_failed
+   Modulo: system/eventLoop
+   Severidad: medium
+   Mensaje: eventLoop health check failed
+🧠 [BRAIN-ESCALATION] Analizando problema con Ollama...
+
+🧠 [OLLAMA DIAGNOSIS] Analizando test fallido: health_check_failed...
+
+❌ [DIAGNOSIS] Error en análisis Ollama: this.query is not a function
+🔍 [PATTERN DIAGNOSIS] Error en test E2E
+   💡 Diagnostico: Error en test E2E
+
+────────────────────────────────────────────────────────────────────────────────
+🚨 [BRAIN-ESCALATION] ESCALANDO INCIDENTE INC-1767719977622-dcfqv29wh A SOPORTE
+────────────────────────────────────────────────────────────────────────────────
+   📋 Staff de soporte encontrado: 1 personas
+      - Dirección General (Gerente General, Nivel 1)
+   💾 Ticket TKT-1767719977625-0G8ZUS registrado
+❌ [BRAIN-ESCALATION] Error creando notificacion: Error
+    at Query.run (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\sequelize\lib\dialects\postgres\query.js:50:25)
+    at C:\Bio\sistema_asistencia_biometrico\backend\node_modules\sequelize\lib\sequelize.js:315:28
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BrainEscalationService.createSupportNotification (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:616:17)
+    at async BrainEscalationService.escalateToSupport (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:386:13)
+    at async BrainEscalationService.processIncident (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:225:13)
+    at async BrainEscalationService.onProblemDetected (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:154:9)
+    at async BrainNervousSystem.runHealthCheck (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainNervousSystem.js:378:21)
+    at async Timeout._onTimeout (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainNervousSystem.js:351:13) {
+  name: 'SequelizeDatabaseError',
+  parent: error: la sintaxis de entrada no es válida para tipo uuid: «brain_escalation_service»
+      at Parser.parseErrorMessage (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:285:98)
+      at Parser.handlePacket (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:122:29)
+      at Parser.parse (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:35:38)
+      at Socket.<anonymous> (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\index.js:11:42)
+      at Socket.emit (node:events:519:28)
+      at addChunk (node:internal/streams/readable:561:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+      at Readable.push (node:internal/streams/readable:392:5)
+      at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+      at TCP.callbackTrampoline (node:internal/async_hooks:130:17) {
+    length: 143,
+    severity: 'ERROR',
+    code: '22P02',
+    detail: undefined,
+    hint: undefined,
+    position: '726',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'uuid.c',
+    line: '136',
+    routine: 'string_to_uuid',
+    sql: 'INSERT INTO unified_notifications (\n' +
+      '                        company_id, thread_id,\n' +
+      '                        origin_type, origin_id, origin_name,\n' +
+      '                        recipient_type, recipient_id, recipient_name,\n' +
+      '                        category, module, notification_type, priority,\n' +
+      '                        title, message, short_message,\n' +
+      '                        requires_action, metadata, created_by\n' +
+      '                    ) VALUES (\n' +
+      '                        NULL, $1,\n' +
+      "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+      "                        'staff', $2, $3,\n" +
+      "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+      '                        $5, $6, $7,\n' +
+      "                        TRUE, $8, 'brain_escalation_service'\n" +
+      '                    )',
+    parameters: [
+      'TKT-1767719977625-0G8ZUS',
+      'd68e095e-8761-4848-9040-4a5b3361caed',
+      'Dirección General',
+      'normal',
+      '[BRAIN AUTO-DETECT] health_check_failed en system/eventLoop',
+      '## Problema Detectado Automaticamente por Brain\n' +
+        '\n' +
+        '**Tipo:** health_check_failed\n' +
+        '**Modulo:** system/eventLoop\n' +
+        '**Severidad:** medium\n' +
+        '**Detectado:** 2026-01-06T17:19:37.622Z\n' +
+        '\n' +
+        '### Mensaje de Error\n' +
+        '```\n' +
+        'eventLoop health check failed\n' +
+        '```\n' +
+        '\n' +
+        '### Diagnostico IA (Ollama)\n' +
+        '**Causa raiz probable:** Error en test E2E\n' +
+        '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+        '**Confianza:** N/A\n' +
+        '\n' +
+        '### Intentos de Auto-Reparacion\n' +
+        'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+        '\n' +
+        '### Timeline\n' +
+        '- **detected** (2:19:37 p.m.)\n' +
+        '- **diagnosis** (2:19:37 p.m.)\n' +
+        '- **escalation_started** (2:19:37 p.m.)',
+      'Incidente Brain #INC-17677199',
+      '{"incidentId":"INC-1767719977622-dcfqv29wh","ticketId":"TKT-1767719977625-0G8ZUS","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/eventLoop\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\neventLoop health check failed\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: medium"}'
+    ]
+  },
+  original: error: la sintaxis de entrada no es válida para tipo uuid: «brain_escalation_service»
+      at Parser.parseErrorMessage (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:285:98)
+      at Parser.handlePacket (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:122:29)
+      at Parser.parse (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:35:38)
+      at Socket.<anonymous> (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\index.js:11:42)
+      at Socket.emit (node:events:519:28)
+      at addChunk (node:internal/streams/readable:561:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+      at Readable.push (node:internal/streams/readable:392:5)
+      at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+      at TCP.callbackTrampoline (node:internal/async_hooks:130:17) {
+    length: 143,
+    severity: 'ERROR',
+    code: '22P02',
+    detail: undefined,
+    hint: undefined,
+    position: '726',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'uuid.c',
+    line: '136',
+    routine: 'string_to_uuid',
+    sql: 'INSERT INTO unified_notifications (\n' +
+      '                        company_id, thread_id,\n' +
+      '                        origin_type, origin_id, origin_name,\n' +
+      '                        recipient_type, recipient_id, recipient_name,\n' +
+      '                        category, module, notification_type, priority,\n' +
+      '                        title, message, short_message,\n' +
+      '                        requires_action, metadata, created_by\n' +
+      '                    ) VALUES (\n' +
+      '                        NULL, $1,\n' +
+      "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+      "                        'staff', $2, $3,\n" +
+      "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+      '                        $5, $6, $7,\n' +
+      "                        TRUE, $8, 'brain_escalation_service'\n" +
+      '                    )',
+    parameters: [
+      'TKT-1767719977625-0G8ZUS',
+      'd68e095e-8761-4848-9040-4a5b3361caed',
+      'Dirección General',
+      'normal',
+      '[BRAIN AUTO-DETECT] health_check_failed en system/eventLoop',
+      '## Problema Detectado Automaticamente por Brain\n' +
+        '\n' +
+        '**Tipo:** health_check_failed\n' +
+        '**Modulo:** system/eventLoop\n' +
+        '**Severidad:** medium\n' +
+        '**Detectado:** 2026-01-06T17:19:37.622Z\n' +
+        '\n' +
+        '### Mensaje de Error\n' +
+        '```\n' +
+        'eventLoop health check failed\n' +
+        '```\n' +
+        '\n' +
+        '### Diagnostico IA (Ollama)\n' +
+        '**Causa raiz probable:** Error en test E2E\n' +
+        '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+        '**Confianza:** N/A\n' +
+        '\n' +
+        '### Intentos de Auto-Reparacion\n' +
+        'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+        '\n' +
+        '### Timeline\n' +
+        '- **detected** (2:19:37 p.m.)\n' +
+        '- **diagnosis** (2:19:37 p.m.)\n' +
+        '- **escalation_started** (2:19:37 p.m.)',
+      'Incidente Brain #INC-17677199',
+      '{"incidentId":"INC-1767719977622-dcfqv29wh","ticketId":"TKT-1767719977625-0G8ZUS","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/eventLoop\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\neventLoop health check failed\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: medium"}'
+    ]
+  },
+  sql: 'INSERT INTO unified_notifications (\n' +
+    '                        company_id, thread_id,\n' +
+    '                        origin_type, origin_id, origin_name,\n' +
+    '                        recipient_type, recipient_id, recipient_name,\n' +
+    '                        category, module, notification_type, priority,\n' +
+    '                        title, message, short_message,\n' +
+    '                        requires_action, metadata, created_by\n' +
+    '                    ) VALUES (\n' +
+    '                        NULL, $1,\n' +
+    "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+    "                        'staff', $2, $3,\n" +
+    "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+    '                        $5, $6, $7,\n' +
+    "                        TRUE, $8, 'brain_escalation_service'\n" +
+    '                    )',
+  parameters: [
+    'TKT-1767719977625-0G8ZUS',
+    'd68e095e-8761-4848-9040-4a5b3361caed',
+    'Dirección General',
+    'normal',
+    '[BRAIN AUTO-DETECT] health_check_failed en system/eventLoop',
+    '## Problema Detectado Automaticamente por Brain\n' +
+      '\n' +
+      '**Tipo:** health_check_failed\n' +
+      '**Modulo:** system/eventLoop\n' +
+      '**Severidad:** medium\n' +
+      '**Detectado:** 2026-01-06T17:19:37.622Z\n' +
+      '\n' +
+      '### Mensaje de Error\n' +
+      '```\n' +
+      'eventLoop health check failed\n' +
+      '```\n' +
+      '\n' +
+      '### Diagnostico IA (Ollama)\n' +
+      '**Causa raiz probable:** Error en test E2E\n' +
+      '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+      '**Confianza:** N/A\n' +
+      '\n' +
+      '### Intentos de Auto-Reparacion\n' +
+      'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+      '\n' +
+      '### Timeline\n' +
+      '- **detected** (2:19:37 p.m.)\n' +
+      '- **diagnosis** (2:19:37 p.m.)\n' +
+      '- **escalation_started** (2:19:37 p.m.)',
+    'Incidente Brain #INC-17677199',
+    '{"incidentId":"INC-1767719977622-dcfqv29wh","ticketId":"TKT-1767719977625-0G8ZUS","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/eventLoop\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\neventLoop health check failed\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: medium"}'
+  ]
+}
+📧 [APONNT] Enviando email tipo: transactional a: aponntsuite@gmail.com
+❌ [APONNT] Error enviando email: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2b1707d76aasm3785331eec.33 - gsmtp
+❌ Error logging email: Named replacement ":has_attachments" has no entry in the replacement map.
+❌ [BRAIN-ESCALATION] Error enviando email: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2b1707d76aasm3785331eec.33 - gsmtp
+✅ [BRAIN-ESCALATION] Escalamiento completado - Ticket: TKT-1767719977625-0G8ZUS
+      7️⃣ [DELETE] Testeando eliminación de registro...
+        🔹 Buscando botón de eliminar...
+      8️⃣ Testeando botones de fila...
+      9️⃣ Testeando modal de edición...
+      🔟 [PERSISTENCIA] Testeando persistencia de datos...
+        🔹 Recargando página completa (F5)...
+      ❌ [UNKNOWN-ERROR EXCEPTION] Unexpected token ')'
+         📁 File: unknown:null:null
+        ⚠️  PERSISTENCIA SKIP - Lista vacía después de recargar
+      1️⃣1️⃣ [AUTODISCOVER] Descubriendo todos los botones de la interfaz...
+      🔍 [AUTODISCOVER] Descubriendo TODOS los botones en la interfaz...
+      ✅ [AUTODISCOVER] Encontrados 23 botones:
+         - "👁️" (togglePassword('passwordInput', this))
+         - "🚀 Iniciar Sesión" (no onclick)
+         - "👁️" (togglePassword('userPassword', this))
+         - "🚀 Acceder" (no onclick)
+         - "🚪 Salir" (cerrarSesion())
+         - "?" (no onclick)
+         - "×" (ModuleHelpSystem.toggleChat())
+         - "¿Cómo creo una nueva oferta laboral?" (ModuleHelpSystem.askQuestion('¿Cómo creo una nueva oferta laboral?'))
+         - "¿Cómo veo los candidatos pendientes?" (ModuleHelpSystem.askQuestion('¿Cómo veo los candidatos pendientes?'))
+         - "¿Qué significan las métricas del dashboard?" (ModuleHelpSystem.askQuestion('¿Qué significan las métricas del dashboard?'))
+         - "➤" (ModuleHelpSystem.sendMessage())
+         - "×" (window.tourEngine.closeChatPanel())
+         - "⏮" (window.tourEngine.prevStep())
+         - "⏸" (window.tourEngine.togglePause())
+         - "⏭" (window.tourEngine.nextStep())
+         - "🔊" (window.tourEngine.toggleTTS())
+         - "💬" (window.tourEngine.openChatPanel())
+         - "✕" (window.tourEngine.endTour())
+         - "🎯" (no onclick)
+         - "0" (no onclick)
+         - "💬 Chat" (no onclick)
+         - "🔔 Inbox
+                            0" (no onclick)
+         - "🎫 Tickets
+                            0" (no onclick)
+        ✅ AUTODISCOVER OK - 23 botones encontrados
+      1️⃣2️⃣ [ROW-BUTTONS] Descubriendo botones en las filas...
+      🔘 [ROW-BUTTONS] Descubriendo TODOS los botones en las filas...
+        ℹ️  ROW-BUTTONS SKIP - No hay filas en la tabla
+      1️⃣3️⃣ [VIEW-BUTTON] Testeando botón "Ver" y sus tabs...
+      👁️  [VIEW-BUTTON] Buscando y testeando botón "Ver"...
+        ❌ VIEW-BUTTON FAIL - No hay registros en la tabla para testear botón Ver
+      ✅ Tests completados: 4 passed, 9 failed
+      🎫 [AUTO-TICKET] Creando ticket automático para Gestión de Usuarios...
+✅ [AUTO-AUDIT] Usuario "Auditor System" creado
+✅ [AUTO-AUDIT] Sistema inicializado - User ID: 763be0c9-0a82-47b2-a69c-35db27061183
+🎫 [AUTO-AUDIT] Ticket creado: AUDIT-2026-000001 para módulo users
+🔧 [AUTO-REPAIR] Iniciando proceso para ticket f3788b2e-10e3-416b-8b4a-04c55a59a96d...
+  🔄 [AUTO-REPAIR] Intento 1/3...
+  🧠 [ANALYZER] Analizando errores del módulo users...
+✅ [OLLAMA] Local disponible
+  🤖 [OLLAMA-LOCAL] Usando modelo: llama3.1:8b
+❌ [OLLAMA-LOCAL] Error: Request failed with status code 500
+  🌐 [ANALYZER] Intentando con OpenAI API...
+❌ [OPENAI] Error: timeout of 10000ms exceeded
+  📋 [ANALYZER] Usando análisis por patrones (fallback)...
+⚠️ [NERVOUS-SYSTEM] Health check: 1 problemas detectados
+
+================================================================================
+🔔 [BRAIN-ESCALATION] PROBLEMA DETECTADO - INC-1767720036589-9fd9ososh
+================================================================================
+   Tipo: health_check_failed
+   Modulo: system/eventLoop
+   Severidad: medium
+   Mensaje: eventLoop health check failed
+🧠 [BRAIN-ESCALATION] Analizando problema con Ollama...
+
+🧠 [OLLAMA DIAGNOSIS] Analizando test fallido: health_check_failed...
+
+❌ [DIAGNOSIS] Error en análisis Ollama: this.query is not a function
+🔍 [PATTERN DIAGNOSIS] Error en test E2E
+   💡 Diagnostico: Error en test E2E
+
+────────────────────────────────────────────────────────────────────────────────
+🚨 [BRAIN-ESCALATION] ESCALANDO INCIDENTE INC-1767720036589-9fd9ososh A SOPORTE
+────────────────────────────────────────────────────────────────────────────────
+   📋 Staff de soporte encontrado: 1 personas
+      - Dirección General (Gerente General, Nivel 1)
+   💾 Ticket TKT-1767720036643-W9FT1C registrado
+❌ [BRAIN-ESCALATION] Error creando notificacion: Error
+    at Query.run (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\sequelize\lib\dialects\postgres\query.js:50:25)
+    at C:\Bio\sistema_asistencia_biometrico\backend\node_modules\sequelize\lib\sequelize.js:315:28
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BrainEscalationService.createSupportNotification (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:616:17)
+    at async BrainEscalationService.escalateToSupport (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:386:13)
+    at async BrainEscalationService.processIncident (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:225:13)
+    at async BrainEscalationService.onProblemDetected (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainEscalationService.js:154:9)
+    at async BrainNervousSystem.runHealthCheck (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainNervousSystem.js:378:21)
+    at async Timeout._onTimeout (C:\Bio\sistema_asistencia_biometrico\backend\src\brain\services\BrainNervousSystem.js:351:13) {
+  name: 'SequelizeDatabaseError',
+  parent: error: la sintaxis de entrada no es válida para tipo uuid: «brain_escalation_service»
+      at Parser.parseErrorMessage (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:285:98)
+      at Parser.handlePacket (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:122:29)
+      at Parser.parse (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:35:38)
+      at Socket.<anonymous> (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\index.js:11:42)
+      at Socket.emit (node:events:519:28)
+      at addChunk (node:internal/streams/readable:561:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+      at Readable.push (node:internal/streams/readable:392:5)
+      at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+      at TCP.callbackTrampoline (node:internal/async_hooks:130:17) {
+    length: 143,
+    severity: 'ERROR',
+    code: '22P02',
+    detail: undefined,
+    hint: undefined,
+    position: '726',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'uuid.c',
+    line: '136',
+    routine: 'string_to_uuid',
+    sql: 'INSERT INTO unified_notifications (\n' +
+      '                        company_id, thread_id,\n' +
+      '                        origin_type, origin_id, origin_name,\n' +
+      '                        recipient_type, recipient_id, recipient_name,\n' +
+      '                        category, module, notification_type, priority,\n' +
+      '                        title, message, short_message,\n' +
+      '                        requires_action, metadata, created_by\n' +
+      '                    ) VALUES (\n' +
+      '                        NULL, $1,\n' +
+      "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+      "                        'staff', $2, $3,\n" +
+      "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+      '                        $5, $6, $7,\n' +
+      "                        TRUE, $8, 'brain_escalation_service'\n" +
+      '                    )',
+    parameters: [
+      'TKT-1767720036643-W9FT1C',
+      'd68e095e-8761-4848-9040-4a5b3361caed',
+      'Dirección General',
+      'normal',
+      '[BRAIN AUTO-DETECT] health_check_failed en system/eventLoop',
+      '## Problema Detectado Automaticamente por Brain\n' +
+        '\n' +
+        '**Tipo:** health_check_failed\n' +
+        '**Modulo:** system/eventLoop\n' +
+        '**Severidad:** medium\n' +
+        '**Detectado:** 2026-01-06T17:20:36.589Z\n' +
+        '\n' +
+        '### Mensaje de Error\n' +
+        '```\n' +
+        'eventLoop health check failed\n' +
+        '```\n' +
+        '\n' +
+        '### Diagnostico IA (Ollama)\n' +
+        '**Causa raiz probable:** Error en test E2E\n' +
+        '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+        '**Confianza:** N/A\n' +
+        '\n' +
+        '### Intentos de Auto-Reparacion\n' +
+        'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+        '\n' +
+        '### Timeline\n' +
+        '- **detected** (2:20:36 p.m.)\n' +
+        '- **diagnosis** (2:20:36 p.m.)\n' +
+        '- **escalation_started** (2:20:36 p.m.)',
+      'Incidente Brain #INC-17677200',
+      '{"incidentId":"INC-1767720036589-9fd9ososh","ticketId":"TKT-1767720036643-W9FT1C","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/eventLoop\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\neventLoop health check failed\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: medium"}'
+    ]
+  },
+  original: error: la sintaxis de entrada no es válida para tipo uuid: «brain_escalation_service»
+      at Parser.parseErrorMessage (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:285:98)
+      at Parser.handlePacket (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:122:29)
+      at Parser.parse (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:35:38)
+      at Socket.<anonymous> (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\index.js:11:42)
+      at Socket.emit (node:events:519:28)
+      at addChunk (node:internal/streams/readable:561:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+      at Readable.push (node:internal/streams/readable:392:5)
+      at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+      at TCP.callbackTrampoline (node:internal/async_hooks:130:17) {
+    length: 143,
+    severity: 'ERROR',
+    code: '22P02',
+    detail: undefined,
+    hint: undefined,
+    position: '726',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'uuid.c',
+    line: '136',
+    routine: 'string_to_uuid',
+    sql: 'INSERT INTO unified_notifications (\n' +
+      '                        company_id, thread_id,\n' +
+      '                        origin_type, origin_id, origin_name,\n' +
+      '                        recipient_type, recipient_id, recipient_name,\n' +
+      '                        category, module, notification_type, priority,\n' +
+      '                        title, message, short_message,\n' +
+      '                        requires_action, metadata, created_by\n' +
+      '                    ) VALUES (\n' +
+      '                        NULL, $1,\n' +
+      "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+      "                        'staff', $2, $3,\n" +
+      "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+      '                        $5, $6, $7,\n' +
+      "                        TRUE, $8, 'brain_escalation_service'\n" +
+      '                    )',
+    parameters: [
+      'TKT-1767720036643-W9FT1C',
+      'd68e095e-8761-4848-9040-4a5b3361caed',
+      'Dirección General',
+      'normal',
+      '[BRAIN AUTO-DETECT] health_check_failed en system/eventLoop',
+      '## Problema Detectado Automaticamente por Brain\n' +
+        '\n' +
+        '**Tipo:** health_check_failed\n' +
+        '**Modulo:** system/eventLoop\n' +
+        '**Severidad:** medium\n' +
+        '**Detectado:** 2026-01-06T17:20:36.589Z\n' +
+        '\n' +
+        '### Mensaje de Error\n' +
+        '```\n' +
+        'eventLoop health check failed\n' +
+        '```\n' +
+        '\n' +
+        '### Diagnostico IA (Ollama)\n' +
+        '**Causa raiz probable:** Error en test E2E\n' +
+        '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+        '**Confianza:** N/A\n' +
+        '\n' +
+        '### Intentos de Auto-Reparacion\n' +
+        'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+        '\n' +
+        '### Timeline\n' +
+        '- **detected** (2:20:36 p.m.)\n' +
+        '- **diagnosis** (2:20:36 p.m.)\n' +
+        '- **escalation_started** (2:20:36 p.m.)',
+      'Incidente Brain #INC-17677200',
+      '{"incidentId":"INC-1767720036589-9fd9ososh","ticketId":"TKT-1767720036643-W9FT1C","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/eventLoop\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\neventLoop health check failed\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: medium"}'
+    ]
+  },
+  sql: 'INSERT INTO unified_notifications (\n' +
+    '                        company_id, thread_id,\n' +
+    '                        origin_type, origin_id, origin_name,\n' +
+    '                        recipient_type, recipient_id, recipient_name,\n' +
+    '                        category, module, notification_type, priority,\n' +
+    '                        title, message, short_message,\n' +
+    '                        requires_action, metadata, created_by\n' +
+    '                    ) VALUES (\n' +
+    '                        NULL, $1,\n' +
+    "                        'brain', 'brain-escalation', 'Brain Auto-Detect',\n" +
+    "                        'staff', $2, $3,\n" +
+    "                        'technical', 'brain', 'incident_escalation', $4,\n" +
+    '                        $5, $6, $7,\n' +
+    "                        TRUE, $8, 'brain_escalation_service'\n" +
+    '                    )',
+  parameters: [
+    'TKT-1767720036643-W9FT1C',
+    'd68e095e-8761-4848-9040-4a5b3361caed',
+    'Dirección General',
+    'normal',
+    '[BRAIN AUTO-DETECT] health_check_failed en system/eventLoop',
+    '## Problema Detectado Automaticamente por Brain\n' +
+      '\n' +
+      '**Tipo:** health_check_failed\n' +
+      '**Modulo:** system/eventLoop\n' +
+      '**Severidad:** medium\n' +
+      '**Detectado:** 2026-01-06T17:20:36.589Z\n' +
+      '\n' +
+      '### Mensaje de Error\n' +
+      '```\n' +
+      'eventLoop health check failed\n' +
+      '```\n' +
+      '\n' +
+      '### Diagnostico IA (Ollama)\n' +
+      '**Causa raiz probable:** Error en test E2E\n' +
+      '**Solucion sugerida:** Revisar el código del test y el frontend\n' +
+      '**Confianza:** N/A\n' +
+      '\n' +
+      '### Intentos de Auto-Reparacion\n' +
+      'Se intentaron 0 reparaciones automaticas sin exito.\n' +
+      '\n' +
+      '### Timeline\n' +
+      '- **detected** (2:20:36 p.m.)\n' +
+      '- **diagnosis** (2:20:36 p.m.)\n' +
+      '- **escalation_started** (2:20:36 p.m.)',
+    'Incidente Brain #INC-17677200',
+    '{"incidentId":"INC-1767720036589-9fd9ososh","ticketId":"TKT-1767720036643-W9FT1C","claudeCodePrompt":"## Contexto del Problema\\n\\nEl sistema Brain de Aponnt ha detectado automaticamente el siguiente problema que no pudo ser resuelto automaticamente.\\n\\n**Modulo afectado:** system/eventLoop\\n**Tipo de error:** health_check_failed\\n\\n### Error\\n```\\neventLoop health check failed\\n```\\n\\n\\n\\n### Diagnostico IA\\n- **Causa probable:** Error en test E2E\\n- **Solucion sugerida:** Revisar el código del test y el frontend\\n\\n\\n### Tarea\\n1. Analiza el error y su contexto\\n2. Identifica la causa raiz\\n3. Implementa la solucion minima necesaria\\n4. Ejecuta los tests para verificar la correccion\\n5. Si el problema persiste, documenta los hallazgos\\n\\n### Notas\\n- Este ticket fue generado automaticamente por el sistema Brain\\n- Se intentaron 0 auto-reparaciones sin exito\\n- El problema tiene severidad: medium"}'
+  ]
+}
+📧 [APONNT] Enviando email tipo: transactional a: aponntsuite@gmail.com
+  📊 [METRICS] Métricas de diagnóstico guardadas en audit_logs
+❌ [AUTO-REPAIR] Error en intento 1: TypeError: Cannot read properties of undefined (reading 'attemptRepair')
+    at AutoAuditTicketSystem.startAutoRepairProcess (C:\Bio\sistema_asistencia_biometrico\backend\src\auditor\core\AutoAuditTicketSystem.js:260:59)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async AutoAuditTicketSystem.createAutoTicket (C:\Bio\sistema_asistencia_biometrico\backend\src\auditor\core\AutoAuditTicketSystem.js:125:7)
+    at async FrontendCollector.testModule (C:\Bio\sistema_asistencia_biometrico\backend\src\auditor\collectors\FrontendCollector.js:982:26)
+    at async MasterTestingOrchestrator.testModuleBasic (C:\Bio\sistema_asistencia_biometrico\backend\src\testing\MasterTestingOrchestrator.js:384:22)
+    at async MasterTestingOrchestrator.testModuleComplete (C:\Bio\sistema_asistencia_biometrico\backend\src\testing\MasterTestingOrchestrator.js:328:12)
+    at async MasterTestingOrchestrator.runFullTesting (C:\Bio\sistema_asistencia_biometrico\backend\src\testing\MasterTestingOrchestrator.js:236:24)
+    at async main (C:\Bio\sistema_asistencia_biometrico\backend\scripts\test-single-module-deep.js:46:20)
+  🔄 [AUTO-REPAIR] Intento 2/3...
+  🧠 [ANALYZER] Analizando errores del módulo users...
+✅ [OLLAMA] Local disponible
+  🤖 [OLLAMA-LOCAL] Usando modelo: llama3.1:8b
+❌ [APONNT] Error enviando email: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2b170675076sm4231721eec.2 - gsmtp
+❌ Error logging email: Named replacement ":has_attachments" has no entry in the replacement map.
+❌ [BRAIN-ESCALATION] Error enviando email: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2b170675076sm4231721eec.2 - gsmtp
+✅ [BRAIN-ESCALATION] Escalamiento completado - Ticket: TKT-1767720036643-W9FT1C
+❌ [OLLAMA-LOCAL] Error: Request failed with status code 500
+  🌐 [ANALYZER] Intentando con OpenAI API...
+❌ [OPENAI] Error: timeout of 10000ms exceeded
+  📋 [ANALYZER] Usando análisis por patrones (fallback)...
+  📊 [METRICS] Métricas de diagnóstico guardadas en audit_logs
+❌ [AUTO-REPAIR] Error en intento 2: TypeError: Cannot read properties of undefined (reading 'attemptRepair')
+    at AutoAuditTicketSystem.startAutoRepairProcess (C:\Bio\sistema_asistencia_biometrico\backend\src\auditor\core\AutoAuditTicketSystem.js:260:59)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async AutoAuditTicketSystem.createAutoTicket (C:\Bio\sistema_asistencia_biometrico\backend\src\auditor\core\AutoAuditTicketSystem.js:125:7)
+    at async FrontendCollector.testModule (C:\Bio\sistema_asistencia_biometrico\backend\src\auditor\collectors\FrontendCollector.js:982:26)
+    at async MasterTestingOrchestrator.testModuleBasic (C:\Bio\sistema_asistencia_biometrico\backend\src\testing\MasterTestingOrchestrator.js:384:22)
+    at async MasterTestingOrchestrator.testModuleComplete (C:\Bio\sistema_asistencia_biometrico\backend\src\testing\MasterTestingOrchestrator.js:328:12)
+    at async MasterTestingOrchestrator.runFullTesting (C:\Bio\sistema_asistencia_biometrico\backend\src\testing\MasterTestingOrchestrator.js:236:24)
+    at async main (C:\Bio\sistema_asistencia_biometrico\backend\scripts\test-single-module-deep.js:46:20)
+  🔄 [AUTO-REPAIR] Intento 3/3...
+  🧠 [ANALYZER] Analizando errores del módulo users...
+✅ [OLLAMA] Local disponible
+  🤖 [OLLAMA-LOCAL] Usando modelo: llama3.1:8b
+❌ [OLLAMA-LOCAL] Error: Request failed with status code 500
+  🌐 [ANALYZER] Intentando con OpenAI API...
+❌ [OPENAI] Error: timeout of 10000ms exceeded
+  📋 [ANALYZER] Usando análisis por patrones (fallback)...
+  📊 [METRICS] Métricas de diagnóstico guardadas en audit_logs
+❌ [AUTO-REPAIR] Error en intento 3: TypeError: Cannot read properties of undefined (reading 'attemptRepair')
+    at AutoAuditTicketSystem.startAutoRepairProcess (C:\Bio\sistema_asistencia_biometrico\backend\src\auditor\core\AutoAuditTicketSystem.js:260:59)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async AutoAuditTicketSystem.createAutoTicket (C:\Bio\sistema_asistencia_biometrico\backend\src\auditor\core\AutoAuditTicketSystem.js:125:7)
+    at async FrontendCollector.testModule (C:\Bio\sistema_asistencia_biometrico\backend\src\auditor\collectors\FrontendCollector.js:982:26)
+    at async MasterTestingOrchestrator.testModuleBasic (C:\Bio\sistema_asistencia_biometrico\backend\src\testing\MasterTestingOrchestrator.js:384:22)
+    at async MasterTestingOrchestrator.testModuleComplete (C:\Bio\sistema_asistencia_biometrico\backend\src\testing\MasterTestingOrchestrator.js:328:12)
+    at async MasterTestingOrchestrator.runFullTesting (C:\Bio\sistema_asistencia_biometrico\backend\src\testing\MasterTestingOrchestrator.js:236:24)
+    at async main (C:\Bio\sistema_asistencia_biometrico\backend\scripts\test-single-module-deep.js:46:20)
+⚠️ [AUTO-REPAIR] Ticket AUDIT-2026-000001 NO resuelto después de 3 intentos
+      ✅ [AUTO-TICKET] Ticket creado: AUDIT-2026-000001
+
+🔬 [MASTER] Deteniendo Brain Nervous System...
+🛑 [NERVOUS-SYSTEM] Deteniendo sistema nervioso...
+🛑 [NERVOUS-SYSTEM] Sistema nervioso DETENIDO
+   ✅ Brain detenido
+
+📄 [MASTER] Generando reporte final...
+📊 [REPORT] Encontrados 1 resultados en BD para execution_id: 8e3f210b-4812-45b5-a21c-af0db454a218
+   ✅ Reporte guardado en: C:\Bio\sistema_asistencia_biometrico\backend\TESTING-FINAL-REPORT.md
+
+
+════════════════════════════════════════════════════════════════════════════════
+🎉 [MASTER] TESTING COMPLETO FINALIZADO
+════════════════════════════════════════════════════════════════════════════════
+   Total módulos: 1
+   ✅ Passed: 0
+   ❌ Failed: 0
+   🔧 Fixed: 0
+   ⏭️ Skipped: 0
+   ⏱️ Duración: 146.5s
+════════════════════════════════════════════════════════════════════════════════
+
+🛑 [NERVOUS-SYSTEM] Deteniendo sistema nervioso...
+🛑 [NERVOUS-SYSTEM] Sistema nervioso DETENIDO
+
+════════════════════════════════════════════════════════════════════════════════
+📊 RESULTADO
+════════════════════════════════════════════════════════════════════════════════
+   Módulo: users
+   Status: ❌ FAILED
+   Passed: 0
+   Failed: 0
+════════════════════════════════════════════════════════════════════════════════
+

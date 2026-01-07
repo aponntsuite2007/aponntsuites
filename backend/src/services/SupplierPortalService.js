@@ -1403,6 +1403,164 @@ class SupplierPortalService {
             });
         }
     }
+    /**
+     * Get supplier profile
+     */
+    async getSupplierProfile(supplierId, portalUserId) {
+        const query = `
+            SELECT
+                s.supplier_id,
+                s.name,
+                s.contact_email,
+                s.contact_phone,
+                s.address,
+                s.city,
+                s.province,
+                s.country,
+                s.postal_code,
+                s.tax_id,
+                s.bank_name,
+                s.bank_account,
+                s.bank_cbu_cvu,
+                spu.email as portal_email,
+                spu.email_verified,
+                spu.must_change_password,
+                spu.last_password_change,
+                spu.account_status,
+                spu.created_at as portal_created_at
+            FROM wms_suppliers s
+            JOIN supplier_portal_users spu ON spu.supplier_id = s.supplier_id
+            WHERE s.supplier_id = $1 AND spu.id = $2
+        `;
+
+        const result = await pool.query(query, [supplierId, portalUserId]);
+
+        if (result.rows.length === 0) {
+            throw new Error('Perfil no encontrado');
+        }
+
+        return result.rows[0];
+    }
+
+    /**
+     * Update supplier profile
+     */
+    async updateSupplierProfile(supplierId, portalUserId, data) {
+        const {
+            contact_phone,
+            address,
+            city,
+            province,
+            country,
+            postal_code
+        } = data;
+
+        const query = `
+            UPDATE wms_suppliers
+            SET
+                contact_phone = COALESCE($1, contact_phone),
+                address = COALESCE($2, address),
+                city = COALESCE($3, city),
+                province = COALESCE($4, province),
+                country = COALESCE($5, country),
+                postal_code = COALESCE($6, postal_code),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE supplier_id = $7
+            RETURNING *
+        `;
+
+        const result = await pool.query(query, [
+            contact_phone,
+            address,
+            city,
+            province,
+            country,
+            postal_code,
+            supplierId
+        ]);
+
+        return result.rows[0];
+    }
+
+    /**
+     * Change password
+     */
+    async changePassword(portalUserId, currentPassword, newPassword) {
+        const bcrypt = require('bcrypt');
+
+        // Get current password hash
+        const userQuery = await pool.query(
+            'SELECT password FROM supplier_portal_users WHERE id = $1',
+            [portalUserId]
+        );
+
+        if (userQuery.rows.length === 0) {
+            throw new Error('Usuario no encontrado');
+        }
+
+        const user = userQuery.rows[0];
+
+        // Verify current password
+        const isValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isValid) {
+            throw new Error('Contraseña actual incorrecta');
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update password
+        const updateQuery = `
+            UPDATE supplier_portal_users
+            SET
+                password = $1,
+                must_change_password = false,
+                last_password_change = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $2
+            RETURNING id, email, must_change_password, last_password_change
+        `;
+
+        const result = await pool.query(updateQuery, [hashedPassword, portalUserId]);
+
+        return result.rows[0];
+    }
+
+    /**
+     * Update banking information
+     */
+    async updateBankingInfo(supplierId, data) {
+        const { bank_name, bank_account, bank_cbu_cvu } = data;
+
+        if (!bank_name || !bank_account || !bank_cbu_cvu) {
+            throw new Error('Información bancaria incompleta');
+        }
+
+        // Validate CBU/CVU format (22 digits)
+        if (!/^\d{22}$/.test(bank_cbu_cvu)) {
+            throw new Error('CBU/CVU debe tener 22 dígitos');
+        }
+
+        const query = `
+            UPDATE wms_suppliers
+            SET
+                bank_name = $1,
+                bank_account = $2,
+                bank_cbu_cvu = $3,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE supplier_id = $4
+            RETURNING supplier_id, bank_name, bank_account, bank_cbu_cvu
+        `;
+
+        const result = await pool.query(query, [
+            bank_name,
+            bank_account,
+            bank_cbu_cvu,
+            supplierId
+        ]);
+
+        return result.rows[0];
+    }
 }
 
 module.exports = new SupplierPortalService();

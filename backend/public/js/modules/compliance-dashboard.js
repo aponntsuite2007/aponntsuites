@@ -21,7 +21,7 @@ console.log('%c RISK INTELLIGENCE v2.0 ', 'background: linear-gradient(90deg, #1
 // ============================================================================
 if (typeof ModuleHelpSystem !== 'undefined') {
     ModuleHelpSystem.registerModule('risk-intelligence', {
-        moduleName: 'Risk Intelligence Dashboard',
+        moduleName: 'Inteligencia de Riesgos',
         moduleDescription: 'Sistema de análisis predictivo de riesgos laborales basado en datos reales de asistencia, sanciones, vacaciones y métricas de rendimiento.',
 
         contexts: {
@@ -319,7 +319,7 @@ async function loadRiskConfigFromDB() {
 const RiskIntelligence = {
 
     async init() {
-        console.log('🔍 Iniciando Risk Intelligence Dashboard...');
+        console.log('🔍 Iniciando Inteligencia de Riesgos...');
         this.injectStyles();
         this.render();
         this.attachEventListeners();
@@ -1038,7 +1038,7 @@ const RiskIntelligence = {
                     <div>
                         <h1>
                             <span>🛡️</span>
-                            Risk Intelligence Dashboard
+                            Inteligencia de Riesgos
                         </h1>
                         <div class="ri-header-badge">
                             <span class="ri-badge ai">🧠 Azure AI</span>

@@ -4360,7 +4360,7 @@
       },
       {
         "id": "compliance-dashboard",
-        "name": "Risk Intelligence Dashboard",
+        "name": "Inteligencia de Riesgos",
         "description": "[COMMERCIAL] Cumplimiento normativo, auditorías, riesgos",
         "category": "compliance",
         "version": "2.0.0",
@@ -5389,7 +5389,7 @@
       },
       {
         "id": "voice-platform",
-        "name": "Voice Platform 🎤",
+        "name": "Voz del Empleado 🎤",
         "description": "Sistema de Experiencias del Empleado con IA - Captura sugerencias, problemas y soluciones. Clustering semántico, gamificación y analytics.",
         "category": "rrhh",
         "version": "1.0.0",
@@ -9126,7 +9126,7 @@
         "modules": [
           "Consentimientos y Privacidad",
           "Gestión Legal",
-          "Risk Intelligence Dashboard",
+          "Inteligencia de Riesgos",
           "Reportes de Auditoría"
         ]
       },
@@ -9142,7 +9142,7 @@
           "Búsquedas Laborales",
           "Gestión de Sanciones",
           "Beneficios Laborales",
-          "Voice Platform 🎤"
+          "Voz del Empleado 🎤"
         ]
       },
       {

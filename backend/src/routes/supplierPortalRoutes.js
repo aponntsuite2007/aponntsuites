@@ -822,4 +822,110 @@ router.post('/notifications/read-all', authenticateSupplier, async (req, res) =>
     }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// PERFIL Y CONFIGURACIÓN
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Obtener perfil del proveedor
+router.get('/profile', authenticateSupplier, async (req, res) => {
+    try {
+        const profile = await SupplierPortalService.getSupplierProfile(
+            req.supplierId,
+            req.portalUserId
+        );
+        res.json(profile);
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Get profile error:', error.message);
+        res.status(500).json({ error: 'Error al cargar perfil' });
+    }
+});
+
+// Actualizar perfil del proveedor
+router.put('/profile', authenticateSupplier, async (req, res) => {
+    try {
+        const updated = await SupplierPortalService.updateSupplierProfile(
+            req.supplierId,
+            req.portalUserId,
+            req.body
+        );
+        res.json({ message: 'Perfil actualizado correctamente', data: updated });
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Update profile error:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Cambiar contraseña del proveedor
+router.post('/profile/change-password', authenticateSupplier, async (req, res) => {
+    try {
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        // Validar campos requeridos
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({
+                error: 'Campos requeridos: currentPassword, newPassword, confirmPassword'
+            });
+        }
+
+        // Validar que las contraseñas coincidan
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ error: 'Las contraseñas nuevas no coinciden' });
+        }
+
+        // Validar longitud mínima
+        if (newPassword.length < 8) {
+            return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+        }
+
+        // Validar que no sea la contraseña por defecto
+        if (newPassword === 'changeme123' || newPassword === 'password') {
+            return res.status(400).json({ error: 'Contraseña demasiado común, elige otra' });
+        }
+
+        const result = await SupplierPortalService.changePassword(
+            req.portalUserId,
+            currentPassword,
+            newPassword
+        );
+
+        res.json({ message: 'Contraseña cambiada correctamente', data: result });
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Change password error:', error.message);
+
+        if (error.message === 'Contraseña actual incorrecta') {
+            return res.status(401).json({ error: error.message });
+        }
+
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Actualizar información bancaria
+router.put('/profile/banking', authenticateSupplier, async (req, res) => {
+    try {
+        const result = await SupplierPortalService.updateBankingInfo(
+            req.supplierId,
+            req.body
+        );
+        res.json({ message: 'Información bancaria actualizada', data: result });
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Update banking error:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Obtener estado de compliance
+router.get('/profile/compliance-status', authenticateSupplier, async (req, res) => {
+    try {
+        const status = await SupplierPortalService.getComplianceStatus(
+            req.portalUserId,
+            req.supplierId
+        );
+        res.json(status);
+    } catch (error) {
+        console.error('❌ [SUPPLIER PORTAL] Get compliance status error:', error.message);
+        res.status(500).json({ error: 'Error al cargar estado de compliance' });
+    }
+});
+
 module.exports = router;

@@ -2612,6 +2612,15 @@ try {
     console.log('⚠️ [SUPPLIER-PORTAL-ATTACHMENTS] Routes not available:', e.message);
 }
 
+// 💬 IMPORTAR RUTAS DE MENSAJERÍA PROVEEDOR-EMPRESA - OPCIONAL EN PRODUCCIÓN
+let supplierMessagesRoutes = null;
+try {
+    supplierMessagesRoutes = require('./src/routes/supplierMessagesRoutes');
+    console.log('✅ [SUPPLIER-MESSAGES] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [SUPPLIER-MESSAGES] Routes not available:', e.message);
+}
+
 // 💰 IMPORTAR RUTAS DE FINANZAS (Finance Enterprise) - OPCIONAL EN PRODUCCIÓN
 let financeRoutes = null;
 try {
@@ -3648,10 +3657,23 @@ if (supplierPortalAttachmentsRoutes) {
     app.use('/api/supplier-portal/attachments', supplierPortalAttachmentsRoutes);
     console.log('📎 [SUPPLIER-PORTAL-ATTACHMENTS] Rutas de adjuntos configuradas');
     console.log('   📍 POST /api/supplier-portal/attachments/rfq/:rfqId/company-attachments - Upload adjunto empresa→proveedor');
+    console.log('   📍 POST /api/supplier-portal/attachments/rfq/:rfqId/supplier-upload - Upload adjunto proveedor→empresa');
     console.log('   📍 GET  /api/supplier-portal/attachments/rfq/:rfqId/company-attachments - Listar adjuntos');
+    console.log('   📍 GET  /api/supplier-portal/attachments/rfq/:rfqId/my-uploads - Mis adjuntos');
     console.log('   📍 GET  /api/supplier-portal/attachments/rfq/:rfqId/company-attachments/:attachmentId/download - Descargar adjunto');
     console.log('   📍 POST /api/supplier-portal/attachments/invoice/upload - Upload factura proveedor');
     console.log('   📍 POST /api/supplier-portal/attachments/invoice/:invoiceId/validate - Validar factura');
+}
+
+// 💬 MENSAJERÍA PROVEEDOR-EMPRESA - Enero 2026 - Solo si está disponible
+if (supplierMessagesRoutes) {
+    app.use('/api/supplier-messages', supplierMessagesRoutes);
+    console.log('💬 [SUPPLIER-MESSAGES] Rutas de mensajería configuradas');
+    console.log('   📍 GET  /api/supplier-messages/inbox - Bandeja de entrada');
+    console.log('   📍 GET  /api/supplier-messages/sent - Mensajes enviados');
+    console.log('   📍 GET  /api/supplier-messages/unread-count - Contador no leídos');
+    console.log('   📍 POST /api/supplier-messages/send - Enviar mensaje');
+    console.log('   📍 POST /api/supplier-messages/:id/mark-read - Marcar como leído');
 }
 
 // 💰 FINANCE ENTERPRISE (Finanzas Empresariales) - Enero 2026 - Solo si está disponible

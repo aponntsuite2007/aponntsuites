@@ -563,8 +563,15 @@
         headers: headers
       });
 
+      // 401 Unauthorized es esperado cuando no hay sesión válida - no es error crítico
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        if (response.status === 401) {
+          console.log('[NOTIFICATION-BADGE] No autenticado - sesión inválida o expirada');
+        } else {
+          console.warn(`[NOTIFICATION-BADGE] Error HTTP ${response.status}`);
+        }
+        STATE.isLoading = false;
+        return;
       }
 
       const result = await response.json();
@@ -577,7 +584,8 @@
       }
 
     } catch (error) {
-      console.error('[NOTIFICATION-BADGE] Error fetching badge data:', error.message);
+      // Network errors, parsing errors, etc. - no son críticos para el badge
+      console.log('[NOTIFICATION-BADGE] No se pudo cargar badge:', error.message);
     } finally {
       STATE.isLoading = false;
     }

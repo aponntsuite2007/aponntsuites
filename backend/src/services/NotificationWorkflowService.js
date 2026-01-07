@@ -1,13 +1,43 @@
 /**
- * SERVICIO: NotificationWorkflowService
- * Motor central del sistema de notificaciones enterprise
+ * ============================================================================
+ * NOTIFICATION WORKFLOW SERVICE - DEPRECADO
+ * ============================================================================
  *
- * Responsabilidades:
- * - Crear notificaciones con workflows
- * - Procesar acciones (aprobar/rechazar/escalar)
- * - Renderizar templates
- * - Gestionar escalamiento automático
- * - Enviar notificaciones por múltiples canales
+ * ⚠️ DEPRECATION NOTICE (Enero 2025):
+ * Este servicio está DEPRECADO. Usa NotificationCentralExchange.send() en su lugar.
+ *
+ * Todos los métodos de este servicio ahora delegan a NotificationCentralExchange
+ * para mantener backward compatibility 100%.
+ *
+ * ANTES (deprecado):
+ * ```javascript
+ * await NotificationWorkflowService.createNotification({
+ *   module: 'medical',
+ *   notificationType: 'appointment_reminder',
+ *   companyId: 11,
+ *   category: 'info',
+ *   priority: 'high',
+ *   entity: { appointment_id: 123 },
+ *   variables: { patient: 'Juan', date: '2025-01-15' }
+ * });
+ * ```
+ *
+ * AHORA (recomendado):
+ * ```javascript
+ * await NCE.send({
+ *   companyId: 11,
+ *   module: 'medical',
+ *   workflowKey: 'medical.appointment_reminder',
+ *   recipientType: 'user',
+ *   recipientId: 'uuid-123',
+ *   title: 'Recordatorio de cita médica',
+ *   message: 'Hola Juan, tu cita es el 2025-01-15',
+ *   metadata: { appointment_id: 123, patient: 'Juan', date: '2025-01-15' },
+ *   priority: 'high'
+ * });
+ * ```
+ *
+ * ============================================================================
  */
 
 const {
@@ -23,12 +53,18 @@ const {
 
 const workflowConfigHelper = require('../utils/workflowConfigHelper');
 const { isModuleActive } = require('../utils/moduleHelper');
+const NCE = require('./NotificationCentralExchange');
 
 class NotificationWorkflowService {
 
   /**
    * Crear notificación con workflow automático
    *
+   * ⚠️ DEPRECADO: Usa NotificationCentralExchange.send() en su lugar.
+   *
+   * Este método ahora delega a NCE.send() para backward compatibility.
+   *
+   * @deprecated Usar NotificationCentralExchange.send() directamente
    * @param {Object} data - Datos de la notificación
    * @param {String} data.module - Módulo (attendance, medical, legal, etc.)
    * @param {String} data.notificationType - Tipo específico
@@ -39,112 +75,105 @@ class NotificationWorkflowService {
    * @param {Object} data.variables - Variables para renderizar template
    * @param {String} [data.templateKey] - Clave del template a usar
    * @param {Object} [data.recipient] - Destinatario específico
+   * @param {String} [data.title] - Título
+   * @param {String} [data.message] - Mensaje
    * @returns {Promise<Notification>}
    */
   async createNotification(data) {
+    console.warn(`⚠️ [WORKFLOW-SERVICE-DEPRECATED] NotificationWorkflowService.createNotification() is deprecated. Use NCE.send() instead.`);
+    console.log(`🔀 [WORKFLOW-SERVICE-DEPRECATED] Delegating to NCE.send() for module: ${data.module}`);
+
     try {
-      // 1. Buscar workflow aplicable
-      const workflow = await NotificationWorkflow.findApplicable(
-        data.module,
-        data.entity || {},
-        data.companyId
-      );
+      // Construir workflowKey basado en módulo y tipo
+      const workflowKey = data.workflowKey || `${data.module}.${data.notificationType}`;
 
-      // 2. Determinar destinatario inicial
-      const recipientData = await this.resolveRecipient(
-        data,
-        workflow,
-        1 // Paso 1 del workflow
-      );
+      // Determinar destinatario
+      let recipientType = 'user';
+      let recipientId = null;
 
-      // 3. Renderizar template si se especifica
-      let content = {};
-      if (data.templateKey) {
-        const template = await NotificationTemplate.findByKey(
-          data.templateKey,
-          data.companyId
-        );
-
-        if (template) {
-          content = template.render(data.variables || {});
-        }
+      if (data.recipient) {
+        recipientType = data.recipient.type || 'user';
+        recipientId = data.recipient.userId || data.recipient.id;
+      } else if (data.recipientUserId) {
+        recipientId = data.recipientUserId;
+      } else if (data.recipientRole) {
+        recipientType = 'role';
+        recipientId = data.recipientRole;
       }
 
-      // 4. Crear notificación
-      const notification = await Notification.create({
+      // Determinar canales
+      const channels = [];
+      if (data.sendEmail) channels.push('email');
+      if (data.sendWhatsApp) channels.push('whatsapp');
+      if (data.sendSms) channels.push('sms');
+      if (channels.length === 0) channels.push('inbox'); // Default
+
+      // Mapear parámetros legacy a formato NCE
+      const nceParams = {
+        companyId: data.companyId,
+        module: data.module,
+        workflowKey,
+
+        // Origen (entity)
+        originType: data.relatedEntityType || (data.entity ? Object.keys(data.entity)[0] : null),
+        originId: data.relatedEntityId || (data.entity ? Object.values(data.entity)[0] : null),
+
+        // Destinatario
+        recipientType,
+        recipientId,
+
+        // Contenido
+        title: data.title || `${data.module}: ${data.notificationType}`,
+        message: data.message || 'Notificación del sistema',
+
+        // Metadata
+        metadata: {
+          ...data.metadata,
+          ...data.variables,
+          category: data.category,
+          templateKey: data.templateKey,
+          entity: data.entity,
+          relatedEntityType: data.relatedEntityType,
+          relatedEntityId: data.relatedEntityId,
+          relatedUserId: data.relatedUserId,
+          relatedDepartmentId: data.relatedDepartmentId,
+          relatedKioskId: data.relatedKioskId,
+          relatedAttendanceId: data.relatedAttendanceId,
+          _legacy_source: 'NotificationWorkflowService.createNotification',
+          _legacy_notificationType: data.notificationType
+        },
+
+        // Opciones
+        priority: data.priority || 'medium',
+        channels,
+        requiresAction: data.requiresAction !== undefined ? data.requiresAction : data.category === 'approval_request',
+        actionType: data.actionType || (data.category === 'approval_request' ? 'approval' : null),
+        createdBy: data.createdBy
+      };
+
+      // Delegar a NCE
+      const result = await NCE.send(nceParams);
+
+      console.log(`✅ [WORKFLOW-SERVICE-DEPRECATED] Delegación exitosa a NCE. Notification ID: ${result.notificationId}`);
+
+      // Retornar objeto compatible con estructura legacy (Notification model)
+      return {
+        id: result.notificationId,
         company_id: data.companyId,
         module: data.module,
         category: data.category || 'info',
         notification_type: data.notificationType,
         priority: data.priority || 'medium',
-
-        // Destinatario (NUEVO: soporta múltiples con recipient_custom_list)
-        recipient_user_id: recipientData.userId,
-        recipient_role: recipientData.role,
-        recipient_department_id: recipientData.departmentId,
-        recipient_shift_id: recipientData.shiftId,
-        recipient_custom_list: recipientData.userIds || [],  // NUEVO: Array de user IDs
-        is_broadcast: recipientData.isBroadcast || false,
-
-        // Contenido
-        title: content.title || data.title,
-        message: content.message || data.message,
-        short_message: content.short_message || data.shortMessage,
-        email_body: content.email_body,
-
-        // Relaciones
-        related_entity_type: data.relatedEntityType,
-        related_entity_id: data.relatedEntityId,
-        related_user_id: data.relatedUserId,
-        related_department_id: data.relatedDepartmentId,
-        related_kiosk_id: data.relatedKioskId,
-        related_attendance_id: data.relatedAttendanceId,
-
-        // Metadata
-        metadata: data.metadata || {},
-
-        // Workflow
-        requires_action: workflow ? true : false,
-        action_status: workflow ? 'pending' : null,
-        action_type: data.actionType || (workflow ? 'approve_reject' : null),
-        action_deadline: workflow ? this.calculateDeadline(workflow.getFirstStep()) : null,
-        action_options: data.actionOptions || (workflow ? ['approve', 'reject'] : []),
-
-        // Canales
-        sent_via_app: true,
-        sent_via_email: data.sendEmail || false,
-        sent_via_whatsapp: data.sendWhatsApp || false,
-        sent_via_sms: data.sendSms || false,
-
-        created_by: data.createdBy || null
-      });
-
-      // 5. Registrar en log de acciones
-      await NotificationActionsLog.log({
-        notificationId: notification.id,
-        companyId: data.companyId,
-        action: 'created',
-        userId: data.createdBy,
-        newStatus: workflow ? 'pending' : 'sent',
-        metadata: {
-          workflow_id: workflow?.id,
-          step: 1,
-          template_key: data.templateKey
-        }
-      });
-
-      // 6. Enviar por canales configurados
-      await this.sendViaChannels(notification, data);
-
-      // 7. Programar recordatorio si aplica
-      if (workflow && notification.action_deadline) {
-        this.scheduleReminder(notification);
-      }
-
-      return notification;
+        title: nceParams.title,
+        message: nceParams.message,
+        metadata: nceParams.metadata,
+        created_at: new Date(),
+        _delegated_to: 'NotificationCentralExchange',
+        _nce_result: result
+      };
 
     } catch (error) {
-      console.error('[NotificationWorkflowService] Error creating notification:', error);
+      console.error('[WORKFLOW-SERVICE-DEPRECATED] Error delegating to NCE:', error);
       throw error;
     }
   }

@@ -18,6 +18,9 @@ try {
   console.log('⚠️ [AUTH] NotificationUnifiedService not available, using fallback notifications');
 }
 
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+const NCE = require('./NotificationCentralExchange');
+
 // 🆕 SSOT: Resolución de destinatarios de notificaciones departamentales
 const NotificationRecipientResolver = require('./NotificationRecipientResolver');
 
@@ -950,7 +953,8 @@ class LateArrivalAuthorizationService {
               employeeData,
               authorizationToken,
               shiftData,
-              lateMinutes
+              lateMinutes,
+              companyId  // 🔥 NCE: Pasar companyId
             });
             break;
 
@@ -970,7 +974,8 @@ class LateArrivalAuthorizationService {
               employeeData,
               authorizationToken,
               shiftData,
-              lateMinutes
+              lateMinutes,
+              companyId  // 🔥 NCE: Pasar companyId
             });
             const whatsappResult = await this._sendWhatsAppNotification({
               authorizer,
@@ -1065,55 +1070,81 @@ class LateArrivalAuthorizationService {
   /**
    * Enviar notificación por Email con botones HTML
    * 🆕 INCLUYE información de escalación si notify_escalation=true
+   * 🔥 MIGRADO A NCE (Notification Central Exchange)
    */
-  async _sendEmailNotification({ authorizer, employeeData, authorizationToken, shiftData, lateMinutes }) {
+  async _sendEmailNotification({ authorizer, employeeData, authorizationToken, shiftData, lateMinutes, companyId }) {
     try {
-      if (!this.emailTransporter) {
-        return { success: false, error: 'Email transporter not configured' };
-      }
-
       const approveUrl = `${this.serverBaseUrl}/api/v1/authorization/approve/${authorizationToken}`;
       const rejectUrl = `${this.serverBaseUrl}/api/v1/authorization/reject/${authorizationToken}`;
 
-      const htmlContent = this._buildEmailHTML({
-        authorizerName: authorizer.first_name,
-        employeeName: `${employeeData.first_name} ${employeeData.last_name}`,
-        employeeLegajo: employeeData.legajo,
-        departmentName: employeeData.department_name || 'N/A',
-        shiftName: shiftData.name,
-        shiftStartTime: shiftData.startTime,
-        lateMinutes,
-        approveUrl,
-        rejectUrl,
-        currentTime: new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }),
-        escalationInfo: authorizer.notify_escalation ? authorizer.escalation_info : null  // 🆕 Info de escalación
+      // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+      const nceResult = await NCE.send({
+        // CONTEXTO
+        companyId: companyId,
+        module: 'attendance',
+        originType: 'late_arrival_authorization',
+        originId: authorizationToken,
+
+        // WORKFLOW (define reglas, canales, SLA, escalamiento)
+        workflowKey: 'attendance.late_arrival_authorization_request',
+
+        // DESTINATARIO
+        recipientType: 'user',
+        recipientId: authorizer.user_id,
+        recipientEmail: authorizer.email,
+
+        // CONTENIDO
+        title: authorizer.notify_escalation
+          ? `🔼 ESCALACIÓN - Autorización Requerida - Llegada Tardía ${employeeData.first_name} ${employeeData.last_name}`
+          : `⚠️ Autorización Requerida - Llegada Tardía ${employeeData.first_name} ${employeeData.last_name}`,
+        message: `El empleado ${employeeData.first_name} ${employeeData.last_name} (Legajo: ${employeeData.legajo || 'N/A'}) llegó ${lateMinutes} minutos tarde.`,
+        metadata: {
+          authorizerName: authorizer.first_name,
+          employeeName: `${employeeData.first_name} ${employeeData.last_name}`,
+          employeeLegajo: employeeData.legajo,
+          employeeUserId: employeeData.user_id,
+          departmentName: employeeData.department_name || 'N/A',
+          shiftName: shiftData.name,
+          shiftStartTime: shiftData.startTime,
+          lateMinutes,
+          approveUrl,
+          rejectUrl,
+          currentTime: new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }),
+          escalationInfo: authorizer.notify_escalation ? authorizer.escalation_info : null,
+          authorizationToken  // Para tracking
+        },
+
+        // COMPORTAMIENTO
+        priority: 'critical',           // Crítico - requiere acción urgente
+        requiresAction: true,           // Requiere aprobación/rechazo
+        actionType: 'approval',         // Tipo de acción esperada
+        slaHours: 0.25,                 // 15 minutos (0.25 horas)
+
+        // CANALES (NCE decide según política del workflow)
+        channels: ['email', 'push', 'websocket'],
+
+        // ESCALAMIENTO (NCE maneja según política)
+        escalationPolicy: {
+          levels: [
+            { after: '15m', escalateTo: 'manager' },
+            { after: '30m', escalateTo: 'hr_manager' }
+          ]
+        }
       });
 
-      // 🆕 Subject diferente si hay escalación
-      let subject = `⚠️ Autorización Requerida - Llegada Tardía ${employeeData.first_name} ${employeeData.last_name}`;
-      if (authorizer.notify_escalation) {
-        subject = `🔼 ESCALACIÓN - ${subject}`;
-      }
-
-      const mailOptions = {
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
-        to: authorizer.email,
-        subject,
-        html: htmlContent
-      };
-
-      const info = await this.emailTransporter.sendMail(mailOptions);
-
-      console.log(`✅ Email sent to ${authorizer.email}: ${info.messageId}`);
+      console.log(`✅ [NCE] Late arrival authorization sent via NCE to ${authorizer.email}`);
+      console.log(`   Notification ID: ${nceResult.notificationId}`);
+      console.log(`   Channels: ${nceResult.channelsUsed?.join(', ')}`);
 
       return {
-        success: true,
-        messageId: info.messageId,
-        recipient: authorizer.email
+        success: nceResult.success,
+        messageId: nceResult.notificationId,
+        recipient: authorizer.email,
+        channelsUsed: nceResult.channelsUsed
       };
 
     } catch (error) {
-      console.error('❌ Error sending email:', error);
+      console.error('❌ [NCE] Error sending late arrival authorization via NCE:', error);
       return {
         success: false,
         error: error.message
@@ -1221,6 +1252,7 @@ class LateArrivalAuthorizationService {
 
   /**
    * Enviar notificación fallback cuando no hay autorizadores
+   * 🔥 MIGRADO A NCE (Notification Central Exchange)
    */
   async _sendFallbackNotification({ employeeData, authorizationToken, shiftData, lateMinutes, companyId }) {
     try {
@@ -1241,33 +1273,56 @@ class LateArrivalAuthorizationService {
 
       const results = [];
 
-      // Email fallback
-      if (company.fallback_notification_email && this.emailTransporter) {
+      // 🔥 REEMPLAZO: Email fallback directo → NCE (Central Telefónica)
+      if (company.fallback_notification_email) {
         const approveUrl = `${this.serverBaseUrl}/api/v1/authorization/approve/${authorizationToken}`;
         const rejectUrl = `${this.serverBaseUrl}/api/v1/authorization/reject/${authorizationToken}`;
 
-        const htmlContent = this._buildEmailHTML({
-          authorizerName: 'RRHH',
-          employeeName: `${employeeData.first_name} ${employeeData.last_name}`,
-          employeeLegajo: employeeData.legajo,
-          departmentName: employeeData.department_name || 'N/A',
-          shiftName: shiftData.name,
-          shiftStartTime: shiftData.startTime,
-          lateMinutes,
-          approveUrl,
-          rejectUrl,
-          currentTime: new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
+        const nceResult = await NCE.send({
+          // CONTEXTO
+          companyId: companyId,
+          module: 'attendance',
+          originType: 'late_arrival_authorization_fallback',
+          originId: authorizationToken,
+
+          // WORKFLOW
+          workflowKey: 'attendance.late_arrival_authorization_request',
+
+          // DESTINATARIO (fallback = role-based, no user específico)
+          recipientType: 'role',
+          recipientRole: 'hr_manager',
+          recipientEmail: company.fallback_notification_email,
+
+          // CONTENIDO
+          title: `⚠️ [FALLBACK] Autorización Requerida - Llegada Tardía ${employeeData.first_name} ${employeeData.last_name}`,
+          message: `No hay supervisores disponibles. El empleado ${employeeData.first_name} ${employeeData.last_name} (Legajo: ${employeeData.legajo || 'N/A'}) llegó ${lateMinutes} minutos tarde.`,
+          metadata: {
+            authorizerName: 'RRHH',
+            employeeName: `${employeeData.first_name} ${employeeData.last_name}`,
+            employeeLegajo: employeeData.legajo,
+            employeeUserId: employeeData.user_id,
+            departmentName: employeeData.department_name || 'N/A',
+            shiftName: shiftData.name,
+            shiftStartTime: shiftData.startTime,
+            lateMinutes,
+            approveUrl,
+            rejectUrl,
+            currentTime: new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }),
+            authorizationToken,
+            isFallback: true  // Marca que es fallback
+          },
+
+          // COMPORTAMIENTO
+          priority: 'critical',
+          requiresAction: true,
+          actionType: 'approval',
+          slaHours: 0.25,  // 15 minutos
+
+          channels: ['email', 'push'],
         });
 
-        const mailOptions = {
-          from: process.env.SMTP_FROM || process.env.SMTP_USER,
-          to: company.fallback_notification_email,
-          subject: `⚠️ [FALLBACK] Autorización Requerida - Llegada Tardía ${employeeData.first_name} ${employeeData.last_name}`,
-          html: htmlContent
-        };
-
-        const info = await this.emailTransporter.sendMail(mailOptions);
-        results.push({ type: 'email', success: true, messageId: info.messageId });
+        console.log(`✅ [NCE-FALLBACK] Late arrival authorization sent via NCE to ${company.fallback_notification_email}`);
+        results.push({ type: 'email', success: nceResult.success, messageId: nceResult.notificationId });
       }
 
       // WhatsApp fallback
@@ -1501,7 +1556,8 @@ class LateArrivalAuthorizationService {
         employeeData,
         lateMinutes,
         shiftData,
-        authorizationToken
+        authorizationToken,
+        companyId  // 🔥 NCE: Pasar companyId
       });
 
       return { success: true };
@@ -1787,13 +1843,15 @@ _Sistema de Asistencia Biométrico APONNT_`;
    * Notificar resultado de autorización (aprobado/rechazado)
    * Envía WebSocket al kiosco y a administradores
    * NUEVO: Crea ventana de autorización de 5 minutos si aprobado
+   * 🔥 NCE: Agregado companyId para notificaciones via NCE
    */
   async notifyAuthorizationResult({
     attendanceId,
     employeeData,
     authorizerData,
     status,
-    notes = ''
+    notes = '',
+    companyId  // 🔥 NCE: Nuevo parámetro
   }) {
     try {
       // 🎯 NUEVO: Si aprobado, crear ventana de autorización de 5 minutos
@@ -1872,7 +1930,8 @@ _Sistema de Asistencia Biométrico APONNT_`;
         authorizerData,
         status,
         authorizationWindow,
-        notes
+        notes,
+        companyId  // 🔥 NCE: Pasar companyId
       });
 
       // 🆕 ENVIAR VÍA SISTEMA CENTRAL DE NOTIFICACIONES
@@ -2018,17 +2077,19 @@ _Sistema de Asistencia Biométrico APONNT_`;
   /**
    * 🆕 Enviar email al EMPLEADO cuando solicita autorización
    * Le informa que debe esperar y puede retirarse del kiosk
+   * 🔥 MIGRADO A NCE (Notification Central Exchange)
    */
   async sendEmployeeNotificationEmail({
     employeeData,
     lateMinutes,
     shiftData,
-    authorizationToken
+    authorizationToken,
+    companyId  // 🔥 NCE: Nuevo parámetro requerido
   }) {
     try {
-      if (!this.emailTransporter || !employeeData.email) {
-        console.log('⚠️ Cannot send employee email: no transporter or email address');
-        return { success: false, error: 'Email not configured or employee has no email' };
+      if (!employeeData.email) {
+        console.log('⚠️ Cannot send employee email: no email address');
+        return { success: false, error: 'Employee has no email' };
       }
 
       const windowMinutes = parseInt(process.env.AUTHORIZATION_WINDOW_MINUTES) || 5;
@@ -2099,15 +2160,44 @@ _Sistema de Asistencia Biométrico APONNT_`;
 </body>
 </html>`;
 
-      await this.emailTransporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
-        to: employeeData.email,
-        subject: `⏳ Solicitud de Autorización Enviada - ${lateMinutes} min de retraso`,
-        html: htmlContent
+      // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+      const nceResult = await NCE.send({
+        // CONTEXTO
+        companyId: companyId,
+        module: 'attendance',
+        originType: 'late_arrival_authorization_confirmation',
+        originId: authorizationToken,
+
+        // WORKFLOW (informativo, no requiere acción)
+        workflowKey: 'attendance.late_arrival_processed',
+
+        // DESTINATARIO (empleado que solicitó)
+        recipientType: 'user',
+        recipientId: employeeData.user_id,
+        recipientEmail: employeeData.email,
+
+        // CONTENIDO
+        title: `⏳ Solicitud de Autorización Enviada - ${lateMinutes} min de retraso`,
+        message: `Tu solicitud de ingreso ha sido enviada a tus supervisores. Recibirás una notificación cuando sea procesada.`,
+        metadata: {
+          employeeName: `${employeeData.first_name} ${employeeData.last_name}`,
+          lateMinutes,
+          shiftName: shiftData.name,
+          windowMinutes,
+          authorizationToken,
+          canLeaveKiosk: true  // Puede retirarse del kiosk
+        },
+
+        // COMPORTAMIENTO (informativo)
+        priority: 'medium',
+        requiresAction: false,
+
+        // CANALES
+        channels: ['push', 'inbox'],  // Push + inbox (no email masivo al empleado)
       });
 
-      console.log(`✅ [EMPLOYEE-EMAIL] Notification sent to ${employeeData.email}`);
-      return { success: true };
+      console.log(`✅ [NCE] Employee late arrival confirmation sent via NCE to ${employeeData.email}`);
+      return { success: nceResult.success, messageId: nceResult.notificationId };
 
     } catch (error) {
       console.error('❌ Error sending employee notification email:', error);
@@ -2117,16 +2207,18 @@ _Sistema de Asistencia Biométrico APONNT_`;
 
   /**
    * 🆕 Enviar email al empleado con el RESULTADO de la autorización
+   * 🔥 MIGRADO A NCE (Notification Central Exchange)
    */
   async _sendEmployeeResultEmail({
     employeeData,
     authorizerData,
     status,
     authorizationWindow,
-    notes
+    notes,
+    companyId  // 🔥 NCE: Nuevo parámetro requerido
   }) {
     try {
-      if (!this.emailTransporter || !employeeData.email) {
+      if (!employeeData.email) {
         return { success: false };
       }
 
@@ -2184,15 +2276,47 @@ _Sistema de Asistencia Biométrico APONNT_`;
 </body>
 </html>`;
 
-      await this.emailTransporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
-        to: employeeData.email,
-        subject: `${isApproved ? '✅ APROBADA' : '❌ RECHAZADA'} - Tu solicitud de autorización`,
-        html: htmlContent
+      // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+      const nceResult = await NCE.send({
+        // CONTEXTO
+        companyId: companyId,
+        module: 'attendance',
+        originType: 'late_arrival_authorization_result',
+        originId: authorizationWindow?.authorizationToken || `result-${employeeData.user_id}`,
+
+        // WORKFLOW (resultado de aprobación/rechazo)
+        workflowKey: isApproved ? 'attendance.late_arrival_approved' : 'attendance.late_arrival_rejected',
+
+        // DESTINATARIO (empleado)
+        recipientType: 'user',
+        recipientId: employeeData.user_id,
+        recipientEmail: employeeData.email,
+
+        // CONTENIDO
+        title: `${isApproved ? '✅ APROBADA' : '❌ RECHAZADA'} - Tu solicitud de autorización`,
+        message: isApproved
+          ? `Tu solicitud de ingreso ha sido APROBADA por ${authorizerData.first_name} ${authorizerData.last_name}. Tienes ${windowMinutes} minutos para completar tu fichaje.`
+          : `Tu solicitud de ingreso ha sido RECHAZADA por ${authorizerData.first_name} ${authorizerData.last_name}.${notes ? ` Motivo: ${notes}` : ''}`,
+        metadata: {
+          employeeName: `${employeeData.first_name} ${employeeData.last_name}`,
+          authorizerName: `${authorizerData.first_name} ${authorizerData.last_name}`,
+          status,
+          isApproved,
+          windowMinutes,
+          notes,
+          authorizationWindow
+        },
+
+        // COMPORTAMIENTO
+        priority: 'critical',  // Crítico porque afecta el ingreso del empleado
+        requiresAction: false,  // Informativo, no requiere respuesta
+
+        // CANALES
+        channels: ['email', 'push', 'websocket'],  // Multi-canal para asegurar que el empleado lo vea
       });
 
-      console.log(`✅ [EMPLOYEE-RESULT-EMAIL] ${status} notification sent to ${employeeData.email}`);
-      return { success: true };
+      console.log(`✅ [NCE] Employee authorization result (${status}) sent via NCE to ${employeeData.email}`);
+      return { success: nceResult.success, messageId: nceResult.notificationId };
 
     } catch (error) {
       console.error('❌ Error sending employee result email:', error);

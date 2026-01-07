@@ -596,4 +596,213 @@ router.get('/rfq/:rfqId/check-required-downloads', authMiddleware, async (req, r
   }
 });
 
+// ============================================================================
+// SUPPLIER UPLOADS - Proveedor sube adjuntos (NUEVO)
+// ============================================================================
+
+/**
+ * POST /api/supplier-portal/attachments/rfq/:rfqId/supplier-upload
+ * Proveedor sube adjuntos a una RFQ (propuesta, cotización, specs técnicas)
+ */
+router.post('/rfq/:rfqId/supplier-upload',
+    authenticateSupplier,
+    upload.array('files', 10),
+    async (req, res) => {
+        const transaction = await sequelize.transaction();
+
+        try {
+            const { rfqId } = req.params;
+            const { supplierId, supplierEmail } = req.supplier;
+            const { attachment_type = 'proposal', description } = req.body;
+
+            // Validar que el proveedor tiene acceso a esta RFQ
+            const rfq = await RequestForQuotation.findOne({
+                where: { id: rfqId, supplier_id: supplierId }
+            });
+
+            if (!rfq) {
+                await transaction.rollback();
+                return res.status(403).json({ error: 'No tienes acceso a esta RFQ' });
+            }
+
+            if (!req.files || req.files.length === 0) {
+                await transaction.rollback();
+                return res.status(400).json({ error: 'No se recibieron archivos' });
+            }
+
+            // Crear adjuntos
+            const attachments = await Promise.all(req.files.map(file => {
+                return RfqAttachment.create({
+                    rfq_id: rfqId,
+                    file_name: file.filename,
+                    original_name: file.originalname,
+                    file_path: file.path,
+                    file_size: file.size,
+                    mime_type: file.mimetype,
+                    attachment_type: attachment_type,  // 'proposal', 'technical_specs', 'certificate'
+                    description: description,
+                    uploaded_by: 'supplier',
+                    uploaded_by_email: supplierEmail,
+                    is_supplier_attachment: true
+                }, { transaction });
+            }));
+
+            await transaction.commit();
+
+            res.status(201).json({
+                message: `${attachments.length} archivo(s) subido(s) correctamente`,
+                attachments
+            });
+        } catch (error) {
+            await transaction.rollback();
+            console.error('Error uploading supplier attachments to RFQ:', error);
+            res.status(500).json({ error: 'Error al subir archivos' });
+        }
+    }
+);
+
+/**
+ * POST /api/supplier-portal/attachments/purchase-order/:poId/supplier-upload
+ * Proveedor sube adjuntos a una Purchase Order (remito, certificado, documentación)
+ */
+router.post('/purchase-order/:poId/supplier-upload',
+    authenticateSupplier,
+    upload.array('files', 10),
+    async (req, res) => {
+        const transaction = await sequelize.transaction();
+
+        try {
+            const { poId } = req.params;
+            const { supplierId, supplierEmail } = req.supplier;
+            const { attachment_type = 'delivery_note', description } = req.body;
+
+            // Validar que el proveedor tiene acceso a este PO
+            const po = await PurchaseOrder.findOne({
+                where: { id: poId, supplier_id: supplierId }
+            });
+
+            if (!po) {
+                await transaction.rollback();
+                return res.status(403).json({ error: 'No tienes acceso a esta orden de compra' });
+            }
+
+            if (!req.files || req.files.length === 0) {
+                await transaction.rollback();
+                return res.status(400).json({ error: 'No se recibieron archivos' });
+            }
+
+            // Crear adjuntos
+            const attachments = await Promise.all(req.files.map(file => {
+                return PurchaseOrderAttachment.create({
+                    purchase_order_id: poId,
+                    file_name: file.filename,
+                    original_name: file.originalname,
+                    file_path: file.path,
+                    file_size: file.size,
+                    mime_type: file.mimetype,
+                    attachment_type: attachment_type,  // 'delivery_note', 'certificate', 'documentation'
+                    description: description,
+                    uploaded_by: 'supplier',
+                    uploaded_by_email: supplierEmail,
+                    is_supplier_attachment: true
+                }, { transaction });
+            }));
+
+            await transaction.commit();
+
+            res.status(201).json({
+                message: `${attachments.length} archivo(s) subido(s) correctamente`,
+                attachments
+            });
+        } catch (error) {
+            await transaction.rollback();
+            console.error('Error uploading supplier attachments to PO:', error);
+            res.status(500).json({ error: 'Error al subir archivos' });
+        }
+    }
+);
+
+/**
+ * GET /api/supplier-portal/attachments/rfq/:rfqId/my-uploads
+ * Obtener adjuntos subidos por el proveedor a una RFQ
+ */
+router.get('/rfq/:rfqId/my-uploads', authenticateSupplier, async (req, res) => {
+    try {
+        const { rfqId } = req.params;
+        const { supplierId } = req.supplier;
+
+        // Validar acceso
+        const rfq = await RequestForQuotation.findOne({
+            where: { id: rfqId, supplier_id: supplierId }
+        });
+
+        if (!rfq) {
+            return res.status(403).json({ error: 'No tienes acceso a esta RFQ' });
+        }
+
+        const attachments = await RfqAttachment.findAll({
+            where: {
+                rfq_id: rfqId,
+                is_supplier_attachment: true
+            },
+            order: [['created_at', 'DESC']]
+        });
+
+        res.json({ attachments });
+    } catch (error) {
+        console.error('Error fetching supplier RFQ uploads:', error);
+        res.status(500).json({ error: 'Error al cargar adjuntos' });
+    }
+});
+
+/**
+ * DELETE /api/supplier-portal/attachments/rfq/:rfqId/:attachmentId
+ * Proveedor elimina uno de sus adjuntos
+ */
+router.delete('/rfq/:rfqId/:attachmentId', authenticateSupplier, async (req, res) => {
+    const transaction = await sequelize.transaction();
+
+    try {
+        const { rfqId, attachmentId } = req.params;
+        const { supplierId } = req.supplier;
+
+        // Validar acceso y que el adjunto sea del proveedor
+        const attachment = await RfqAttachment.findOne({
+            where: {
+                id: attachmentId,
+                rfq_id: rfqId,
+                is_supplier_attachment: true
+            },
+            include: [{
+                model: RequestForQuotation,
+                where: { supplier_id: supplierId }
+            }]
+        });
+
+        if (!attachment) {
+            await transaction.rollback();
+            return res.status(403).json({ error: 'Adjunto no encontrado o sin acceso' });
+        }
+
+        // Eliminar archivo físico
+        const fs = require('fs').promises;
+        try {
+            await fs.unlink(attachment.file_path);
+        } catch (err) {
+            console.warn('⚠️ No se pudo eliminar archivo físico:', err.message);
+        }
+
+        // Eliminar registro
+        await attachment.destroy({ transaction });
+
+        await transaction.commit();
+
+        res.json({ message: 'Adjunto eliminado correctamente' });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error deleting supplier attachment:', error);
+        res.status(500).json({ error: 'Error al eliminar adjunto' });
+    }
+});
+
 module.exports = router;

@@ -2440,7 +2440,7 @@
           "entry_point": "BIOMETRIC_CAPTURE",
           "final_states": [],
           "auto_generated": true,
-          "generated_at": "2026-01-06T23:08:22.161Z",
+          "generated_at": "2026-01-07T01:42:26.176Z",
           "stats": {
             "total": 152,
             "core": 37,
@@ -2450,7 +2450,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2026-01-06T23:08:22.172Z"
+      "lastBrainUpdate": "2026-01-07T01:42:26.184Z"
     },
     {
       "id": "legal-dashboard",
@@ -2514,7 +2514,7 @@
             "CASE_ARCHIVED"
           ],
           "auto_generated": true,
-          "generated_at": "2026-01-06T23:08:22.192Z",
+          "generated_at": "2026-01-07T01:42:26.197Z",
           "stats": {
             "total": 43,
             "core": 3,
@@ -2524,7 +2524,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2026-01-06T23:08:22.199Z"
+      "lastBrainUpdate": "2026-01-07T01:42:26.209Z"
     },
     {
       "id": "kiosks",
