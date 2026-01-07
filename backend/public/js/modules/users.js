@@ -1368,29 +1368,43 @@ function showAddUser() {
 
 // Save new user
 async function saveNewUser() {
-    const name = document.getElementById('newUserName').value;
-    const email = document.getElementById('newUserEmail').value;
-    const legajo = document.getElementById('newUserLegajo').value;
-    const password = document.getElementById('newUserPassword').value;
-    const role = document.getElementById('newUserRole').value;
-    const dept = document.getElementById('newUserDept').value;
-    const convenio = document.getElementById('newUserConvenio').value;
-    const allowOutsideRadius = document.getElementById('newUserAllowOutsideRadius').checked;
-    
+    console.log('🔍 [DEBUG saveNewUser] INICIO - Función ejecutada');
+
+    const name = document.getElementById('newUserName')?.value;
+    const email = document.getElementById('newUserEmail')?.value;
+    const legajo = document.getElementById('newUserLegajo')?.value;
+    const password = document.getElementById('newUserPassword')?.value;
+    const role = document.getElementById('newUserRole')?.value;
+    const dept = document.getElementById('newUserDept')?.value;
+    const convenio = document.getElementById('newUserConvenio')?.value;
+    const allowOutsideRadius = document.getElementById('newUserAllowOutsideRadius')?.checked;
+
+    console.log('🔍 [DEBUG] Valores leídos:', {
+        name: name || 'VACÍO',
+        email: email || 'VACÍO',
+        legajo: legajo || 'VACÍO',
+        password: password ? '***' : 'VACÍO',
+        role: role || 'VACÍO',
+        dept: dept || 'VACÍO'
+    });
+
     if (!name || !email || !legajo || !password) {
+        console.log('❌ [DEBUG] VALIDACIÓN FALLIDA - Campos vacíos');
         showUserMessage('⚠️ Por favor complete todos los campos obligatorios', 'warning');
         return;
     }
-    
+
+    console.log('✅ [DEBUG] Validación OK - Continuando con POST');
     console.log('💾 [USERS] Guardando usuario:', { name, email, legajo, role, dept });
-    
+
     try {
         // Parse name into firstName and lastName
         const nameParts = name.trim().split(' ');
         const firstName = nameParts[0] || name;
         const lastName = nameParts.slice(1).join(' ') || 'Usuario';
-        
-        // Prepare user data for API
+
+        // Prepare user data for API (userRoutes.js fields)
+        // ⭐ FIX: NO enviar usuario ni companyId - el backend los maneja automáticamente
         const userData = {
             employeeId: legajo,
             firstName: firstName,
@@ -1398,20 +1412,25 @@ async function saveNewUser() {
             email: email,
             password: password,
             role: role,
-            departmentId: dept, // Use departmentId instead of department for PostgreSQL
+            department: dept ? parseInt(dept) : null,  // ⭐ FIX: 'department', no 'departmentId'
             convenioColectivo: convenio,
-            allowOutsideRadius: allowOutsideRadius
+            // ⚠️ allowOutsideRadius NO se envía - se maneja como gpsEnabled en backend
         };
-        
+
+        console.log('🔍 [DEBUG] UserData enviado:', userData);
+
         // Get auth token from localStorage or sessionStorage
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
         if (!token) {
             showUserMessage('⚠️ No hay token de autenticación', 'error');
             return;
         }
-        
+
         // Call API to create user
+        // ⭐ FIX: Usar endpoint correcto /api/v1/users (userRoutes.js)
         const apiUrl = window.progressiveAdmin.getApiUrl('/api/v1/users');
+        console.log('🔍 [DEBUG] Llamando a:', apiUrl);
+
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -15303,5 +15322,9 @@ window.startOffboarding = startOffboarding;
 window.approveHiringRequirement = approveHiringRequirement;
 window.viewOffboardingDetails = viewOffboardingDetails;
 window.createRequirementCard = createRequirementCard;
+
+// ⭐ CRÍTICO: Exponer funciones de CRUD básico a window (para onclick en botones)
+window.saveNewUser = saveNewUser;
+window.saveEditUser = saveEditUser;
 
 } // Cierre del bloque else - previene re-ejecución en doble carga del módulo
