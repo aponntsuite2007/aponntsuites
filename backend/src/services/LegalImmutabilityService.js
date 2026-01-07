@@ -29,6 +29,9 @@ const {
 } = require('../config/database');
 const LegalJurisdictionService = require('./LegalJurisdictionService');
 
+// 🔥 NCE: Central Telefónica de Notificaciones - CERO BYPASS
+const NCE = require('./NotificationCentralExchange');
+
 class LegalImmutabilityService {
     // Configuración de ventanas temporales (igual que médico)
     static EDIT_WINDOW_HOURS = 48; // Ventana inicial de edición
@@ -613,39 +616,43 @@ class LegalImmutabilityService {
                 employeeName = employee?.name || 'Empleado';
             }
 
-            // Crear notificación
-            const notification = await Notification.create({
-                company_id: context.companyId,
-                user_id: rhrhUsers[0].user_id,
-                type: 'legal_authorization_request',
-                priority: authorization.priority === 'urgent' ? 'high' : 'normal',
+            // 🔥 NCE: Notificación a RRHH via Central Telefónica
+            const nceResult = await NCE.send({
+                companyId: context.companyId,
+                module: 'legal',
+                originType: 'legal_authorization_request',
+                originId: `legal-auth-${authorization.id}`,
+                workflowKey: 'legal.authorization_request',
+                recipientType: 'user',
+                recipientId: rhrhUsers[0].user_id,
                 title: `[LEGAL] Solicitud de ${actionTypeText} - ${employeeName}`,
                 message: `${context.userName || 'Usuario'} solicita autorización para ${actionTypeText.toLowerCase()} un registro legal.\n\n` +
                     `**Tipo:** ${tableLabel}\n` +
                     `**Empleado:** ${employeeName}\n` +
                     `**Razón:** ${authorization.request_reason}\n\n` +
                     `Este registro requiere autorización de RRHH para ser modificado.`,
-                category: 'legal',
-                source_module: 'legal-dashboard',
-                source_id: record.id?.toString(),
-                data: {
+                priority: authorization.priority === 'urgent' ? 'urgent' : 'high',
+                requiresAction: true,
+                actionType: 'approval',
+                metadata: {
                     authorization_id: authorization.id,
                     record_id: record.id,
                     record_table: table,
                     action_type: authorization.action_type,
-                    employee_id: employeeId
+                    employee_id: employeeId,
+                    category: 'legal',
+                    source_module: 'legal-dashboard',
+                    actions: [
+                        { key: 'approve', label: 'Aprobar', style: 'success' },
+                        { key: 'reject', label: 'Rechazar', style: 'danger' }
+                    ],
+                    expires_at: authorization.expires_at
                 },
-                actionable: true,
-                actions: JSON.stringify([
-                    { key: 'approve', label: 'Aprobar', style: 'success' },
-                    { key: 'reject', label: 'Rechazar', style: 'danger' }
-                ]),
-                expires_at: authorization.expires_at,
-                status: 'unread'
-            }, { transaction });
+                channels: ['inbox'],
+            });
 
             return {
-                notification_id: notification.id,
+                notification_id: nceResult.notificationId,
                 group_id: `legal-auth-${authorization.id}`
             };
 
@@ -660,32 +667,38 @@ class LegalImmutabilityService {
      */
     static async notifyRequestorApproved(authorization, context, transaction) {
         try {
-            await Notification.create({
-                company_id: authorization.company_id,
-                user_id: authorization.requested_by,
-                type: 'legal_authorization_approved',
-                priority: 'high',
+            // 🔥 NCE: Notificación de aprobación via Central Telefónica
+            await NCE.send({
+                companyId: authorization.company_id,
+                module: 'legal',
+                originType: 'legal_authorization_approved',
+                originId: `legal-approved-${authorization.id}`,
+                workflowKey: 'legal.authorization_approved',
+                recipientType: 'user',
+                recipientId: authorization.requested_by,
                 title: `✅ Autorización LEGAL APROBADA - Ventana de ${this.AUTHORIZATION_WINDOW_HOURS} horas`,
                 message: `Su solicitud de ${authorization.action_type === 'delete' ? 'eliminación' : 'edición'} ha sido aprobada.\n\n` +
                     `**IMPORTANTE:** Tiene ${this.AUTHORIZATION_WINDOW_HOURS} horas para realizar la acción.\n` +
                     `**Vence:** ${new Date(authorization.authorization_window_end).toLocaleString()}\n\n` +
                     (authorization.authorization_response ? `**Respuesta:** ${authorization.authorization_response}` : ''),
-                category: 'legal',
-                source_module: 'legal-dashboard',
-                source_id: authorization.record_id?.toString(),
-                data: {
+                priority: 'high',
+                requiresAction: true,
+                actionType: 'action_window',
+                metadata: {
                     authorization_id: authorization.id,
                     record_id: authorization.record_id,
                     record_table: authorization.record_table,
-                    window_end: authorization.authorization_window_end
+                    window_end: authorization.authorization_window_end,
+                    category: 'legal',
+                    source_module: 'legal-dashboard',
+                    actions: [
+                        { key: 'go_to_record', label: 'Ir al registro', style: 'primary' }
+                    ],
+                    expires_at: authorization.authorization_window_end
                 },
-                actionable: true,
-                actions: JSON.stringify([
-                    { key: 'go_to_record', label: 'Ir al registro', style: 'primary' }
-                ]),
-                expires_at: authorization.authorization_window_end,
-                status: 'unread'
-            }, { transaction });
+                slaHours: this.AUTHORIZATION_WINDOW_HOURS,
+                channels: ['inbox'],
+            });
 
         } catch (error) {
             console.error('❌ [LEGAL] Error notificando aprobación:', error);
@@ -697,24 +710,29 @@ class LegalImmutabilityService {
      */
     static async notifyRequestorRejected(authorization, context, transaction) {
         try {
-            await Notification.create({
-                company_id: authorization.company_id,
-                user_id: authorization.requested_by,
-                type: 'legal_authorization_rejected',
-                priority: 'normal',
+            // 🔥 NCE: Notificación de rechazo via Central Telefónica
+            await NCE.send({
+                companyId: authorization.company_id,
+                module: 'legal',
+                originType: 'legal_authorization_rejected',
+                originId: `legal-rejected-${authorization.id}`,
+                workflowKey: 'legal.authorization_rejected',
+                recipientType: 'user',
+                recipientId: authorization.requested_by,
                 title: `❌ Autorización LEGAL RECHAZADA`,
                 message: `Su solicitud de ${authorization.action_type === 'delete' ? 'eliminación' : 'edición'} ha sido rechazada.\n\n` +
                     (authorization.authorization_response ? `**Motivo:** ${authorization.authorization_response}` : ''),
-                category: 'legal',
-                source_module: 'legal-dashboard',
-                source_id: authorization.record_id?.toString(),
-                data: {
+                priority: 'normal',
+                requiresAction: false,
+                metadata: {
                     authorization_id: authorization.id,
                     record_id: authorization.record_id,
-                    record_table: authorization.record_table
+                    record_table: authorization.record_table,
+                    category: 'legal',
+                    source_module: 'legal-dashboard'
                 },
-                status: 'unread'
-            }, { transaction });
+                channels: ['inbox'],
+            });
 
         } catch (error) {
             console.error('❌ [LEGAL] Error notificando rechazo:', error);

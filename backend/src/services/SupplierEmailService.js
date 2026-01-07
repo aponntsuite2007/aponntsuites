@@ -481,14 +481,37 @@ class SupplierEmailService {
                 </p>
             `;
 
-            const result = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to: email,
-                subject: `[OC] Nueva orden de compra: ${po.po_number} - $${parseFloat(po.total).toLocaleString()}`,
-                html: this.getBaseTemplate(content, 'Nueva Orden de Compra')
+            // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+            const result = await NCE.send({
+                companyId: po.company_id,
+                module: 'suppliers',
+                originType: 'purchase_order',
+                originId: poId,
+
+                workflowKey: 'suppliers.purchase_order_notification',
+
+                recipientType: 'associate',
+                recipientId: supplierId,
+                recipientEmail: email,
+
+                title: `[OC] Nueva orden de compra: ${po.po_number}`,
+                message: `Nueva orden de compra de ${po.company_name} por $${parseFloat(po.total).toLocaleString()}`,
+                metadata: {
+                    poId,
+                    poNumber: po.po_number,
+                    total: po.total,
+                    deliveryDate,
+                    companyName: po.company_name,
+                    portalUrl: this.portalUrl
+                },
+
+                priority: 'high',
+                requiresAction: false,
+
+                channels: ['email'],
             });
 
-            console.log(`📧 [SUPPLIER EMAIL] PO notification sent to ${email}`);
+            console.log(`📧 [NCE] PO notification sent to ${email}`);
             return result;
 
         } catch (error) {
@@ -583,14 +606,41 @@ class SupplierEmailService {
                 </p>
             `;
 
-            const result = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to: email,
-                subject: `[URGENTE] Reclamo recibido: ${claim.claim_number} - Acción requerida`,
-                html: this.getBaseTemplate(content, 'Reclamo Recibido')
+            // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+            const result = await NCE.send({
+                companyId: claim.company_id,
+                module: 'suppliers',
+                originType: 'supplier_claim',
+                originId: claimId,
+
+                workflowKey: 'suppliers.claim_notification',
+
+                recipientType: 'associate',
+                recipientId: supplierId,
+                recipientEmail: email,
+
+                title: `[URGENTE] Reclamo recibido: ${claim.claim_number}`,
+                message: `${claim.company_name} ha registrado un reclamo que requiere su atención inmediata`,
+                metadata: {
+                    claimId,
+                    claimNumber: claim.claim_number,
+                    claimType: claim.claim_type,
+                    poNumber: claim.po_number,
+                    requestedResolution: claim.requested_resolution,
+                    description: claim.description,
+                    companyName: claim.company_name,
+                    portalUrl: this.portalUrl
+                },
+
+                priority: 'critical',
+                requiresAction: true,
+                actionType: 'response',
+                slaHours: 48,
+
+                channels: ['email'],
             });
 
-            console.log(`📧 [SUPPLIER EMAIL] Claim notification sent to ${email}`);
+            console.log(`📧 [NCE] Claim notification sent to ${email}`);
             return result;
 
         } catch (error) {
@@ -689,14 +739,38 @@ class SupplierEmailService {
                 </p>
             `;
 
-            const result = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to: email,
-                subject: `[PAGO] Pago programado: ${payment.payment_order_number} - $${parseFloat(payment.net_amount).toLocaleString()}`,
-                html: this.getBaseTemplate(content, 'Pago Programado')
+            // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+            const result = await NCE.send({
+                companyId: payment.company_id,
+                module: 'suppliers',
+                originType: 'payment_order',
+                originId: paymentId,
+
+                workflowKey: 'suppliers.payment_scheduled',
+
+                recipientType: 'associate',
+                recipientId: supplierId,
+                recipientEmail: email,
+
+                title: `[PAGO] Pago programado: ${payment.payment_order_number}`,
+                message: `${payment.company_name} ha programado un pago a su favor por $${parseFloat(payment.net_amount).toLocaleString()}`,
+                metadata: {
+                    paymentId,
+                    paymentOrderNumber: payment.payment_order_number,
+                    netAmount: payment.net_amount,
+                    scheduledDate,
+                    paymentMethod: payment.payment_method,
+                    companyName: payment.company_name,
+                    portalUrl: this.portalUrl
+                },
+
+                priority: 'medium',
+                requiresAction: false,
+
+                channels: ['email'],
             });
 
-            console.log(`📧 [SUPPLIER EMAIL] Payment notification sent to ${email}`);
+            console.log(`📧 [NCE] Payment notification sent to ${email}`);
             return result;
 
         } catch (error) {
@@ -800,14 +874,37 @@ class SupplierEmailService {
                 </div>
             `;
 
-            const result = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to: supplier.email,
-                subject: `[APONNT] ¡Bienvenido al Portal de Proveedores! - Credenciales de Acceso`,
-                html: this.getBaseTemplate(content, 'Bienvenido al Portal de Proveedores')
+            // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+            const result = await NCE.send({
+                companyId: company.company_id,
+                module: 'suppliers',
+                originType: 'supplier_welcome',
+                originId: supplier.id,
+
+                workflowKey: 'suppliers.welcome_email',
+
+                recipientType: 'associate',
+                recipientId: supplier.id,
+                recipientEmail: supplier.email,
+
+                title: '[APONNT] ¡Bienvenido al Portal de Proveedores!',
+                message: `${company.name} le ha habilitado acceso al Portal de Proveedores de APONNT`,
+                metadata: {
+                    supplierId: supplier.id,
+                    supplierName: supplier.contact_name || supplier.name,
+                    companyName: company.name,
+                    credentialsEmail: credentials.email,
+                    credentialsPassword: credentials.password,  // ⚠️ Solo en metadata, no en logs
+                    portalUrl: credentials.portalUrl
+                },
+
+                priority: 'high',
+                requiresAction: false,
+
+                channels: ['email'],
             });
 
-            console.log(`📧 [SUPPLIER EMAIL] Welcome email sent to ${supplier.email}`);
+            console.log(`📧 [NCE] Welcome email sent to ${supplier.email}`);
             return result;
 
         } catch (error) {
@@ -864,14 +961,36 @@ class SupplierEmailService {
                 </p>
             `;
 
-            const result = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to: supplier.email,
-                subject: `[APONNT] Restablecimiento de Contraseña - Portal de Proveedores`,
-                html: this.getBaseTemplate(content, 'Restablecimiento de Contraseña')
+            // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+            const result = await NCE.send({
+                companyId: supplier.company_id || null,  // Puede ser null si es global
+                module: 'suppliers',
+                originType: 'supplier_password_reset',
+                originId: supplier.id,
+
+                workflowKey: 'suppliers.password_reset',
+
+                recipientType: 'associate',
+                recipientId: supplier.id,
+                recipientEmail: supplier.email,
+
+                title: '[APONNT] Restablecimiento de Contraseña',
+                message: 'Se ha restablecido la contraseña de su cuenta en el Portal de Proveedores',
+                metadata: {
+                    supplierId: supplier.id,
+                    supplierName: supplier.contact_name || supplier.name,
+                    credentialsEmail: credentials.email,
+                    credentialsPassword: credentials.password,  // ⚠️ Solo en metadata, no en logs
+                    portalUrl: credentials.portalUrl
+                },
+
+                priority: 'high',
+                requiresAction: false,
+
+                channels: ['email'],
             });
 
-            console.log(`📧 [SUPPLIER EMAIL] Password reset email sent to ${supplier.email}`);
+            console.log(`📧 [NCE] Password reset email sent to ${supplier.email}`);
             return result;
 
         } catch (error) {

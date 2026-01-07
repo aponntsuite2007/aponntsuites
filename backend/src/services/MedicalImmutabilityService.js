@@ -25,6 +25,9 @@ const {
 } = require('../config/database');
 const { Op } = require('sequelize');
 
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+const NCE = require('./NotificationCentralExchange');
+
 class MedicalImmutabilityService {
     // Configuración de ventanas temporales
     static EDIT_WINDOW_HOURS = 48; // Ventana inicial de edición
@@ -893,40 +896,47 @@ class MedicalImmutabilityService {
             const actionTypeText = authorization.action_type === 'delete' ? 'ELIMINAR' : 'EDITAR';
             const employee = record.employee || {};
 
-            // Crear notificación usando el modelo existente
-            const notification = await Notification.create({
-                company_id: context.companyId,
-                user_id: rhrhUsers[0].user_id, // Primer RRHH
-                type: 'authorization_request',
-                priority: authorization.priority === 'urgent' ? 'high' : 'normal',
+            // 🔥 NCE: Central Telefónica de Notificaciones
+            const nceResult = await NCE.send({
+                companyId: context.companyId,
+                module: 'medical',
+                originType: 'medical_authorization_request',
+                originId: `medical-auth-${authorization.id}`,
+
+                workflowKey: 'medical.authorization_request',
+
+                recipientType: 'user',
+                recipientId: rhrhUsers[0].user_id,
+
                 title: `[MÉDICO] Solicitud de ${actionTypeText} - ${employee.name || 'Empleado'}`,
-                message: `El Dr. ${context.userName || 'Médico'} solicita autorización para ${actionTypeText.toLowerCase()} un registro médico.\n\n` +
-                    `**Empleado:** ${employee.name || 'N/A'}\n` +
-                    `**Tipo:** ${record.record_type}\n` +
-                    `**Título:** ${record.title}\n` +
-                    `**Razón:** ${authorization.request_reason}\n\n` +
-                    `Este registro fue bloqueado el ${record.locked_at ? new Date(record.locked_at).toLocaleString() : 'N/A'}`,
-                category: 'medical',
-                source_module: 'medical-dashboard',
-                source_id: record.id.toString(),
-                data: {
+                message: `El Dr. ${context.userName || 'Médico'} solicita autorización para ${actionTypeText.toLowerCase()} un registro médico.`,
+
+                metadata: {
                     authorization_id: authorization.id,
                     record_id: record.id,
                     action_type: authorization.action_type,
                     employee_id: record.employee_id,
-                    proposed_changes: authorization.proposed_changes
+                    employee_name: employee.name || 'N/A',
+                    record_type: record.record_type,
+                    record_title: record.title,
+                    request_reason: authorization.request_reason,
+                    proposed_changes: authorization.proposed_changes,
+                    locked_at: record.locked_at,
+                    actions: [
+                        { key: 'approve', label: 'Aprobar', style: 'success' },
+                        { key: 'reject', label: 'Rechazar', style: 'danger' }
+                    ]
                 },
-                actionable: true,
-                actions: JSON.stringify([
-                    { key: 'approve', label: 'Aprobar', style: 'success' },
-                    { key: 'reject', label: 'Rechazar', style: 'danger' }
-                ]),
-                expires_at: authorization.expires_at,
-                status: 'unread'
-            }, { transaction });
+
+                priority: authorization.priority === 'urgent' ? 'urgent' : 'high',
+                requiresAction: true,
+                actionType: 'approval',
+
+                channels: ['inbox'],
+            });
 
             return {
-                notification_id: notification.id,
+                notification_id: nceResult.notificationId,
                 group_id: `medical-auth-${authorization.id}`
             };
 
@@ -938,62 +948,74 @@ class MedicalImmutabilityService {
 
     /**
      * Notifica al solicitante que fue aprobada
+     * 🔥 MIGRADO A NCE
      */
     static async notifyRequestorApproved(authorization, context, transaction) {
         try {
-            await Notification.create({
-                company_id: authorization.company_id,
-                user_id: authorization.requested_by,
-                type: 'authorization_approved',
-                priority: 'high',
+            await NCE.send({
+                companyId: authorization.company_id,
+                module: 'medical',
+                originType: 'medical_authorization_approved',
+                originId: `medical-auth-approved-${authorization.id}`,
+
+                workflowKey: 'medical.authorization_approved',
+
+                recipientType: 'user',
+                recipientId: authorization.requested_by,
+
                 title: `✅ Autorización APROBADA - Ventana de ${this.AUTHORIZATION_WINDOW_HOURS} horas`,
-                message: `Su solicitud de ${authorization.action_type === 'delete' ? 'eliminación' : 'edición'} ha sido aprobada.\n\n` +
-                    `**IMPORTANTE:** Tiene ${this.AUTHORIZATION_WINDOW_HOURS} horas para realizar la acción.\n` +
-                    `**Vence:** ${new Date(authorization.authorization_window_end).toLocaleString()}\n\n` +
-                    (authorization.authorization_response ? `**Respuesta:** ${authorization.authorization_response}` : ''),
-                category: 'medical',
-                source_module: 'medical-dashboard',
-                source_id: authorization.record_id.toString(),
-                data: {
+                message: `Su solicitud de ${authorization.action_type === 'delete' ? 'eliminación' : 'edición'} ha sido aprobada.`,
+
+                metadata: {
                     authorization_id: authorization.id,
                     record_id: authorization.record_id,
-                    window_end: authorization.authorization_window_end
+                    window_end: authorization.authorization_window_end,
+                    authorization_response: authorization.authorization_response
                 },
-                actionable: true,
-                actions: JSON.stringify([
-                    { key: 'go_to_record', label: 'Ir al registro', style: 'primary' }
-                ]),
-                expires_at: authorization.authorization_window_end,
-                status: 'unread'
-            }, { transaction });
+
+                priority: 'high',
+                requiresAction: true,
+                actionType: 'execute',
+
+                channels: ['inbox'],
+            });
 
         } catch (error) {
-            console.error('❌ [MEDICAL] Error notificando aprobación:', error);
+            console.error('❌ [NCE] Error notificando aprobación:', error);
         }
     }
 
     /**
      * Notifica al solicitante que fue rechazada
+     * 🔥 MIGRADO A NCE
      */
     static async notifyRequestorRejected(authorization, context, transaction) {
         try {
-            await Notification.create({
-                company_id: authorization.company_id,
-                user_id: authorization.requested_by,
-                type: 'authorization_rejected',
-                priority: 'normal',
+            await NCE.send({
+                companyId: authorization.company_id,
+                module: 'medical',
+                originType: 'medical_authorization_rejected',
+                originId: `medical-auth-rejected-${authorization.id}`,
+
+                workflowKey: 'medical.authorization_rejected',
+
+                recipientType: 'user',
+                recipientId: authorization.requested_by,
+
                 title: `❌ Autorización RECHAZADA`,
-                message: `Su solicitud de ${authorization.action_type === 'delete' ? 'eliminación' : 'edición'} ha sido rechazada.\n\n` +
-                    (authorization.authorization_response ? `**Motivo:** ${authorization.authorization_response}` : ''),
-                category: 'medical',
-                source_module: 'medical-dashboard',
-                source_id: authorization.record_id.toString(),
-                data: {
+                message: `Su solicitud de ${authorization.action_type === 'delete' ? 'eliminación' : 'edición'} ha sido rechazada.${authorization.authorization_response ? ` Motivo: ${authorization.authorization_response}` : ''}`,
+
+                metadata: {
                     authorization_id: authorization.id,
-                    record_id: authorization.record_id
+                    record_id: authorization.record_id,
+                    authorization_response: authorization.authorization_response
                 },
-                status: 'unread'
-            }, { transaction });
+
+                priority: 'normal',
+                requiresAction: false,
+
+                channels: ['inbox'],
+            });
 
         } catch (error) {
             console.error('❌ [MEDICAL] Error notificando rechazo:', error);

@@ -230,8 +230,9 @@ class NotificationCentralExchange {
             // ================================================================
             // PASO 8: INTEGRAR CON INBOX (NOTIFICATION_GROUPS + MESSAGES)
             // ================================================================
+            let groupId = null;
             try {
-                await this._integrateWithInbox({
+                groupId = await this._integrateWithInbox({
                     companyId: params.companyId,
                     workflowKey: params.workflowKey,
                     originType: params.originType,
@@ -284,6 +285,7 @@ class NotificationCentralExchange {
             return {
                 success: true,
                 notificationId: notificationLog.id,
+                groupId: groupId,
                 workflowKey: params.workflowKey,
                 recipients: recipients.map(r => ({
                     userId: r.user_id,
@@ -480,7 +482,7 @@ class NotificationCentralExchange {
     async _getWorkflow(workflowKey, companyId) {
         const query = `
             SELECT * FROM notification_workflows
-            WHERE (process_key = :workflowKey OR workflow_key = :workflowKey)
+            WHERE process_key = :workflowKey
               AND (
                 (scope = 'aponnt' AND company_id IS NULL)
                 OR (scope = 'company' AND company_id = :companyId)
@@ -528,49 +530,42 @@ class NotificationCentralExchange {
      * Crear registro en notification_log
      */
     async _createNotificationLog(data) {
-        // TODO: Implementar INSERT completo con todos los campos
-        // Por ahora, stub básico
+        // Crear registro en notification_log (simplified - only essential fields)
         const query = `
             INSERT INTO notification_log (
-                company_id, workflow_key, workflow_id, thread_id,
-                module, origin_type, origin_id,
-                recipient_type, recipient_id, recipient_email,
-                title, message, metadata,
-                priority, requires_action, action_type,
-                sla_hours, sla_deadline_at, channels,
-                status, created_at
+                workflow_id, process_key, company_id,
+                recipient_type, recipient_id, recipient_email, recipient_phone,
+                channel, status, metadata, created_at
             ) VALUES (
-                :companyId, :workflowKey, :workflow_id, :threadId,
-                :module, :originType, :originId,
-                :recipientType, :recipientId, :recipientEmail,
-                :title, :message, :metadata,
-                :priority, :requiresAction, :actionType,
-                :slaHours, :slaDeadline, :channels,
-                'sent', NOW()
+                :workflow_id, :processKey, :companyId,
+                :recipientType, :recipientId, :recipientEmail, :recipientPhone,
+                :channel, 'sent', :metadata, NOW()
             ) RETURNING *
         `;
 
         const [notification] = await sequelize.query(query, {
             replacements: {
+                workflow_id: data.workflow_id || null,
+                processKey: data.workflowKey || null,
                 companyId: data.companyId,
-                workflowKey: data.workflowKey,
-                workflow_id: data.workflow_id,
-                threadId: data.threadId || null,
-                module: data.module,
-                originType: data.originType,
-                originId: data.originId,
                 recipientType: data.recipients[0]?.user_id ? 'user' : 'unknown',
                 recipientId: data.recipients[0]?.user_id || null,
                 recipientEmail: data.recipients[0]?.email || null,
-                title: data.title,
-                message: data.message,
-                metadata: JSON.stringify(data.metadata),
-                priority: data.priority,
-                requiresAction: data.requiresAction,
-                actionType: data.actionType,
-                slaHours: data.slaHours,
-                slaDeadline: data.slaDeadline,
-                channels: JSON.stringify(data.channels)
+                recipientPhone: data.recipients[0]?.phone || null,
+                channel: (data.channels && data.channels.length > 0) ? data.channels[0] : 'inbox',
+                metadata: JSON.stringify({
+                    title: data.title,
+                    message: data.message,
+                    module: data.module,
+                    originType: data.originType,
+                    originId: data.originId,
+                    priority: data.priority,
+                    requiresAction: data.requiresAction,
+                    actionType: data.actionType,
+                    slaHours: data.slaHours,
+                    channels: data.channels,
+                    ...data.metadata
+                })
             },
             type: QueryTypes.INSERT
         });

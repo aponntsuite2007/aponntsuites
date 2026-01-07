@@ -19,5 +19,212 @@
     "totalFields": 0,
     "totalTabs": 0
   },
-  "waitForSelector": "#mainContent"
+  "waitForSelector": "#mainContent",
+  "lastEnriched": "2026-01-07T13:01:18.531Z",
+  "discoverySource": "FrontendCollector",
+  "buttons": {
+    "discovered": [
+      {
+        "text": "👁️",
+        "classes": "password-toggle",
+        "onclick": "togglePassword('passwordInput', this)",
+        "id": "",
+        "visible": true,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "🚀 Iniciar Sesión",
+        "classes": "btn-primary",
+        "onclick": "",
+        "id": "loginButton",
+        "visible": true,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "👁️",
+        "classes": "password-toggle",
+        "onclick": "togglePassword('userPassword', this)",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "🚀 Acceder",
+        "classes": "",
+        "onclick": "",
+        "id": "loginButton",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "🚪 Salir",
+        "classes": "",
+        "onclick": "cerrarSesion()",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "Agregar Usuario",
+        "classes": "btn-add-user",
+        "onclick": "showAddUser()",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "🔄 Iniciar sesión",
+        "classes": "btn btn-primary",
+        "onclick": "location.reload()",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "?",
+        "classes": "mhs-fab",
+        "onclick": "",
+        "id": "mhs-fab",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "×",
+        "classes": "",
+        "onclick": "ModuleHelpSystem.toggleChat()",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "¿Cómo creo una nueva oferta laboral?",
+        "classes": "mhs-chat-suggestion",
+        "onclick": "ModuleHelpSystem.askQuestion('¿Cómo creo una nueva oferta laboral?')",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "¿Cómo veo los candidatos pendientes?",
+        "classes": "mhs-chat-suggestion",
+        "onclick": "ModuleHelpSystem.askQuestion('¿Cómo veo los candidatos pendientes?')",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "¿Qué significan las métricas del dashboard?",
+        "classes": "mhs-chat-suggestion",
+        "onclick": "ModuleHelpSystem.askQuestion('¿Qué significan las métricas del dashboard?')",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "➤",
+        "classes": "mhs-chat-send",
+        "onclick": "ModuleHelpSystem.sendMessage()",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "×",
+        "classes": "",
+        "onclick": "window.tourEngine.closeChatPanel()",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "⏮",
+        "classes": "",
+        "onclick": "window.tourEngine.prevStep()",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "⏸",
+        "classes": "",
+        "onclick": "window.tourEngine.togglePause()",
+        "id": "tour-pause-btn",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "⏭",
+        "classes": "",
+        "onclick": "window.tourEngine.nextStep()",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "🔊",
+        "classes": "",
+        "onclick": "window.tourEngine.toggleTTS()",
+        "id": "tour-tts-btn",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "💬",
+        "classes": "",
+        "onclick": "window.tourEngine.openChatPanel()",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "✕",
+        "classes": "",
+        "onclick": "window.tourEngine.endTour()",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "🎯",
+        "classes": "brain-tour-launcher",
+        "onclick": "",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "0",
+        "classes": "",
+        "onclick": "",
+        "id": "unified-help-btn",
+        "visible": true,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "💬 Chat",
+        "classes": "uhc-tab active",
+        "onclick": "",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "🔔 Inbox\n                            0",
+        "classes": "uhc-tab",
+        "onclick": "",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      },
+      {
+        "text": "🎫 Tickets\n                            0",
+        "classes": "uhc-tab",
+        "onclick": "",
+        "id": "",
+        "visible": false,
+        "discoveredAt": "2026-01-07T13:01:18.531Z"
+      }
+    ],
+    "count": 25
+  }
 }

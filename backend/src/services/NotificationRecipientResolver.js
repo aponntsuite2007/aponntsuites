@@ -147,12 +147,11 @@ class NotificationRecipientResolver {
                 user_id,
                 "employeeId",
                 email,
-                first_name,
-                last_name,
-                (first_name || ' ' || last_name) as full_name,
+                "firstName",
+                "lastName",
+                ("firstName" || ' ' || "lastName") as full_name,
                 role,
                 department_id,
-                shift_id,
                 phone,
                 account_status,
                 email_verified
@@ -180,12 +179,11 @@ class NotificationRecipientResolver {
                 user_id,
                 "employeeId",
                 email,
-                first_name,
-                last_name,
-                (first_name || ' ' || last_name) as full_name,
+                "firstName",
+                "lastName",
+                ("firstName" || ' ' || "lastName") as full_name,
                 role,
                 department_id,
-                shift_id,
                 phone,
                 account_status,
                 email_verified
@@ -193,7 +191,7 @@ class NotificationRecipientResolver {
             WHERE role = :roleName
               AND company_id = :companyId
               AND account_status = 'active'
-            ORDER BY first_name, last_name
+            ORDER BY "firstName", "lastName"
         `;
 
         const users = await sequelize.query(query, {
@@ -255,9 +253,9 @@ class NotificationRecipientResolver {
                 u.user_id,
                 u."employeeId",
                 u.email,
-                u.first_name,
-                u.last_name,
-                (u.first_name || ' ' || u.last_name) as full_name,
+                u."firstName",
+                u."lastName",
+                (u."firstName" || ' ' || u."lastName") as full_name,
                 u.role,
                 u.phone,
                 u.account_status
@@ -287,9 +285,9 @@ class NotificationRecipientResolver {
                 u.user_id,
                 u."employeeId",
                 u.email,
-                u.first_name,
-                u.last_name,
-                (u.first_name || ' ' || u.last_name) as full_name,
+                u."firstName",
+                u."lastName",
+                (u."firstName" || ' ' || u."lastName") as full_name,
                 u.role,
                 u.phone,
                 u.account_status
@@ -341,12 +339,11 @@ class NotificationRecipientResolver {
                 user_id,
                 "employeeId",
                 email,
-                first_name,
-                last_name,
-                (first_name || ' ' || last_name) as full_name,
+                "firstName",
+                "lastName",
+                ("firstName" || ' ' || "lastName") as full_name,
                 role,
                 department_id,
-                shift_id,
                 phone,
                 account_status,
                 email_verified
@@ -354,7 +351,7 @@ class NotificationRecipientResolver {
             WHERE department_id = :departmentId
               AND company_id = :companyId
               AND account_status = 'active'
-            ORDER BY first_name, last_name
+            ORDER BY "firstName", "lastName"
         `;
 
         const users = await sequelize.query(query, {
@@ -374,12 +371,11 @@ class NotificationRecipientResolver {
                 user_id,
                 "employeeId",
                 email,
-                first_name,
-                last_name,
-                (first_name || ' ' || last_name) as full_name,
+                "firstName",
+                "lastName",
+                ("firstName" || ' ' || "lastName") as full_name,
                 role,
                 department_id,
-                shift_id,
                 phone,
                 account_status,
                 email_verified
@@ -387,7 +383,7 @@ class NotificationRecipientResolver {
             WHERE shift_id = :shiftId
               AND company_id = :companyId
               AND account_status = 'active'
-            ORDER BY first_name, last_name
+            ORDER BY "firstName", "lastName"
         `;
 
         const users = await sequelize.query(query, {

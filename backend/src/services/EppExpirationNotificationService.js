@@ -11,6 +11,9 @@
 const cron = require('node-cron');
 const { Op } = require('sequelize');
 
+// 🔥 NCE: Central Telefónica de Notificaciones - CERO BYPASS
+const NCE = require('./NotificationCentralExchange');
+
 class EppExpirationNotificationService {
     constructor() {
         this.db = null;
@@ -447,24 +450,33 @@ class EppExpirationNotificationService {
             }
         }
 
-        // Crear notificaciones usando el sistema enterprise
+        // 🔥 NCE: Crear notificaciones via Central Telefónica
         try {
-            const { EnterpriseNotification } = this.db;
-            if (EnterpriseNotification) {
-                for (const notif of notifications) {
-                    await EnterpriseNotification.create({
-                        ...notif,
-                        status: 'pending',
-                        read: false,
-                        created_at: new Date()
-                    });
-                }
-            } else {
-                // Fallback: usar console.log si no hay sistema de notificaciones
-                console.log(`[EPP-NOTIFICATION] ${isExpired ? 'VENCIDO' : 'Por vencer'}: ${eppName} - ${employeeName} - ${daysRemaining} dias`);
+            for (const notif of notifications) {
+                await NCE.send({
+                    companyId: notif.company_id,
+                    module: 'hse',
+                    originType: notif.type,
+                    originId: `epp-${delivery.id}-${notif.recipient_id}`,
+                    workflowKey: isExpired ? 'hse.epp_expired' : 'hse.epp_expiring',
+                    recipientType: 'user',
+                    recipientId: notif.recipient_id,
+                    title: notif.title,
+                    message: notif.message,
+                    priority: severity === 'critical' ? 'urgent' : (severity === 'high' ? 'high' : 'normal'),
+                    requiresAction: true,
+                    actionType: 'replacement',
+                    metadata: {
+                        ...notif.metadata,
+                        action_url: notif.action_url,
+                        severity: notif.severity
+                    },
+                    slaHours: isExpired ? 24 : (daysRemaining * 24),
+                    channels: ['inbox'],
+                });
             }
         } catch (err) {
-            console.error('[EPP-SCHEDULER] Error creando notificacion:', err.message);
+            console.error('[EPP-SCHEDULER] Error creando notificacion NCE:', err.message);
             // No lanzar error para continuar con otras notificaciones
         }
     }

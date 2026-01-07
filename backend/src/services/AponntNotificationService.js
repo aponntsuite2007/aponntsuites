@@ -13,35 +13,21 @@
  * 4. Alertas críticas del sistema
  *
  * Canales de notificación:
- * - Email (EmailService.sendFromAponnt)
+ * - Email (NCE - Central Telefónica) 🔥 MIGRADO
  * - Notificación interna (NotificationsEnterprise)
- * - SMS (futuro)
+ * - SMS (futuro via NCE)
  *
  * ============================================================================
  */
 
 const { sequelize } = require('../config/database');
 
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass EmailService)
+const NCE = require('./NotificationCentralExchange');
+
 class AponntNotificationService {
     constructor() {
-        this.emailService = null; // Se inicializa lazy
-        console.log('🔔 [APONNT-NOTIF] Servicio de notificaciones Aponnt → Empresas inicializado');
-    }
-
-    /**
-     * Inicializar EmailService de forma lazy
-     */
-    _getEmailService() {
-        if (!this.emailService) {
-            try {
-                // EmailService exporta un singleton (instancia), no la clase
-                this.emailService = require('./EmailService');
-            } catch (error) {
-                console.error('❌ [APONNT-NOTIF] Error cargando EmailService:', error.message);
-                this.emailService = null;
-            }
-        }
-        return this.emailService;
+        console.log('🔔 [APONNT-NOTIF] Servicio de notificaciones Aponnt → Empresas inicializado (via NCE)');
     }
 
     /**
@@ -55,29 +41,46 @@ class AponntNotificationService {
 
             const notifications = [];
 
-            // 1. EMAIL A LA EMPRESA (BIENVENIDA)
+            // 1. EMAIL A LA EMPRESA (BIENVENIDA) → NCE
             try {
-                const emailService = this._getEmailService();
-                if (emailService) {
-                    const welcomeEmail = await emailService.sendFromAponnt('transactional', {
-                        to: companyData.contactEmail,
-                        recipientName: companyData.name,
-                        subject: `¡Bienvenido a Aponnt! - ${companyData.name}`,
-                        category: 'onboarding',
-                        html: this._generateWelcomeEmailHTML(companyData),
-                        text: this._generateWelcomeEmailText(companyData)
-                    });
+                const welcomeResult = await NCE.send({
+                    companyId: companyData.id,
+                    module: 'companies',
+                    originType: 'company_onboarding',
+                    originId: `company-${companyData.id}-welcome`,
 
-                    notifications.push({
-                        type: 'email',
-                        status: 'sent',
-                        messageId: welcomeEmail.messageId
-                    });
+                    workflowKey: 'companies.new_company_welcome',
 
-                    console.log(`📧 [APONNT-NOTIF] Email de bienvenida enviado a ${companyData.contactEmail}`);
-                }
+                    recipientType: 'external',
+                    recipientId: companyData.contactEmail,
+                    recipientEmail: companyData.contactEmail,
+
+                    title: `¡Bienvenido a Aponnt! - ${companyData.name}`,
+                    message: `Tu empresa ${companyData.name} ha sido registrada exitosamente.`,
+
+                    metadata: {
+                        companyId: companyData.id,
+                        companyName: companyData.name,
+                        licenseType: companyData.licenseType,
+                        maxEmployees: companyData.maxEmployees,
+                        htmlContent: this._generateWelcomeEmailHTML(companyData),
+                        textContent: this._generateWelcomeEmailText(companyData)
+                    },
+
+                    priority: 'high',
+                    requiresAction: false,
+                    channels: ['email'],
+                });
+
+                notifications.push({
+                    type: 'email',
+                    status: welcomeResult.success ? 'sent' : 'failed',
+                    notificationId: welcomeResult.notificationId
+                });
+
+                console.log(`📧 [NCE] Email de bienvenida enviado a ${companyData.contactEmail} (ID: ${welcomeResult.notificationId})`);
             } catch (emailError) {
-                console.error(`❌ [APONNT-NOTIF] Error enviando email de bienvenida:`, emailError.message);
+                console.error(`❌ [NCE] Error enviando email de bienvenida:`, emailError.message);
                 notifications.push({
                     type: 'email',
                     status: 'failed',
@@ -180,27 +183,43 @@ class AponntNotificationService {
 
             const notifications = [];
 
-            // 1. EMAIL A LA EMPRESA
+            // 1. EMAIL A LA EMPRESA → NCE
             try {
-                const emailService = this._getEmailService();
-                if (emailService) {
-                    const moduleChangeEmail = await emailService.sendFromAponnt('billing', {
-                        to: company.contact_email,
-                        recipientName: company.name,
-                        subject: `Cambios en tu suscripción - ${company.name}`,
-                        category: 'billing',
-                        html: this._generateModuleChangeEmailHTML(company, changeData),
-                        text: this._generateModuleChangeEmailText(company, changeData)
-                    });
+                const moduleChangeResult = await NCE.send({
+                    companyId: companyId,
+                    module: 'billing',
+                    originType: 'module_change_notification',
+                    originId: `company-${companyId}-modules-${Date.now()}`,
 
-                    notifications.push({
-                        type: 'email',
-                        status: 'sent',
-                        messageId: moduleChangeEmail.messageId
-                    });
-                }
+                    workflowKey: 'billing.module_change',
+
+                    recipientType: 'external',
+                    recipientId: company.contact_email,
+                    recipientEmail: company.contact_email,
+
+                    title: `Cambios en tu suscripción - ${company.name}`,
+                    message: this._generateModuleChangeMessage(changeData),
+
+                    metadata: {
+                        companyId,
+                        companyName: company.name,
+                        changeData,
+                        htmlContent: this._generateModuleChangeEmailHTML(company, changeData),
+                        textContent: this._generateModuleChangeEmailText(company, changeData)
+                    },
+
+                    priority: 'high',
+                    requiresAction: false,
+                    channels: ['email'],
+                });
+
+                notifications.push({
+                    type: 'email',
+                    status: moduleChangeResult.success ? 'sent' : 'failed',
+                    notificationId: moduleChangeResult.notificationId
+                });
             } catch (emailError) {
-                console.error(`❌ [APONNT-NOTIF] Error enviando email de cambio:`, emailError.message);
+                console.error(`❌ [NCE] Error enviando email de cambio:`, emailError.message);
             }
 
             // 2. NOTIFICACIÓN INTERNA
@@ -265,16 +284,33 @@ class AponntNotificationService {
 
             for (const company of companies) {
                 try {
-                    // Email
-                    const emailService = this._getEmailService();
-                    if (emailService && announcementData.sendEmail) {
-                        await emailService.sendFromAponnt('marketing', {
-                            to: company.contact_email,
-                            recipientName: company.name,
-                            subject: announcementData.title,
-                            category: 'announcement',
-                            html: announcementData.html,
-                            text: announcementData.text
+                    // Email → NCE
+                    if (announcementData.sendEmail) {
+                        await NCE.send({
+                            companyId: company.id,
+                            module: 'platform',
+                            originType: 'platform_announcement',
+                            originId: `announcement-${Date.now()}-${company.id}`,
+
+                            workflowKey: 'platform.announcement',
+
+                            recipientType: 'external',
+                            recipientId: company.contact_email,
+                            recipientEmail: company.contact_email,
+
+                            title: announcementData.title,
+                            message: announcementData.message,
+
+                            metadata: {
+                                companyId: company.id,
+                                companyName: company.name,
+                                htmlContent: announcementData.html,
+                                textContent: announcementData.text
+                            },
+
+                            priority: announcementData.priority || 'normal',
+                            requiresAction: false,
+                            channels: ['email'],
                         });
                     }
 
@@ -348,27 +384,43 @@ class AponntNotificationService {
 
             const notifications = [];
 
-            // 1. EMAIL URGENTE
+            // 1. EMAIL URGENTE → NCE
             try {
-                const emailService = this._getEmailService();
-                if (emailService) {
-                    const alertEmail = await emailService.sendFromAponnt('support', {
-                        to: company.contact_email,
-                        recipientName: company.name,
-                        subject: `🚨 ALERTA: ${alertData.title}`,
-                        category: 'alert',
-                        html: this._generateAlertEmailHTML(company, alertData),
-                        text: this._generateAlertEmailText(company, alertData)
-                    });
+                const alertResult = await NCE.send({
+                    companyId: companyId,
+                    module: 'system',
+                    originType: 'system_alert',
+                    originId: `alert-${companyId}-${Date.now()}`,
 
-                    notifications.push({
-                        type: 'email',
-                        status: 'sent',
-                        messageId: alertEmail.messageId
-                    });
-                }
+                    workflowKey: 'system.critical_alert',
+
+                    recipientType: 'external',
+                    recipientId: company.contact_email,
+                    recipientEmail: company.contact_email,
+
+                    title: `🚨 ALERTA: ${alertData.title}`,
+                    message: alertData.message,
+
+                    metadata: {
+                        companyId,
+                        companyName: company.name,
+                        alertData,
+                        htmlContent: this._generateAlertEmailHTML(company, alertData),
+                        textContent: this._generateAlertEmailText(company, alertData)
+                    },
+
+                    priority: 'urgent',
+                    requiresAction: true,
+                    channels: ['email'],
+                });
+
+                notifications.push({
+                    type: 'email',
+                    status: alertResult.success ? 'sent' : 'failed',
+                    notificationId: alertResult.notificationId
+                });
             } catch (emailError) {
-                console.error(`❌ [APONNT-NOTIF] Error enviando email de alerta:`, emailError.message);
+                console.error(`❌ [NCE] Error enviando email de alerta:`, emailError.message);
             }
 
             // 2. NOTIFICACIÓN INTERNA CRÍTICA

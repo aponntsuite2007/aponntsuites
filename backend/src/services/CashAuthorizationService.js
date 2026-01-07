@@ -6,6 +6,9 @@
 
 const { Op, literal } = require('sequelize');
 
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+const NCE = require('./NotificationCentralExchange');
+
 class CashAuthorizationService {
     constructor(db) {
         this.db = db;
@@ -709,24 +712,34 @@ class CashAuthorizationService {
 
     /**
      * Enviar notificación
+     * 🔥 MIGRADO A NCE: Central Telefónica
      */
     async sendNotification(companyId, userId, notification) {
         try {
-            // Intentar usar el sistema de notificaciones existente
-            if (this.db.Notification) {
-                await this.db.Notification.create({
-                    company_id: companyId,
-                    user_id: userId,
-                    type: notification.type,
-                    title: notification.title,
-                    message: notification.message,
-                    data: notification.data,
-                    priority: notification.priority || 'normal',
-                    is_read: false
-                });
-            }
+            // 🔥 NCE: Central Telefónica de Notificaciones
+            await NCE.send({
+                companyId: companyId,
+                module: 'finance',
+                originType: 'cash_authorization',
+                originId: `cash-auth-${Date.now()}`,
 
-            // También enviar por socket si está disponible
+                workflowKey: `finance.${notification.type || 'authorization'}`,
+
+                recipientType: 'user',
+                recipientId: userId,
+
+                title: notification.title,
+                message: notification.message,
+
+                metadata: notification.data || {},
+
+                priority: notification.priority || 'normal',
+                requiresAction: notification.type === 'authorization_request',
+
+                channels: ['inbox', 'websocket'],
+            });
+
+            // Socket ya lo maneja NCE via websocket channel, pero mantener fallback
             if (global.io) {
                 global.io.to(`user_${userId}`).emit('notification', notification);
             }

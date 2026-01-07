@@ -30,6 +30,9 @@ const EmailTemplateRenderer = require('../utils/EmailTemplateRenderer');
 const NotificationService = require('./notificationService');
 const { QueryTypes } = require('sequelize');
 
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+const NCE = require('./NotificationCentralExchange');
+
 class EmailVerificationService {
     constructor() {
         this.TOKEN_EXPIRATION_HOURS = 48; // 48 horas
@@ -507,17 +510,41 @@ class EmailVerificationService {
                 Soporte: soporte@aponnt.com
             `;
 
-            // Enviar email usando EmailService de Aponnt
-            await EmailService.sendFromAponnt('support', {
-                to: email,
-                subject: '🔐 Verifica tu email - Aponnt',
-                html: emailHTML,
-                text: emailText,
-                category: 'verification',
-                recipientName: templateData.user_name
+            // 🔥 NCE: Central Telefónica de Notificaciones
+            await NCE.send({
+                companyId: null, // Scope aponnt (verificación global)
+                module: 'auth',
+                originType: 'email_verification',
+                originId: `verification-${token}`,
+
+                workflowKey: 'auth.email_verification',
+
+                recipientType: 'external',
+                recipientId: email,
+                recipientEmail: email,
+
+                title: '🔐 Verifica tu email - Aponnt',
+                message: `Verificación de email para ${templateData.user_name}`,
+
+                metadata: {
+                    token,
+                    userType,
+                    userName: templateData.user_name,
+                    verificationLink: templateData.verification_link,
+                    expiresAt: expiresAt,
+                    pendingConsents: consents?.length || 0,
+                    htmlContent: emailHTML,
+                    textContent: emailText
+                },
+
+                priority: 'high',
+                requiresAction: true,
+                actionType: 'verification',
+
+                channels: ['email'],
             });
 
-            console.log(`✅ [EMAIL-VERIFY] Email de verificación enviado a: ${email}`);
+            console.log(`✅ [NCE] Email de verificación enviado a: ${email}`);
 
         } catch (error) {
             console.error(`❌ [EMAIL-VERIFY] Error enviando email:`, error.message);

@@ -18,6 +18,9 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass EmailService)
+const NCE = require('./NotificationCentralExchange');
+
 class AponntBillingService {
 
     /**
@@ -492,18 +495,39 @@ class AponntBillingService {
                 console.warn('⚠️ [APONNT BILLING] No se pudo crear notificación en inbox:', e.message);
             }
 
-            // Enviar email
+            // 🔥 Enviar email → NCE
             try {
-                const EmailService = require('./EmailService');
-                const emailService = new EmailService();
+                await NCE.send({
+                    companyId: preInvoice.company_id,
+                    module: 'billing',
+                    originType: 'pre_invoice_review',
+                    originId: `pre-invoice-${preInvoice.id}`,
 
-                await emailService.sendFromAponnt({
-                    to: emailConfig.from_email,
-                    subject: `📄 Pre-factura ${preInvoice.pre_invoice_code} pendiente de revisión`,
-                    html: this._generatePreInvoiceEmailHtml(preInvoice)
+                    workflowKey: 'billing.pre_invoice_pending',
+
+                    recipientType: 'group',
+                    recipientId: 'aponnt_billing_team',
+                    recipientEmail: emailConfig.from_email,
+
+                    title: `📄 Pre-factura ${preInvoice.pre_invoice_code} pendiente de revisión`,
+                    message: `Nueva pre-factura generada para ${preInvoice.company_name || 'empresa'} por $${preInvoice.total}`,
+
+                    metadata: {
+                        preInvoiceId: preInvoice.id,
+                        preInvoiceCode: preInvoice.pre_invoice_code,
+                        companyId: preInvoice.company_id,
+                        total: preInvoice.total,
+                        htmlContent: this._generatePreInvoiceEmailHtml(preInvoice)
+                    },
+
+                    priority: 'normal',
+                    requiresAction: true,
+                    actionType: 'approval',
+
+                    channels: ['email'],
                 });
             } catch (e) {
-                console.warn('⚠️ [APONNT BILLING] No se pudo enviar email:', e.message);
+                console.warn('⚠️ [NCE] No se pudo enviar email:', e.message);
             }
 
             console.log(`📧 [APONNT BILLING] Notificación enviada para pre-factura ${preInvoice.pre_invoice_code}`);

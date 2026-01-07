@@ -21,6 +21,9 @@ const { Notification, SupportTicketV2, User, Company, Partner } = database;
 const EmailService = require('./EmailService');
 const EmailTemplateRenderer = require('../utils/EmailTemplateRenderer');
 
+// 🔥 NCE: Central Telefónica de Notificaciones - CERO BYPASS
+const NCE = require('./NotificationCentralExchange');
+
 class SupportNotificationService {
   /**
    * Enviar notificación cuando se crea un nuevo ticket
@@ -52,32 +55,37 @@ class SupportNotificationService {
         return null;
       }
 
-      // Notificar al vendor asignado
+      // 🔥 NCE: Notificar al vendor asignado via Central Telefónica
       if (ticket.assigned_to_vendor_id) {
-        const notification = await Notification.create({
-          company_id: ticket.company_id,
+        const nceResult = await NCE.send({
+          companyId: ticket.company_id,
           module: 'support',
-          category: 'info',
-          notification_type: 'support_ticket_created',
-          priority: ticket.priority === 'urgent' ? 'urgent' : 'high',
-          recipient_user_id: ticket.assigned_to_vendor_id,
+          originType: 'support_ticket_created',
+          originId: `ticket-${ticket.ticket_id}`,
+          workflowKey: 'support.ticket_created',
+          recipientType: 'user',
+          recipientId: ticket.assigned_to_vendor_id,
           title: `Nuevo ticket de soporte: ${ticket.ticket_number}`,
           message: `${ticket.creator?.firstName} ${ticket.creator?.lastName} ha creado un ticket de soporte sobre "${ticket.subject}" en el módulo ${ticket.module_display_name || ticket.module_name}.`,
-          action_url: `/support/tickets/${ticket.ticket_id}`,
-          action_required: true,
-          action_deadline: ticket.sla_first_response_deadline,
+          priority: ticket.priority === 'urgent' ? 'urgent' : 'high',
+          requiresAction: true,
+          actionType: 'response',
           metadata: {
             ticket_id: ticket.ticket_id,
             ticket_number: ticket.ticket_number,
             module_name: ticket.module_name,
             priority: ticket.priority,
             sla_first_response_deadline: ticket.sla_first_response_deadline,
-            sla_resolution_deadline: ticket.sla_resolution_deadline
-          }
+            sla_resolution_deadline: ticket.sla_resolution_deadline,
+            action_url: `/support/tickets/${ticket.ticket_id}`,
+            category: 'info'
+          },
+          slaHours: ticket.sla_first_response_deadline ? Math.ceil((new Date(ticket.sla_first_response_deadline) - new Date()) / 3600000) : 24,
+          channels: ['inbox'],
         });
 
-        console.log(`✅ [SUPPORT-NOTIF] Notificación enviada a vendor ${ticket.assigned_to_vendor_id} para ticket ${ticket.ticket_number}`);
-        return notification;
+        console.log(`✅ [SUPPORT-NOTIF] Notificación NCE enviada a vendor ${ticket.assigned_to_vendor_id} para ticket ${ticket.ticket_number}`);
+        return nceResult;
       }
 
       return null;
@@ -125,27 +133,32 @@ class SupportNotificationService {
 
       if (!recipient_user_id) return null;
 
-      const notification = await Notification.create({
-        company_id: ticket.company_id,
+      // 🔥 NCE: Notificación de mensaje via Central Telefónica
+      const nceResult = await NCE.send({
+        companyId: ticket.company_id,
         module: 'support',
-        category: 'info',
-        notification_type: 'support_message_received',
-        priority: 'medium',
-        recipient_user_id,
+        originType: 'support_message_received',
+        originId: `message-${message_id}`,
+        workflowKey: 'support.message_received',
+        recipientType: 'user',
+        recipientId: recipient_user_id,
         title: `Nuevo mensaje en ticket ${ticket.ticket_number}`,
         message: `${fromUser.firstName} ${fromUser.lastName} ha respondido en el ticket de soporte.`,
-        action_url: `/support/tickets/${ticket.ticket_id}`,
-        action_required: true,
+        priority: 'normal',
+        requiresAction: true,
         metadata: {
           ticket_id: ticket.ticket_id,
           ticket_number: ticket.ticket_number,
           from_user_id,
-          message_id
-        }
+          message_id,
+          action_url: `/support/tickets/${ticket.ticket_id}`,
+          category: 'info'
+        },
+        channels: ['inbox'],
       });
 
-      console.log(`✅ [SUPPORT-NOTIF] Notificación de mensaje enviada a ${recipient_user_id}`);
-      return notification;
+      console.log(`✅ [SUPPORT-NOTIF] Notificación NCE de mensaje enviada a ${recipient_user_id}`);
+      return nceResult;
     } catch (error) {
       console.error('[SUPPORT-NOTIF] Error notifying new message:', error);
       return null;
@@ -179,30 +192,34 @@ class SupportNotificationService {
 
       if (!ticket || !ticket.escalated_to_supervisor_id) return null;
 
-      // Notificar al supervisor
-      const notification = await Notification.create({
-        company_id: ticket.company_id,
+      // 🔥 NCE: Notificar escalamiento al supervisor via Central Telefónica
+      const nceResult = await NCE.send({
+        companyId: ticket.company_id,
         module: 'support',
-        category: 'alert',
-        notification_type: 'support_ticket_escalated',
-        priority: 'urgent',
-        recipient_user_id: ticket.escalated_to_supervisor_id,
+        originType: 'support_ticket_escalated',
+        originId: `escalation-${escalation_id}`,
+        workflowKey: 'support.ticket_escalated',
+        recipientType: 'user',
+        recipientId: ticket.escalated_to_supervisor_id,
         title: `Ticket escalado: ${ticket.ticket_number}`,
         message: `El ticket de soporte "${ticket.subject}" ha sido escalado por ${ticket.assignedVendor?.firstName} ${ticket.assignedVendor?.lastName}. Requiere atención urgente.`,
-        action_url: `/support/tickets/${ticket.ticket_id}`,
-        action_required: true,
-        action_deadline: ticket.sla_resolution_deadline,
+        priority: 'urgent',
+        requiresAction: true,
+        actionType: 'escalation',
         metadata: {
           ticket_id: ticket.ticket_id,
           ticket_number: ticket.ticket_number,
           escalation_id,
           original_vendor_id: ticket.assigned_to_vendor_id,
-          priority: 'urgent'
-        }
+          action_url: `/support/tickets/${ticket.ticket_id}`,
+          category: 'alert'
+        },
+        slaHours: ticket.sla_resolution_deadline ? Math.ceil((new Date(ticket.sla_resolution_deadline) - new Date()) / 3600000) : 4,
+        channels: ['inbox'],
       });
 
-      console.log(`✅ [SUPPORT-NOTIF] Notificación de escalamiento enviada a supervisor ${ticket.escalated_to_supervisor_id}`);
-      return notification;
+      console.log(`✅ [SUPPORT-NOTIF] Notificación NCE de escalamiento enviada a supervisor ${ticket.escalated_to_supervisor_id}`);
+      return nceResult;
     } catch (error) {
       console.error('[SUPPORT-NOTIF] Error notifying escalation:', error);
       return null;
@@ -242,28 +259,34 @@ class SupportNotificationService {
 
       if (!deadline_field) return null;
 
-      const notification = await Notification.create({
-        company_id: ticket.company_id,
+      // 🔥 NCE: Notificación SLA via Central Telefónica
+      const nceResult = await NCE.send({
+        companyId: ticket.company_id,
         module: 'support',
-        category: 'warning',
-        notification_type: 'support_sla_deadline_approaching',
-        priority: 'high',
-        recipient_user_id: ticket.assigned_to_vendor_id,
+        originType: 'support_sla_deadline_approaching',
+        originId: `sla-${ticket.ticket_id}-${deadline_type}`,
+        workflowKey: 'support.sla_deadline',
+        recipientType: 'user',
+        recipientId: ticket.assigned_to_vendor_id,
         title: `SLA próximo a vencer: ${ticket.ticket_number}`,
         message: `El deadline de ${deadline_name} para el ticket "${ticket.subject}" está próximo a vencer.`,
-        action_url: `/support/tickets/${ticket.ticket_id}`,
-        action_required: true,
-        action_deadline: deadline_field,
+        priority: 'high',
+        requiresAction: true,
+        actionType: 'sla_warning',
         metadata: {
           ticket_id: ticket.ticket_id,
           ticket_number: ticket.ticket_number,
           deadline_type,
-          deadline: deadline_field
-        }
+          deadline: deadline_field,
+          action_url: `/support/tickets/${ticket.ticket_id}`,
+          category: 'warning'
+        },
+        slaHours: Math.max(1, Math.ceil((new Date(deadline_field) - new Date()) / 3600000)),
+        channels: ['inbox'],
       });
 
-      console.log(`⚠️  [SUPPORT-NOTIF] Notificación de SLA enviada para ticket ${ticket.ticket_number}`);
-      return notification;
+      console.log(`⚠️  [SUPPORT-NOTIF] Notificación NCE de SLA enviada para ticket ${ticket.ticket_number}`);
+      return nceResult;
     } catch (error) {
       console.error('[SUPPORT-NOTIF] Error notifying SLA deadline:', error);
       return null;
@@ -292,28 +315,32 @@ class SupportNotificationService {
 
       if (!ticket || !ticket.assigned_to_vendor_id) return null;
 
-      // Notificar al vendor que su ticket fue cerrado
-      const notification = await Notification.create({
-        company_id: ticket.company_id,
+      // 🔥 NCE: Notificar cierre al vendor via Central Telefónica
+      const nceResult = await NCE.send({
+        companyId: ticket.company_id,
         module: 'support',
-        category: 'info',
-        notification_type: 'support_ticket_closed',
-        priority: 'low',
-        recipient_user_id: ticket.assigned_to_vendor_id,
+        originType: 'support_ticket_closed',
+        originId: `closed-${ticket.ticket_id}`,
+        workflowKey: 'support.ticket_closed',
+        recipientType: 'user',
+        recipientId: ticket.assigned_to_vendor_id,
         title: `Ticket cerrado: ${ticket.ticket_number}`,
         message: `El ticket "${ticket.subject}" ha sido cerrado por ${ticket.closedBy?.firstName} ${ticket.closedBy?.lastName}.`,
-        action_url: `/support/tickets/${ticket.ticket_id}`,
-        action_required: false,
+        priority: 'low',
+        requiresAction: false,
         metadata: {
           ticket_id: ticket.ticket_id,
           ticket_number: ticket.ticket_number,
           closed_by_user_id: ticket.closed_by_user_id,
-          rating: ticket.rating
-        }
+          rating: ticket.rating,
+          action_url: `/support/tickets/${ticket.ticket_id}`,
+          category: 'info'
+        },
+        channels: ['inbox'],
       });
 
-      console.log(`✅ [SUPPORT-NOTIF] Notificación de cierre enviada a vendor ${ticket.assigned_to_vendor_id}`);
-      return notification;
+      console.log(`✅ [SUPPORT-NOTIF] Notificación NCE de cierre enviada a vendor ${ticket.assigned_to_vendor_id}`);
+      return nceResult;
     } catch (error) {
       console.error('[SUPPORT-NOTIF] Error notifying ticket closed:', error);
       return null;
@@ -337,26 +364,31 @@ class SupportNotificationService {
 
       if (!ticket || ticket.status !== 'closed' || ticket.rating) return null;
 
-      // Notificar al creador para que evalúe
-      const notification = await Notification.create({
-        company_id: ticket.company_id,
+      // 🔥 NCE: Solicitar evaluación via Central Telefónica
+      const nceResult = await NCE.send({
+        companyId: ticket.company_id,
         module: 'support',
-        category: 'info',
-        notification_type: 'support_rating_request',
-        priority: 'low',
-        recipient_user_id: ticket.created_by_user_id,
+        originType: 'support_rating_request',
+        originId: `rating-${ticket.ticket_id}`,
+        workflowKey: 'support.rating_request',
+        recipientType: 'user',
+        recipientId: ticket.created_by_user_id,
         title: `Evalúa el soporte recibido: ${ticket.ticket_number}`,
         message: `Tu ticket de soporte ha sido cerrado. Por favor, evalúa la atención recibida para ayudarnos a mejorar.`,
-        action_url: `/support/tickets/${ticket.ticket_id}/rate`,
-        action_required: true,
+        priority: 'low',
+        requiresAction: true,
+        actionType: 'feedback',
         metadata: {
           ticket_id: ticket.ticket_id,
-          ticket_number: ticket.ticket_number
-        }
+          ticket_number: ticket.ticket_number,
+          action_url: `/support/tickets/${ticket.ticket_id}/rate`,
+          category: 'info'
+        },
+        channels: ['inbox'],
       });
 
-      console.log(`⭐ [SUPPORT-NOTIF] Solicitud de evaluación enviada al cliente ${ticket.created_by_user_id}`);
-      return notification;
+      console.log(`⭐ [SUPPORT-NOTIF] Solicitud NCE de evaluación enviada al cliente ${ticket.created_by_user_id}`);
+      return nceResult;
     } catch (error) {
       console.error('[SUPPORT-NOTIF] Error notifying rating request:', error);
       return null;
@@ -420,34 +452,38 @@ class SupportNotificationService {
           return null;
       }
 
-      // Crear notificación para cada admin
-      const notifications = await Promise.all(
+      // 🔥 NCE: Crear notificaciones para cada admin via Central Telefónica
+      const nceResults = await Promise.all(
         aponntAdmins.map(admin =>
-          Notification.create({
-            company_id: 1, // Aponnt
+          NCE.send({
+            companyId: null, // Aponnt (scope global)
             module: 'support',
-            category: 'alert',
-            notification_type: `support_admin_${event_type}`,
-            priority,
-            recipient_user_id: admin.user_id,
+            originType: `support_admin_${event_type}`,
+            originId: `admin-${event_type}-${ticket.ticket_id}-${admin.user_id}`,
+            workflowKey: `support.admin_${event_type}`,
+            recipientType: 'user',
+            recipientId: admin.user_id,
             title,
             message,
-            action_url: `/admin/support/tickets/${ticket.ticket_id}`,
-            action_required: priority === 'high',
+            priority: priority === 'high' ? 'high' : 'normal',
+            requiresAction: priority === 'high',
             metadata: {
               ticket_id: ticket.ticket_id,
               ticket_number: ticket.ticket_number,
               company_id: ticket.company_id,
               company_name: ticket.company?.name,
               event_type,
+              action_url: `/admin/support/tickets/${ticket.ticket_id}`,
+              category: 'alert',
               ...details
-            }
+            },
+            channels: ['inbox'],
           })
         )
       );
 
-      console.log(`📢 [SUPPORT-NOTIF] ${notifications.length} notificaciones enviadas a admins de Aponnt`);
-      return notifications;
+      console.log(`📢 [SUPPORT-NOTIF] ${nceResults.length} notificaciones NCE enviadas a admins de Aponnt`);
+      return nceResults;
     } catch (error) {
       console.error('[SUPPORT-NOTIF] Error notifying Aponnt admin:', error);
       return null;
@@ -812,17 +848,34 @@ class SupportNotificationService {
    */
   static async sendToInbox(userId, userType, notificationData) {
     try {
-      const notification = await Notification.create({
-        ...notificationData,
-        recipient_user_id: userId,
-        recipient_type: userType
+      // 🔥 NCE: Central Telefónica de Notificaciones
+      const nceResult = await NCE.send({
+        companyId: notificationData.company_id,
+        module: 'support',
+        originType: notificationData.notification_type,
+        originId: `support-${notificationData.notification_type}-${userId}-${Date.now()}`,
+        workflowKey: `support.${notificationData.notification_type}`,
+        recipientType: 'user',
+        recipientId: userId,
+        title: notificationData.title,
+        message: notificationData.message,
+        priority: notificationData.priority || 'normal',
+        requiresAction: notificationData.action_required || false,
+        metadata: {
+          ...notificationData.metadata,
+          action_url: notificationData.action_url,
+          category: notificationData.category,
+          recipient_type: userType,
+          action_deadline: notificationData.action_deadline
+        },
+        channels: ['inbox'],
       });
 
-      console.log(`✅ [SUPPORT-NOTIF-INBOX] Notificación guardada en inbox para ${userType} ${userId}`);
-      return notification;
+      console.log(`✅ [SUPPORT-NOTIF-INBOX] Notificación NCE guardada para ${userType} ${userId}`);
+      return nceResult;
 
     } catch (error) {
-      console.error(`❌ [SUPPORT-NOTIF-INBOX] Error guardando en inbox:`, error.message);
+      console.error(`❌ [SUPPORT-NOTIF-INBOX] Error guardando en NCE:`, error.message);
       throw error;
     }
   }

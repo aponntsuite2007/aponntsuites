@@ -221,8 +221,8 @@ class AutonomousQAAgent {
     if (loginBtn) await loginBtn.click();
 
     // Esperar que cargue el panel COMPLETAMENTE
-    console.log('   ⏳ Esperando que cargue el panel y módulos (20s)...');
-    await this.page.waitForTimeout(20000); // 20 segundos para módulos dinámicos
+    console.log('   ⏳ Esperando que cargue el panel y módulos (8s)...');
+    await this.page.waitForTimeout(8000); // 8 segundos para módulos dinámicos
 
     // Tomar screenshot para debug
     try {
@@ -245,18 +245,16 @@ class AutonomousQAAgent {
       console.log('      ⚠️  No se pudo abrir sidebar mobile');
     }
 
-    // Esperar específicamente a que aparezcan módulos
+    // Esperar específicamente a que aparezcan módulos (detección rápida)
     console.log('   🔍 Esperando a que aparezcan módulos...');
     try {
       await this.page.waitForFunction(
         () => {
-          // Buscar elementos que típicamente contienen módulos
-          const moduleElements = document.querySelectorAll(
-            '[data-module], .sidebar a, .menu-item, .module-link, button[onclick*="loadModule"], a[onclick*="loadModule"], .mobile-sidebar a, .mobile-sidebar button'
-          );
-          return moduleElements.length > 5; // Al menos 5 módulos
+          // Buscar elementos con data-module-key (más específico y confiable)
+          const moduleElements = document.querySelectorAll('[data-module-key]');
+          return moduleElements.length > 0; // Al menos 1 módulo
         },
-        { timeout: 15000 }
+        { timeout: 5000 }
       );
       console.log('      ✅ Módulos detectados en el DOM');
     } catch (e) {

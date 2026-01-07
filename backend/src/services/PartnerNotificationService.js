@@ -17,6 +17,9 @@ const database = require('../config/database');
 const nodemailer = require('nodemailer');
 const { QueryTypes } = require('sequelize');
 
+// 🔥 NCE: Sistema central de notificaciones (central telefónica)
+const NCE = require('./NotificationCentralExchange');
+
 class PartnerNotificationService {
   constructor() {
     // Configurar transporter de email (usa variables de entorno)
@@ -153,180 +156,138 @@ class PartnerNotificationService {
       const historyId = historyResult[0][0].id;
       console.log(`   ✅ Historia registrada con ID: ${historyId}`);
 
-      // 4. Generar contenido de notificación
-      const notification = this._generateNotificationContent(partner, oldStatus, newStatus, changeReason, changedByName, activeContracts);
+      // 4. Notificar al partner usando NCE (central telefónica)
+      const partnerName = partner.company_name || `${partner.first_name} ${partner.last_name}`;
 
-      // 5. Crear notificación en tabla notifications (sistema unificado)
-      const Notification = database.Notification;
+      const statusLabels = {
+        pendiente_aprobacion: 'Pendiente de Aprobación',
+        activo: 'Activo',
+        suspendido: 'Suspendido',
+        baja: 'Dado de Baja',
+        renuncia: 'Renuncia'
+      };
 
-      const partnerNotification = await Notification.create({
-        company_id: null, // Partners no tienen company_id en tabla partners (es global)
-        module: 'partners',
-        category: this._getNotificationCategory(newStatus),
-        notification_type: `partner_status_${newStatus}`,
-        priority: this._getNotificationPriority(newStatus),
-
-        // Destinatario (el partner)
-        recipient_user_id: null, // Partner no es user del sistema
-        recipient_custom_list: [partner.email],
-
-        // Contenido
-        title: notification.title,
-        message: notification.message,
-        short_message: notification.shortMessage,
-        email_body: notification.emailBody,
-
-        // Contexto
-        related_entity_type: 'partner',
-        related_entity_id: partnerId,
-        related_partner_id: partnerId,
-
-        // Metadata
-        metadata: {
-          old_status: oldStatus,
-          new_status: newStatus,
-          change_reason: changeReason,
-          changed_by: changedByName,
-          changed_by_role: changedByRole,
-          active_contracts_count: activeContracts.length,
-          history_id: historyId
-        },
-
-        // Sender
-        sender_user_id: changedByUserId,
-        sender_type: 'admin',
-
-        // Canales
-        sent_via_app: true,
-        sent_via_email: true,
-
-        // No requiere acción del partner (solo informativa)
-        requires_action: false,
-
-        created_by: changedByUserId
-      });
-
-      console.log(`   ✅ Notificación creada con ID: ${partnerNotification.id}`);
-
-      // 6. Enviar email al partner
+      let partnerNotification = null;
       let emailSent = false;
       let emailSentAt = null;
 
-      if (partner.email && process.env.SMTP_USER) {
-        try {
-          await this.emailTransporter.sendMail({
-            from: process.env.SMTP_FROM || 'Sistema de Partners <noreply@empresa.com>',
-            to: partner.email,
-            subject: notification.emailSubject,
-            html: notification.emailBody
-          });
+      try {
+        const nceResult = await NCE.send({
+          companyId: null, // Partners son scope aponnt (global)
+          module: 'partners',
+          originType: 'partner_status_change',
+          originId: historyId,
+          workflowKey: 'partners.status_change_notification',
 
-          emailSent = true;
-          emailSentAt = new Date();
+          recipientType: 'associate', // Partner es asociado externo
+          recipientId: partnerId,
+          recipientEmail: partner.email,
 
-          console.log(`   ✅ Email enviado a partner: ${partner.email}`);
+          title: `Estado de Partner Actualizado: ${statusLabels[newStatus]}`,
+          message: `Estimado/a ${partnerName}, su estado ha sido actualizado de "${statusLabels[oldStatus]}" a "${statusLabels[newStatus]}".` +
+                   (changeReason ? ` Motivo: ${changeReason}.` : '') +
+                   (activeContracts.length > 0 ? ` IMPORTANTE: Tiene ${activeContracts.length} contrato(s) activo(s). Los clientes serán notificados.` : ''),
 
-          // Actualizar notificación
-          await partnerNotification.update({
-            email_sent_at: emailSentAt
-          });
-        } catch (emailError) {
-          console.error(`   ⚠️  Error enviando email a partner:`, emailError.message);
-        }
+          metadata: {
+            partnerId,
+            partnerName,
+            partnerEmail: partner.email,
+            partnerRole: partner.role_name,
+            oldStatus,
+            newStatus,
+            oldStatusLabel: statusLabels[oldStatus],
+            newStatusLabel: statusLabels[newStatus],
+            changeReason,
+            changedBy: changedByName,
+            changedByRole,
+            changedByUserId,
+            activeContractsCount: activeContracts.length,
+            activeContracts: activeContracts.map(c => ({
+              companyId: c.company_id,
+              companyName: c.company_name,
+              serviceType: c.service_type
+            })),
+            historyId
+          },
+
+          priority: this._getNotificationPriority(newStatus),
+          requiresAction: false, // Informativa para el partner
+          channels: ['email'],
+        });
+
+        emailSent = nceResult.success;
+        emailSentAt = emailSent ? new Date() : null;
+        partnerNotification = { id: nceResult.notificationId || null };
+
+        console.log(`   ✅ Notificación NCE enviada a partner: ${partner.email} (ID: ${partnerNotification.id})`);
+
+      } catch (nceError) {
+        console.error(`   ⚠️  Error enviando notificación NCE a partner:`, nceError.message);
+        // Continuar con notificaciones a clientes aunque falle la del partner
       }
 
-      // 7. Enviar notificaciones a clientes (si hay contratos activos)
+      // 5. Notificar a clientes con contratos activos usando NCE
       const clientNotifications = [];
 
       for (const client of clientsToNotify) {
         try {
-          const clientNotificationContent = this._generateClientNotificationContent(
-            partner,
-            newStatus,
-            changeReason,
-            client
-          );
-
-          // Crear notificación para el cliente
-          const clientNotif = await Notification.create({
-            company_id: client.company_id,
+          const nceClientResult = await NCE.send({
+            companyId: client.company_id, // Scope company (cada cliente es una empresa)
             module: 'partners',
-            category: 'alert',
-            notification_type: 'partner_contract_status_change',
-            priority: 'high',
+            originType: 'partner_contract_status_change',
+            originId: client.service_request_id,
+            workflowKey: 'partners.contract_affected_notification',
 
-            // Destinatario (la empresa cliente - broadcast a admins)
-            is_broadcast: true,
-            recipient_role: 'admin',
+            recipientType: 'role', // Broadcast a admins de la empresa cliente
+            recipientRole: 'admin',
+            recipientEmail: client.email, // Email de contacto de la empresa
 
-            // Contenido
-            title: clientNotificationContent.title,
-            message: clientNotificationContent.message,
-            short_message: clientNotificationContent.shortMessage,
-            email_body: clientNotificationContent.emailBody,
+            title: `⚠️ Cambio de Estado en Partner Contratado: ${partnerName}`,
+            message: `El Partner "${partnerName}" con quien tienen contratado "${client.service_type}" cambió su estado a: ${statusLabels[newStatus]}.` +
+                     (changeReason ? ` Motivo: ${changeReason}.` : '') +
+                     ` Recomendamos contactar al equipo administrativo para coordinar alternativas.`,
 
-            // Contexto
-            related_entity_type: 'partner_service_request',
-            related_entity_id: client.service_request_id,
-            related_partner_id: partnerId,
-            related_service_request_id: client.service_request_id,
-
-            // Metadata
             metadata: {
-              partner_id: partnerId,
-              partner_name: partner.company_name || `${partner.first_name} ${partner.last_name}`,
-              new_status: newStatus,
-              change_reason: changeReason,
-              service_type: client.service_type
+              partnerId,
+              partnerName,
+              partnerOldStatus: oldStatus,
+              partnerNewStatus: newStatus,
+              partnerNewStatusLabel: statusLabels[newStatus],
+              changeReason,
+              clientCompanyId: client.company_id,
+              clientCompanyName: client.company_name,
+              clientEmail: client.email,
+              serviceType: client.service_type,
+              serviceRequestId: client.service_request_id,
+              historyId
             },
 
-            // Sender
-            sender_user_id: changedByUserId,
-            sender_type: 'system',
-
-            // Canales
-            sent_via_app: true,
-            sent_via_email: true,
-
-            // Requiere atención del cliente
-            requires_action: true,
-            action_type: 'acknowledge',
-
-            created_by: changedByUserId
+            priority: 'high', // Siempre alta (afecta servicio activo)
+            requiresAction: true, // Cliente debe tomar acción
+            actionType: 'acknowledge',
+            channels: ['email', 'push', 'inbox'], // Multi-canal
           });
 
-          // Enviar email al cliente
-          if (client.email && process.env.SMTP_USER) {
-            try {
-              await this.emailTransporter.sendMail({
-                from: process.env.SMTP_FROM || 'Sistema de Partners <noreply@empresa.com>',
-                to: client.email,
-                subject: clientNotificationContent.emailSubject,
-                html: clientNotificationContent.emailBody
-              });
+          if (nceClientResult.success) {
+            clientNotifications.push({
+              company_id: client.company_id,
+              company_name: client.company_name,
+              email: client.email,
+              sent_at: new Date(),
+              notification_id: nceClientResult.notificationId || null
+            });
 
-              await clientNotif.update({ email_sent_at: new Date() });
-
-              console.log(`   ✅ Email enviado a cliente: ${client.company_name} (${client.email})`);
-            } catch (emailError) {
-              console.error(`   ⚠️  Error enviando email a cliente ${client.company_name}:`, emailError.message);
-            }
+            console.log(`   ✅ Notificación NCE enviada a cliente: ${client.company_name} (${client.email})`);
+          } else {
+            console.error(`   ⚠️  Error enviando notificación NCE a cliente ${client.company_name}`);
           }
-
-          clientNotifications.push({
-            company_id: client.company_id,
-            company_name: client.company_name,
-            email: client.email,
-            sent_at: new Date(),
-            notification_id: clientNotif.id
-          });
 
         } catch (clientError) {
           console.error(`   ⚠️  Error notificando cliente ${client.company_name}:`, clientError.message);
         }
       }
 
-      // 8. Actualizar partner_status_history con resultados de notificaciones
+      // 6. Actualizar partner_status_history con resultados de notificaciones
       const updateHistoryQuery = `
         UPDATE partner_status_history
         SET

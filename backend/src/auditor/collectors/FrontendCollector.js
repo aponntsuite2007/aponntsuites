@@ -15,12 +15,14 @@ let chromium = null;
 try { chromium = require('playwright').chromium; } catch(e) { console.log('Playwright no disponible'); }
 const axios = require('axios');
 const LearningEngine = require('../learning/LearningEngine');
+const ConfigEnrichmentService = require('./ConfigEnrichmentService');
 
 class FrontendCollector {
   constructor(database, systemRegistry) {
     this.database = database;
     this.systemRegistry = systemRegistry;
     this.learningEngine = new LearningEngine(); // ⭐ SISTEMA AUTO-EVOLUTIVO
+    this.enrichmentService = new ConfigEnrichmentService(); // ⭐ ENRIQUECIMIENTO DE CONFIGS
     // Detectar puerto dinámicamente del servidor actual
     const port = process.env.PORT || '9998';
     this.baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
@@ -1052,6 +1054,21 @@ class FrontendCollector {
         }
       }
 
+      // ⭐ ENRIQUECER CONFIG con descubrimientos del testing
+      console.log(`      💾 [ENRICH] Guardando descubrimientos en config...`);
+      const discoveries = {
+        viewButtonTabs: viewButtonResult.success ? viewButtonResult.testedTabs : [],
+        allButtons: allButtonsResult.success ? allButtonsResult.buttons : [],
+        rowButtons: rowButtonsDiscoverResult.success ? rowButtonsDiscoverResult.buttons : [],
+      };
+
+      try {
+        await this.enrichmentService.enrichModuleConfig(module.id, discoveries);
+        console.log(`      ✅ [ENRICH] Config enriquecido para módulo: ${module.id}`);
+      } catch (enrichError) {
+        console.error(`      ⚠️  [ENRICH] Error enriqueciendo config:`, enrichError.message);
+      }
+
       return log;
 
     } catch (error) {
@@ -1780,9 +1797,20 @@ class FrontendCollector {
       }
 
       console.log(`        ✅ DEBUG FIX 7: Click exitoso en botón: "${clickResult.buttonText}"`);
-      await this.page.waitForTimeout(5000); // Esperar respuesta del servidor + recarga de lista
+      await this.page.waitForTimeout(2000); // Esperar respuesta inicial
 
-      // 4. Verificar que se creó correctamente (modal cerrado, mensaje success)
+      // 4. ⭐ FIX CRÍTICO: Detectar y cerrar modal de confirmación "Entendido" si aparece
+      console.log(`        🔹 Verificando modal de confirmación "Entendido"...`);
+      const confirmButtons = await this.page.$$('button:has-text("Entendido"), button:has-text("OK"), button:has-text("Aceptar"), .swal2-confirm, .swal-button--confirm');
+      if (confirmButtons.length > 0) {
+        console.log(`        ✅ Modal "Entendido" detectado - cerrando...`);
+        await confirmButtons[0].click();
+        await this.page.waitForTimeout(1000);
+      }
+
+      await this.page.waitForTimeout(2000); // Esperar recarga de lista
+
+      // 5. Verificar que se creó correctamente (modal cerrado, mensaje success)
       const modalClosed = await this.page.evaluate(() => {
         const modals = document.querySelectorAll('.modal.show, [style*="display: block"]');
         return modals.length === 0;

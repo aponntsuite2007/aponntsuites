@@ -2,29 +2,17 @@
  * CONTACT ROUTES - Formulario de contacto publico
  *
  * Endpoint publico (sin autenticacion) para recibir consultas
- * desde la landing page y enviarlas a aponntsuite@gmail.com
+ * desde la landing page - TODO pasa por NCE (Central Telefónica)
  *
- * @version 1.0.0
- * @date 2025-11-25
+ * @version 2.0.0 - Migrado a NCE
+ * @date 2026-01-07
  */
 
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
 
-// Configuracion SMTP desde variables de entorno
-const SMTP_CONFIG = {
-    host: process.env.SMTP_HOST || process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '587'),
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER || process.env.EMAIL_USER || 'aponntsuite@gmail.com',
-        pass: process.env.SMTP_PASS || process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-};
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+const NCE = require('../services/NotificationCentralExchange');
 
 const DESTINATION_EMAIL = 'aponntsuite@gmail.com';
 
@@ -65,151 +53,80 @@ router.post('/', async (req, res) => {
 
         console.log(`📧 [CONTACT] Nueva consulta de: ${name} <${email}>`);
 
-        // Crear transporter
-        const transporter = nodemailer.createTransport(SMTP_CONFIG);
+        // Generar ID único para este contacto
+        const contactId = `contact-${Date.now()}`;
 
-        // Formatear fecha
-        const fecha = new Date().toLocaleString('es-AR', {
-            dateStyle: 'full',
-            timeStyle: 'short'
+        // 🔥 REEMPLAZO 1: Email interno a Aponnt → NCE (Central Telefónica)
+        const nceToAponnt = await NCE.send({
+            companyId: null, // Scope aponnt (global)
+            module: 'contact',
+            originType: 'contact_form',
+            originId: contactId,
+
+            workflowKey: 'contact.form_submission',
+
+            recipientType: 'group',
+            recipientId: 'aponnt_support_team',
+            recipientEmail: DESTINATION_EMAIL,
+
+            title: `[Web Contact] ${SUBJECT_MAP[subject] || subject} - ${name}`,
+            message: `Nueva consulta desde la web de ${name} (${email}): ${message.substring(0, 200)}...`,
+
+            metadata: {
+                contactId,
+                senderName: name,
+                senderEmail: email,
+                senderPhone: phone || null,
+                senderCompany: company || null,
+                subject: SUBJECT_MAP[subject] || subject,
+                subjectKey: subject,
+                fullMessage: message,
+                source: 'web_form',
+                replyTo: email
+            },
+
+            priority: subject === 'support' ? 'high' : 'normal',
+            requiresAction: true,
+            actionType: 'response',
+            slaHours: subject === 'support' ? 24 : 48,
+
+            channels: ['email', 'inbox'],
         });
 
-        // Email para Aponnt (notificacion interna)
-        const emailToAponnt = {
-            from: `"Aponnt Web" <${SMTP_CONFIG.auth.user}>`,
-            to: DESTINATION_EMAIL,
-            replyTo: email,
-            subject: `[Web Contact] ${SUBJECT_MAP[subject] || subject} - ${name}`,
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 20px; border-radius: 10px 10px 0 0;">
-                        <h2 style="color: white; margin: 0;">Nueva Consulta desde la Web</h2>
-                    </div>
-                    <div style="background: #f8fafc; padding: 25px; border: 1px solid #e2e8f0;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr>
-                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; width: 120px;">Nombre:</td>
-                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;">${name}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold;">Email:</td>
-                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;"><a href="mailto:${email}">${email}</a></td>
-                            </tr>
-                            ${phone ? `
-                            <tr>
-                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold;">Telefono:</td>
-                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;"><a href="tel:${phone}">${phone}</a></td>
-                            </tr>
-                            ` : ''}
-                            ${company ? `
-                            <tr>
-                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold;">Empresa:</td>
-                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;">${company}</td>
-                            </tr>
-                            ` : ''}
-                            <tr>
-                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold;">Asunto:</td>
-                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;">${SUBJECT_MAP[subject] || subject}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; font-weight: bold;">Fecha:</td>
-                                <td style="padding: 10px 0;">${fecha}</td>
-                            </tr>
-                        </table>
+        console.log(`✅ [NCE] Email interno enviado a ${DESTINATION_EMAIL} (ID: ${nceToAponnt.notificationId})`);
 
-                        <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                            <h4 style="margin: 0 0 10px 0; color: #1e293b;">Mensaje:</h4>
-                            <p style="margin: 0; white-space: pre-wrap; color: #475569;">${message}</p>
-                        </div>
-                    </div>
-                    <div style="background: #1e293b; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
-                        <p style="color: #94a3b8; margin: 0; font-size: 12px;">
-                            Este mensaje fue enviado desde el formulario de contacto de aponnt.com
-                        </p>
-                    </div>
-                </div>
-            `,
-            text: `
-Nueva Consulta desde la Web
-===========================
+        // 🔥 REEMPLAZO 2: Email de confirmación al usuario → NCE (Central Telefónica)
+        const nceToUser = await NCE.send({
+            companyId: null, // Scope aponnt (global)
+            module: 'contact',
+            originType: 'contact_form_confirmation',
+            originId: contactId,
 
-Nombre: ${name}
-Email: ${email}
-${phone ? `Telefono: ${phone}` : ''}
-${company ? `Empresa: ${company}` : ''}
-Asunto: ${SUBJECT_MAP[subject] || subject}
-Fecha: ${fecha}
+            workflowKey: 'contact.auto_reply',
 
-Mensaje:
-${message}
-            `
-        };
+            recipientType: 'external',
+            recipientId: email, // Email como ID para externos
+            recipientEmail: email,
 
-        // Email de confirmacion para el usuario
-        const emailToUser = {
-            from: `"Aponnt Suite" <${SMTP_CONFIG.auth.user}>`,
-            to: email,
-            subject: `Recibimos tu consulta - Aponnt`,
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-                        <h1 style="color: white; margin: 0; font-size: 28px;">Aponnt</h1>
-                        <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0;">Sistema Integral de Administracion de Recursos Empresariales</p>
-                    </div>
-                    <div style="background: #ffffff; padding: 30px; border: 1px solid #e2e8f0;">
-                        <h2 style="color: #1e293b; margin-top: 0;">Hola ${name.split(' ')[0]},</h2>
-                        <p style="color: #475569; line-height: 1.6;">
-                            Gracias por contactarnos. Hemos recibido tu consulta sobre
-                            <strong>${SUBJECT_MAP[subject] || subject}</strong> y nos pondremos
-                            en contacto contigo en las proximas 24 horas habiles.
-                        </p>
+            title: `Recibimos tu consulta - Aponnt`,
+            message: `Hola ${name.split(' ')[0]}, gracias por contactarnos. Hemos recibido tu consulta sobre "${SUBJECT_MAP[subject] || subject}" y te responderemos en las próximas 24 horas hábiles.`,
 
-                        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                            <h4 style="margin: 0 0 10px 0; color: #1e293b;">Tu mensaje:</h4>
-                            <p style="margin: 0; color: #64748b; font-style: italic;">"${message.substring(0, 200)}${message.length > 200 ? '...' : ''}"</p>
-                        </div>
+            metadata: {
+                contactId,
+                senderName: name,
+                senderEmail: email,
+                subject: SUBJECT_MAP[subject] || subject,
+                messagePreview: message.substring(0, 200),
+                whatsappLink: 'https://wa.me/5492657673741'
+            },
 
-                        <p style="color: #475569; line-height: 1.6;">
-                            Mientras tanto, puedes contactarnos directamente por WhatsApp para una respuesta mas rapida:
-                        </p>
+            priority: 'low',
+            requiresAction: false,
 
-                        <div style="text-align: center; margin: 25px 0;">
-                            <a href="https://wa.me/5492657673741" style="display: inline-block; background: #22c55e; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold;">
-                                Contactar por WhatsApp
-                            </a>
-                        </div>
-                    </div>
-                    <div style="background: #1e293b; padding: 20px; border-radius: 0 0 10px 10px; text-align: center;">
-                        <p style="color: #94a3b8; margin: 0 0 10px 0; font-size: 14px;">
-                            Aponnt Suite - Plataforma SaaS B2B
-                        </p>
-                        <p style="color: #64748b; margin: 0; font-size: 12px;">
-                            Este es un mensaje automatico, por favor no respondas a este email.
-                        </p>
-                    </div>
-                </div>
-            `,
-            text: `
-Hola ${name.split(' ')[0]},
+            channels: ['email'],
+        });
 
-Gracias por contactarnos. Hemos recibido tu consulta sobre "${SUBJECT_MAP[subject] || subject}" y nos pondremos en contacto contigo en las proximas 24 horas habiles.
-
-Tu mensaje:
-"${message}"
-
-Mientras tanto, puedes contactarnos directamente por WhatsApp: +54 9 2657 673741
-
-Saludos,
-Equipo Aponnt
-            `
-        };
-
-        // Enviar ambos emails
-        await transporter.sendMail(emailToAponnt);
-        console.log(`✅ [CONTACT] Email interno enviado a ${DESTINATION_EMAIL}`);
-
-        await transporter.sendMail(emailToUser);
-        console.log(`✅ [CONTACT] Email de confirmacion enviado a ${email}`);
+        console.log(`✅ [NCE] Email de confirmación enviado a ${email} (ID: ${nceToUser.notificationId})`);
 
         res.json({
             success: true,

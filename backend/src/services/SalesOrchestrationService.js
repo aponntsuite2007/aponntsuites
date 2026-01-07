@@ -19,6 +19,9 @@ const { QueryTypes } = require('sequelize');
 const EmailService = require('./EmailService');
 const LeadScoringService = require('./LeadScoringService');
 
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+const NCE = require('./NotificationCentralExchange');
+
 class SalesOrchestrationService {
     constructor() {
         this.brainHub = null;
@@ -2028,30 +2031,50 @@ Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
 
     /**
      * Enviar email genérico
+     * 🔥 MIGRADO A NCE: Todas las ~15 llamadas a sendEmail() ahora pasan por Central Telefónica
      */
-    async sendEmail({ to, subject, html }) {
+    async sendEmail({ to, subject, html, meetingId = null, attendeeId = null, emailType = 'commercial' }) {
         try {
-            // Asegurar que emailService esté disponible
-            if (!this.emailService) {
-                this.emailService = require('./EmailService');
-            }
+            // 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass EmailService)
+            const result = await NCE.send({
+                companyId: null, // Scope aponnt (global - emails comerciales de Aponnt)
+                module: 'sales',
+                originType: 'sales_orchestration_email',
+                originId: meetingId ? `meeting-${meetingId}` : `sales-email-${Date.now()}`,
 
-            // Usar EmailService centralizado con tipo 'commercial' (aponntcomercial@gmail.com)
-            const result = await this.emailService.sendFromAponnt('commercial', {
-                to,
-                subject,
-                html
+                workflowKey: `sales.${emailType}`,
+
+                recipientType: 'external',
+                recipientId: attendeeId || to,
+                recipientEmail: to,
+
+                title: subject,
+                message: subject, // El mensaje real está en el HTML
+
+                metadata: {
+                    emailType,
+                    meetingId,
+                    attendeeId,
+                    htmlContent: html,
+                    source: 'sales_orchestration_service',
+                    sentAt: new Date().toISOString()
+                },
+
+                priority: 'normal',
+                requiresAction: false,
+
+                channels: ['email'],
             });
 
-            if (result && result.success !== false) {
-                console.log(`📧 [SALES-ORCH] Email comercial enviado a ${to}`);
+            if (result && result.success) {
+                console.log(`📧 [NCE] Email comercial enviado a ${to} (ID: ${result.notificationId})`);
                 return true;
             } else {
-                console.error(`❌ [SALES-ORCH] Error enviando email comercial:`, result?.error || 'Error desconocido');
+                console.error(`❌ [NCE] Error enviando email comercial:`, result?.error || 'Error desconocido');
                 return false;
             }
         } catch (error) {
-            console.error(`❌ [SALES-ORCH] Error enviando email a ${to}:`, error.message);
+            console.error(`❌ [NCE] Error enviando email a ${to}:`, error.message);
             return false;
         }
     }

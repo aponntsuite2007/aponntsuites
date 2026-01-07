@@ -16,8 +16,11 @@
 
 const express = require('express');
 const router = express.Router();
-const emailService = require('../services/EmailService'); // ✅ EmailService es singleton
-const { sequelize, Notification } = require('../config/database');
+
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+const NCE = require('../services/NotificationCentralExchange');
+
+const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 
 /**
@@ -101,33 +104,47 @@ router.post('/contact', async (req, res) => {
             </html>
         `;
 
-        // Enviar email a aponntcomercial@gmail.com
-        const emailResult = await emailService.sendFromAponnt('support', {
-            to: 'aponntcomercial@gmail.com',
-            subject: `🆕 Contacto Web: ${subject}`,
-            html: emailHTML,
-            text: `
-                Nueva Solicitud de Contacto
-                ===========================
+        // Generar ID único para este contacto
+        const contactId = `contact-form-${Date.now()}`;
 
-                Nombre: ${name}
-                Email: ${email}
-                ${phone ? `Teléfono: ${phone}` : ''}
-                ${company ? `Empresa: ${company}` : ''}
-                Asunto: ${subject}
+        // 🔥 REEMPLAZO 1: Email a equipo comercial → NCE (Central Telefónica)
+        const nceToComercial = await NCE.send({
+            companyId: null, // Scope aponnt (global)
+            module: 'contact',
+            originType: 'contact_form',
+            originId: contactId,
 
-                Mensaje:
-                ${message}
+            workflowKey: 'contact.form_submission_comercial',
 
-                ---
-                Enviado desde formulario de contacto de Aponnt Suite
-                Fecha: ${new Date().toLocaleString('es-AR')}
-            `,
-            category: 'contact_form',
-            recipientName: 'Aponnt Comercial'
+            recipientType: 'group',
+            recipientId: 'aponnt_comercial_team',
+            recipientEmail: 'aponntcomercial@gmail.com',
+
+            title: `🆕 Contacto Web: ${subject}`,
+            message: `Nueva solicitud de contacto de ${name} (${email}): "${subject}"`,
+
+            metadata: {
+                contactId,
+                senderName: name,
+                senderEmail: email,
+                senderPhone: phone || null,
+                senderCompany: company || null,
+                subject,
+                fullMessage: message,
+                source: 'index_html_form',
+                emailHtml: emailHTML,
+                submittedAt: new Date().toISOString()
+            },
+
+            priority: 'high',
+            requiresAction: true,
+            actionType: 'response',
+            slaHours: 24,
+
+            channels: ['email'],
         });
 
-        console.log(`✅ [CONTACT FORM] Email enviado a aponntcomercial@gmail.com`);
+        console.log(`✅ [NCE] Email enviado a aponntcomercial@gmail.com (ID: ${nceToComercial.notificationId})`);
 
         // ===================================================================
         // PASO 2: OBTENER STAFF DE APONNT CON ROLES GG Y GA
@@ -160,39 +177,50 @@ router.post('/contact', async (req, res) => {
         // PASO 3: CREAR NOTIFICACIONES ENTERPRISE PARA EL STAFF
         // ===================================================================
 
+        // 🔥 REEMPLAZO 2: Notificaciones inbox al staff → NCE (Central Telefónica)
         if (staffMembers.length > 0) {
-            // Crear notificaciones para cada miembro del staff que tenga user_id
             const staffWithUserIds = staffMembers.filter(s => s.user_id);
 
             for (const staff of staffWithUserIds) {
                 try {
-                    await Notification.create({
-                        company_id: null, // null porque es una notificación de Aponnt (no de una empresa cliente)
-                        user_id: staff.user_id,
-                        type: 'contact_form_submission',
+                    const nceToStaff = await NCE.send({
+                        companyId: null, // Scope aponnt (global - staff de Aponnt)
+                        module: 'contact',
+                        originType: 'contact_form_staff_notification',
+                        originId: `${contactId}-staff-${staff.staff_id}`,
+
+                        workflowKey: 'contact.form_submission_staff_inbox',
+
+                        recipientType: 'user',
+                        recipientId: staff.user_id,
+                        recipientEmail: staff.email,
+
                         title: '📬 Nueva Solicitud de Contacto Web',
                         message: `${name} (${email}) ha enviado una consulta: "${subject}"`,
-                        link_url: null,
-                        link_text: null,
-                        data: {
+
+                        metadata: {
+                            contactId,
                             contact_name: name,
                             contact_email: email,
-                            contact_phone: phone,
-                            contact_company: company,
-                            subject: subject,
-                            message: message,
+                            contact_phone: phone || null,
+                            contact_company: company || null,
+                            subject,
+                            fullMessage: message,
                             submitted_at: new Date().toISOString(),
                             staff_role: staff.role_code,
                             staff_name: `${staff.first_name} ${staff.last_name}`
                         },
+
                         priority: 'high',
-                        read: false,
-                        read_at: null
+                        requiresAction: true,
+                        actionType: 'response',
+
+                        channels: ['inbox'], // Solo inbox, el email ya fue enviado arriba
                     });
 
-                    console.log(`✅ [CONTACT FORM] Notificación creada para: ${staff.first_name} ${staff.last_name} (${staff.role_name})`);
+                    console.log(`✅ [NCE] Notificación inbox creada para: ${staff.first_name} ${staff.last_name} (ID: ${nceToStaff.notificationId})`);
                 } catch (notifError) {
-                    console.error(`⚠️ [CONTACT FORM] Error creando notificación para ${staff.first_name}:`, notifError.message);
+                    console.error(`⚠️ [NCE] Error creando notificación para ${staff.first_name}:`, notifError.message);
                 }
             }
         }
@@ -230,7 +258,9 @@ router.post('/contact', async (req, res) => {
             success: true,
             message: '¡Mensaje enviado exitosamente! Nos pondremos en contacto contigo pronto.',
             data: {
-                email_sent: emailResult.success,
+                contactId,
+                email_sent: nceToComercial.success,
+                nce_notification_id: nceToComercial.notificationId,
                 notifications_created: staffMembers.filter(s => s.user_id).length,
                 staff_notified: staffMembers.map(s => ({
                     name: `${s.first_name} ${s.last_name}`,

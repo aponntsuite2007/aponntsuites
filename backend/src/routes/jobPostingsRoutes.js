@@ -35,12 +35,15 @@ const {
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'aponnt_secret_2025';
 
-// Importar servicio de email
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+const NCE = require('../services/NotificationCentralExchange');
+
+// Importar servicio de email (legacy - siendo migrado a NCE)
 let EmailService;
 try {
   EmailService = require('../services/EmailService');
 } catch (e) {
-  console.log('⚠️ EmailService no disponible, emails de verificación desactivados');
+  console.log('⚠️ EmailService no disponible, usando NCE');
 }
 
 // Importar servicio de inbox para notificaciones proactivas
@@ -557,25 +560,39 @@ router.post('/public/candidates/register', async (req, res) => {
     const verificationCode = candidate.generateVerificationCode();
     await candidate.save();
 
-    // Enviar email con código
-    if (EmailService) {
-      try {
-        await EmailService.sendEmail({
-          to: email,
-          subject: 'Tu código de verificación - Portal de Empleo',
-          html: `
-            <h2>¡Hola ${full_name}!</h2>
-            <p>Tu código de verificación es:</p>
-            <h1 style="font-size: 32px; letter-spacing: 5px; text-align: center; background: #f0f0f0; padding: 20px; border-radius: 8px;">
-              ${verificationCode}
-            </h1>
-            <p>Este código expira en 15 minutos.</p>
-            <p>Si no solicitaste este código, ignora este email.</p>
-          `
-        });
-      } catch (emailError) {
-        console.error('⚠️ Error enviando email de verificación:', emailError);
-      }
+    // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+    try {
+      await NCE.send({
+        companyId: null, // Scope aponnt (portal público)
+        module: 'jobs',
+        originType: 'candidate_verification',
+        originId: candidate.id,
+
+        workflowKey: 'jobs.candidate_verification',
+
+        recipientType: 'external',
+        recipientId: email,
+        recipientEmail: email,
+
+        title: 'Tu código de verificación - Portal de Empleo',
+        message: `Hola ${full_name}, tu código de verificación es: ${verificationCode}. Expira en 15 minutos.`,
+
+        metadata: {
+          candidateId: candidate.id,
+          candidateName: full_name,
+          candidateEmail: email,
+          verificationCode,
+          expiresInMinutes: 15
+        },
+
+        priority: 'high',
+        requiresAction: false,
+
+        channels: ['email'],
+      });
+      console.log(`✅ [NCE] Código de verificación enviado a ${email}`);
+    } catch (emailError) {
+      console.error('⚠️ Error enviando email de verificación:', emailError);
     }
 
     res.json({
@@ -693,24 +710,39 @@ router.post('/public/candidates/login', async (req, res) => {
     const verificationCode = candidate.generateVerificationCode();
     await candidate.save();
 
-    // Enviar email con código
-    if (EmailService) {
-      try {
-        await EmailService.sendEmail({
-          to: email,
-          subject: 'Tu código de acceso - Portal de Empleo',
-          html: `
-            <h2>¡Hola ${candidate.full_name}!</h2>
-            <p>Tu código de acceso es:</p>
-            <h1 style="font-size: 32px; letter-spacing: 5px; text-align: center; background: #f0f0f0; padding: 20px; border-radius: 8px;">
-              ${verificationCode}
-            </h1>
-            <p>Este código expira en 15 minutos.</p>
-          `
-        });
-      } catch (emailError) {
-        console.error('⚠️ Error enviando email de login:', emailError);
-      }
+    // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+    try {
+      await NCE.send({
+        companyId: null, // Scope aponnt (portal público)
+        module: 'jobs',
+        originType: 'candidate_login',
+        originId: candidate.id,
+
+        workflowKey: 'jobs.candidate_login_code',
+
+        recipientType: 'external',
+        recipientId: email,
+        recipientEmail: email,
+
+        title: 'Tu código de acceso - Portal de Empleo',
+        message: `Hola ${candidate.full_name}, tu código de acceso es: ${verificationCode}. Expira en 15 minutos.`,
+
+        metadata: {
+          candidateId: candidate.id,
+          candidateName: candidate.full_name,
+          candidateEmail: email,
+          verificationCode,
+          expiresInMinutes: 15
+        },
+
+        priority: 'high',
+        requiresAction: false,
+
+        channels: ['email'],
+      });
+      console.log(`✅ [NCE] Código de acceso enviado a ${email}`);
+    } catch (emailError) {
+      console.error('⚠️ Error enviando email de login:', emailError);
     }
 
     res.json({

@@ -3,6 +3,8 @@ const { sequelize } = require('../config/database');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const PrivacyRegulationService = require('./PrivacyRegulationService');
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+const NCE = require('./NotificationCentralExchange');
 
 class BiometricConsentService {
     constructor() {
@@ -623,14 +625,40 @@ Al aceptar este consentimiento mediante el enlace recibido por email, usted decl
             const fromEmail = company.email || process.env.FROM_EMAIL || process.env.SMTP_USER;
             const fromName = `${company.name} - RRHH`;
 
-            const result = await this.emailTransporter.sendMail({
-                from: `"${fromName}" <${fromEmail}>`,
-                to: user.email,
-                subject: '🔐 Solicitud de Consentimiento para Análisis Biométrico',
-                html
+            // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+            const result = await NCE.send({
+                companyId: company.company_id,
+                module: 'biometric',
+                originType: 'biometric_consent_request',
+                originId: token,
+
+                workflowKey: 'biometric.consent_request',
+
+                recipientType: 'user',
+                recipientId: user.user_id,
+                recipientEmail: user.email,
+
+                title: '🔐 Solicitud de Consentimiento para Análisis Biométrico',
+                message: `${company.name} solicita su consentimiento para el procesamiento de datos biométricos (GDPR/BIPA)`,
+                metadata: {
+                    userId: user.user_id,
+                    userName: `${user.first_name} ${user.last_name}`,
+                    companyName: company.name,
+                    token,
+                    legalDocVersion: legalDoc.version,
+                    regulation: legalDoc.regulation,
+                    consentLink: `${process.env.FRONTEND_URL || 'http://localhost:9998'}/biometric-consent?token=${token}`
+                },
+
+                priority: 'high',
+                requiresAction: true,
+                actionType: 'acknowledgement',
+                slaHours: 168,  // 7 días (1 semana)
+
+                channels: ['email'],
             });
 
-            console.log(`✅ Email enviado a ${user.email} - ID: ${result.messageId}`);
+            console.log(`✅ [NCE] Biometric consent request sent to ${user.email}`);
             return result;
 
         } catch (error) {
@@ -802,14 +830,37 @@ Al aceptar este consentimiento mediante el enlace recibido por email, usted decl
             const fromEmail = company.email || process.env.FROM_EMAIL || process.env.SMTP_USER;
             const fromName = `${company.name} - RRHH`;
 
-            const result = await this.emailTransporter.sendMail({
-                from: `"${fromName}" <${fromEmail}>`,
-                to: user.email,
-                subject: '✅ Confirmación: Consentimiento Biométrico Registrado',
-                html
+            // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+            const result = await NCE.send({
+                companyId: company.company_id,
+                module: 'biometric',
+                originType: 'biometric_consent_confirmation',
+                originId: consentData.consent_id,
+
+                workflowKey: 'biometric.consent_confirmation',
+
+                recipientType: 'user',
+                recipientId: user.user_id,
+                recipientEmail: user.email,
+
+                title: '✅ Confirmación: Consentimiento Biométrico Registrado',
+                message: `Su consentimiento para el procesamiento de datos biométricos ha sido registrado exitosamente`,
+                metadata: {
+                    userId: user.user_id,
+                    userName: `${user.first_name} ${user.last_name}`,
+                    companyName: company.name,
+                    consentId: consentData.consent_id,
+                    acceptedAt: consentData.consent_given_at,
+                    withdrawalInfo: 'Puede retirar su consentimiento en cualquier momento desde su panel de usuario'
+                },
+
+                priority: 'medium',
+                requiresAction: false,
+
+                channels: ['email'],
             });
 
-            console.log(`✅ Email de confirmación enviado a ${user.email} - ID: ${result.messageId}`);
+            console.log(`✅ [NCE] Biometric consent confirmation sent to ${user.email}`);
             return result;
 
         } catch (error) {

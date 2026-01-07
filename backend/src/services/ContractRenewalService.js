@@ -22,6 +22,9 @@ const { sequelize } = require('../config/database');
 const emailService = require('./EmailService');
 const inboxService = require('./inboxService');
 
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass EmailService)
+const NCE = require('./NotificationCentralExchange');
+
 class ContractRenewalService {
     constructor() {
         this.emailService = emailService;
@@ -164,7 +167,7 @@ class ContractRenewalService {
         recipients.push(this.APONNT_COMMERCIAL_EMAIL);
         if (contract.company_email) recipients.push(contract.company_email);
 
-        // Enviar email a cada destinatario
+        // 🔥 Enviar email a cada destinatario → NCE
         for (const recipient of recipients) {
             try {
                 // Determinar tipo de destinatario para tracking
@@ -173,26 +176,45 @@ class ContractRenewalService {
                 else if (recipient === this.APONNT_COMMERCIAL_EMAIL) recipientType = 'staff';
                 else if (recipient === contract.company_email) recipientType = 'company';
 
-                await this.emailService.sendFromAponnt('billing', {
-                    to: recipient,
-                    subject,
-                    html,
-                    text: this.generateRenewalEmailText(contract, isGracePeriod, daysLeft),
-                    category: 'contract_renewal',
-                    recipientName: recipient === contract.vendor_email ? 'Vendedor' :
-                                  recipient === contract.company_email ? contract.company_name : 'Equipo Comercial',
-                    // Datos para tracking de respuestas (inbound email)
+                await NCE.send({
                     companyId: contract.company_id,
-                    entityType: 'contract_renewal',
-                    entityId: contract.contract_id,
-                    recipientType,
-                    expectsReply: true
+                    module: 'contracts',
+                    originType: 'contract_renewal_alert',
+                    originId: `contract-${contract.contract_id}-renewal-${recipient}`,
+
+                    workflowKey: isGracePeriod ? 'contracts.grace_period_alert' : 'contracts.renewal_alert',
+
+                    recipientType: recipientType === 'staff' ? 'group' : 'external',
+                    recipientId: recipient,
+                    recipientEmail: recipient,
+
+                    title: subject,
+                    message: `Alerta de renovación para contrato ${contract.contract_code}`,
+
+                    metadata: {
+                        contractId: contract.contract_id,
+                        contractCode: contract.contract_code,
+                        companyId: contract.company_id,
+                        companyName: contract.company_name,
+                        daysLeft,
+                        isGracePeriod,
+                        recipientType,
+                        htmlContent: html,
+                        textContent: this.generateRenewalEmailText(contract, isGracePeriod, daysLeft)
+                    },
+
+                    priority: isGracePeriod ? 'urgent' : 'high',
+                    requiresAction: true,
+                    actionType: 'response',
+                    slaHours: isGracePeriod ? 24 : 72,
+
+                    channels: ['email'],
                 });
 
-                console.log(`✅ [CONTRACT-RENEWAL] Alerta enviada a ${recipient} para ${contract.contract_code}`);
+                console.log(`✅ [NCE] Alerta enviada a ${recipient} para ${contract.contract_code}`);
 
             } catch (error) {
-                console.error(`⚠️ [CONTRACT-RENEWAL] Error enviando a ${recipient}:`, error.message);
+                console.error(`⚠️ [NCE] Error enviando a ${recipient}:`, error.message);
             }
         }
 
@@ -478,16 +500,37 @@ APONNT - Sistema de Asistencia Biométrico
             contractData.company_email
         ].filter(Boolean);
 
+        // 🔥 NCE: Central Telefónica
         for (const recipient of recipients) {
             try {
-                await this.emailService.sendFromAponnt('billing', {
-                    to: recipient,
-                    subject,
-                    html,
-                    category: 'contract_extension'
+                await NCE.send({
+                    companyId: contractData.company_id,
+                    module: 'contracts',
+                    originType: 'contract_extension_notification',
+                    originId: `contract-${contractData.contract_id}-extension-${recipient}`,
+
+                    workflowKey: 'contracts.extension_applied',
+
+                    recipientType: 'external',
+                    recipientId: recipient,
+                    recipientEmail: recipient,
+
+                    title: subject,
+                    message: `Extensión de 60 días aplicada al contrato ${contractData.contract_code}`,
+
+                    metadata: {
+                        contractId: contractData.contract_id,
+                        contractCode: contractData.contract_code,
+                        companyId: contractData.company_id,
+                        htmlContent: html
+                    },
+
+                    priority: 'high',
+                    requiresAction: true,
+                    channels: ['email'],
                 });
             } catch (error) {
-                console.error(`⚠️ Error enviando a ${recipient}:`, error.message);
+                console.error(`⚠️ [NCE] Error enviando a ${recipient}:`, error.message);
             }
         }
     }
@@ -604,16 +647,37 @@ APONNT - Sistema de Asistencia Biométrico
             contractData.company_email
         ].filter(Boolean);
 
+        // 🔥 NCE: Central Telefónica
         for (const recipient of recipients) {
             try {
-                await this.emailService.sendFromAponnt('billing', {
-                    to: recipient,
-                    subject,
-                    html,
-                    category: 'contract_suspension'
+                await NCE.send({
+                    companyId: contractData.company_id,
+                    module: 'contracts',
+                    originType: 'contract_suspension_notification',
+                    originId: `contract-${contractData.contract_id}-suspension-${recipient}`,
+
+                    workflowKey: 'contracts.suspension_applied',
+
+                    recipientType: 'external',
+                    recipientId: recipient,
+                    recipientEmail: recipient,
+
+                    title: subject,
+                    message: `Contrato ${contractData.contract_code} suspendido por falta de renovación`,
+
+                    metadata: {
+                        contractId: contractData.contract_id,
+                        contractCode: contractData.contract_code,
+                        companyId: contractData.company_id,
+                        htmlContent: html
+                    },
+
+                    priority: 'urgent',
+                    requiresAction: true,
+                    channels: ['email'],
                 });
             } catch (error) {
-                console.error(`⚠️ Error enviando a ${recipient}:`, error.message);
+                console.error(`⚠️ [NCE] Error enviando a ${recipient}:`, error.message);
             }
         }
 
