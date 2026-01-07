@@ -97,7 +97,6 @@ class NotificationCentralExchange {
      * @param {number} [params.slaHours] - SLA en horas (si no, usa política del workflow)
      * @param {Array<string>} [params.channels] - Canales (si no, usa política del workflow)
      * @param {Object} [params.escalationPolicy] - Política de escalamiento custom
-     * @param {string} [params.threadId] - ID de thread (para conversaciones)
      * @param {string} [params.createdBy] - ID de usuario que crea la notificación
      * @returns {Promise<Object>} Resultado de la notificación
      */
@@ -160,30 +159,12 @@ class NotificationCentralExchange {
             console.log(`📡 [NCE.send] Canales: ${channels.join(', ')}`);
 
             // ================================================================
-            // PASO 6: CREAR THREAD SI ES CONVERSACIÓN
-            // ================================================================
-            let threadId = params.threadId;
-            if (!threadId && workflow.supports_threads) {
-                threadId = await this._createThread({
-                    companyId: params.companyId,
-                    subject: params.title,
-                    category: workflow.category || workflow.notification_type,
-                    module: params.module,
-                    workflowKey: params.workflowKey,
-                    initiatorId: params.createdBy || params.originId,
-                    priority: params.priority || 'normal'
-                });
-                console.log(`📬 [NCE.send] Thread creado: ${threadId}`);
-            }
-
-            // ================================================================
-            // PASO 7: GUARDAR EN notification_log (TRACKING UNIFICADO)
+            // PASO 6: GUARDAR EN notification_log (TRACKING UNIFICADO)
             // ================================================================
             const notificationLog = await this._createNotificationLog({
                 ...notificationPayload,
                 workflowKey: params.workflowKey,
                 workflow_id: workflow.id,
-                threadId,
                 channels,
                 recipients
             });
@@ -191,7 +172,7 @@ class NotificationCentralExchange {
             console.log(`✅ [NCE.send] Log creado: ${notificationLog.id}`);
 
             // ================================================================
-            // PASO 8: DISPATCH A MULTI-CHANNEL (paralelo para cada destinatario)
+            // PASO 7: DISPATCH A MULTI-CHANNEL (paralelo para cada destinatario)
             // ================================================================
             const allDispatchResults = [];
 
@@ -247,7 +228,7 @@ class NotificationCentralExchange {
             console.log(`✅ [NCE.send] Dispatch completado: ${dispatchResults.successCount}/${dispatchResults.totalCount} exitosos`);
 
             // ================================================================
-            // PASO 8.5: INTEGRAR CON INBOX (NOTIFICATION_GROUPS + MESSAGES)
+            // PASO 8: INTEGRAR CON INBOX (NOTIFICATION_GROUPS + MESSAGES)
             // ================================================================
             try {
                 await this._integrateWithInbox({
@@ -303,7 +284,6 @@ class NotificationCentralExchange {
             return {
                 success: true,
                 notificationId: notificationLog.id,
-                threadId: threadId || null,
                 workflowKey: params.workflowKey,
                 recipients: recipients.map(r => ({
                     userId: r.user_id,
@@ -542,28 +522,6 @@ class NotificationCentralExchange {
             slaDeadline,
             createdBy: params.createdBy
         };
-    }
-
-    /**
-     * Crear thread de conversación
-     */
-    async _createThread(data) {
-        const query = `
-            INSERT INTO notification_threads (
-                company_id, subject, category, module, workflow_key,
-                initiator_id, priority, status
-            ) VALUES (
-                :companyId, :subject, :category, :module, :workflowKey,
-                :initiatorId, :priority, 'active'
-            ) RETURNING id
-        `;
-
-        const [result] = await sequelize.query(query, {
-            replacements: data,
-            type: QueryTypes.INSERT
-        });
-
-        return result[0]?.id || result.id;
     }
 
     /**
