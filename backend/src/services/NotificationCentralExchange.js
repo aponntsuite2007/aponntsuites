@@ -60,6 +60,7 @@ const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const NotificationRecipientResolver = require('./NotificationRecipientResolver');
 const NotificationChannelDispatcher = require('./NotificationChannelDispatcher');
+const inboxService = require('./inboxService');
 
 class NotificationCentralExchange {
 
@@ -244,6 +245,30 @@ class NotificationCentralExchange {
             };
 
             console.log(`✅ [NCE.send] Dispatch completado: ${dispatchResults.successCount}/${dispatchResults.totalCount} exitosos`);
+
+            // ================================================================
+            // PASO 8.5: INTEGRAR CON INBOX (NOTIFICATION_GROUPS + MESSAGES)
+            // ================================================================
+            try {
+                await this._integrateWithInbox({
+                    companyId: params.companyId,
+                    workflowKey: params.workflowKey,
+                    originType: params.originType,
+                    originId: params.originId,
+                    title: params.title,
+                    message: params.message,
+                    priority: params.priority || 'normal',
+                    recipients,
+                    channels,
+                    requiresAction: params.requiresAction || workflow.requires_action,
+                    metadata: params.metadata,
+                    notificationLogId: notificationLog.id
+                });
+                console.log(`📬 [NCE.send] Integrado con inbox (grupos + mensajes creados)`);
+            } catch (error) {
+                console.error(`❌ [NCE.send] Error integrando con inbox:`, error.message);
+                // No bloqueante - continuar aunque falle inbox
+            }
 
             // ================================================================
             // PASO 9: PROGRAMAR ESCALAMIENTO AUTOMÁTICO (si aplica)
@@ -720,6 +745,109 @@ class NotificationCentralExchange {
             escalated: false,
             finalDecision: null
         };
+    }
+
+    /**
+     * Integrar con Inbox (notification_groups + notification_messages)
+     * Crea o busca grupo conversacional y agrega mensaje para cada destinatario
+     */
+    async _integrateWithInbox(data) {
+        const {
+            companyId,
+            workflowKey,
+            originType,
+            originId,
+            title,
+            message,
+            priority,
+            recipients,
+            channels,
+            requiresAction,
+            metadata,
+            notificationLogId
+        } = data;
+
+        // Generar group_type basándose en workflow_key o origin_type
+        const groupType = workflowKey || originType || 'notification';
+
+        // Buscar grupo existente basándose en origin_type + origin_id + workflow_key
+        // Si existe, agregar mensaje al hilo. Si no, crear nuevo grupo.
+        const groupKey = `${originType || 'system'}_${originId || 'general'}_${workflowKey || 'default'}`;
+
+        let group = null;
+
+        // Intentar buscar grupo existente
+        if (originType && originId) {
+            const [existing] = await sequelize.query(`
+                SELECT *
+                FROM notification_groups
+                WHERE company_id = :companyId
+                  AND metadata->>'origin_type' = :originType
+                  AND metadata->>'origin_id' = :originId
+                  AND metadata->>'workflow_key' = :workflowKey
+                  AND status != 'closed'
+                ORDER BY created_at DESC
+                LIMIT 1
+            `, {
+                replacements: {
+                    companyId,
+                    originType: originType || '',
+                    originId: originId || '',
+                    workflowKey: workflowKey || ''
+                },
+                type: QueryTypes.SELECT
+            });
+
+            if (existing && existing.length > 0) {
+                group = existing[0];
+                console.log(`📬 [NCE.inbox] Grupo existente encontrado: ${group.id}`);
+            }
+        }
+
+        // Si no existe, crear nuevo grupo
+        if (!group) {
+            group = await inboxService.createNotificationGroup(companyId, {
+                group_type: groupType,
+                initiator_type: 'system',
+                initiator_id: 'nce',
+                subject: title,
+                priority: priority,
+                metadata: {
+                    origin_type: originType,
+                    origin_id: originId,
+                    workflow_key: workflowKey,
+                    notification_log_id: notificationLogId,
+                    ...metadata
+                }
+            });
+            console.log(`📬 [NCE.inbox] Nuevo grupo creado: ${group.id} (${groupType})`);
+        }
+
+        // Crear mensaje para cada destinatario
+        for (const recipient of recipients) {
+            try {
+                await inboxService.sendMessage(group.id, companyId, {
+                    sender_type: 'system',
+                    sender_id: 'nce',
+                    sender_name: 'Sistema de Notificaciones',
+                    recipient_type: 'user',
+                    recipient_id: recipient.user_id,
+                    recipient_name: recipient.full_name || recipient.email,
+                    message_type: requiresAction ? 'action_request' : 'notification',
+                    subject: title,
+                    content: message,
+                    deadline_at: requiresAction ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null,
+                    requires_response: requiresAction || false,
+                    channels: channels,
+                    attachments: metadata?.attachments || null
+                });
+                console.log(`📬 [NCE.inbox] Mensaje creado para ${recipient.email}`);
+            } catch (error) {
+                console.error(`❌ [NCE.inbox] Error creando mensaje para ${recipient.email}:`, error.message);
+            }
+        }
+
+        return group.id;
     }
 
     /**
