@@ -25,6 +25,9 @@ const { EventEmitter } = require('events');
 const fs = require('fs');
 const path = require('path');
 
+// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass EmailService)
+const NCE = require('../../services/NotificationCentralExchange');
+
 // Imports del sistema
 let sequelize, AponntStaff, AponntStaffRole, NotificationUnifiedService, EmailService;
 
@@ -361,8 +364,21 @@ class BrainEscalationService extends EventEmitter {
 
         try {
             // 1. Determinar severidad y cadena de escalamiento
-            const severity = incident.problem.severity || 'medium';
+            const severity = (incident.problem.severity || 'medium').toLowerCase();
+
+            // 🔍 DEBUG: Verificar configuración
+            console.log(`   🔍 [DEBUG] severity: "${severity}"`);
+            console.log(`   🔍 [DEBUG] this.config existe: ${!!this.config}`);
+            console.log(`   🔍 [DEBUG] this.config.severityLevels existe: ${!!this.config?.severityLevels}`);
+            console.log(`   🔍 [DEBUG] Claves disponibles: ${Object.keys(this.config?.severityLevels || {}).join(', ')}`);
+
             const escalationConfig = this.config.severityLevels[severity];
+            console.log(`   🔍 [DEBUG] escalationConfig: ${escalationConfig ? JSON.stringify(escalationConfig) : 'undefined'}`);
+
+            if (!escalationConfig) {
+                console.error(`   ❌ [DEBUG] No se encontró configuración para severity "${severity}"`);
+                throw new Error(`Configuración de severidad "${severity}" no encontrada`);
+            }
 
             // 2. Obtener staff de soporte segun severidad
             const supportStaff = await this.getSupportStaff(escalationConfig.maxLevel);
@@ -656,60 +672,85 @@ ${incident.diagnosis ? `### Diagnostico IA
 
     /**
      * Enviar email de escalamiento
+     * 🔥 MIGRADO A NCE: Central Telefónica
      */
     async sendEscalationEmail(incident, ticket, supportStaff) {
         try {
-            const emailService = require('../../services/EmailService');
+            const emailHtml = `
+                <h2>🧠 Incidente Detectado por Brain</h2>
+                <p>El sistema Brain ha detectado un problema que no pudo resolverse automaticamente.</p>
+
+                <hr>
+                <h3>Detalles del Incidente</h3>
+                <ul>
+                    <li><strong>ID:</strong> ${incident.id}</li>
+                    <li><strong>Ticket:</strong> ${ticket.id}</li>
+                    <li><strong>Modulo:</strong> ${incident.problem.module || 'N/A'}</li>
+                    <li><strong>Severidad:</strong> ${incident.problem.severity || 'medium'}</li>
+                    <li><strong>Detectado:</strong> ${incident.detectedAt.toLocaleString('es-AR')}</li>
+                </ul>
+
+                <h3>Error</h3>
+                <pre style="background: #f4f4f4; padding: 10px; overflow-x: auto;">
+${(incident.problem.message || 'Sin mensaje').substring(0, 500)}
+                </pre>
+
+                ${incident.diagnosis ? `
+                <h3>Diagnostico IA</h3>
+                <p><strong>Causa probable:</strong> ${incident.diagnosis.root_cause}</p>
+                <p><strong>Solucion sugerida:</strong> ${incident.diagnosis.suggested_fix}</p>
+                ` : ''}
+
+                <h3>Intentos de Auto-Reparacion</h3>
+                <p>Se realizaron ${incident.autoRepairAttempts} intentos de reparacion automatica sin exito.</p>
+
+                <hr>
+                <p><strong>Por favor, revisa el panel de soporte para tomar accion.</strong></p>
+                <p>Saludos,<br>Sistema Brain - Aponnt</p>
+            `;
 
             for (const staff of supportStaff.slice(0, 2)) {
                 if (!staff.email) continue;
 
-                await emailService.sendFromAponnt('transactional', {
-                    to: staff.email,
-                    subject: `🚨 [BRAIN] Incidente Escalado - ${ticket.id}`,
-                    html: `
-                        <h2>🧠 Incidente Detectado por Brain</h2>
-                        <p>Hola <strong>${staff.first_name}</strong>,</p>
-                        <p>El sistema Brain ha detectado un problema que no pudo resolverse automaticamente.</p>
+                // 🔥 NCE: Central Telefónica
+                await NCE.send({
+                    companyId: null, // Scope aponnt (global - soporte interno)
+                    module: 'brain',
+                    originType: 'brain_escalation',
+                    originId: `incident-${incident.id}-${staff.staff_id}`,
 
-                        <hr>
-                        <h3>Detalles del Incidente</h3>
-                        <ul>
-                            <li><strong>ID:</strong> ${incident.id}</li>
-                            <li><strong>Ticket:</strong> ${ticket.id}</li>
-                            <li><strong>Modulo:</strong> ${incident.problem.module || 'N/A'}</li>
-                            <li><strong>Severidad:</strong> ${incident.problem.severity || 'medium'}</li>
-                            <li><strong>Detectado:</strong> ${incident.detectedAt.toLocaleString('es-AR')}</li>
-                        </ul>
+                    workflowKey: 'brain.escalation_alert',
 
-                        <h3>Error</h3>
-                        <pre style="background: #f4f4f4; padding: 10px; overflow-x: auto;">
-${(incident.problem.message || 'Sin mensaje').substring(0, 500)}
-                        </pre>
+                    recipientType: 'user',
+                    recipientId: staff.user_id || staff.staff_id,
+                    recipientEmail: staff.email,
 
-                        ${incident.diagnosis ? `
-                        <h3>Diagnostico IA</h3>
-                        <p><strong>Causa probable:</strong> ${incident.diagnosis.root_cause}</p>
-                        <p><strong>Solucion sugerida:</strong> ${incident.diagnosis.suggested_fix}</p>
-                        ` : ''}
+                    title: `🚨 [BRAIN] Incidente Escalado - ${ticket.id}`,
+                    message: `Brain detectó problema en ${incident.problem.module || 'sistema'}: ${(incident.problem.message || '').substring(0, 100)}`,
 
-                        <h3>Intentos de Auto-Reparacion</h3>
-                        <p>Se realizaron ${incident.autoRepairAttempts} intentos de reparacion automatica sin exito.</p>
+                    metadata: {
+                        incidentId: incident.id,
+                        ticketId: ticket.id,
+                        module: incident.problem.module,
+                        severity: incident.problem.severity,
+                        autoRepairAttempts: incident.autoRepairAttempts,
+                        staffId: staff.staff_id,
+                        htmlContent: emailHtml
+                    },
 
-                        <hr>
-                        <p><strong>Por favor, revisa el panel de soporte para tomar accion.</strong></p>
-                        <p>Saludos,<br>Sistema Brain - Aponnt</p>
-                    `,
-                    text: `Brain - Incidente Escalado\n\nID: ${incident.id}\nTicket: ${ticket.id}\nModulo: ${incident.problem.module}\n\nError: ${incident.problem.message}\n\nPor favor revisar.`,
-                    recipientName: `${staff.first_name} ${staff.last_name}`,
-                    category: 'brain_escalation'
+                    priority: 'urgent',
+                    requiresAction: true,
+                    actionType: 'resolution',
+                    slaHours: 4,
+
+                    channels: ['email', 'inbox'],
                 });
 
-                console.log(`   📧 Email enviado a ${staff.email}`);
+                console.log(`   📧 [NCE] Email enviado a ${staff.email}`);
             }
 
         } catch (error) {
-            console.error('❌ [BRAIN-ESCALATION] Error enviando email:', error.message);
+            console.error('❌ [NCE] Error enviando email:', error.message);
         }
     }
 
