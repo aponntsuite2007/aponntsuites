@@ -32,9 +32,9 @@ router.get('/overview', async (req, res) => {
                 COUNT(*) FILTER (WHERE action_status = 'completed')::INTEGER as total_actions_completed,
                 COUNT(*) FILTER (WHERE sla_breached = TRUE)::INTEGER as total_sla_breached,
                 ROUND(AVG(EXTRACT(EPOCH FROM (read_at - created_at))/60), 2) as avg_read_time_minutes,
-                COUNT(DISTINCT recipient_user_id)::INTEGER as unique_recipients
+                COUNT(DISTINCT recipient_id)::INTEGER as unique_recipients
             FROM unified_notifications
-            WHERE created_at >= NOW() - INTERVAL ':days days'
+            WHERE created_at >= NOW() - MAKE_INTERVAL(days => :days)
               AND deleted_at IS NULL
               ${whereCompany}
         `, {
@@ -69,7 +69,7 @@ router.get('/by-channel', async (req, res) => {
                 COUNT(*) FILTER (WHERE response_at IS NOT NULL)::INTEGER as total_responded,
                 ROUND((COUNT(*) FILTER (WHERE delivered_at IS NOT NULL)::DECIMAL / NULLIF(COUNT(*), 0) * 100), 2) as delivery_rate
             FROM notification_log
-            WHERE sent_at >= NOW() - INTERVAL ':days days'
+            WHERE sent_at >= NOW() - MAKE_INTERVAL(days => :days)
               ${companyId ? 'AND company_id = :companyId' : ''}
             GROUP BY channel
             ORDER BY total_sent DESC
@@ -107,7 +107,7 @@ router.get('/by-module', async (req, res) => {
                 COUNT(*) FILTER (WHERE priority = 'urgent')::INTEGER as total_urgent,
                 ROUND(AVG(EXTRACT(EPOCH FROM (read_at - created_at))/60), 2) as avg_read_time_minutes
             FROM unified_notifications
-            WHERE created_at >= NOW() - INTERVAL ':days days'
+            WHERE created_at >= NOW() - MAKE_INTERVAL(days => :days)
               AND deleted_at IS NULL
               ${whereCompany}
             GROUP BY module
@@ -146,7 +146,7 @@ router.get('/timeline', async (req, res) => {
                 COUNT(*) FILTER (WHERE read_at IS NOT NULL)::INTEGER as total_read,
                 COUNT(*) FILTER (WHERE priority IN ('urgent', 'high'))::INTEGER as total_high_priority
             FROM unified_notifications
-            WHERE created_at >= NOW() - INTERVAL ':days days'
+            WHERE created_at >= NOW() - MAKE_INTERVAL(days => :days)
               AND deleted_at IS NULL
               ${whereCompany}
             GROUP BY period
@@ -187,7 +187,7 @@ router.get('/sla-performance', async (req, res) => {
                        NULLIF(COUNT(*) FILTER (WHERE sla_hours IS NOT NULL), 0) * 100), 2) as compliance_rate,
                 ROUND(AVG(EXTRACT(EPOCH FROM (action_completed_at - created_at))/3600), 2) as avg_completion_hours
             FROM unified_notifications
-            WHERE created_at >= NOW() - INTERVAL ':days days'
+            WHERE created_at >= NOW() - MAKE_INTERVAL(days => :days)
               AND requires_action = TRUE
               AND deleted_at IS NULL
               ${whereCompany}
@@ -219,18 +219,18 @@ router.get('/top-recipients', async (req, res) => {
 
         const topRecipients = await sequelize.query(`
             SELECT
-                un.recipient_user_id,
+                un.recipient_id,
                 u.name as user_name,
                 u.email as user_email,
                 COUNT(*)::INTEGER as total_notifications,
                 COUNT(*) FILTER (WHERE un.read_at IS NOT NULL)::INTEGER as total_read,
                 ROUND((COUNT(*) FILTER (WHERE un.read_at IS NOT NULL)::DECIMAL / NULLIF(COUNT(*), 0) * 100), 2) as read_rate
             FROM unified_notifications un
-            LEFT JOIN users u ON u.id = un.recipient_user_id
+            LEFT JOIN users u ON u.id = un.recipient_id
             WHERE un.created_at >= NOW() - INTERVAL ':days days'
               AND un.deleted_at IS NULL
               ${whereCompany}
-            GROUP BY un.recipient_user_id, u.name, u.email
+            GROUP BY un.recipient_id, u.name, u.email
             ORDER BY total_notifications DESC
             LIMIT :limit
         `, {
