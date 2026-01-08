@@ -83,6 +83,16 @@ class E2EPhase extends PhaseInterface {
       await this.agent.init();
 
       console.log('✅ [E2E] AutonomousQAAgent inicializado');
+
+      // IMPORTANTE: Hacer login antes de ejecutar tests
+      await this.agent.login({
+        empresa: 'isi',
+        usuario: 'admin',
+        password: 'admin123'
+      });
+
+      console.log('✅ [E2E] Login completado exitosamente');
+
     } catch (error) {
       console.error('❌ [E2E] Error inicializando agent:', error);
       throw error;

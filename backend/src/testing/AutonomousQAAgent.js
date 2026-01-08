@@ -165,7 +165,7 @@ class AutonomousQAAgent {
    */
   async login(credentials = {}) {
     const empresaSlug = credentials.empresa || 'isi';
-    const usuario = credentials.usuario || 'soporte'; // Usuario real que funciona
+    const usuario = credentials.usuario || 'admin'; // Usuario admin de la empresa ISI
     const password = credentials.password || 'admin123';
 
     console.log(`\n🔐 [AGENT] Login automático...`);
