@@ -127,6 +127,14 @@ const RolePermissions = (function() {
             subsections: ['pendientes', 'aprobadas'],
             component: 'PreBillingDashboard'
         },
+        'notification-billing': {
+            id: 'notification-billing',
+            icon: '💸',
+            label: 'Facturación de Canales',
+            description: 'Gestión de tarifación y facturación de canales de notificación (SMS, WhatsApp, Push)',
+            subsections: ['dashboard', 'empresas', 'tarifas', 'mensajes'],
+            component: 'NotificationBillingDashboard'
+        },
         'facturacion': {
             id: 'facturacion',
             icon: '🧾',
@@ -423,7 +431,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '💰 Administración',
-                    sections: ['aponnt-billing', 'facturacion', 'tareas-admin', 'configuracion']
+                    sections: ['aponnt-billing', 'notification-billing', 'facturacion', 'tareas-admin', 'configuracion']
                 },
                 {
                     title: '👥 Staff',
@@ -573,7 +581,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '💰 Administración',
-                    sections: ['aponnt-billing', 'facturacion', 'tareas-admin', 'configuracion']
+                    sections: ['aponnt-billing', 'notification-billing', 'facturacion', 'tareas-admin', 'configuracion']
                 },
                 {
                     title: '👥 Staff',

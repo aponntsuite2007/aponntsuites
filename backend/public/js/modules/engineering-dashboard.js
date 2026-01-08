@@ -441,7 +441,6 @@ const EngineeringDashboard = {
       { id: 'database', icon: '🗄️', label: 'Base de Datos' },
       { id: 'workflows', icon: '🔄', label: 'Workflows' },
       { id: 'auto-healing', icon: '🔧', label: 'Auto-Healing' },
-      { id: 'billing', icon: '💸', label: 'Facturación de Canales' }
     ];
 
     return `
@@ -532,25 +531,6 @@ const EngineeringDashboard = {
               <div style="font-size: 64px; margin-bottom: 20px;">🔧</div>
               <h2 style="color: #374151;">Sistema de Auto-Healing</h2>
               <p style="color: #6b7280;">Cargando dashboard...</p>
-            </div>
-          </div>
-        `;
-      case 'billing':
-        // Inicializar Notification Billing Dashboard si está disponible
-        setTimeout(() => {
-          if (window.NotificationBillingDashboard && typeof window.NotificationBillingDashboard.init === 'function') {
-            console.log('✅ [ENGINEERING] Inicializando Notification Billing Dashboard...');
-            window.NotificationBillingDashboard.init();
-          } else {
-            console.error('❌ [ENGINEERING] NotificationBillingDashboard no está disponible');
-          }
-        }, 100);
-        return `
-          <div id="billing-dashboard-container" style="padding: 20px;">
-            <div style="text-align: center; padding: 50px;">
-              <div style="font-size: 64px; margin-bottom: 20px;">💸</div>
-              <h2 style="color: #374151;">Sistema de Facturación de Canales</h2>
-              <p style="color: #6b7280;">Cargando dashboard de billing...</p>
             </div>
           </div>
         `;

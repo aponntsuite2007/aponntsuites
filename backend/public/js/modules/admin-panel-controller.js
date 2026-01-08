@@ -196,6 +196,7 @@ const AdminPanelController = {
 
             // ===== FACTURACIÓN APONNT =====
             'aponnt-billing': () => this._loadAponntBilling(),
+            'notification-billing': () => this._loadNotificationBilling(),
 
             // ===== TAREAS ADMIN =====
             'tareas-admin': () => this._loadTareasAdmin(),
@@ -333,6 +334,14 @@ const AdminPanelController = {
             'aponnt-billing': async () => {
                 if (window.AponntBillingDashboard) {
                     await AponntBillingDashboard.init(document.getElementById('content-area'));
+                }
+            },
+            'notification-billing': async () => {
+                console.log('[AdminPanel] Inicializando Notification Billing Dashboard...');
+                if (window.NotificationBillingDashboard) {
+                    await NotificationBillingDashboard.init();
+                } else {
+                    console.error('[AdminPanel] NotificationBillingDashboard no está definido');
                 }
             },
             'marketing': async () => {
@@ -527,6 +536,11 @@ const AdminPanelController = {
     async _loadAponntBilling() {
         // El dashboard se auto-renderiza al inicializarse
         return `<div id="aponnt-billing-container"></div>`;
+    },
+
+    async _loadNotificationBilling() {
+        console.log('[AdminPanel] Cargando Notification Billing Dashboard...');
+        return '<div id="billing-dashboard-container" style="min-height: 600px;"></div>';
     },
 
     async _loadFacturacion() {
