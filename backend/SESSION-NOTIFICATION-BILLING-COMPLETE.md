@@ -534,9 +534,9 @@ Deberías ver en logs:
 
 1. Abrir navegador → http://localhost:9998/panel-administrativo.html
 2. Login como admin de Aponnt
-3. Sidebar → Clic en **"🏗️ Ingeniería"**
-4. En los tabs superiores → Clic en **"💸 Facturación de Canales"**
-5. El dashboard se cargará automáticamente con 4 vistas:
+3. Sidebar → Menú **"💰 Administración"**
+4. Clic en **"💸 Facturación de Canales"**
+5. El dashboard se carga automáticamente con 4 vistas:
    - 📊 **Dashboard** - Métricas, costos, revenue, profit
    - 🏢 **Empresas** - Gestión por empresa
    - 💲 **Tarifas** - Configurar pricing por empresa/canal
@@ -544,8 +544,11 @@ Deberías ver en logs:
 
 **Archivos de integración**:
 - `panel-administrativo.html` línea 768 - Script cargado
-- `engineering-dashboard.js` línea 444 - Tab agregado
-- `engineering-dashboard.js` línea 538-556 - Caso billing en renderContent()
+- `role-permissions.js` líneas 130-137 - Definición de sección
+- `role-permissions.js` líneas 434, 584 - Agregado a menús admin
+- `admin-panel-controller.js` línea 199 - Routing agregado
+- `admin-panel-controller.js` línea 339 - Initializer agregado
+- `admin-panel-controller.js` línea 541 - Loader agregado
 
 ---
 
