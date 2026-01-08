@@ -558,6 +558,31 @@
                                                         alert('Módulo Engineering Dashboard: no disponible. Verifica que el script esté cargado.');
                                                     }
                                                     break;
+
+                                                case 'e2e-advanced-dashboard':
+                                                case 'e2e-advanced':
+                                                case 'e2e_advanced':
+                                                    // 🧪 E2E Advanced Testing Dashboard
+                                                    if (typeof E2EAdvancedDashboard !== 'undefined' && E2EAdvancedDashboard.init) {
+                                                        console.log('🧪 [E2E ADVANCED] Inicializando E2E Advanced Testing Dashboard...');
+                                                        // Ocultar grid de módulos
+                                                        const moduleGrid = document.querySelector('.module-grid');
+                                                        if (moduleGrid) moduleGrid.style.display = 'none';
+                                                        // Mostrar contenido principal
+                                                        const mainContent = document.getElementById('mainContent');
+                                                        if (mainContent) {
+                                                            mainContent.style.display = 'block';
+                                                            // Limpiar contenido anterior
+                                                            mainContent.innerHTML = '<div id="module-content"></div>';
+                                                        }
+                                                        // Inicializar E2E Advanced Dashboard
+                                                        E2EAdvancedDashboard.init();
+                                                    } else {
+                                                        console.error('❌ [E2E ADVANCED] E2EAdvancedDashboard no está disponible');
+                                                        alert('Módulo E2E Advanced Testing: no disponible. Verifica que el script esté cargado.');
+                                                    }
+                                                    break;
+
                                                 case 'compliance-dashboard':
                                                 case 'compliance_dashboard':
                                                     if (typeof ComplianceDashboard !== 'undefined' && ComplianceDashboard.init) {
@@ -2322,6 +2347,9 @@
     <!-- 🏗️ Engineering Dashboard - E2E Advanced Testing + Brain Integration -->
     <script src="js/modules/engineering-dashboard.js"></script>
 
+    <!-- 🧪 E2E Advanced Testing Dashboard -->
+    <script src="../src/testing/e2e-advanced/dashboard/e2e-advanced-dashboard.js"></script>
+
     <!-- FIX: Eliminar modales fantasma que aparecen al abrir módulo usuarios -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -3997,7 +4025,10 @@
                         'licensing-management',  // Solo para panel-administrativo APONNT
                         'permissions-test',      // Módulo de testing interno
                         'audit-dashboard',       // Dashboard de auditoría interno
-                        'engineering-dashboard'  // Solo para desarrollo/ingeniería
+                        'engineering-dashboard', // Solo para desarrollo/ingeniería
+                        'e2e-advanced-dashboard', // E2E Advanced Testing - Solo desarrollo
+                        'e2e-advanced',
+                        'e2e_advanced'
                     ];
 
                     companyModules = data.modules

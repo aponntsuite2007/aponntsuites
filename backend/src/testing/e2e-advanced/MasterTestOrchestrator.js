@@ -61,8 +61,19 @@ const MonitoringPhase = require('./phases/MonitoringPhase');
 const EdgeCasesPhase = require('./phases/EdgeCasesPhase');
 
 class MasterTestOrchestrator extends EventEmitter {
-  constructor() {
+  constructor(database = null, options = {}) {
     super();
+
+    // Opciones configurables
+    this.options = {
+      baseURL: options.baseURL || 'http://localhost:9998',
+      saveResults: options.saveResults !== undefined ? options.saveResults : true,
+      onProgress: options.onProgress || null,
+      modules: options.modules || null
+    };
+
+    // Database (opcional, para testing)
+    this.db = database || require('../../config/database');
 
     // Phases registradas (Map para O(1) lookup)
     this.phases = new Map();
@@ -166,7 +177,7 @@ class MasterTestOrchestrator extends EventEmitter {
 
     try {
       // Crear registro en BD
-      await this._createExecution(executionId, 'full_suite', modules);
+      await this._createExecution(executionId, 'full', modules);
 
       // Emitir evento de inicio
       this.emit('execution:started', { executionId, modules });
@@ -466,9 +477,22 @@ class MasterTestOrchestrator extends EventEmitter {
    * @private
    */
   async _saveResults(executionId, results, confidenceScore = null) {
+    // Si options.saveResults es false, no persistir
+    if (this.options && this.options.saveResults === false) {
+      return;
+    }
+
+    // Determinar status final basado en results
+    let finalStatus = 'passed';
+    if (results.errors && results.errors.length > 0) {
+      finalStatus = 'failed';
+    } else if (results.summary && results.summary.failed > 0) {
+      finalStatus = results.summary.failed > results.summary.passed ? 'failed' : 'warning';
+    }
+
     await db.E2EAdvancedExecution.update(
       {
-        status: 'completed',
+        status: finalStatus,
         completed_at: new Date(),
         duration: Date.now() - new Date().getTime()
       },
