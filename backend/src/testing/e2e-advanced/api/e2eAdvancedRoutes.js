@@ -24,9 +24,14 @@
 const express = require('express');
 const router = express.Router();
 const MasterTestOrchestrator = require('../MasterTestOrchestrator');
-const { E2EAdvancedExecution, TestResultDetailed, ConfidenceScore } = require('../../../models');
+const db = require('../../../config/database');
 const { auth } = require('../../../middleware/auth');
 const { Op } = require('sequelize');
+
+// Modelos
+const E2EAdvancedExecution = db.E2EAdvancedExecution;
+const TestResultDetailed = db.TestResultDetailed;
+const ConfidenceScore = db.ConfidenceScore;
 
 // Instancia única del orchestrator (singleton)
 let orchestrator = null;

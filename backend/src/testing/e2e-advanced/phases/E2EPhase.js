@@ -16,7 +16,7 @@
  */
 
 const PhaseInterface = require('./PhaseInterface');
-const AutonomousQAAgent = require('../AutonomousQAAgent');
+const AutonomousQAAgent = require('../../AutonomousQAAgent');
 const path = require('path');
 const fs = require('fs');
 
@@ -183,7 +183,7 @@ class E2EPhase extends PhaseInterface {
         total: this.results.totalTests,
         duration,
         metrics: {
-          modulesT ested: modulesToTest.length,
+          modulesTested: modulesToTest.length,
           modulesPassed: Object.values(this.results.modules).filter(m => m.status !== 'failed').length,
           modulesFailed: Object.values(this.results.modules).filter(m => m.status === 'failed').length,
           averageTestsPerModule: modulesToTest.length > 0
