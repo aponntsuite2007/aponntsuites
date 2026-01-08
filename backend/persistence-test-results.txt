@@ -1,0 +1,47 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+PASS tests/e2e-advanced-persistence.test.js
+  🗄️ E2E Advanced - Persistence Tests
+    1️⃣ E2EAdvancedExecution - Guardar ejecución
+      √ Debe crear una ejecución en la base de datos (4 ms)
+      √ Debe validar el modo de ejecución (full, phases, modules, custom) (1 ms)
+      √ Debe validar el status de ejecución (running, passed, failed, warning, cancelled) (1 ms)
+      √ Debe actualizar ejecución a completada con resultados
+    2️⃣ E2EAdvancedExecution - Recuperar ejecuciones
+      √ Debe recuperar una ejecución por execution_id (1 ms)
+      √ Debe recuperar ejecuciones de una empresa (multi-tenant) (1 ms)
+      √ Debe recuperar ejecuciones con filtros (status, mode, date range)
+    3️⃣ ConfidenceScore - Guardar score
+      √ Debe crear un confidence score con breakdown
+      √ Debe calcular production_ready correctamente (>= 95%) (1 ms)
+      √ Debe asignar confidence_level correcto (LOW, MEDIUM, HIGH) (1 ms)
+    4️⃣ ConfidenceScore - Recuperar scores
+      √ Debe recuperar score por execution_id
+      √ Debe recuperar scores históricos de una empresa (1 ms)
+    5️⃣ Relaciones FK - Execution → ConfidenceScore
+      √ Debe mantener integridad referencial (FK execution_id)
+      √ Debe recuperar execution con su confidence score (JOIN) (1 ms)
+    6️⃣ Funciones Helper SQL
+      √ Debe ejecutar get_e2e_execution_summary() (1 ms)
+      √ Debe ejecutar get_e2e_recent_executions()
+      √ Debe ejecutar get_e2e_module_health()
+      √ Debe ejecutar calculate_confidence_score() (1 ms)
+    7️⃣ Integration - Dashboard Data Retrieval
+      √ Debe recuperar datos para Overview tab (1 ms)
+      √ Debe recuperar datos para historial de ejecuciones
+      √ Debe recuperar datos para gráficos de tendencia
+    8️⃣ Multi-Tenant Isolation
+      √ Debe aislar ejecuciones por company_id (1 ms)
+      √ Debe aislar confidence scores por company_id
+    9️⃣ Performance - Índices y Queries
+      √ Debe buscar por execution_id eficientemente (índice único) (1 ms)
+      √ Debe filtrar por company_id + status eficientemente (índice compuesto)
+    🔟 Error Handling
+      √ Debe manejar errores de creación de ejecución (23 ms)
+      √ Debe manejar errores de creación de score
+      √ Debe retornar null si no encuentra ejecución
+
+Test Suites: 1 passed, 1 total
+Tests:       28 passed, 28 total
+Snapshots:   0 total
+Time:        0.695 s, estimated 1 s
+Ran all test suites matching /tests\\e2e-advanced-persistence.test.js/i.

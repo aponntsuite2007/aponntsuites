@@ -1,0 +1,336 @@
+
+🧪 ====================================
+   VALIDACIÓN E2E ADVANCED SYSTEM
+====================================
+
+📦 [1/7] Cargando MasterTestOrchestrator...
+🔍 [DEBUG] DATABASE_URL exists? false
+🔍 [DEBUG] DATABASE_URL value: NOT SET
+🔍 [DEBUG] NODE_ENV: undefined
+💻 Conectando a PostgreSQL local
+🐘 Configuración PostgreSQL - Sistema Optimizado
+   ✅ MasterTestOrchestrator cargado correctamente
+
+🔧 [2/7] Creando instancia del orchestrator...
+🔧 [ORCHESTRATOR] Registrando phases...
+✅ [ORCHESTRATOR] 7 phases registradas
+✅ [ORCHESTRATOR] Dependencias configuradas
+   ✅ Orchestrator instanciado correctamente
+
+📊 [3/7] Verificando phases registradas...
+   Phases encontradas: 7/7
+   ✅ Todas las 7 phases registradas: e2e, load, security, multiTenant, database, monitoring, edgeCases
+
+🧮 [4/7] Verificando ConfidenceCalculator...
+   Confidence Score (test): 100/100
+   ✅ ConfidenceCalculator funcionando correctamente
+
+🚀 [5/7] Ejecutando suite completo (modo simulación)...
+   Módulos: [users]
+   Phases: 7
+
+
+================================================================================
+🚀 [MASTER] INICIANDO SUITE COMPLETO - ID: b3b878e6-aea2-47f9-a06e-3825c54eb06b
+================================================================================
+   Módulos: TODOS
+   Parallel: SÍ
+================================================================================
+
+
+🚀 [ORCHESTRATOR] Ejecución iniciada: b3b878e6-aea2-47f9-a06e-3825c54eb06b
+📋 [MASTER] Plan de ejecución (3 stages):
+   Stage 1: e2e, security, database
+   Stage 2: load, multiTenant, edgeCases
+   Stage 3: monitoring
+
+
+🎯 [MASTER] Ejecutando Stage 1/3
+
+   ⚙️  [E2E] Iniciando...
+
+🧪 [E2E] Ejecutando tests funcionales...
+   Módulos: TODOS
+🧪 [E2E] Inicializando AutonomousQAAgent...
+🤖 [AGENT] Autonomous QA Agent inicializado
+   Session ID: 23b5a366-ecea-46b9-9f52-5673af786784
+   Learning: ON
+   Brain Integration: ON
+
+🚀 [AGENT] Inicializando navegador...
+
+   ⚙️  [SECURITY] Iniciando...
+⚠️ [SECURITY] ZAP no disponible - ejecutando tests básicos
+
+   ⚙️  [DATABASE] Iniciando...
+   ✅ [SECURITY] Completado en 0.00s
+   ✅ Navegador listo
+✅ [E2E] AutonomousQAAgent inicializado
+⚠️  [E2E] No se pudo cargar modules-registry, usando lista manual
+   Testing 7 módulos...
+
+   [1/7] Testeando módulo: users
+
+════════════════════════════════════════════════════════════════════════════════
+🎯 [AGENT] TESTEANDO MÓDULO: users
+════════════════════════════════════════════════════════════════════════════════
+
+🧭 [AGENT] Navegando a módulo: users
+   ⏳ Esperando a que los módulos se rendericen...
+   ⚠️  Timeout esperando módulos - continuando de todos modos
+   🔍 Buscando por data-module-key="users"...
+   🔍 Buscando por texto en module cards...
+   🔍 Buscando entre 0 module cards...
+
+   ❌ No se encontró módulo "users"
+   📸 Screenshot guardado: debug-searching-users.png
+
+   🔍 DEBUG EXHAUSTIVO:
+      Total buttons en página: 0
+      Total con class="module-card": 0
+      Total con data-module-key: 0
+      Buttons visibles: 0
+
+   📋 Sample module cards:
+
+   📋 Sample data-module-key elements:
+
+❌ [AGENT] Error testeando módulo users: No se encontró botón para módulo: users
+   ❌ Error testeando users: No se encontró botón para módulo: users
+
+   [2/7] Testeando módulo: attendance
+
+════════════════════════════════════════════════════════════════════════════════
+🎯 [AGENT] TESTEANDO MÓDULO: attendance
+════════════════════════════════════════════════════════════════════════════════
+
+🧭 [AGENT] Navegando a módulo: attendance
+   ⏳ Esperando a que los módulos se rendericen...
+   ⚠️  Timeout esperando módulos - continuando de todos modos
+   🔍 Buscando por data-module-key="attendance"...
+   🔍 Buscando por texto en module cards...
+   🔍 Buscando entre 0 module cards...
+
+   ❌ No se encontró módulo "attendance"
+   📸 Screenshot guardado: debug-searching-attendance.png
+
+   🔍 DEBUG EXHAUSTIVO:
+      Total buttons en página: 0
+      Total con class="module-card": 0
+      Total con data-module-key: 0
+      Buttons visibles: 0
+
+   📋 Sample module cards:
+
+   📋 Sample data-module-key elements:
+
+❌ [AGENT] Error testeando módulo attendance: No se encontró botón para módulo: attendance
+   ❌ Error testeando attendance: No se encontró botón para módulo: attendance
+
+   [3/7] Testeando módulo: departments
+
+════════════════════════════════════════════════════════════════════════════════
+🎯 [AGENT] TESTEANDO MÓDULO: departments
+════════════════════════════════════════════════════════════════════════════════
+
+🧭 [AGENT] Navegando a módulo: departments
+   ⏳ Esperando a que los módulos se rendericen...
+   ⚠️  Timeout esperando módulos - continuando de todos modos
+   🔍 Buscando por data-module-key="departments"...
+   🔍 Buscando por texto en module cards...
+   🔍 Buscando entre 0 module cards...
+
+   ❌ No se encontró módulo "departments"
+   📸 Screenshot guardado: debug-searching-departments.png
+
+   🔍 DEBUG EXHAUSTIVO:
+      Total buttons en página: 0
+      Total con class="module-card": 0
+      Total con data-module-key: 0
+      Buttons visibles: 0
+
+   📋 Sample module cards:
+
+   📋 Sample data-module-key elements:
+
+❌ [AGENT] Error testeando módulo departments: No se encontró botón para módulo: departments
+   ❌ Error testeando departments: No se encontró botón para módulo: departments
+
+   [4/7] Testeando módulo: shifts
+
+════════════════════════════════════════════════════════════════════════════════
+🎯 [AGENT] TESTEANDO MÓDULO: shifts
+════════════════════════════════════════════════════════════════════════════════
+
+🧭 [AGENT] Navegando a módulo: shifts
+   ⏳ Esperando a que los módulos se rendericen...
+   ⚠️  Timeout esperando módulos - continuando de todos modos
+   🔍 Buscando por data-module-key="shifts"...
+   🔍 Buscando por texto en module cards...
+   🔍 Buscando entre 0 module cards...
+
+   ❌ No se encontró módulo "shifts"
+   📸 Screenshot guardado: debug-searching-shifts.png
+
+   🔍 DEBUG EXHAUSTIVO:
+      Total buttons en página: 0
+      Total con class="module-card": 0
+      Total con data-module-key: 0
+      Buttons visibles: 0
+
+   📋 Sample module cards:
+
+   📋 Sample data-module-key elements:
+
+❌ [AGENT] Error testeando módulo shifts: No se encontró botón para módulo: shifts
+   ❌ Error testeando shifts: No se encontró botón para módulo: shifts
+
+   [5/7] Testeando módulo: reports
+
+════════════════════════════════════════════════════════════════════════════════
+🎯 [AGENT] TESTEANDO MÓDULO: reports
+════════════════════════════════════════════════════════════════════════════════
+
+🧭 [AGENT] Navegando a módulo: reports
+   ⏳ Esperando a que los módulos se rendericen...
+   ⚠️  Timeout esperando módulos - continuando de todos modos
+   🔍 Buscando por data-module-key="reports"...
+   🔍 Buscando por texto en module cards...
+   🔍 Buscando entre 0 module cards...
+
+   ❌ No se encontró módulo "reports"
+   📸 Screenshot guardado: debug-searching-reports.png
+
+   🔍 DEBUG EXHAUSTIVO:
+      Total buttons en página: 0
+      Total con class="module-card": 0
+      Total con data-module-key: 0
+      Buttons visibles: 0
+
+   📋 Sample module cards:
+
+   📋 Sample data-module-key elements:
+
+❌ [AGENT] Error testeando módulo reports: No se encontró botón para módulo: reports
+   ❌ Error testeando reports: No se encontró botón para módulo: reports
+
+   [6/7] Testeando módulo: notifications
+
+════════════════════════════════════════════════════════════════════════════════
+🎯 [AGENT] TESTEANDO MÓDULO: notifications
+════════════════════════════════════════════════════════════════════════════════
+
+🧭 [AGENT] Navegando a módulo: notifications
+   ⏳ Esperando a que los módulos se rendericen...
+   ⚠️  Timeout esperando módulos - continuando de todos modos
+   🔍 Buscando por data-module-key="notifications"...
+   🔍 Buscando por texto en module cards...
+   🔍 Buscando entre 0 module cards...
+
+   ❌ No se encontró módulo "notifications"
+   📸 Screenshot guardado: debug-searching-notifications.png
+
+   🔍 DEBUG EXHAUSTIVO:
+      Total buttons en página: 0
+      Total con class="module-card": 0
+      Total con data-module-key: 0
+      Buttons visibles: 0
+
+   📋 Sample module cards:
+
+   📋 Sample data-module-key elements:
+
+❌ [AGENT] Error testeando módulo notifications: No se encontró botón para módulo: notifications
+   ❌ Error testeando notifications: No se encontró botón para módulo: notifications
+
+   [7/7] Testeando módulo: kiosks
+
+════════════════════════════════════════════════════════════════════════════════
+🎯 [AGENT] TESTEANDO MÓDULO: kiosks
+════════════════════════════════════════════════════════════════════════════════
+
+🧭 [AGENT] Navegando a módulo: kiosks
+   ⏳ Esperando a que los módulos se rendericen...
+   ⚠️  Timeout esperando módulos - continuando de todos modos
+   🔍 Buscando por data-module-key="kiosks"...
+   🔍 Buscando por texto en module cards...
+   🔍 Buscando entre 0 module cards...
+
+   ❌ No se encontró módulo "kiosks"
+   📸 Screenshot guardado: debug-searching-kiosks.png
+
+   🔍 DEBUG EXHAUSTIVO:
+      Total buttons en página: 0
+      Total con class="module-card": 0
+      Total con data-module-key: 0
+      Buttons visibles: 0
+
+   📋 Sample module cards:
+
+   📋 Sample data-module-key elements:
+
+❌ [AGENT] Error testeando módulo kiosks: No se encontró botón para módulo: kiosks
+   ❌ Error testeando kiosks: No se encontró botón para módulo: kiosks
+
+✅ [E2E] Tests completados
+   Passed: 0/0
+   Score: 0.00%
+   Duración: 1.19min
+⚠️  [E2E] Error en cleanup: this.agent.cleanup is not a function
+   ✅ [E2E] Completado en 71.31s
+   ✅ [DATABASE] Completado en 122.34s
+⚠️  [DEPS] Fase load requiere e2e pero falló
+
+⚠️  [MASTER] Deteniendo ejecución - dependencias no cumplidas para stage 2
+
+✅ [ORCHESTRATOR] Ejecución completada: b3b878e6-aea2-47f9-a06e-3825c54eb06b
+   Confidence: 25.4%
+
+================================================================================
+✅ [MASTER] SUITE COMPLETADO
+   Confidence: 25.4%
+   Production Ready: NO ❌
+================================================================================
+
+   Execution ID: b3b878e6-aea2-47f9-a06e-3825c54eb06b
+   Confidence Score: 25.4/100
+   Production Ready: NO ❌
+   Duration: 122.7s
+   Phases ejecutadas: 3/3
+   Tests: 12 passed, 13 failed, 0 skipped
+   ✅ Suite ejecutado exitosamente
+
+🔍 [6/7] Verificando estructura de resultados...
+   ✅ Estructura de resultados válida (4 campos principales)
+
+   ✅ Subestructura de results válida
+
+📋 [7/7] Verificando phaseResults...
+   Phase results recibidos: 3
+   - e2e: failed (score: 0/100)
+   - security: warning (score: 100/100)
+   - database: warning (score: 54/100)
+
+   ✅ PhaseResults válidos
+
+====================================
+🎉 VALIDACIÓN COMPLETADA EXITOSAMENTE
+====================================
+
+✅ Componentes validados:
+   ✓ MasterTestOrchestrator
+   ✓ 7 Testing Phases (E2E, Load, Security, MultiTenant, Database, Monitoring, EdgeCases)
+   ✓ ConfidenceCalculator
+   ✓ Ejecución de suite completo
+   ✓ Estructura de resultados
+   ✓ PhaseResults
+
+📊 Métricas:
+   - Confidence Score: 25.4/100
+   - Production Ready: NO ❌
+   - Phases ejecutadas: 3/3
+   - Tests: 12 passed, 13 failed
+   - Duration: 122.7s
+
+🚀 Sistema listo para Integration Testing (CK-12)
+
