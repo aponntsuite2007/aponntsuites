@@ -687,15 +687,22 @@ const NotificationBillingDashboard = {
   }
 };
 
+// Exponer al scope global
+window.NotificationBillingDashboard = NotificationBillingDashboard;
+
+console.log('✅ [NOTIFICATION-BILLING] Dashboard cargado y disponible en window.NotificationBillingDashboard');
+
 // Auto-inicializar si está en la página correcta
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('billing-dashboard-container')) {
+      console.log('🔄 [NOTIFICATION-BILLING] Auto-inicializando dashboard...');
       NotificationBillingDashboard.init();
     }
   });
 } else {
   if (document.getElementById('billing-dashboard-container')) {
+    console.log('🔄 [NOTIFICATION-BILLING] Auto-inicializando dashboard...');
     NotificationBillingDashboard.init();
   }
 }
