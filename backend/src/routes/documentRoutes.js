@@ -5,6 +5,9 @@ const path = require('path');
 const fs = require('fs').promises;
 const { body, validationResult } = require('express-validator');
 
+// Integración NCE - Notificaciones
+const DocumentsNotifications = require('../services/integrations/documents-notifications');
+
 // Middleware y servicios
 const auth = require('../middleware/auth');
 const notificationService = require('../services/notificationService');

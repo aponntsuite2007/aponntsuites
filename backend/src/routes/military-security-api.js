@@ -6,6 +6,9 @@ const router = express.Router();
 const MilitarySecurityEngine = require('../services/military-security-engine');
 const rateLimit = require('express-rate-limit');
 
+// Integración NCE - Notificaciones
+const SecurityNotifications = require('../services/integrations/security-notifications');
+
 // Rate limiting militar
 const militaryRateLimit = rateLimit({
   windowMs: 60 * 1000, // 1 minuto

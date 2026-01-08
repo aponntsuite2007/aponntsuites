@@ -18,6 +18,9 @@ const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
 
+// Integración NCE - Notificaciones
+const PayrollNotifications = require('../services/integrations/payroll-notifications');
+
 // ============================================================================
 // HELPER: Validar formato UUID
 // ============================================================================

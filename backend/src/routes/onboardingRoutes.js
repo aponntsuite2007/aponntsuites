@@ -22,6 +22,9 @@ const router = express.Router();
 const OnboardingService = require('../services/OnboardingService');
 const { auth, authorize } = require('../middleware/auth');
 
+// Integración NCE - Notificaciones
+const OnboardingNotifications = require('../services/integrations/onboarding-notifications');
+
 /**
  * ============================================
  * FASE 1: PRESUPUESTO

@@ -4,6 +4,9 @@ const { Training, TrainingAssignment, TrainingProgress, User } = require('../con
 const { auth } = require('../middleware/auth');
 const { Op } = require('sequelize');
 
+// Integración NCE - Notificaciones
+const TrainingNotifications = require('../services/integrations/training-notifications');
+
 // Helper: Transformar training al formato del frontend
 function formatTraining(training) {
   const data = training.toJSON ? training.toJSON() : training;

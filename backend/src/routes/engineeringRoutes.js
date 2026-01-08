@@ -39,6 +39,9 @@ const router = express.Router();
 const { exec } = require('child_process');
 const path = require('path');
 
+// Integración NCE - Notificaciones
+const EngineeringNotifications = require('../services/integrations/engineering-notifications');
+
 // ============================================================================
 // ECOSYSTEM BRAIN - Fuente de datos VIVOS
 // ============================================================================

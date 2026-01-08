@@ -30,6 +30,7 @@ const CompanyEmailProcessService = require('./CompanyEmailProcessService');
 const FirebasePushService = require('./FirebasePushService');
 const TwilioMessagingService = require('./TwilioMessagingService');
 const NotificationWebSocketService = require('./NotificationWebSocketService');
+const NotificationBillingService = require('./NotificationBillingService');
 
 class NotificationChannelDispatcher {
 
@@ -540,7 +541,39 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
         console.log(`💬 [SMS] Sending to: ${recipient.phone}`);
 
         try {
-            // Obtener número de teléfono del recipient
+            // PASO 1: VERIFICAR SI EMPRESA PUEDE ENVIAR (CUOTA, SUSPENSIÓN)
+            const companyId = recipient.company_id || metadata.companyId;
+            if (!companyId) {
+                throw new Error('No se pudo determinar company_id del recipient');
+            }
+
+            const billingCheck = await NotificationBillingService.canCompanySend(companyId, 'sms');
+
+            if (!billingCheck.canSend) {
+                console.warn(`🚫 [SMS] Empresa ${companyId} NO puede enviar SMS: ${billingCheck.reason}`);
+
+                // Mensaje explícito según razón de suspensión
+                let errorMessage = 'Canal SMS deshabilitado';
+                if (billingCheck.reason === 'quota_exceeded') {
+                    errorMessage = `Cuota mensual de SMS agotada (${billingCheck.usage.current}/${billingCheck.usage.quota})`;
+                } else if (billingCheck.reason === 'channel_suspended') {
+                    errorMessage = 'Canal SMS suspendido por Aponnt (contactar administrador)';
+                } else if (billingCheck.reason.includes('non_payment')) {
+                    errorMessage = 'Canal SMS suspendido por falta de pago';
+                }
+
+                return {
+                    provider: 'twilio_sms',
+                    status: 'suspended',
+                    reason: billingCheck.reason,
+                    message: errorMessage,
+                    messageId: null
+                };
+            }
+
+            console.log(`✅ [SMS] Empresa ${companyId} puede enviar (${billingCheck.usage.current}/${billingCheck.usage.quota || '∞'})`);
+
+            // PASO 2: Obtener número de teléfono del recipient
             let phoneNumber = recipient.phone;
 
             // Si no tiene phone en recipient, buscar en BD
@@ -569,11 +602,22 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
                 };
             }
 
-            // Enviar SMS vía Twilio
+            // PASO 3: Enviar SMS vía Twilio
             const result = await TwilioMessagingService.sendSMS({
                 to: phoneNumber,
                 body: message
             });
+
+            // PASO 4: REGISTRAR BILLING (acumular costo)
+            const notificationId = metadata.notificationId || logId;
+            if (notificationId) {
+                await NotificationBillingService.registerBilling(
+                    companyId,
+                    notificationId,
+                    'sms',
+                    result.success ? 'delivered' : 'failed'
+                );
+            }
 
             return {
                 provider: 'twilio_sms',
@@ -603,7 +647,39 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
         console.log(`📱 [WHATSAPP] Sending to: ${recipient.phone}`);
 
         try {
-            // Obtener número de teléfono del recipient
+            // PASO 1: VERIFICAR SI EMPRESA PUEDE ENVIAR (CUOTA, SUSPENSIÓN)
+            const companyId = recipient.company_id || metadata.companyId;
+            if (!companyId) {
+                throw new Error('No se pudo determinar company_id del recipient');
+            }
+
+            const billingCheck = await NotificationBillingService.canCompanySend(companyId, 'whatsapp');
+
+            if (!billingCheck.canSend) {
+                console.warn(`🚫 [WHATSAPP] Empresa ${companyId} NO puede enviar WhatsApp: ${billingCheck.reason}`);
+
+                // Mensaje explícito según razón de suspensión
+                let errorMessage = 'Canal WhatsApp deshabilitado';
+                if (billingCheck.reason === 'quota_exceeded') {
+                    errorMessage = `Cuota mensual de WhatsApp agotada (${billingCheck.usage.current}/${billingCheck.usage.quota})`;
+                } else if (billingCheck.reason === 'channel_suspended') {
+                    errorMessage = 'Canal WhatsApp suspendido por Aponnt (contactar administrador)';
+                } else if (billingCheck.reason.includes('non_payment')) {
+                    errorMessage = 'Canal WhatsApp suspendido por falta de pago';
+                }
+
+                return {
+                    provider: 'twilio_whatsapp',
+                    status: 'suspended',
+                    reason: billingCheck.reason,
+                    message: errorMessage,
+                    messageId: null
+                };
+            }
+
+            console.log(`✅ [WHATSAPP] Empresa ${companyId} puede enviar (${billingCheck.usage.current}/${billingCheck.usage.quota || '∞'})`);
+
+            // PASO 2: Obtener número de teléfono del recipient
             let phoneNumber = recipient.phone;
 
             // Si no tiene phone en recipient, buscar en BD
@@ -632,11 +708,22 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
                 };
             }
 
-            // Enviar WhatsApp vía Twilio
+            // PASO 3: Enviar WhatsApp vía Twilio
             const result = await TwilioMessagingService.sendWhatsApp({
                 to: phoneNumber,
                 body: message
             });
+
+            // PASO 4: REGISTRAR BILLING (acumular costo)
+            const notificationId = metadata.notificationId || logId;
+            if (notificationId) {
+                await NotificationBillingService.registerBilling(
+                    companyId,
+                    notificationId,
+                    'whatsapp',
+                    result.success ? 'delivered' : 'failed'
+                );
+            }
 
             return {
                 provider: 'twilio_whatsapp',

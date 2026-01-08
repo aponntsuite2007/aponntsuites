@@ -11,6 +11,9 @@ const NotificationWorkflowService = require('../services/NotificationWorkflowSer
 // Importar sistema modular Plug & Play
 const { useModuleIfAvailable } = require('../utils/moduleHelper');
 
+// Integración NCE - Notificaciones
+const AttendanceNotifications = require('../services/integrations/attendance-notifications');
+
 // Importar rutas de estadísticas avanzadas
 const advancedStatsRouter = require('./attendance_stats_advanced');
 

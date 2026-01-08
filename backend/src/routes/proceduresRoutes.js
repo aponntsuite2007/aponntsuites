@@ -12,6 +12,9 @@ const router = express.Router();
 const { auth, authorize } = require('../middleware/auth');
 const ProceduresService = require('../services/ProceduresService');
 
+// Integración NCE - Notificaciones
+const ProceduresNotifications = require('../services/integrations/procedures-notifications');
+
 // Middleware: Solo RRHH, gerentes, supervisores pueden escribir/modificar
 const canWrite = authorize('admin', 'super_admin', 'rrhh', 'gerente', 'supervisor');
 

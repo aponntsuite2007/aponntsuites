@@ -19,6 +19,7 @@ const {
     User,
     Company
 } = require('../config/database');
+const NotificationCentralExchange = require('./NotificationCentralExchange');
 
 class HseService {
 
@@ -648,6 +649,73 @@ class HseService {
                     { status: data.condition },
                     { where: { id: deliveryId } }
                 );
+            }
+
+            // Obtener delivery para datos de notificación
+            const delivery = await EppDelivery.findByPk(deliveryId, {
+                include: [
+                    { model: User, as: 'employee', attributes: ['user_id', 'firstName', 'lastName', 'email', 'company_id'] },
+                    { model: EppCatalog, as: 'eppItem', attributes: ['name', 'code'] }
+                ]
+            });
+
+            // Notificar inspección programada
+            if (delivery && delivery.employee) {
+                try {
+                    await NotificationCentralExchange.send({
+                        companyId: delivery.employee.company_id,
+                        module: 'hse',
+                        workflowKey: 'hse_inspection_scheduled',
+                        recipientType: 'user',
+                        recipientId: delivery.employee.user_id,
+                        title: 'Inspección de EPP programada',
+                        message: `Se ha programado una inspección de su EPP "${delivery.eppItem?.name}" para el ${new Date(data.inspection_date).toLocaleDateString()}.`,
+                        priority: data.action_required ? 'high' : 'normal',
+                        channels: ['email', 'inbox', 'websocket'],
+                        originType: 'hse_inspection',
+                        originId: inspection.id.toString(),
+                        metadata: {
+                            inspection_id: inspection.id,
+                            delivery_id: deliveryId,
+                            epp_name: delivery.eppItem?.name,
+                            inspector_id: inspectorId,
+                            inspection_date: data.inspection_date
+                        }
+                    });
+                } catch (notifError) {
+                    console.error('[HseService] Error enviando notificación de inspección:', notifError);
+                }
+            }
+
+            // Si hay no conformidad, enviar notificación adicional
+            if (!data.is_compliant || data.condition === 'unusable' || data.condition === 'damaged') {
+                try {
+                    await NotificationCentralExchange.send({
+                        companyId: delivery.employee.company_id,
+                        module: 'hse',
+                        workflowKey: 'hse_non_conformity',
+                        recipientType: 'user',
+                        recipientId: delivery.employee.user_id,
+                        title: 'No conformidad detectada en EPP',
+                        message: `Se detectó una no conformidad en su EPP "${delivery.eppItem?.name}". Estado: ${data.condition}. ${data.action_notes || ''}`,
+                        priority: 'urgent',
+                        requiresAction: data.action_required || false,
+                        channels: ['email', 'push', 'inbox', 'websocket'],
+                        originType: 'hse_non_conformity',
+                        originId: inspection.id.toString(),
+                        metadata: {
+                            inspection_id: inspection.id,
+                            delivery_id: deliveryId,
+                            epp_name: delivery.eppItem?.name,
+                            condition: data.condition,
+                            is_compliant: data.is_compliant,
+                            action_required: data.action_required,
+                            action_deadline: data.action_deadline
+                        }
+                    });
+                } catch (notifError) {
+                    console.error('[HseService] Error enviando notificación de no conformidad:', notifError);
+                }
             }
 
             return { success: true, inspection };

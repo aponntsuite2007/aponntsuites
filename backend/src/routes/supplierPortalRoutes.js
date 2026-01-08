@@ -11,6 +11,9 @@ const SupplierDocumentService = require('../services/SupplierDocumentService');
 const { uploadSingle, uploadMultiple, cleanupTempFile } = require('../middleware/supplierUpload');
 const { pool } = require('../config/database');
 
+// Integración NCE - Notificaciones
+const SuppliersNotifications = require('../services/integrations/suppliers-notifications');
+
 // Inicializar servicio de documentos
 let supplierDocumentService = null;
 try {

@@ -18,6 +18,9 @@ const {
 // Importar servicio de notificaciones enterprise
 const NotificationWorkflowService = require('../services/NotificationWorkflowService');
 
+// Importar nuevas integraciones de notificaciones (NCE)
+const VacationNotifications = require('../services/integrations/vacation-notifications');
+
 // Importar sistema modular Plug & Play
 const { useModuleIfAvailable } = require('../utils/moduleHelper');
 
@@ -1009,57 +1012,28 @@ async function sendVacationRequestNotification(vacationRequest) {
       }
     }
 
-    // Determinar prioridad según días solicitados
-    const priority = vacationRequest.totalDays > 14 ? 'high' :
-                     vacationRequest.totalDays > 7 ? 'medium' : 'normal';
+    // 🔔 NUEVA INTEGRACIÓN NCE (NotificationCentralExchange)
+    // Notificar al supervisor/aprobador sobre la nueva solicitud
+    const supervisorId = employee.department?.supervisor_id || employee.user_id;
 
-    console.log(`🔔 [VACATION] Generando notificación de solicitud: ${employee.firstName} ${employee.lastName} - ${vacationRequest.totalDays} días`);
-
-    // 🔔 GENERAR NOTIFICACIÓN CON WORKFLOW AUTOMÁTICO
-    // 🔌 PLUG & PLAY: Solo se envía si el módulo 'notifications-enterprise' está activo
-    await useModuleIfAvailable(employee.company_id, 'notifications-enterprise', async () => {
-      return await NotificationWorkflowService.createNotification({
-        module: 'vacation',
-        notificationType: 'vacation_request_approval',
-        companyId: employee.company_id,
-        category: 'approval_request',
-        priority: priority,
-        templateKey: 'vacation_request_approval',
-        variables: {
-          employee_name: `${employee.firstName} ${employee.lastName}`,
-          employee_id: employee.employeeId || employee.user_id.substring(0, 8),
-          department: employee.department?.name || 'Sin departamento',
-          total_days: vacationRequest.totalDays,
-          start_date: new Date(vacationRequest.startDate).toLocaleDateString('es-AR'),
-          end_date: new Date(vacationRequest.endDate).toLocaleDateString('es-AR'),
-          request_type: vacationRequest.requestType,
-          license_type: licenseTypeText,
-          reason: vacationRequest.reason || 'Sin motivo especificado',
-          request_date: new Date().toLocaleDateString('es-AR')
-        },
-        relatedEntityType: 'vacation_request',
-        relatedEntityId: vacationRequest.id,
-      relatedUserId: employee.user_id,
-      relatedDepartmentId: employee.department?.id,
-      entity: {
+    await VacationNotifications.notifyRequestCreated({
+      companyId: employee.company_id,
+      recipientId: supervisorId,
+      data: {
+        id: vacationRequest.id,
+        originId: vacationRequest.id,
+        message: `${employee.firstName} ${employee.lastName} ha solicitado ${vacationRequest.totalDays} días de ${licenseTypeText} desde ${new Date(vacationRequest.startDate).toLocaleDateString('es-AR')} hasta ${new Date(vacationRequest.endDate).toLocaleDateString('es-AR')}.`,
+        employee_name: `${employee.firstName} ${employee.lastName}`,
+        employee_id: employee.employeeId || employee.user_id.substring(0, 8),
+        department: employee.department?.name || 'Sin departamento',
+        total_days: vacationRequest.totalDays,
+        start_date: new Date(vacationRequest.startDate).toLocaleDateString('es-AR'),
+        end_date: new Date(vacationRequest.endDate).toLocaleDateString('es-AR'),
         request_type: vacationRequest.requestType,
-        total_days: vacationRequest.totalDays
-      },
-        sendEmail: vacationRequest.totalDays > 14, // Email si son más de 14 días
-        metadata: {
-          vacation_request_id: vacationRequest.id,
-          request_type: vacationRequest.requestType,
-          license_id: vacationRequest.extraordinaryLicenseId,
-          auto_generated: true
-        }
-      });
-    }, () => {
-      // Fallback: Módulo no activo, solicitud guardada sin notificar
-      console.log('⏭️  [VACATION] Módulo notificaciones no activo - Solicitud guardada sin notificar');
-      return null;
+        license_type: licenseTypeText,
+        reason: vacationRequest.reason || 'Sin motivo especificado'
+      }
     });
-
-    console.log(`✅ [VACATION] Notificación generada para solicitud ${vacationRequest.id}`);
 
   } catch (error) {
     console.error('[sendVacationRequestNotification] Error:', error);
@@ -1092,56 +1066,31 @@ async function sendVacationResponseNotification(vacationRequest, approvedBy, sta
 
     const statusText = status === 'approved' ? 'APROBADA' : 'RECHAZADA';
 
-    console.log(`🔔 [VACATION] Generando notificación de respuesta: ${employee.firstName} ${employee.lastName} - ${statusText}`);
+    // 🔔 NUEVA INTEGRACIÓN NCE (NotificationCentralExchange)
+    // Notificar al empleado sobre la respuesta a su solicitud
+    const notificationData = {
+      companyId: employee.company_id,
+      recipientId: employee.user_id,
+      data: {
+        id: vacationRequest.id,
+        originId: vacationRequest.id,
+        message: `Tu solicitud de ${vacationRequest.totalDays} días de vacaciones desde ${new Date(vacationRequest.startDate).toLocaleDateString('es-AR')} hasta ${new Date(vacationRequest.endDate).toLocaleDateString('es-AR')} ha sido ${statusText}.`,
+        employee_name: `${employee.firstName} ${employee.lastName}`,
+        status: statusText,
+        total_days: vacationRequest.totalDays,
+        start_date: new Date(vacationRequest.startDate).toLocaleDateString('es-AR'),
+        end_date: new Date(vacationRequest.endDate).toLocaleDateString('es-AR'),
+        approver_name: `${approver.firstName} ${approver.lastName}`,
+        approval_comments: vacationRequest.approvalComments || 'Sin comentarios',
+        approval_date: new Date().toLocaleDateString('es-AR')
+      }
+    };
 
-    // 🔔 GENERAR NOTIFICACIÓN INFORMATIVA (NO REQUIERE ACCIÓN)
-    // 🔌 PLUG & PLAY: Solo se envía si el módulo 'notifications-enterprise' está activo
-    await useModuleIfAvailable(employee.company_id, 'notifications-enterprise', async () => {
-      return await NotificationWorkflowService.createNotification({
-        module: 'vacation',
-        notificationType: 'vacation_response',
-        companyId: employee.company_id,
-        category: 'informational',
-        priority: 'high',
-        templateKey: 'vacation_request_response',
-        variables: {
-          employee_name: `${employee.firstName} ${employee.lastName}`,
-          employee_id: employee.employeeId || employee.user_id.substring(0, 8),
-          status: statusText,
-          status_color: status === 'approved' ? 'success' : 'danger',
-          total_days: vacationRequest.totalDays,
-          start_date: new Date(vacationRequest.startDate).toLocaleDateString('es-AR'),
-          end_date: new Date(vacationRequest.endDate).toLocaleDateString('es-AR'),
-          approver_name: `${approver.firstName} ${approver.lastName}`,
-          approval_comments: vacationRequest.approvalComments || 'Sin comentarios',
-          approval_date: new Date().toLocaleDateString('es-AR')
-        },
-        relatedEntityType: 'vacation_request',
-        relatedEntityId: vacationRequest.id,
-      relatedUserId: employee.user_id,
-      relatedDepartmentId: employee.department?.id,
-      recipientRole: 'employee', // Esta notificación va al empleado directamente
-      recipientUserId: employee.user_id,
-      entity: {
-        status: status,
-        total_days: vacationRequest.totalDays
-      },
-        sendEmail: true, // Siempre enviar email en respuestas
-        metadata: {
-          vacation_request_id: vacationRequest.id,
-          approver_id: approvedBy,
-          approval_date: new Date(),
-          final_decision: status,
-          auto_generated: true
-        }
-      });
-    }, () => {
-      // Fallback: Módulo no activo, respuesta registrada sin notificar
-      console.log('⏭️  [VACATION] Módulo notificaciones no activo - Respuesta registrada sin notificar');
-      return null;
-    });
-
-    console.log(`✅ [VACATION] Notificación de respuesta generada para solicitud ${vacationRequest.id}`);
+    if (status === 'approved') {
+      await VacationNotifications.notifyApproved(notificationData);
+    } else {
+      await VacationNotifications.notifyRejected(notificationData);
+    }
 
   } catch (error) {
     console.error('[sendVacationResponseNotification] Error:', error);

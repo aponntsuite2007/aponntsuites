@@ -3177,6 +3177,45 @@ console.log('   ⏰ GET    /api/notifications/analytics/timeline - Timeline de n
 console.log('   ⚡ GET    /api/notifications/analytics/sla-performance - Performance de SLA');
 console.log('   👥 GET    /api/notifications/analytics/top-recipients - Top destinatarios');
 
+// 📊 CONFIGURAR RUTAS DE NOTIFICATION MONITORING DASHBOARD
+const notificationMonitoringRoutes = require('./src/routes/notificationMonitoringRoutes');
+app.use('/api/notifications/monitoring', notificationMonitoringRoutes);
+
+console.log('\n📊 [NOTIFICATION-MONITORING] Dashboard de Monitoreo ACTIVO:');
+console.log('   📊 GET    /api/notifications/monitoring/stats - Estadísticas generales');
+console.log('   📡 GET    /api/notifications/monitoring/by-channel - Métricas por canal');
+console.log('   🎯 GET    /api/notifications/monitoring/by-module - Métricas por módulo');
+console.log('   📅 GET    /api/notifications/monitoring/timeline - Timeline diario');
+console.log('   💯 GET    /api/notifications/monitoring/engagement - Tasas de apertura/lectura');
+console.log('   📝 GET    /api/notifications/monitoring/recent - Notificaciones recientes');
+console.log('   ⏰ Períodos soportados: 7d, 30d, 90d, all');
+
+// 💰 CONFIGURAR RUTAS DE NOTIFICATION BILLING
+const notificationBillingRoutes = require('./src/routes/notificationBillingRoutes');
+app.use('/api/notifications/billing', notificationBillingRoutes);
+
+console.log('\n💰 [NOTIFICATION-BILLING] Sistema de Tarifación y Facturación ACTIVO:');
+console.log('   📊 GET    /api/notifications/billing/dashboard - Dashboard de facturación (Aponnt)');
+console.log('   🏢 GET    /api/notifications/billing/company/:id - Facturación por empresa');
+console.log('   📜 GET    /api/notifications/billing/company/:id/log - Log detallado de billing');
+console.log('   💲 POST   /api/notifications/billing/pricing - Configurar tarifas');
+console.log('   💲 GET    /api/notifications/billing/pricing/:id - Ver tarifas de empresa');
+console.log('   🚫 POST   /api/notifications/billing/suspend - Suspender canal');
+console.log('   ✅ POST   /api/notifications/billing/enable - Habilitar canal');
+console.log('   📄 POST   /api/notifications/billing/mark-invoiced - Marcar como facturado');
+console.log('   📈 GET    /api/notifications/billing/stats - Estadísticas de billing');
+
+// 📥 CONFIGURAR RUTAS DE WEBHOOKS (Twilio SMS/WhatsApp entrante)
+const notificationWebhookRoutes = require('./src/routes/notificationWebhookRoutes');
+app.use('/api/webhooks', notificationWebhookRoutes);
+
+console.log('\n📥 [NOTIFICATION-WEBHOOKS] Webhooks de Twilio ACTIVO:');
+console.log('   📱 POST   /api/webhooks/twilio/incoming - Recibir mensajes SMS/WhatsApp');
+console.log('   📊 POST   /api/webhooks/twilio/status - Recibir updates de status');
+console.log('   📋 GET    /api/webhooks/incoming/:companyId - Ver mensajes entrantes');
+console.log('   ✅ POST   /api/webhooks/incoming/:id/mark-processed - Marcar como procesado');
+console.log('   💡 Configurar en Twilio Console: https://[tu-dominio]/api/webhooks/twilio/incoming');
+
 // 🔗 CONFIGURAR COMPANY EMAIL PROCESS MAPPING - Asignación de emails a procesos (multi-tenant)
 const companyEmailProcessRoutes = require('./src/routes/companyEmailProcessRoutes');
 app.use('/api/company-email-process', companyEmailProcessRoutes);
@@ -3220,6 +3259,18 @@ console.log('   🤖 POST   /api/brain/tickets/:id/retry-repair - Reintentar aut
 console.log('   📊 GET    /api/brain/stats/summary - Estadísticas de tickets');
 console.log('   📝 POST   /api/brain/tickets/:id/export-claude-code - Exportar para Claude Code');
 console.log(`   💾 Total de tickets: 20,973 archivos JSON`);
+
+// ✅ DEV TICKETS - Sistema de Tracking de Desarrollo (Complementario a Brain Tickets)
+const devTicketsRoutes = require('./src/routes/devTicketsRoutes');
+app.use('/api/dev-tickets', devTicketsRoutes);
+
+console.log('🎯 [DEV TICKETS] Sistema de Tracking de Desarrollo ACTIVO:');
+console.log('   📋 GET    /api/dev-tickets - Listar dev tickets (features/desarrollo)');
+console.log('   📝 GET    /api/dev-tickets/:id - Detalles de dev ticket');
+console.log('   ➕ POST   /api/dev-tickets - Crear nuevo dev ticket');
+console.log('   ✏️  PATCH  /api/dev-tickets/:id - Actualizar progreso (checklist, session history)');
+console.log('   📄 GET    /api/dev-tickets/:id/resume - Generar resumen para Claude Code');
+console.log('   💡 Complemento: TKT-* = Bugs auto-detectados | DEV-* = Features/Desarrollo planificado');
 
 // ✅ CONFIGURAR BRAIN REACTIVE - Sistema Reactivo del Cerebro
 const brainReactiveRoutes = require('./src/routes/brainReactiveRoutes');

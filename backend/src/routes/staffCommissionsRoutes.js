@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const StaffCommissionService = require('../services/StaffCommissionService');
 
+// Integración NCE - Notificaciones
+const StaffNotifications = require('../services/integrations/staff-notifications');
+
 /**
  * ============================================================================
  * RUTAS: COMISIONES DE STAFF APONNT (Sistema Piramidal)
