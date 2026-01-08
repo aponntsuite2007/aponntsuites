@@ -117,7 +117,7 @@
   "frontends": {
     "summary": {
       "total": 28,
-      "totalLines": 36763,
+      "totalLines": 38614,
       "byType": {
         "other": [
           {
@@ -227,7 +227,7 @@
               "/api/contact",
               "/api/technology-stack/all"
             ],
-            "lastModified": "2026-01-04T20:30:01.670Z",
+            "lastModified": "2026-01-06T11:12:18.812Z",
             "features": [
               "Multi-idioma",
               "Gráficos/Dashboards",
@@ -324,10 +324,10 @@
             "type": "other",
             "title": "Registro de Partners - Sistema de Asistencia Biométrico",
             "url": "/partner-register.html",
-            "lines": 860,
+            "lines": 909,
             "modules": [],
             "apiEndpoints": [],
-            "lastModified": "2025-12-16T13:34:17.934Z",
+            "lastModified": "2026-01-06T02:00:46.314Z",
             "features": [
               "Multi-idioma",
               "Modales dinámicos"
@@ -474,10 +474,10 @@
             "type": "partners",
             "title": "Aponnt - Portal de Asociados",
             "url": "/panel-asociados.html",
-            "lines": 2224,
+            "lines": 2271,
             "modules": [],
             "apiEndpoints": [],
-            "lastModified": "2026-01-01T21:59:57.049Z",
+            "lastModified": "2026-01-06T01:59:05.496Z",
             "features": [
               "Multi-idioma",
               "Gráficos/Dashboards",
@@ -492,7 +492,7 @@
             "type": "company",
             "title": "Aponnt - SIN UNDEFINED - v20250926",
             "url": "/panel-empresa.html",
-            "lines": 7958,
+            "lines": 8086,
             "modules": [],
             "apiEndpoints": [
               "/api/aponnt/dashboard/companies",
@@ -502,7 +502,7 @@
               "/api/v1/health",
               "/api/v1/licensing"
             ],
-            "lastModified": "2026-01-04T20:37:28.220Z",
+            "lastModified": "2026-01-06T22:26:43.329Z",
             "features": [
               "Multi-idioma",
               "Asistente IA integrado",
@@ -545,16 +545,23 @@
             "type": "suppliers",
             "title": "Aponnt - Portal de Proveedores",
             "url": "/panel-proveedores.html",
-            "lines": 2115,
+            "lines": 3742,
             "modules": [],
             "apiEndpoints": [
-              "/api/supplier-portal"
+              "/api/supplier-portal",
+              "/api/supplier-portal/attachments/invoice/upload",
+              "/api/supplier-messages/sent",
+              "/api/supplier-messages/send",
+              "/api/supplier-messages/unread-count"
             ],
-            "lastModified": "2026-01-04T02:13:01.888Z",
+            "lastModified": "2026-01-06T14:47:23.825Z",
             "features": [
               "Multi-idioma",
+              "Asistente IA integrado",
               "Gráficos/Dashboards",
-              "Modales dinámicos"
+              "Modales dinámicos",
+              "Generación PDF",
+              "Export Excel"
             ]
           }
         ]
@@ -683,7 +690,7 @@
           "Generación PDF",
           "Export Excel"
         ],
-        "last_modified": "2026-01-04T20:30:01.670Z"
+        "last_modified": "2026-01-06T11:12:18.812Z"
       },
       {
         "filename": "isi-direct.html",
@@ -781,7 +788,7 @@
         "type": "partners",
         "title": "Aponnt - Portal de Asociados",
         "url": "/panel-asociados.html",
-        "lines": 2224,
+        "lines": 2271,
         "modules_loaded": 0,
         "modules": [],
         "api_endpoints_used": 0,
@@ -791,14 +798,14 @@
           "Tablas de datos",
           "Modales dinámicos"
         ],
-        "last_modified": "2026-01-01T21:59:57.049Z"
+        "last_modified": "2026-01-06T01:59:05.496Z"
       },
       {
         "filename": "panel-empresa.html",
         "type": "company",
         "title": "Aponnt - SIN UNDEFINED - v20250926",
         "url": "/panel-empresa.html",
-        "lines": 7958,
+        "lines": 8086,
         "modules_loaded": 0,
         "modules": [],
         "api_endpoints_used": 6,
@@ -810,7 +817,7 @@
           "Tiempo real (WebSocket)",
           "Biometría"
         ],
-        "last_modified": "2026-01-04T20:37:28.220Z"
+        "last_modified": "2026-01-06T22:26:43.329Z"
       },
       {
         "filename": "panel-isi-direct.html",
@@ -829,23 +836,26 @@
         "type": "suppliers",
         "title": "Aponnt - Portal de Proveedores",
         "url": "/panel-proveedores.html",
-        "lines": 2115,
+        "lines": 3742,
         "modules_loaded": 0,
         "modules": [],
-        "api_endpoints_used": 1,
+        "api_endpoints_used": 5,
         "features": [
           "Multi-idioma",
+          "Asistente IA integrado",
           "Gráficos/Dashboards",
-          "Modales dinámicos"
+          "Modales dinámicos",
+          "Generación PDF",
+          "Export Excel"
         ],
-        "last_modified": "2026-01-04T02:13:01.888Z"
+        "last_modified": "2026-01-06T14:47:23.825Z"
       },
       {
         "filename": "partner-register.html",
         "type": "other",
         "title": "Registro de Partners - Sistema de Asistencia Biométrico",
         "url": "/partner-register.html",
-        "lines": 860,
+        "lines": 909,
         "modules_loaded": 0,
         "modules": [],
         "api_endpoints_used": 0,
@@ -853,7 +863,7 @@
           "Multi-idioma",
           "Modales dinámicos"
         ],
-        "last_modified": "2025-12-16T13:34:17.934Z"
+        "last_modified": "2026-01-06T02:00:46.314Z"
       },
       {
         "filename": "privacidad.html",
@@ -1031,7 +1041,7 @@
       "total_modules": 72,
       "core_included_in_base": 33,
       "commercial_addons": 38,
-      "ai_powered_modules": 9,
+      "ai_powered_modules": 10,
       "internal_modules": 1,
       "engineering_marvels": 10
     },
@@ -9422,7 +9432,7 @@
     "database_functions": "30+",
     "documented_workflows": 12,
     "automated_tests": "Phase4 E2E collectors (15+)",
-    "lines_of_code_metadata": 22092,
+    "lines_of_code_metadata": 22614,
     "modules_registered": 72,
     "translation_keys": 1964,
     "total_translations": 11784,
@@ -9541,12 +9551,12 @@
     "github": "Private repository - disponible para auditoría bajo NDA"
   },
   "_metadata": {
-    "generated_at": "2026-01-05T01:05:53.617Z",
+    "generated_at": "2026-01-07T21:59:52.445Z",
     "data_source": "Auto-generated from Brain engineering-metadata.js + modules-registry.json + filesystem scan",
     "version": "4.1.0",
     "total_modules_in_registry": 72,
     "client_visible_modules": 71,
-    "engineering_metadata_lines": 22092,
+    "engineering_metadata_lines": 22614,
     "total_frontends": 28,
     "total_mobile_apps": 2,
     "transparency_level": "RADICAL - Exposing full system architecture for objective AI analysis"

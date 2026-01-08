@@ -536,6 +536,28 @@
                                                         alert('Error cargando módulo Auditor');
                                                     });
                                                     break;
+
+                                                case 'engineering-dashboard':
+                                                    // 🏗️ Engineering Dashboard - E2E Advanced Testing + Brain Integration
+                                                    if (typeof EngineeringDashboard !== 'undefined' && EngineeringDashboard.init) {
+                                                        console.log('🏗️ [ENGINEERING] Inicializando Engineering Dashboard...');
+                                                        // Ocultar grid de módulos
+                                                        const moduleGrid = document.querySelector('.module-grid');
+                                                        if (moduleGrid) moduleGrid.style.display = 'none';
+                                                        // Mostrar contenido principal
+                                                        const mainContent = document.getElementById('mainContent');
+                                                        if (mainContent) {
+                                                            mainContent.style.display = 'block';
+                                                            // Limpiar contenido anterior
+                                                            mainContent.innerHTML = '<div id="engineering-dashboard-container"></div>';
+                                                        }
+                                                        // Inicializar Engineering Dashboard
+                                                        EngineeringDashboard.init(currentCompany?.id || null);
+                                                    } else {
+                                                        console.error('❌ [ENGINEERING] EngineeringDashboard no está disponible');
+                                                        alert('Módulo Engineering Dashboard: no disponible. Verifica que el script esté cargado.');
+                                                    }
+                                                    break;
                                                 case 'compliance-dashboard':
                                                 case 'compliance_dashboard':
                                                     if (typeof ComplianceDashboard !== 'undefined' && ComplianceDashboard.init) {
@@ -2296,6 +2318,9 @@
     <script src="js/modules/interactive-tour-engine.js"></script>
     <!-- <script src="js/modules/licensing-management.js"></script> --> <!-- REMOVIDO - Solo para panel-administrativo -->
     <script src="js/modules/art-management.js"></script>
+
+    <!-- 🏗️ Engineering Dashboard - E2E Advanced Testing + Brain Integration -->
+    <script src="js/modules/engineering-dashboard.js"></script>
 
     <!-- FIX: Eliminar modales fantasma que aparecen al abrir módulo usuarios -->
     <script>

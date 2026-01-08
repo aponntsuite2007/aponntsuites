@@ -225,6 +225,11 @@ const AponntStaff = require('../models/AponntStaff')(sequelize);
 const { defineModel: defineAuditTestLog } = require('../models/AuditTestLog');
 const AuditTestLog = defineAuditTestLog(sequelize);
 
+// ✅ MODELOS - Sistema de E2E Advanced Testing (7 Phases, Confidence Score)
+const E2EAdvancedExecution = require('../models/E2EAdvancedExecution')(sequelize);
+const TestResultDetailed = require('../models/TestResultDetailed')(sequelize);
+const ConfidenceScore = require('../models/ConfidenceScore')(sequelize);
+
 // ✅ MODELOS - Sistema de Attendance Analytics (Scoring + Patrones + OLAP)
 const AttendanceProfile = require('../models/AttendanceProfile')(sequelize);
 const AttendancePattern = require('../models/AttendancePattern')(sequelize);
@@ -1097,6 +1102,34 @@ AssistantConversation.belongsTo(AssistantKnowledgeBase, { foreignKey: 'knowledge
 AssistantKnowledgeBase.hasMany(AssistantConversation, { foreignKey: 'knowledge_entry_id', sourceKey: 'id', as: 'conversations' });
 
 // ============================================================================
+// ✅ ASOCIACIONES - Sistema de E2E Advanced Testing (7 Phases, Confidence)
+// ============================================================================
+
+// E2EAdvancedExecution associations
+if (E2EAdvancedExecution.associate) {
+  E2EAdvancedExecution.associate({
+    User,
+    Company,
+    TestResultDetailed,
+    ConfidenceScore
+  });
+}
+
+// TestResultDetailed associations
+if (TestResultDetailed.associate) {
+  TestResultDetailed.associate({
+    E2EAdvancedExecution
+  });
+}
+
+// ConfidenceScore associations
+if (ConfidenceScore.associate) {
+  ConfidenceScore.associate({
+    E2EAdvancedExecution
+  });
+}
+
+// ============================================================================
 // ASOCIACIONES - Process Chain Analytics
 // ============================================================================
 
@@ -1812,6 +1845,10 @@ module.exports = {
   AuditLog,
   // ✅ EXPORT - Sistema de Testing Phase 4
   AuditTestLog,
+  // ✅ EXPORTS - Sistema de E2E Advanced Testing
+  E2EAdvancedExecution,
+  TestResultDetailed,
+  ConfidenceScore,
   // ✅ EXPORT - Sistema de Asistente IA
   AssistantKnowledgeBase,
   AssistantConversation,

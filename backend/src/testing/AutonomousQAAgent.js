@@ -1346,25 +1346,77 @@ ${crudStats.tested > 0 ? `
       }
 
       try {
-        // Llenar según tipo de campo
+        const selector = field.id ? `#${field.id}` : `[name="${field.name}"]`;
+        const fieldHandle = await this.page.$(selector);
+
+        if (!fieldHandle) {
+          console.log(`         ⚠️  Campo "${field.name}" no encontrado`);
+          continue;
+        }
+
+        // ⭐ FIX 30: Aplicar los 3 critical fixes ANTES de llenar campo
+
+        // FIX 1: Container Awareness - Verificar si está en modal
+        const isInModal = await fieldHandle.evaluate(el => {
+          return el.closest('.modal.show') !== null;
+        });
+
+        // FIX 2: Smart Scroll - Scrollear en contenedor correcto
+        if (isInModal) {
+          // Scroll en modal-body
+          await this.page.evaluate(() => {
+            const modalBody = document.querySelector('.modal.show .modal-body');
+            if (modalBody) {
+              modalBody.scrollTop = 0; // Reset al top primero
+            }
+          });
+          await this.page.waitForTimeout(100);
+        }
+
+        // Scroll al elemento específico
+        try {
+          await fieldHandle.scrollIntoViewIfNeeded({ timeout: 5000 });
+        } catch (scrollError) {
+          // Si falla scroll nativo, intentar scroll manual
+          await fieldHandle.evaluate(el => {
+            el.scrollIntoView({ behavior: 'instant', block: 'center' });
+          });
+        }
+
+        await this.page.waitForTimeout(200);
+
+        // FIX 3: Viewport Visibility - Verificar que está visible
+        const isVisible = await fieldHandle.evaluate(el => {
+          const rect = el.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && rect.top >= 0;
+        });
+
+        if (!isVisible) {
+          console.log(`         ⚠️  Campo "${field.name}" no visible en viewport`);
+          // Intentar forzar visibilidad
+          await fieldHandle.evaluate(el => {
+            el.scrollIntoView({ behavior: 'instant', block: 'center', inline: 'nearest' });
+          });
+          await this.page.waitForTimeout(300);
+        }
+
+        // Ahora llenar según tipo de campo
         if (field.tag === 'select') {
-          await this.page.selectOption(`#${field.id}, [name="${field.name}"]`, testValue);
+          await this.page.selectOption(selector, testValue);
           console.log(`         ✅ Select "${field.name}" = "${testValue}"`);
         }
         else if (field.type === 'checkbox') {
           if (testValue) {
-            await this.page.check(`#${field.id}, [name="${field.name}"]`);
+            await this.page.check(selector);
             console.log(`         ✅ Checkbox "${field.name}" = checked`);
           }
         }
         else if (field.type === 'radio') {
-          await this.page.check(`#${field.id}, [name="${field.name}"][value="${testValue}"]`);
+          await this.page.check(`${selector}[value="${testValue}"]`);
           console.log(`         ✅ Radio "${field.name}" = "${testValue}"`);
         }
         else {
           // Input normal (text, email, number, date, etc.)
-          const selector = field.id ? `#${field.id}` : `[name="${field.name}"]`;
-
           // Limpiar campo primero
           await this.page.fill(selector, '');
 
@@ -1567,15 +1619,26 @@ ${crudStats.tested > 0 ? `
       // ═══════════════════════════════════════════════════════════════
       console.log(`\n      📝 [CREATE] Creando registro...`);
 
-      // Click en botón crear (ya debería estar abierto el modal)
-      await createButtonHandle.scrollIntoViewIfNeeded();
-      await createButtonHandle.click();
-      await this.page.waitForTimeout(2000);
+      // ⭐ FIX 30: El modal YA debería estar abierto desde testElement()
+      // NO hacer scroll/click de nuevo (causa timeout)
+      let modalOpen = await this.page.$('.modal.show');
 
-      // Verificar que modal abrió
-      const modalOpen = await this.page.$('.modal.show');
       if (!modalOpen) {
-        console.log(`         ❌ Modal no se abrió`);
+        // Si por alguna razón el modal no está abierto, intentar abrir
+        console.log(`         ⚠️  Modal no abierto, intentando abrir...`);
+        try {
+          await createButtonHandle.click();
+          await this.page.waitForTimeout(2000);
+          modalOpen = await this.page.$('.modal.show');
+        } catch (clickError) {
+          console.log(`         ❌ Error abriendo modal: ${clickError.message}`);
+        }
+      } else {
+        console.log(`         ✅ Modal ya abierto (desde testElement)`);
+      }
+
+      if (!modalOpen) {
+        console.log(`         ❌ Modal no se pudo abrir`);
         return crudResult;
       }
 

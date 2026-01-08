@@ -264,7 +264,15 @@
       "Bash(node scripts/get-login-3steps.js:*)",
       "Bash(node scripts/test-notification-circuits.js:*)",
       "Bash(node scripts/list-workflows.js:*)",
-      "Skill(actualiza-ingenieria)"
+      "Skill(actualiza-ingenieria)",
+      "Bash(node scripts/run-e2e-advanced-migrations.js:*)",
+      "Bash(node scripts/check-tables.js:*)",
+      "Bash(node scripts/verify-e2e-tables.js:*)",
+      "Bash(node scripts/e2e-migration-summary.js:*)",
+      "Bash(xargs cat:*)",
+      "Bash(taskkill /F /PID 60484)",
+      "Bash(powershell -Command \"Stop-Process -Id 60484 -Force\")",
+      "Bash(node scripts/fix-vacation-workflow-scope.js:*)"
     ],
     "deny": [],
     "ask": []

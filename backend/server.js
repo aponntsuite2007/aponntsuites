@@ -3041,6 +3041,35 @@ try {
     console.log('⚠️ [ULTIMATE-TEST] Routes not available (optional in production):', e.message);
 }
 
+// ✅ CONFIGURAR E2E ADVANCED TESTING SYSTEM - 7 PHASES UNIFIED (Enero 2026)
+try {
+    const e2eAdvancedRoutes = require('./src/testing/e2e-advanced/api/e2eAdvancedRoutes');
+    app.use('/api/e2e-advanced', e2eAdvancedRoutes);
+    console.log('✅ [E2E-ADVANCED] Sistema Unificado de Testing ACTIVO');
+    console.log('   🚀 POST   /api/e2e-advanced/run - Ejecutar tests (alcance flexible)');
+    console.log('   📊 GET    /api/e2e-advanced/status - Estado de ejecución actual');
+    console.log('   📋 GET    /api/e2e-advanced/executions - Historial de ejecuciones');
+    console.log('   📈 GET    /api/e2e-advanced/executions/:id - Detalles de ejecución');
+    console.log('   🎯 GET    /api/e2e-advanced/confidence/:id - Confidence score');
+    console.log('   🛑 DELETE /api/e2e-advanced/executions/:id - Cancelar ejecución');
+    console.log('   🔧 GET    /api/e2e-advanced/phases - Fases disponibles');
+    console.log('   📦 GET    /api/e2e-advanced/modules - Módulos disponibles');
+
+    // ✅ INICIALIZAR WEBSOCKET PARA E2E ADVANCED (Real-time updates)
+    const WebSocketManager = require('./src/testing/e2e-advanced/core/WebSocketManager');
+    const wsManager = new WebSocketManager();
+    wsManager.setup(server, '/ws/engineering');
+    wsManager.startHeartbeat();
+
+    // Exponer globalmente para que MasterTestOrchestrator pueda usarlo
+    global.e2eAdvancedWsManager = wsManager;
+
+    console.log('🌐 [E2E-ADVANCED-WS] WebSocket server inicializado en /ws/engineering');
+    console.log('');
+} catch (e) {
+    console.log('⚠️ [E2E-ADVANCED] Routes not available:', e.message);
+}
+
 // app.use('/api/engineering-live', engineeringMetadataRoutes); // Moved to line 3342+ area
 // app.use('/api/process-chain', processChainRoutes); // Moved to line 3131 (after declaration)
 
@@ -3178,6 +3207,19 @@ console.log('   🗺️ GET  /api/brain/roadmap - Roadmap (BD)');
 console.log('   🎯 GET  /api/brain/critical-path - Camino crítico (BD)');
 console.log('   🔄 GET  /api/brain/workflows - Workflows (VIVO)');
 console.log('   🗄️ GET  /api/brain/database - Schema BD (VIVO)');
+
+// ✅ BRAIN TICKETS - Gestión de Tickets del Sistema Brain (20,973 tickets existentes)
+const brainTicketsRoutes = require('./src/routes/brainTicketsRoutes');
+app.use('/api/brain', brainTicketsRoutes);
+
+console.log('🎫 [BRAIN TICKETS] Gestión de Tickets ACTIVO:');
+console.log('   📋 GET    /api/brain/tickets - Listar tickets (filtros: status, priority, module)');
+console.log('   🔍 GET    /api/brain/tickets/:id - Detalles de ticket');
+console.log('   ✏️  PATCH  /api/brain/tickets/:id - Actualizar ticket (status, resolution)');
+console.log('   🤖 POST   /api/brain/tickets/:id/retry-repair - Reintentar auto-reparación');
+console.log('   📊 GET    /api/brain/stats/summary - Estadísticas de tickets');
+console.log('   📝 POST   /api/brain/tickets/:id/export-claude-code - Exportar para Claude Code');
+console.log(`   💾 Total de tickets: 20,973 archivos JSON`);
 
 // ✅ CONFIGURAR BRAIN REACTIVE - Sistema Reactivo del Cerebro
 const brainReactiveRoutes = require('./src/routes/brainReactiveRoutes');

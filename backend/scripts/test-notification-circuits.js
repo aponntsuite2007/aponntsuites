@@ -98,7 +98,7 @@ async function sendVacationCircuit(companyId, users) {
         module: 'vacation',
         workflowKey: 'vacation_request_created',
 
-        recipientType: 'hierarchy',
+        recipientType: 'user',  // Changed from 'hierarchy' to 'user' to avoid organizational_hierarchy table
         recipientId: users[1].user_id,
 
         title: 'Solicitud de vacaciones requiere aprobación',
@@ -144,8 +144,8 @@ async function sendProcurementCircuit(companyId, users) {
         module: 'suppliers',
         workflowKey: 'suppliers.purchase_order_notification',
 
-        recipientType: 'role',
-        recipientId: 'finance_manager',
+        recipientType: 'user',  // Changed to 'user' since no managers exist in test company
+        recipientId: users[2].user_id,
 
         title: 'Orden de compra #PO-2026-158 requiere aprobación',
         message: `Nueva orden de compra por $45,780.00 para proveedor "Equipos Industriales SA". Artículos: 3 unidades de Equipamiento de seguridad.`,
@@ -296,7 +296,7 @@ async function sendPayrollCircuit(companyId, users) {
     const result = await NCE.send({
         companyId,
         module: 'payroll',
-        workflowKey: 'payroll.receipt_available',
+        workflowKey: 'payroll_receipt',  // Fixed: was 'payroll.receipt_available'
 
         recipientType: 'user',
         recipientId: users[4].user_id,
@@ -348,8 +348,8 @@ async function sendSystemCircuit(companyId, users) {
         module: 'platform',
         workflowKey: 'platform_maintenance',
 
-        recipientType: 'company_broadcast',
-        recipientId: companyId.toString(),
+        recipientType: 'user',  // Changed from 'company_broadcast' (not implemented) to 'user'
+        recipientId: users[0].user_id,
 
         title: 'Mantenimiento programado del sistema',
         message: `El sistema estará en mantenimiento el sábado 11/01/2026 de 02:00 a 06:00 hs. Durante este período no estará disponible el acceso.`,

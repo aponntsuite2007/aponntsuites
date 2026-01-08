@@ -15328,105 +15328,15 @@ window.saveNewUser = saveNewUser;
 window.saveEditUser = saveEditUser;
 window.loadUsers = loadUsers; // ⭐ FIX 27: Exponer loadUsers para botón "Entendido"
 
-// ⭐ FIX 29: Implementar STUBS para funciones onclick faltantes (previene crashes)
-// Estas funciones son llamadas desde HTML pero no estaban definidas en el código
-
-function resetPassword(userId, userName) {
-    console.log(`[STUB] resetPassword llamado para usuario ${userId} (${userName})`);
-    showNotification('⏳ Reseteo de contraseña en desarrollo', 'warning');
-}
-
-function manageHiringStatus(userId) {
-    console.log(`[STUB] manageHiringStatus llamado para usuario ${userId}`);
-    showNotification('⏳ Gestión de estado de contratación en desarrollo', 'warning');
-}
-
-function editUserRole(userId, currentRole) {
-    console.log(`[STUB] editUserRole llamado para usuario ${userId}, rol actual: ${currentRole}`);
-    const newRole = prompt(`Cambiar rol del usuario:\nRol actual: ${currentRole}\n\nIngrese nuevo rol (admin/operator/employee):`, currentRole);
-    if (newRole && newRole !== currentRole) {
-        showNotification(`✅ Rol cambiado de "${currentRole}" a "${newRole}"`, 'success');
-        setTimeout(() => loadUsers(), 1000);
-    }
-}
-
-function toggleUserStatus(userId) {
-    console.log(`[STUB] toggleUserStatus llamado para usuario ${userId}`);
-    if (confirm('¿Está seguro que desea cambiar el estado de este usuario?')) {
-        showNotification('✅ Estado del usuario actualizado', 'success');
-        setTimeout(() => loadUsers(), 1000);
-    }
-}
-
-function changeDepartment(userId, currentDepartmentId) {
-    console.log(`[STUB] changeDepartment llamado para usuario ${userId}, departamento: ${currentDepartmentId}`);
-    showNotification('⏳ Cambio de departamento en desarrollo', 'warning');
-}
-
-function editPosition(userId, currentPosition) {
-    console.log(`[STUB] editPosition llamado para usuario ${userId}, posición: ${currentPosition}`);
-    const newPosition = prompt(`Editar posición:\nPosición actual: ${currentPosition}\n\nIngrese nueva posición:`, currentPosition);
-    if (newPosition && newPosition !== currentPosition) {
-        showNotification(`✅ Posición cambiada de "${currentPosition}" a "${newPosition}"`, 'success');
-        setTimeout(() => viewUser(userId), 1000);
-    }
-}
-
-function generateUserReport(userId) {
-    console.log(`[STUB] generateUserReport llamado para usuario ${userId}`);
-    showNotification('📊 Generando reporte del usuario...', 'info');
-    setTimeout(() => {
-        showNotification('✅ Reporte generado con éxito (funcionalidad en desarrollo)', 'success');
-    }, 1500);
-}
-
-function auditUserHistory(userId) {
-    console.log(`[STUB] auditUserHistory llamado para usuario ${userId}`);
-    showNotification('📋 Cargando historial de auditoría...', 'info');
-    setTimeout(() => {
-        alert('📋 HISTORIAL DE AUDITORÍA\n\nFuncionalidad en desarrollo.\nMostrará todos los cambios realizados en este usuario.');
-    }, 500);
-}
-
-function refreshHiringStatus(userId) {
-    console.log(`[STUB] refreshHiringStatus llamado para usuario ${userId}`);
-    showNotification('🔄 Actualizando estado de contratación...', 'info');
-    setTimeout(() => {
-        showNotification('✅ Estado actualizado', 'success');
-    }, 1000);
-}
-
-function configureHiringRequirements(userId) {
-    console.log(`[STUB] configureHiringRequirements llamado para usuario ${userId}`);
-    showNotification('⚙️ Configuración de requisitos en desarrollo', 'warning');
-}
-
-function initiateOffboarding(userId, userName) {
-    console.log(`[STUB] initiateOffboarding llamado para usuario ${userId} (${userName})`);
-    if (confirm(`¿Iniciar proceso de baja para ${userName}?`)) {
-        showNotification('📋 Proceso de offboarding iniciado (funcionalidad en desarrollo)', 'info');
-    }
-}
-
-function toggleGPSRadius(userId) {
-    console.log(`[STUB] toggleGPSRadius llamado para usuario ${userId}`);
-    if (confirm('¿Cambiar configuración de restricción GPS para este usuario?')) {
-        showNotification('✅ Configuración GPS actualizada', 'success');
-        setTimeout(() => viewUser(userId), 1000);
-    }
-}
-
-function manageBranches(userId) {
-    console.log(`[STUB] manageBranches llamado para usuario ${userId}`);
-    showNotification('🏢 Gestión de sucursales en desarrollo', 'warning');
-}
+// ⭐ FIX 29: Implementar stub SOLO para manageDrivingLicenses (única función onclick faltante)
+// Las demás funciones YA EXISTEN en el archivo (líneas 3460-14836)
 
 function manageDrivingLicenses(userId) {
     console.log(`[STUB] manageDrivingLicenses llamado para usuario ${userId}`);
     alert('🚗 GESTIÓN DE LICENCIAS DE CONDUCIR\n\nFuncionalidad en desarrollo.\nPermitirá agregar/editar:\n- Licencia Nacional\n- Licencia Internacional\n- Fechas de vencimiento\n- Categorías');
 }
 
-console.log('✅ [USERS] FIX 29: Stubs implementados para 14 funciones onclick faltantes');
+console.log('✅ [USERS] FIX 29: Stub manageDrivingLicenses implementado (única función faltante)');
 
 // ⭐ FIX 28: Exportar TODAS las funciones usadas en onclick (crashes de Playwright resueltos)
 // Core UI Functions
@@ -15449,6 +15359,8 @@ window.changeDepartment = changeDepartment;
 window.editPosition = editPosition;
 window.generateUserReport = generateUserReport;
 window.auditUserHistory = auditUserHistory;
+// ⚠️ resetPassword, manageHiringStatus, refreshHiringStatus, configureHiringRequirements,
+// initiateOffboarding, toggleGPSRadius, manageBranches YA están exportados (líneas 12336-13923)
 
 // Personal Data Functions
 window.editBasicData = editBasicData;
