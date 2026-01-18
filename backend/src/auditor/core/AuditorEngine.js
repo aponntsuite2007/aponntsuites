@@ -432,6 +432,95 @@ class AuditorEngine extends EventEmitter {
   // HEALERS EXECUTION
   // ═══════════════════════════════════════════════════════════
 
+  /**
+   * ═══════════════════════════════════════════════════════════
+   * RETEST SINGLE FAILURE - Validar fix aplicado
+   * ═══════════════════════════════════════════════════════════
+   *
+   * Re-ejecutar un test específico después de aplicar un fix
+   * para validar que el fix realmente funciona.
+   *
+   * @param {Object} failure - Test que falló originalmente
+   * @param {string} execution_id - ID de ejecución
+   * @returns {Promise<Object>} - { passed, results }
+   */
+  async _retestSingleFailure(failure, execution_id) {
+    console.log(`  🔄 [RETEST] Validando fix de ${failure.test_name}...`);
+
+    // Identificar collector apropiado
+    const collectorName = failure.test_type; // 'endpoint', 'database', 'frontend', etc.
+    const collector = this.collectors.get(collectorName);
+
+    if (!collector) {
+      console.log(`  ⚠️  No se encontró collector para ${failure.test_type}`);
+      return {
+        passed: false,
+        reason: 'collector-not-found'
+      };
+    }
+
+    // Re-ejecutar SOLO ese test específico
+    let results;
+    try {
+      // Verificar si el collector tiene el método runSingleTest
+      if (typeof collector.runSingleTest !== 'function') {
+        console.log(`  ⚠️  Collector ${collectorName} no implementa runSingleTest()`);
+        return {
+          passed: false,
+          reason: 'method-not-implemented'
+        };
+      }
+
+      results = await collector.runSingleTest(failure.test_name, execution_id);
+    } catch (error) {
+      console.log(`  ❌ [RETEST] Error ejecutando test: ${error.message}`);
+      return {
+        passed: false,
+        reason: 'execution-error',
+        error: error.message
+      };
+    }
+
+    const passed = results.status === 'passed' || results.status === 'pass';
+
+    if (passed) {
+      console.log(`  ✅ [RETEST] Fix validado: ${failure.test_name}`);
+    } else {
+      console.log(`  ❌ [RETEST] Fix falló: ${failure.test_name}`);
+    }
+
+    return { passed, results };
+  }
+
+  /**
+   * ═══════════════════════════════════════════════════════════
+   * ROLLBACK FIX - Revertir fix que falló en retest
+   * ═══════════════════════════════════════════════════════════
+   *
+   * Restaurar archivo desde backup si el fix no funcionó.
+   *
+   * @param {Object} healResult - Resultado del heal con backupPath
+   */
+  async _rollbackFix(healResult) {
+    if (!healResult.backupPath) {
+      console.log(`  ⚠️  No hay backup para revertir`);
+      return;
+    }
+
+    const fs = require('fs').promises;
+    try {
+      await fs.copyFile(healResult.backupPath, healResult.filePath);
+      console.log(`  ✅ Rollback exitoso: ${healResult.filePath}`);
+    } catch (error) {
+      console.error(`  ❌ Error en rollback: ${error.message}`);
+    }
+  }
+
+  /**
+   * ═══════════════════════════════════════════════════════════
+   * HEALING - Aplicar fixes y validar con retest
+   * ═══════════════════════════════════════════════════════════
+   */
   async _runHealers(execution_id, analysisResults) {
     const failures = analysisResults.filter(r => r.status === 'fail');
 
@@ -462,24 +551,62 @@ class AuditorEngine extends EventEmitter {
 
           if (result.success) {
             console.log(`  ✅ ${name} reparó exitosamente`);
-            healed = true;
 
-            // 🔄 RETROALIMENTACIÓN AUTOMÁTICA: Registrar repair exitoso en KnowledgeBase
-            try {
-              if (failure.aiDiagnosis && this.knowledgeBase) {
-                await this.knowledgeBase.recordRepairSuccess(
-                  failure.error_message || failure.test_name,
-                  failure.aiDiagnosis.solution,
-                  failure.module_name,
-                  result.appliedFix || result.strategy
-                );
-                console.log(`  💾 Repair exitoso registrado en Knowledge Base`);
+            // ⭐ NUEVO: RETEST INMEDIATO para validar fix
+            const retestResult = await this._retestSingleFailure(failure, execution_id);
+
+            if (retestResult.passed) {
+              // Fix CONFIRMADO
+              console.log(`  🎉 [HEALING] Fix VERIFICADO exitosamente`);
+              healed = true;
+
+              // 🔄 RETROALIMENTACIÓN AUTOMÁTICA: Registrar repair exitoso en KnowledgeBase
+              try {
+                if (failure.aiDiagnosis && this.knowledgeBase) {
+                  await this.knowledgeBase.recordRepairSuccess(
+                    failure.error_message || failure.test_name,
+                    failure.aiDiagnosis.solution,
+                    failure.module_name,
+                    result.appliedFix || result.strategy
+                  );
+                  console.log(`  💾 Repair exitoso registrado en Knowledge Base`);
+                }
+              } catch (kbError) {
+                console.error(`  ⚠️  Error guardando en KB:`, kbError.message);
               }
-            } catch (kbError) {
-              console.error(`  ⚠️  Error guardando en KB:`, kbError.message);
-            }
 
-            break; // Ya se reparó, no intentar otros healers
+              // Marcar resultado como verificado
+              result.verified = true;
+              result.retestResult = retestResult;
+
+              break; // Ya se reparó y verificó, no intentar otros healers
+            } else {
+              // Fix NO funcionó, ROLLBACK
+              console.log(`  ⚠️  [HEALING] Fix NO funcionó, revirtiendo...`);
+
+              await this._rollbackFix(result);
+
+              // 🔄 RETROALIMENTACIÓN AUTOMÁTICA: Registrar repair fallido en KnowledgeBase
+              try {
+                if (failure.aiDiagnosis && this.knowledgeBase) {
+                  await this.knowledgeBase.recordRepairFailure(
+                    failure.error_message || failure.test_name,
+                    failure.aiDiagnosis.solution,
+                    failure.module_name,
+                    retestResult.error || 'Retest falló después de aplicar fix'
+                  );
+                  console.log(`  📝 Repair fallido registrado en Knowledge Base para aprender`);
+                }
+              } catch (kbError) {
+                console.error(`  ⚠️  Error guardando fallo en KB:`, kbError.message);
+              }
+
+              // Marcar resultado como no verificado
+              result.verified = false;
+              result.retestResult = retestResult;
+
+              // Continuar intentando con otros healers
+            }
           } else {
             console.log(`  ⚠️  ${name} no pudo reparar`);
           }

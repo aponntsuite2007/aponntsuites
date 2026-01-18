@@ -4894,6 +4894,14 @@ window.showFileTab = function(tabName, button) {
     }
     console.log('🔍 [TABS] Paso 1: Modal encontrado ✓');
 
+    // Si no se pasa button, buscarlo automáticamente (para llamadas programáticas)
+    if (!button) {
+        button = modal.querySelector(`.file-tab[onclick*="'${tabName}'"]`) ||
+                 modal.querySelector(`.file-tab-btn[onclick*="'${tabName}'"]`) ||
+                 modal.querySelector(`[data-tab="${tabName}"]`);
+        console.log(`🔍 [TABS] Button no pasado, buscando automáticamente: ${button ? 'encontrado ✓' : 'no encontrado'}`);
+    }
+
     // Ocultar todos los tabs DENTRO del modal
     console.log('🔍 [TABS] Paso 2: Ocultando tabs...');
     modal.querySelectorAll('.file-tab-content').forEach(tab => {
@@ -4915,7 +4923,9 @@ window.showFileTab = function(tabName, button) {
     if (targetTab) {
         targetTab.style.setProperty('display', 'block', 'important');
         targetTab.classList.add('active');
-        button.classList.add('active');
+        if (button) {
+            button.classList.add('active');
+        }
         console.log(`✅ [TABS] Paso 4: Tab "${tabName}" mostrado ✓`);
 
         // Si es el tab de calendario, cargar el calendario
@@ -4980,14 +4990,36 @@ window.showFileTab = function(tabName, button) {
             }
         }
 
-        // Si es el tab familiar, cargar documentos familiares
+        // Si es el tab familiar, cargar documentos familiares, miembros e hijos
+        // ⭐ FIX 111: Cargar TODA la data del tab family (no solo documentos)
         if (tabName === 'family') {
-            console.log('👨‍👩‍👧‍👦 [FAMILY] Cargando documentos familiares...');
+            console.log('👨‍👩‍👧‍👦 [FAMILY] Cargando datos familiares completos...');
             const userId = window.currentViewUserId;
-            if (userId && typeof loadFamilyDocuments === 'function') {
-                loadFamilyDocuments(userId);
+            if (userId) {
+                // Cargar documentos
+                if (typeof loadFamilyDocuments === 'function') {
+                    loadFamilyDocuments(userId);
+                }
+                // ⭐ FIX 111: También cargar miembros e hijos
+                if (typeof loadFamilyMembers === 'function') {
+                    loadFamilyMembers(userId);
+                }
+                if (typeof loadChildren === 'function') {
+                    loadChildren(userId);
+                }
             } else {
-                console.warn('⚠️ [FAMILY] No se pudo cargar documentos familiares');
+                console.warn('⚠️ [FAMILY] No se pudo cargar datos familiares - userId no disponible');
+            }
+        }
+
+        // Si es el tab personal, cargar educación del empleado
+        if (tabName === 'personal') {
+            console.log('📚 [EDUCATION] Cargando educación del empleado...');
+            const userId = window.currentViewUserId;
+            if (userId && typeof loadEducation === 'function') {
+                loadEducation(userId);
+            } else {
+                console.warn('⚠️ [EDUCATION] No se pudo cargar educación');
             }
         }
 
@@ -5161,7 +5193,7 @@ async function loadDisciplinaryFromSSOT(userId) {
     }
 
     try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || (localStorage.getItem('authToken') || localStorage.getItem('token'));
         if (!token) {
             container.innerHTML = '<p style="color: #999; text-align: center; font-style: italic;">No autenticado</p>';
             return;
@@ -5299,7 +5331,7 @@ async function loadLegalIssuesFromSSOT(userId) {
     }
 
     try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || (localStorage.getItem('authToken') || localStorage.getItem('token'));
         if (!token) {
             container.innerHTML = '<p style="color: #999; text-align: center; font-style: italic; font-size: 12px;">No autenticado</p>';
             return;
@@ -5391,7 +5423,7 @@ async function loadEmployeeNotifications(userId) {
     if (!container) return;
 
     try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || (localStorage.getItem('authToken') || localStorage.getItem('token'));
         if (!token) {
             container.innerHTML = '<p style="color: #999; text-align: center;">No autenticado</p>';
             return;
@@ -6544,9 +6576,12 @@ function addDisciplinaryAction(userId) {
                         <label>Tipo:</label>
                         <select id="actionType" class="form-control" required>
                             <option value="">Seleccionar...</option>
-                            <option value="warning">Amonestación</option>
-                            <option value="reprimand">Apercibimiento</option>
+                            <option value="advertencia_verbal">Amonestación Verbal</option>
+                            <option value="advertencia_escrita">Amonestación Escrita</option>
                             <option value="suspension">Suspensión</option>
+                            <option value="descuento">Descuento</option>
+                            <option value="despido">Despido</option>
+                            <option value="otro">Otro</option>
                         </select>
                     </div>
                     <div style="margin: 10px 0;">
@@ -6653,11 +6688,12 @@ function addEducation(userId) {
                             <label>Tipo:</label>
                             <select id="educationType" class="form-control" required>
                                 <option value="">Seleccionar...</option>
-                                <option value="primary">Primarios</option>
-                                <option value="secondary">Secundarios</option>
-                                <option value="tertiary">Terciarios</option>
-                                <option value="university">Universitarios</option>
-                                <option value="postgraduate">Posgrado</option>
+                                <option value="primaria">Primarios</option>
+                                <option value="secundaria">Secundarios</option>
+                                <option value="terciaria">Terciarios</option>
+                                <option value="universitaria">Universitarios</option>
+                                <option value="posgrado">Posgrado</option>
+                                <option value="doctorado">Doctorado</option>
                             </select>
                         </div>
                         <div style="margin: 10px 0;">
@@ -6731,7 +6767,7 @@ function addEducation(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -6753,6 +6789,234 @@ function addEducation(userId) {
         }
     };
 }
+
+// =================== FUNCIÓN PARA CARGAR EDUCACIÓN ===================
+
+async function loadEducation(userId) {
+    console.log('📚 [EDUCATION] Cargando educación para usuario:', userId);
+
+    try {
+        const response = await fetch(`/api/v1/user-profile/${userId}/education`, {
+            headers: {
+                'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
+            }
+        });
+
+        if (!response.ok) {
+            console.error('❌ Error al cargar educación:', response.status);
+            return;
+        }
+
+        const educationRecords = await response.json();
+        console.log('📚 Registros de educación:', educationRecords);
+
+        // Mapear niveles educativos
+        const levelMap = {
+            'primaria': 'primary',
+            'secundaria': 'secondary',
+            'terciaria': 'tertiary',
+            'universitaria': 'university',
+            'posgrado': 'postgraduate',
+            'doctorado': 'doctorate'
+        };
+
+        // Agrupar por nivel
+        const byLevel = {};
+        for (const record of educationRecords) {
+            const level = levelMap[record.education_level] || record.education_level;
+            if (!byLevel[level]) byLevel[level] = [];
+            byLevel[level].push(record);
+        }
+
+        // Actualizar los spans de cada nivel
+        const updateLevel = (spanId, level) => {
+            const span = document.getElementById(spanId);
+            if (!span) return;
+
+            if (byLevel[level] && byLevel[level].length > 0) {
+                const record = byLevel[level][0]; // Tomar el primero
+                span.textContent = `${record.institution_name} - ${record.degree_title || 'Completado'}`;
+            } else {
+                span.textContent = 'No especificado';
+            }
+        };
+
+        updateLevel('primary-education', 'primary');
+        updateLevel('secondary-education', 'secondary');
+        updateLevel('tertiary-education', 'tertiary');
+        updateLevel('university-education', 'university');
+        updateLevel('postgraduate-education', 'postgraduate');
+
+        // También actualizar la lista general si existe
+        const educationList = document.getElementById('education-list');
+        if (educationList && educationRecords.length > 0) {
+            // Agregar registros a la lista
+            const recordsHtml = educationRecords.map(record => `
+                <div style="background: #e8f4f8; padding: 8px; border-radius: 4px; margin-top: 8px;">
+                    <strong>${record.institution_name}</strong> - ${record.degree_title}
+                    <br><small>Nivel: ${record.education_level} ${record.graduated ? '(Graduado)' : ''}</small>
+                </div>
+            `).join('');
+
+            // Agregar después del grid existente
+            const existingRecords = educationList.querySelector('.education-records');
+            if (existingRecords) {
+                existingRecords.innerHTML = recordsHtml;
+            } else {
+                const recordsDiv = document.createElement('div');
+                recordsDiv.className = 'education-records';
+                recordsDiv.innerHTML = recordsHtml;
+                educationList.appendChild(recordsDiv);
+            }
+        }
+
+        console.log('✅ Educación cargada y mostrada');
+    } catch (error) {
+        console.error('❌ Error al cargar educación:', error);
+    }
+}
+
+// Exportar función
+window.loadEducation = loadEducation;
+
+// =================== FUNCIÓN PARA CARGAR HISTORIAL LABORAL ===================
+
+async function loadWorkHistory(userId) {
+    console.log('💼 [WORK] Cargando historial laboral para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/users/${userId}/work-history`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            console.error('❌ Error al cargar historial laboral:', response.status);
+            return;
+        }
+
+        const workRecords = await response.json();
+        console.log('💼 Registros de trabajo:', workRecords);
+
+        const workList = document.getElementById('work-history-list');
+        if (workList && workRecords.length > 0) {
+            const recordsHtml = workRecords.map(record => `
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #007bff;">
+                    <strong>${record.company_name || 'Empresa'}</strong> - ${record.position || 'Cargo'}
+                    <br><small>Desde: ${record.start_date || 'N/A'} ${record.end_date ? '- Hasta: ' + record.end_date : '(Actual)'}</small>
+                </div>
+            `).join('');
+
+            const existingRecords = workList.querySelector('.work-records');
+            if (existingRecords) {
+                existingRecords.innerHTML = recordsHtml;
+            } else {
+                const recordsDiv = document.createElement('div');
+                recordsDiv.className = 'work-records';
+                recordsDiv.innerHTML = recordsHtml;
+                workList.appendChild(recordsDiv);
+            }
+        }
+        console.log('✅ Historial laboral cargado');
+    } catch (error) {
+        console.error('❌ Error al cargar historial laboral:', error);
+    }
+}
+
+window.loadWorkHistory = loadWorkHistory;
+
+// =================== FUNCIÓN PARA CARGAR MIEMBROS DE FAMILIA ===================
+
+async function loadFamilyMembers(userId) {
+    console.log('👨‍👩‍👧‍👦 [FAMILY] Cargando miembros de familia para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-profile/${userId}/family-members`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            console.error('❌ Error al cargar miembros de familia:', response.status);
+            return;
+        }
+
+        const familyRecords = await response.json();
+        console.log('👨‍👩‍👧‍👦 Miembros de familia:', familyRecords);
+
+        const familyList = document.getElementById('family-list');
+        if (familyList && familyRecords.length > 0) {
+            const recordsHtml = familyRecords.map(member => `
+                <div style="background: #e8f5e9; padding: 10px; border-radius: 4px; margin-bottom: 8px;">
+                    <strong>${member.first_name || ''} ${member.last_name || ''}</strong> - ${member.relationship || 'Familiar'}
+                    <br><small>Fecha nacimiento: ${member.birth_date || 'N/A'}</small>
+                </div>
+            `).join('');
+
+            const existingRecords = familyList.querySelector('.family-records');
+            if (existingRecords) {
+                existingRecords.innerHTML = recordsHtml;
+            } else {
+                const recordsDiv = document.createElement('div');
+                recordsDiv.className = 'family-records';
+                recordsDiv.innerHTML = recordsHtml;
+                familyList.appendChild(recordsDiv);
+            }
+        }
+        console.log('✅ Miembros de familia cargados');
+    } catch (error) {
+        console.error('❌ Error al cargar miembros de familia:', error);
+    }
+}
+
+window.loadFamilyMembers = loadFamilyMembers;
+
+// =================== FUNCIÓN PARA CARGAR HIJOS ===================
+
+async function loadChildren(userId) {
+    console.log('👶 [CHILDREN] Cargando hijos para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-profile/${userId}/children`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            console.error('❌ Error al cargar hijos:', response.status);
+            return;
+        }
+
+        const childrenRecords = await response.json();
+        console.log('👶 Hijos:', childrenRecords);
+
+        const childrenList = document.getElementById('children-list');
+        if (childrenList && childrenRecords.length > 0) {
+            const recordsHtml = childrenRecords.map(child => `
+                <div style="background: #fff3e0; padding: 10px; border-radius: 4px; margin-bottom: 8px;">
+                    <strong>${child.first_name || ''} ${child.last_name || ''}</strong>
+                    <br><small>Fecha nacimiento: ${child.birth_date || 'N/A'} | ${child.gender || ''}</small>
+                </div>
+            `).join('');
+
+            const existingRecords = childrenList.querySelector('.children-records');
+            if (existingRecords) {
+                existingRecords.innerHTML = recordsHtml;
+            } else {
+                const recordsDiv = document.createElement('div');
+                recordsDiv.className = 'children-records';
+                recordsDiv.innerHTML = recordsHtml;
+                childrenList.appendChild(recordsDiv);
+            }
+        }
+        console.log('✅ Hijos cargados');
+    } catch (error) {
+        console.error('❌ Error al cargar hijos:', error);
+    }
+}
+
+window.loadChildren = loadChildren;
+
 
 // =================== FUNCIONES DE SCORING ===================
 
@@ -6979,7 +7243,7 @@ function addLegalIssue(userId) {
                 resolution: document.getElementById('resolution').value || null
             };
 
-            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || (localStorage.getItem('authToken') || localStorage.getItem('token'));
 
             // Usar endpoint SSOT para guardar en user_legal_issues
             const response = await fetch('/api/v1/legal/issues', {
@@ -7108,7 +7372,7 @@ async function editBasicData(userId) {
     let userData = {};
     try {
         const response = await fetch(`/api/v1/users/${userId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}` }
         });
         if (response.ok) {
             const data = await response.json();
@@ -7199,7 +7463,7 @@ async function editBasicData(userId) {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(updateData)
             });
@@ -7308,7 +7572,7 @@ function editContactInfo(userId) {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify({
                     emergencyContact: emergencyContactName,
@@ -7572,7 +7836,7 @@ function editMaritalStatus(userId) {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -7637,8 +7901,9 @@ function addChild(userId) {
                         <label>Sexo:</label>
                         <select id="childGender" class="form-control" required>
                             <option value="">Seleccionar...</option>
-                            <option value="M">Masculino</option>
-                            <option value="F">Femenino</option>
+                            <option value="masculino">Masculino</option>
+                            <option value="femenino">Femenino</option>
+                            <option value="otro">Otro</option>
                         </select>
                     </div>
                 </div>
@@ -7687,21 +7952,24 @@ function addChild(userId) {
         e.preventDefault();
 
         try {
+            // FIX 97: Los campos del formulario son childName y childSurname, no childFullName
+            const childName = document.getElementById('childName')?.value || '';
+            const childSurname = document.getElementById('childSurname')?.value || '';
             const formData = {
-            full_name: document.getElementById('childFullName').value || null,
-            birth_date: document.getElementById('childBirthDate').value || null,
-            dni: document.getElementById('childDni').value || null,
-            gender: document.getElementById('childGender').value || null,
-            lives_with_employee: document.getElementById('livesWithEmployee')?.checked || false,
+            full_name: `${childName} ${childSurname}`.trim() || null,
+            birth_date: document.getElementById('childBirthdate')?.value || null, // FIX: childBirthdate no childBirthDate
+            dni: document.getElementById('childDni')?.value || null,
+            gender: document.getElementById('childGender')?.value || null,
+            lives_with_employee: document.getElementById('childLivesWith')?.value === 'yes' || false, // FIX: childLivesWith
             is_student: document.getElementById('isStudent')?.checked || false,
-            school_name: document.getElementById('schoolName').value || null,
+            school_name: document.getElementById('schoolName')?.value || null,
         };
 
             const response = await fetch(`/api/v1/user-profile/${userId}/children`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -7965,7 +8233,7 @@ function addChronicCondition(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -8079,7 +8347,7 @@ function addMedication(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -8188,7 +8456,7 @@ function addAllergy(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -8295,7 +8563,7 @@ function addActivityRestriction(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -8420,7 +8688,7 @@ function addWorkRestriction(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -8454,7 +8722,7 @@ let availableDependencies = [];
 async function loadAvailableDependencies() {
     try {
         const response = await fetch('/api/v1/concept-dependencies/company', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}` }
         });
         if (response.ok) {
             const data = await response.json();
@@ -8606,7 +8874,7 @@ async function addFamilyDocument(userId) {
             const response = await fetch('/api/v1/upload/single', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: formData
             });
@@ -8651,7 +8919,7 @@ async function addFamilyDocument(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -8691,7 +8959,7 @@ async function loadFamilyDocuments(userId) {
         listContainer.innerHTML = '<p style="text-align: center; color: #666;">Cargando documentos...</p>';
 
         const response = await fetch(`/api/v1/concept-dependencies/documents/${userId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}` }
         });
 
         if (!response.ok) {
@@ -8789,7 +9057,7 @@ async function deleteFamilyDocument(documentId, userId) {
     try {
         const response = await fetch(`/api/v1/concept-dependencies/documents/${documentId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}` }
         });
 
         if (!response.ok) {
@@ -8820,7 +9088,7 @@ async function editFamilyDocument(documentId, userId) {
     // Obtener datos actuales del documento
     try {
         const response = await fetch(`/api/v1/concept-dependencies/documents/${userId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}` }
         });
 
         if (!response.ok) throw new Error('Error al cargar documento');
@@ -8936,7 +9204,7 @@ async function editFamilyDocument(documentId, userId) {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                     },
                     body: JSON.stringify(formData)
                 });
@@ -9076,7 +9344,7 @@ function editAnthropometricData(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -9161,9 +9429,23 @@ function addSurgery(userId) {
                     </div>
                 </div>
 
-                <div style="margin-bottom: 15px;">
-                    <label style="font-size: 12px; color: #666;">Complicaciones/Secuelas</label>
-                    <textarea id="surgeryComplications" class="form-control" rows="2" placeholder="Describir si hubo complicaciones o secuelas..."></textarea>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="surgeryComplications" onchange="document.getElementById('surgeryComplicationsDetails').style.display = this.checked ? 'block' : 'none'"> ¿Hubo complicaciones?
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="surgeryHasPermanentEffects" onchange="document.getElementById('surgeryPermanentEffectsDetails').style.display = this.checked ? 'block' : 'none'"> ¿Efectos permanentes?
+                    </label>
+                </div>
+
+                <div id="surgeryComplicationsDetails" style="margin-bottom: 15px; display: none;">
+                    <label style="font-size: 12px; color: #666;">Detalles de las complicaciones</label>
+                    <textarea id="surgeryComplicationsText" class="form-control" rows="2" placeholder="Describir las complicaciones..."></textarea>
+                </div>
+
+                <div id="surgeryPermanentEffectsDetails" style="margin-bottom: 15px; display: none;">
+                    <label style="font-size: 12px; color: #666;">Detalles de efectos permanentes</label>
+                    <textarea id="surgeryPermanentEffectsText" class="form-control" rows="2" placeholder="Describir efectos permanentes..."></textarea>
                 </div>
 
                 <div style="margin-bottom: 15px;">
@@ -9173,7 +9455,7 @@ function addSurgery(userId) {
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                     <label style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="surgeryHasImplant"> Tiene implante/prótesis
+                        <input type="checkbox" id="surgeryFollowUpRequired"> Requiere seguimiento
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px;">
                         <input type="checkbox" id="surgeryWorkRestriction"> Genera restricción laboral
@@ -9193,24 +9475,31 @@ function addSurgery(userId) {
     document.getElementById('surgeryForm').onsubmit = async (e) => {
         e.preventDefault();
         try {
+            // FIX: Obtener company_id del usuario actual
+            const companyId = window.progressiveAdmin?.currentUser?.company_id ||
+                              window.progressiveAdmin?.currentUser?.companyId ||
+                              localStorage.getItem('companyId');
+
             const formData = {
-                surgery_type: document.getElementById('surgeryType').value,
-                surgery_name: document.getElementById('surgeryName').value,
+                surgery_type: document.getElementById('surgeryType').value + ' - ' + document.getElementById('surgeryName').value,
                 surgery_date: document.getElementById('surgeryDate').value,
-                hospital_name: document.getElementById('surgeryHospital').value || null,
+                hospital_clinic: document.getElementById('surgeryHospital').value || null,
                 surgeon_name: document.getElementById('surgerySurgeon').value || null,
-                outcome: document.getElementById('surgeryOutcome').value,
-                complications: document.getElementById('surgeryComplications').value || null,
+                reason: document.getElementById('surgeryOutcome').value, // Usamos reason para guardar outcome
+                complications: document.getElementById('surgeryComplications').checked, // BOOLEAN
+                complications_details: document.getElementById('surgeryComplicationsText').value || null, // TEXT
+                has_permanent_effects: document.getElementById('surgeryHasPermanentEffects').checked, // BOOLEAN
+                permanent_effects_details: document.getElementById('surgeryPermanentEffectsText').value || null, // TEXT
+                follow_up_required: document.getElementById('surgeryFollowUpRequired').checked, // BOOLEAN
                 notes: document.getElementById('surgeryNotes').value || null,
-                has_implant: document.getElementById('surgeryHasImplant').checked,
-                causes_work_restriction: document.getElementById('surgeryWorkRestriction').checked
+                company_id: companyId  // FIX: Incluir company_id en el request
             };
 
             const response = await fetch(`/api/medical-advanced/surgeries/${userId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -9366,7 +9655,7 @@ function addPsychiatricTreatment(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -9518,7 +9807,7 @@ function addSportsActivity(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -9660,7 +9949,7 @@ function editHealthyHabits(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -9684,7 +9973,7 @@ async function loadMedicalAdvancedData(userId) {
 
     try {
         const response = await fetch(`/api/medical-advanced/complete/${userId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}` }
         });
         const result = await response.json();
 
@@ -9808,7 +10097,7 @@ async function editSalaryConfig(userId) {
     let categories = [];
     try {
         const agreementsRes = await fetch('/api/salary-advanced/labor-agreements', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}` }
         });
         const agreementsData = await agreementsRes.json();
         if (agreementsData.success) agreements = agreementsData.data;
@@ -9935,7 +10224,7 @@ async function editSalaryConfig(userId) {
         }
         try {
             const res = await fetch(`/api/salary-advanced/labor-agreements/${agreementId}/categories`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                headers: { 'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}` }
             });
             const data = await res.json();
             if (data.success) {
@@ -9969,7 +10258,7 @@ async function editSalaryConfig(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -10050,19 +10339,25 @@ function addSalaryIncrease(userId) {
     document.getElementById('salaryIncreaseForm').onsubmit = async (e) => {
         e.preventDefault();
         try {
+            // FIX: Obtener company_id para crear config si no existe
+            const companyId = window.progressiveAdmin?.currentUser?.company_id ||
+                              window.progressiveAdmin?.currentUser?.companyId ||
+                              localStorage.getItem('companyId');
+
             const formData = {
                 newBaseSalary: parseFloat(document.getElementById('newSalary').value),
                 increasePercentage: parseFloat(document.getElementById('increasePercent').value) || null,
                 reason: document.getElementById('increaseReason').value,
                 effectiveFrom: document.getElementById('increaseDate').value,
-                notes: document.getElementById('increaseNotes').value || null
+                notes: document.getElementById('increaseNotes').value || null,
+                company_id: companyId  // FIX: Incluir company_id
             };
 
             const response = await fetch(`/api/salary-advanced/config/${userId}/update-salary`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -10117,7 +10412,7 @@ async function loadUserPayrollHistory(userId, append = false) {
         const companyId = window.progressiveAdmin?.currentUser?.company_id || window.progressiveAdmin?.currentUser?.companyId || 11;
         const response = await fetch(`/api/payroll/user/${userId}/history?limit=${state.limit}&offset=${state.offset}`, {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`,
                 'x-company-id': companyId.toString()
             }
         });
@@ -10189,7 +10484,7 @@ async function loadUserHourBank(userId) {
     const transactionsEl = document.getElementById(`hb-transactions-${userId}`);
 
     try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || (localStorage.getItem('authToken') || localStorage.getItem('token'));
         const response = await fetch(`/api/hour-bank/employee-summary/${userId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -10412,7 +10707,7 @@ async function viewPayrollDetail(userId, detailId) {
         const companyId = window.progressiveAdmin?.currentUser?.company_id || window.progressiveAdmin?.currentUser?.companyId || 11;
         const response = await fetch(`/api/payroll/user/${userId}/history/${detailId}/concepts`, {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`,
                 'x-company-id': companyId.toString()
             }
         });
@@ -10593,7 +10888,7 @@ async function exportPayrollToPDF(userId, detailId) {
     try {
         // Cargar datos del detalle
         const response = await fetch(`/api/payroll/user/${userId}/history/${detailId}/concepts`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}` }
         });
 
         const result = await response.json();
@@ -10696,7 +10991,7 @@ async function loadSalaryAdvancedData(userId) {
 
     try {
         const response = await fetch(`/api/salary-advanced/summary/${userId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}` }
         });
         const result = await response.json();
 
@@ -10749,35 +11044,44 @@ async function loadSalaryAdvancedData(userId) {
         }
 
         // Actualizar resumen de liquidaciones
+        // FIX 96: Verificar existencia de elementos antes de asignar
         if (data.yearSummary) {
             const y = data.yearSummary;
-            document.getElementById('payroll-ytd').textContent = `$${y.netTotal?.toLocaleString() || '--'}`;
-            document.getElementById('payroll-months-processed').textContent = `${y.monthsProcessed} meses procesados`;
+            const ytdEl = document.getElementById('payroll-ytd');
+            const monthsEl = document.getElementById('payroll-months-processed');
+            if (ytdEl) ytdEl.textContent = `$${y.netTotal?.toLocaleString() || '--'}`;
+            if (monthsEl) monthsEl.textContent = `${y.monthsProcessed} meses procesados`;
         }
 
         // Actualizar última liquidación
+        // FIX 96: Función helper para asignar texto de forma segura
+        const safeSetText = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        };
+
         if (data.payrollRecords && data.payrollRecords.length > 0) {
             const latest = data.payrollRecords[0];
-            document.getElementById('payroll-current').textContent = `$${latest.net_salary?.toLocaleString() || '--'}`;
-            document.getElementById('payroll-current-status').textContent = latest.status === 'paid' ? '✅ Pagado' : latest.status === 'approved' ? '✔️ Aprobado' : '⏳ Borrador';
+            safeSetText('payroll-current', `$${latest.net_salary?.toLocaleString() || '--'}`);
+            safeSetText('payroll-current-status', latest.status === 'paid' ? '✅ Pagado' : latest.status === 'approved' ? '✔️ Aprobado' : '⏳ Borrador');
 
             // Desglose
-            document.getElementById('payroll-basic').textContent = `$${latest.base_salary?.toLocaleString() || '--'}`;
-            document.getElementById('payroll-overtime').textContent = `$${((latest.overtime_50_amount || 0) + (latest.overtime_100_amount || 0)).toLocaleString()}`;
-            document.getElementById('payroll-attendance').textContent = `$${latest.attendance_bonus?.toLocaleString() || '--'}`;
-            document.getElementById('payroll-additionals').textContent = `$${latest.other_additions?.toLocaleString() || '0'}`;
-            document.getElementById('payroll-gross').textContent = `$${latest.gross_total?.toLocaleString() || '--'}`;
-            document.getElementById('payroll-retirement').textContent = `$${latest.retirement_deduction?.toLocaleString() || '--'}`;
-            document.getElementById('payroll-health').textContent = `$${latest.social_work_deduction?.toLocaleString() || '--'}`;
-            document.getElementById('payroll-pami').textContent = `$${latest.pami_deduction?.toLocaleString() || '--'}`;
-            document.getElementById('payroll-union').textContent = `$${latest.union_deduction?.toLocaleString() || '0'}`;
-            document.getElementById('payroll-net').textContent = `$${latest.net_salary?.toLocaleString() || '--'}`;
+            safeSetText('payroll-basic', `$${latest.base_salary?.toLocaleString() || '--'}`);
+            safeSetText('payroll-overtime', `$${((latest.overtime_50_amount || 0) + (latest.overtime_100_amount || 0)).toLocaleString()}`);
+            safeSetText('payroll-attendance', `$${latest.attendance_bonus?.toLocaleString() || '--'}`);
+            safeSetText('payroll-additionals', `$${latest.other_additions?.toLocaleString() || '0'}`);
+            safeSetText('payroll-gross', `$${latest.gross_total?.toLocaleString() || '--'}`);
+            safeSetText('payroll-retirement', `$${latest.retirement_deduction?.toLocaleString() || '--'}`);
+            safeSetText('payroll-health', `$${latest.social_work_deduction?.toLocaleString() || '--'}`);
+            safeSetText('payroll-pami', `$${latest.pami_deduction?.toLocaleString() || '--'}`);
+            safeSetText('payroll-union', `$${latest.union_deduction?.toLocaleString() || '0'}`);
+            safeSetText('payroll-net', `$${latest.net_salary?.toLocaleString() || '--'}`);
 
             // Mes anterior
             if (data.payrollRecords.length > 1) {
                 const prev = data.payrollRecords[1];
-                document.getElementById('payroll-previous').textContent = `$${prev.net_salary?.toLocaleString() || '--'}`;
-                document.getElementById('payroll-previous-status').textContent = prev.status === 'paid' ? '✅ Pagado' : '--';
+                safeSetText('payroll-previous', `$${prev.net_salary?.toLocaleString() || '--'}`);
+                safeSetText('payroll-previous-status', prev.status === 'paid' ? '✅ Pagado' : '--');
             }
         }
 
@@ -11008,7 +11312,7 @@ function addVaccination(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${(localStorage.getItem('authToken') || localStorage.getItem('token'))}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -15447,11 +15751,10 @@ window.addLegalIssue = addLegalIssue;
 window.addUnionAffiliation = addUnionAffiliation;
 
 // Department & Branches Functions
-window.closeDepartmentModal = closeDepartmentModal;
-window.saveDepartmentChange = saveDepartmentChange;
+// NOTA: closeDepartmentModal, saveDepartmentChange se asignan dinámicamente
+// dentro de showChangeDepartmentModal() y closeBranchesModal, saveBranchesAssignment
+// dentro de manageBranches(). No se pueden asignar aquí.
 window.manageBranches = manageBranches;
-window.closeBranchesModal = closeBranchesModal;
-window.saveBranchesAssignment = saveBranchesAssignment;
 window.toggleGPSRadius = toggleGPSRadius;
 
 // Hiring Process Functions

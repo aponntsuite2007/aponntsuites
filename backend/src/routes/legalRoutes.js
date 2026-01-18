@@ -758,27 +758,29 @@ router.get('/issues', auth, async (req, res) => {
         const { user_id, status, issue_type, page = 1, limit = 50 } = req.query;
         const offset = (page - 1) * limit;
 
-        let whereClause = 'company_id = :companyId';
+        // FIX 101: Calificar columnas con prefijo de tabla para evitar ambigüedad
+        let whereClause = 'uli.company_id = :companyId';
         const replacements = { companyId, limit: parseInt(limit), offset };
 
         if (user_id) {
-            whereClause += ' AND user_id = :userId';
+            whereClause += ' AND uli.user_id = :userId';
             replacements.userId = user_id;
         }
         if (status) {
-            whereClause += ' AND status = :status';
+            whereClause += ' AND uli.status = :status';
             replacements.status = status;
         }
         if (issue_type) {
-            whereClause += ' AND issue_type = :issueType';
+            whereClause += ' AND uli.issue_type = :issueType';
             replacements.issueType = issue_type;
         }
 
+        // FIX 99: Usar columnas camelCase correctas de la tabla users
         const issues = await sequelize.query(`
             SELECT
                 uli.*,
-                u.first_name || ' ' || u.last_name as employee_name,
-                u.employee_id as employee_code
+                u."firstName" || ' ' || u."lastName" as employee_name,
+                u."employeeId" as employee_code
             FROM user_legal_issues uli
             JOIN users u ON u.user_id = uli.user_id
             WHERE ${whereClause}
@@ -789,8 +791,10 @@ router.get('/issues', auth, async (req, res) => {
             type: sequelize.QueryTypes.SELECT
         });
 
+        // FIX 101: La query COUNT no usa alias, crear whereClause sin prefijo
+        const countWhereClause = whereClause.replace(/uli\./g, '');
         const countResult = await sequelize.query(`
-            SELECT COUNT(*) as total FROM user_legal_issues WHERE ${whereClause}
+            SELECT COUNT(*) as total FROM user_legal_issues WHERE ${countWhereClause}
         `, {
             replacements,
             type: sequelize.QueryTypes.SELECT

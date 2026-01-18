@@ -1303,7 +1303,7 @@ router.get('/unjustified', auth, supervisorOrAdmin, async (req, res) => {
       include: [{
         model: User,
         as: 'user',
-        attributes: ['user_id', 'usuario', 'nombre', 'apellido', 'employee_id']
+        attributes: ['user_id', 'usuario', 'nombre', 'apellido', 'employeeId']
       }],
       order: [['date', 'DESC']],
       limit: 500

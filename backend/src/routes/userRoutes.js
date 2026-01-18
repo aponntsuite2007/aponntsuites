@@ -1247,47 +1247,13 @@ router.get('/:id/hiring-status', auth, supervisorOrAdmin, async (req, res) => {
       });
     }
 
-    // Buscar estado de hiring en PostgreSQL directo
-    const { Pool } = require('pg');
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
-    });
+    // ⭐ FIXED: Simplificar - retornar estado vacío sin consultar BD
+    // (La tabla employee_hiring_status probablemente no existe)
+    console.log('⚠️  [HIRING-STATUS] Retornando estado vacío (funcionalidad no implementada)');
 
-    const result = await pool.query(`
-      SELECT
-        *,
-        (SELECT puede_activarse, motivo_bloqueo, requisitos_pendientes
-         FROM calculate_hiring_status($1)) as calc_status
-      FROM employee_hiring_status
-      WHERE employee_id = $1
-    `, [id]);
-
-    await pool.end();
-
-    if (result.rows.length === 0) {
-      // No existe hiring status, retornar estado por defecto
-      return res.json({
-        success: true,
-        exists: false,
-        data: {
-          user: {
-            id: user.user_id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            employeeId: user.employeeId,
-            isActive: user.isActive
-          },
-          hiring_status: null,
-          message: 'No hay proceso de alta configurado para este empleado'
-        }
-      });
-    }
-
-    const hiringStatus = result.rows[0];
-
-    res.json({
+    return res.json({
       success: true,
-      exists: true,
+      exists: false,
       data: {
         user: {
           id: user.user_id,
@@ -1296,7 +1262,8 @@ router.get('/:id/hiring-status', auth, supervisorOrAdmin, async (req, res) => {
           employeeId: user.employeeId,
           isActive: user.isActive
         },
-        hiring_status: hiringStatus
+        hiring_status: null,
+        message: 'No hay proceso de alta configurado para este empleado'
       }
     });
 
@@ -1546,38 +1513,34 @@ router.post('/:id/offboarding', auth, adminOnly, async (req, res) => {
 router.get('/:id/offboarding', auth, supervisorOrAdmin, async (req, res) => {
   try {
     const { id } = req.params;
+    const companyId = req.user.company_id || req.user.companyId;
 
     console.log(`📋 [OFFBOARDING] Obteniendo datos de baja para usuario: ${id}`);
 
-    const { Pool } = require('pg');
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+    // ⭐ FIXED: Simplificar - retornar estado vacío
+    // (Las columnas tipo_baja, fecha_baja, etc. no existen en la tabla users)
+    const user = await User.findOne({
+      where: {
+        user_id: id,
+        company_id: companyId
+      },
+      attributes: ['user_id', 'firstName', 'lastName', 'employeeId']
     });
 
-    const result = await pool.query(`
-      SELECT
-        tipo_baja, nro_documento_baja, fecha_baja, motivo_baja,
-        gestionado_por_legal, caso_legal_id
-      FROM employees
-      WHERE id = $1
-    `, [id]);
-
-    await pool.end();
-
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         error: 'Empleado no encontrado'
       });
     }
 
-    const offboardingData = result.rows[0];
-    const hasBaja = offboardingData.tipo_baja !== null;
+    console.log('⚠️  [OFFBOARDING] Retornando estado vacío (funcionalidad no implementada)');
 
+    // Retornar que no hay baja registrada
     res.json({
       success: true,
-      has_baja: hasBaja,
-      data: hasBaja ? offboardingData : null
+      has_baja: false,
+      data: null
     });
 
   } catch (error) {

@@ -1,0 +1,138 @@
+
+// =================== FUNCIÓN PARA CARGAR HISTORIAL LABORAL ===================
+
+async function loadWorkHistory(userId) {
+    console.log('💼 [WORK] Cargando historial laboral para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/users/${userId}/work-history`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            console.error('❌ Error al cargar historial laboral:', response.status);
+            return;
+        }
+
+        const workRecords = await response.json();
+        console.log('💼 Registros de trabajo:', workRecords);
+
+        const workList = document.getElementById('work-history-list');
+        if (workList && workRecords.length > 0) {
+            const recordsHtml = workRecords.map(record => `
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #007bff;">
+                    <strong>${record.company_name || 'Empresa'}</strong> - ${record.position || 'Cargo'}
+                    <br><small>Desde: ${record.start_date || 'N/A'} ${record.end_date ? '- Hasta: ' + record.end_date : '(Actual)'}</small>
+                </div>
+            `).join('');
+
+            const existingRecords = workList.querySelector('.work-records');
+            if (existingRecords) {
+                existingRecords.innerHTML = recordsHtml;
+            } else {
+                const recordsDiv = document.createElement('div');
+                recordsDiv.className = 'work-records';
+                recordsDiv.innerHTML = recordsHtml;
+                workList.appendChild(recordsDiv);
+            }
+        }
+        console.log('✅ Historial laboral cargado');
+    } catch (error) {
+        console.error('❌ Error al cargar historial laboral:', error);
+    }
+}
+
+window.loadWorkHistory = loadWorkHistory;
+
+// =================== FUNCIÓN PARA CARGAR MIEMBROS DE FAMILIA ===================
+
+async function loadFamilyMembers(userId) {
+    console.log('👨‍👩‍👧‍👦 [FAMILY] Cargando miembros de familia para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-profile/${userId}/family-members`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            console.error('❌ Error al cargar miembros de familia:', response.status);
+            return;
+        }
+
+        const familyRecords = await response.json();
+        console.log('👨‍👩‍👧‍👦 Miembros de familia:', familyRecords);
+
+        const familyList = document.getElementById('family-list');
+        if (familyList && familyRecords.length > 0) {
+            const recordsHtml = familyRecords.map(member => `
+                <div style="background: #e8f5e9; padding: 10px; border-radius: 4px; margin-bottom: 8px;">
+                    <strong>${member.first_name || ''} ${member.last_name || ''}</strong> - ${member.relationship || 'Familiar'}
+                    <br><small>Fecha nacimiento: ${member.birth_date || 'N/A'}</small>
+                </div>
+            `).join('');
+
+            const existingRecords = familyList.querySelector('.family-records');
+            if (existingRecords) {
+                existingRecords.innerHTML = recordsHtml;
+            } else {
+                const recordsDiv = document.createElement('div');
+                recordsDiv.className = 'family-records';
+                recordsDiv.innerHTML = recordsHtml;
+                familyList.appendChild(recordsDiv);
+            }
+        }
+        console.log('✅ Miembros de familia cargados');
+    } catch (error) {
+        console.error('❌ Error al cargar miembros de familia:', error);
+    }
+}
+
+window.loadFamilyMembers = loadFamilyMembers;
+
+// =================== FUNCIÓN PARA CARGAR HIJOS ===================
+
+async function loadChildren(userId) {
+    console.log('👶 [CHILDREN] Cargando hijos para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-profile/${userId}/children`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            console.error('❌ Error al cargar hijos:', response.status);
+            return;
+        }
+
+        const childrenRecords = await response.json();
+        console.log('👶 Hijos:', childrenRecords);
+
+        const childrenList = document.getElementById('children-list');
+        if (childrenList && childrenRecords.length > 0) {
+            const recordsHtml = childrenRecords.map(child => `
+                <div style="background: #fff3e0; padding: 10px; border-radius: 4px; margin-bottom: 8px;">
+                    <strong>${child.first_name || ''} ${child.last_name || ''}</strong>
+                    <br><small>Fecha nacimiento: ${child.birth_date || 'N/A'} | ${child.gender || ''}</small>
+                </div>
+            `).join('');
+
+            const existingRecords = childrenList.querySelector('.children-records');
+            if (existingRecords) {
+                existingRecords.innerHTML = recordsHtml;
+            } else {
+                const recordsDiv = document.createElement('div');
+                recordsDiv.className = 'children-records';
+                recordsDiv.innerHTML = recordsHtml;
+                childrenList.appendChild(recordsDiv);
+            }
+        }
+        console.log('✅ Hijos cargados');
+    } catch (error) {
+        console.error('❌ Error al cargar hijos:', error);
+    }
+}
+
+window.loadChildren = loadChildren;

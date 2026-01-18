@@ -174,6 +174,135 @@ class EndpointCollector {
     return data;
   }
 
+  /**
+   * RUN SINGLE TEST - Re-ejecutar endpoint específico (para retest loop)
+   *
+   * Formato testName: "module-name:GET /api/path" o "GET /api/path"
+   *
+   * @param {string} testName - Nombre del test (ej: "users:GET /api/users")
+   * @param {string} execution_id - ID de ejecución de auditoría
+   * @returns {Promise<Object>} - { status: 'passed'|'failed', results: AuditLog }
+   */
+  async runSingleTest(testName, execution_id) {
+    console.log(`  🔄 [ENDPOINT] Re-ejecutando test: ${testName}`);
+
+    try {
+      // 1. Parsear testName
+      let moduleId, testIdentifier;
+
+      if (testName.includes(':')) {
+        // Formato: "module-name:GET /api/path"
+        [moduleId, testIdentifier] = testName.split(':');
+      } else {
+        // Formato: "GET /api/path" (sin módulo)
+        testIdentifier = testName;
+        moduleId = null;
+      }
+
+      // 2. Parsear método y path del testIdentifier
+      // Formato esperado: "GET /api/users" o "POST /api/users"
+      const parts = testIdentifier.trim().split(' ');
+      if (parts.length < 2) {
+        throw new Error(`Formato inválido de testName: "${testName}". Esperado: "METHOD /path"`);
+      }
+
+      const method = parts[0];
+      const path = parts.slice(1).join(' '); // Por si el path tiene espacios
+
+      console.log(`     Método: ${method}`);
+      console.log(`     Path: ${path}`);
+      console.log(`     Módulo: ${moduleId || 'auto-detectar'}`);
+
+      // 3. Buscar el endpoint en el registry
+      let endpoint = null;
+      let foundModule = null;
+
+      if (moduleId) {
+        // Buscar en módulo específico
+        foundModule = this.systemRegistry.getModule(moduleId);
+
+        if (!foundModule) {
+          throw new Error(`Módulo "${moduleId}" no encontrado en registry`);
+        }
+
+        endpoint = this._findEndpoint(foundModule, method, path);
+
+        if (!endpoint) {
+          throw new Error(`Endpoint "${method} ${path}" no encontrado en módulo "${moduleId}"`);
+        }
+      } else {
+        // Buscar en TODOS los módulos
+        const allModules = this.systemRegistry.getAllModules();
+
+        for (const mod of allModules) {
+          const found = this._findEndpoint(mod, method, path);
+          if (found) {
+            endpoint = found;
+            foundModule = mod;
+            moduleId = mod.id;
+            console.log(`     ✅ Endpoint encontrado en módulo: ${moduleId}`);
+            break;
+          }
+        }
+
+        if (!endpoint) {
+          throw new Error(`Endpoint "${method} ${path}" no encontrado en ningún módulo`);
+        }
+      }
+
+      // 4. Generar token de prueba
+      const testToken = await this._generateTestToken(this.company_id);
+
+      // 5. Re-ejecutar el test del endpoint
+      console.log(`     🧪 Re-testeando endpoint...`);
+      const testResult = await this._testEndpoint(
+        moduleId,
+        endpoint,
+        testToken,
+        execution_id
+      );
+
+      // 6. Determinar status
+      const passed = testResult.status === 'pass';
+
+      console.log(`     ${passed ? '✅' : '❌'} Retest ${passed ? 'PASÓ' : 'FALLÓ'}`);
+
+      return {
+        passed,
+        status: passed ? 'passed' : 'failed',
+        results: testResult
+      };
+
+    } catch (error) {
+      console.error(`     ❌ Error en retest de endpoint: ${error.message}`);
+
+      return {
+        passed: false,
+        status: 'failed',
+        error: error.message,
+        results: null
+      };
+    }
+  }
+
+  /**
+   * HELPER: Buscar endpoint específico en un módulo
+   * @private
+   */
+  _findEndpoint(module, method, path) {
+    if (!module || !module.api_endpoints) {
+      return null;
+    }
+
+    // Buscar endpoint que coincida con método y path
+    return module.api_endpoints.find(ep => {
+      const methodMatch = ep.method.toLowerCase() === method.toLowerCase();
+      const pathMatch = ep.path === path;
+
+      return methodMatch && pathMatch;
+    });
+  }
+
   async _generateTestToken(companyId) {
     const jwt = require('jsonwebtoken');
     const { User } = this.database;

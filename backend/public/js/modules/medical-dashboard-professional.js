@@ -5319,4 +5319,16 @@ window.initMedicalDashboard = function() {
     }, 300);
 };
 
+// ============================================================================
+// EXPONER FUNCIONES AL SCOPE GLOBAL (window) PARA ONCLICK HANDLERS
+// ============================================================================
+window.openDiagnosisModal = openDiagnosisModal;
+window.closeDiagnosisModal = closeDiagnosisModal;
+window.openCloseCaseModal = openCloseCaseModal;
+window.closeCloseCaseModal = closeCloseCaseModal;
+window.openCaseChatModal = openCaseChatModal;
+window.showMedicalMessage = showMedicalMessage;
+window.loadPendingCases_real = loadPendingCases_real;
+window.loadEmployeesWithMedicalRecords = loadEmployeesWithMedicalRecords;
+
 })(); // Cierre del IIFE para protección contra doble carga

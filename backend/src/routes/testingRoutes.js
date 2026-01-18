@@ -617,4 +617,236 @@ async function verifyFixesAgainstBrainIssues(selectedModules, auditResults) {
   }
 }
 
+// ==================== NEW AI TESTING DASHBOARD ENDPOINTS ====================
+
+/**
+ * POST /api/testing/execute
+ * Ejecutar test simple (basic, performance, security, database, crud, complete)
+ */
+router.post('/execute', async (req, res) => {
+  try {
+    const { testType, config } = req.body;
+
+    console.log(`🤖 [AI-TESTING] Solicitud de ejecución: ${testType}`);
+
+    // Validar tipo de test
+    const validTypes = ['basic', 'performance', 'security', 'database', 'crud', 'complete'];
+    if (!validTypes.includes(testType)) {
+      return res.json({
+        success: false,
+        error: `Tipo de test inválido: ${testType}`
+      });
+    }
+
+    // Para test básico, ejecutar el script de ISI modules
+    if (testType === 'basic') {
+      const { spawn } = require('child_process');
+      const scriptPath = path.join(__dirname, '../../scripts/run-isi-modules-test.js');
+
+      // Verificar que el script existe
+      try {
+        await fs.access(scriptPath);
+      } catch (error) {
+        return res.json({
+          success: false,
+          error: 'Script de test básico no encontrado'
+        });
+      }
+
+      // Ejecutar script en background
+      const child = spawn('node', [scriptPath], {
+        detached: true,
+        stdio: 'ignore',
+        cwd: path.join(__dirname, '../..')
+      });
+
+      child.unref();
+
+      console.log(`✅ [AI-TESTING] Test ${testType} iniciado con PID: ${child.pid}`);
+
+      return res.json({
+        success: true,
+        message: `Test ${testType} iniciado correctamente`,
+        testId: Date.now().toString(),
+        pid: child.pid
+      });
+    }
+
+    // Para otros tipos, retornar not implemented por ahora
+    res.json({
+      success: false,
+      error: `Test tipo "${testType}" aún no implementado. Solo "basic" está disponible.`
+    });
+
+  } catch (error) {
+    console.error('❌ [AI-TESTING] Error ejecutando test:', error);
+    res.json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/testing/overview
+ * Datos para el overview dashboard
+ */
+router.get('/overview', async (req, res) => {
+  try {
+    // Leer datos del último test ISI
+    const isiResultsPath = path.join(__dirname, '../../isi-test-results.json');
+
+    let testsToday = 1;
+    let avgPassRate = 0;
+    let modulesTested = 0;
+    let currentTest = 'Ninguno';
+
+    try {
+      const data = await fs.readFile(isiResultsPath, 'utf-8');
+      const results = JSON.parse(data);
+
+      // Calcular métricas del último test
+      const totalModules = results.results.length;
+      const passedModules = results.results.filter(r => r.status === 'PASSED').length;
+      avgPassRate = Math.round((passedModules / totalModules) * 100);
+      modulesTested = passedModules;
+
+    } catch (error) {
+      console.log('ℹ️ [AI-TESTING] No hay resultados previos disponibles');
+    }
+
+    res.json({
+      success: true,
+      testsToday,
+      avgPassRate,
+      modulesTested,
+      currentTest
+    });
+
+  } catch (error) {
+    console.error('❌ [AI-TESTING] Error obteniendo overview:', error);
+    res.json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/testing/history
+ * Historial de tests ejecutados
+ */
+router.get('/history', async (req, res) => {
+  try {
+    // Leer resultados del último test ISI
+    const isiResultsPath = path.join(__dirname, '../../isi-test-results.json');
+    const history = [];
+
+    try {
+      const data = await fs.readFile(isiResultsPath, 'utf-8');
+      const results = JSON.parse(data);
+
+      // Crear entrada de historial del último test
+      const totalModules = results.results.length;
+      const passedModules = results.results.filter(r => r.status === 'PASSED').length;
+      const passRate = Math.round((passedModules / totalModules) * 100);
+
+      // Calcular duración en minutos
+      const durationMin = Math.round((results.duration_seconds || 0) / 60);
+
+      history.push({
+        id: results.timestamp || Date.now().toString(),
+        test_type: 'basic',
+        status: passRate >= 95 ? 'passed' : (passRate >= 70 ? 'warning' : 'failed'),
+        pass_rate: passRate,
+        duration: `${durationMin} min`,
+        created_at: new Date().toISOString(),
+        modules_tested: totalModules,
+        modules_passed: passedModules
+      });
+
+    } catch (error) {
+      console.log('ℹ️ [AI-TESTING] No hay historial disponible');
+    }
+
+    res.json({
+      success: true,
+      history
+    });
+
+  } catch (error) {
+    console.error('❌ [AI-TESTING] Error obteniendo historial:', error);
+    res.json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/testing/tools-status
+ * Estado de las herramientas de testing (Playwright, k6, OWASP ZAP, PostgreSQL)
+ */
+router.get('/tools-status', async (req, res) => {
+  try {
+    const { spawn } = require('child_process');
+
+    // Check Playwright (siempre instalado en el proyecto)
+    const playwrightInstalled = true;
+
+    // Check k6
+    let k6Installed = false;
+    try {
+      await new Promise((resolve, reject) => {
+        const child = spawn('k6', ['version'], { shell: true });
+        child.on('error', reject);
+        child.on('exit', (code) => code === 0 ? resolve() : reject());
+        setTimeout(reject, 2000); // Timeout 2s
+      });
+      k6Installed = true;
+    } catch (error) {
+      k6Installed = false;
+    }
+
+    // Check OWASP ZAP (via Docker)
+    let owaspZapInstalled = false;
+    try {
+      await new Promise((resolve, reject) => {
+        const child = spawn('docker', ['images', 'zaproxy/zap-stable', '-q'], { shell: true });
+        let hasOutput = false;
+        child.stdout.on('data', (data) => {
+          if (data.toString().trim()) {
+            hasOutput = true;
+          }
+        });
+        child.on('exit', () => {
+          hasOutput ? resolve() : reject();
+        });
+        setTimeout(reject, 2000); // Timeout 2s
+      });
+      owaspZapInstalled = true;
+    } catch (error) {
+      owaspZapInstalled = false;
+    }
+
+    // Check PostgreSQL (asumimos que está si el servidor está corriendo)
+    const postgresqlInstalled = true;
+
+    res.json({
+      success: true,
+      playwright: playwrightInstalled,
+      k6: k6Installed,
+      owasp_zap: owaspZapInstalled,
+      postgresql: postgresqlInstalled
+    });
+
+  } catch (error) {
+    console.error('❌ [AI-TESTING] Error verificando herramientas:', error);
+    res.json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

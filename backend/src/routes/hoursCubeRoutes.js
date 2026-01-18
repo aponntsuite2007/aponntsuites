@@ -451,19 +451,19 @@ router.get('/:companyId/multi-level-metrics', async (req, res) => {
         let baseQuery = `
             SELECT
                 a.id,
-                a.user_id,
+                a."UserId" as user_id,
                 a.date,
-                a.check_in,
-                a.check_out,
+                a."checkInTime" as check_in,
+                a."checkOutTime" as check_out,
                 a.status,
-                a.is_late,
-                COALESCE(a.worked_hours, 0) as worked_hours,
-                COALESCE(a.scheduled_hours, 8) as scheduled_hours,
-                u.first_name,
-                u.last_name,
+                CASE WHEN a.status = 'late' THEN true ELSE false END as is_late,
+                COALESCE(a."workingHours", 0) as worked_hours,
+                8 as scheduled_hours,
+                u."firstName" as first_name,
+                u."lastName" as last_name,
                 u.legajo,
-                u.branch_id,
-                u.sector,
+                u.default_branch_id as branch_id,
+                NULL as sector,
                 COALESCE(a.department_id, u.department_id) as department_id,
                 d.name as department_name,
                 b.name as branch_name,
@@ -473,15 +473,15 @@ router.get('/:companyId/multi-level-metrics', async (req, res) => {
                 s."endTime" as shift_end,
                 s."hourlyRates" as hourly_rates,
                 EXTRACT(DOW FROM a.date) as day_of_week
-            FROM attendance a
-            INNER JOIN users u ON a.user_id = u.id
+            FROM attendances a
+            INNER JOIN users u ON a."UserId" = u.user_id
             LEFT JOIN departments d ON COALESCE(a.department_id, u.department_id) = d.id
-            LEFT JOIN branches b ON u.branch_id = b.id
-            LEFT JOIN user_shift_assignments usa ON usa.user_id = u.id AND usa.is_active = true
+            LEFT JOIN branches b ON u.default_branch_id = b.id
+            LEFT JOIN user_shift_assignments usa ON usa.user_id = u.user_id AND usa.is_active = true
             LEFT JOIN shifts s ON s.id = usa.shift_id
             WHERE u.company_id = :companyId
               AND a.date BETWEEN :startDate AND :endDate
-              AND (a.check_in IS NOT NULL OR a.check_out IS NOT NULL)
+              AND (a."checkInTime" IS NOT NULL OR a."checkOutTime" IS NOT NULL)
         `;
 
         // Filtros adicionales
@@ -870,7 +870,6 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
                 u.email,
                 u.default_branch_id as branch_id,
                 u.department_id,
-                u.sector,
                 d.name as department_name,
                 b.name as branch_name,
                 s.id as shift_id,
@@ -891,33 +890,44 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
             type: sequelize.QueryTypes?.SELECT || 'SELECT'
         });
 
-        if (!userInfo || userInfo.length === 0) {
-            return res.status(404).json({
-                success: false,
-                error: 'Empleado no encontrado'
-            });
+        // Manejar diferentes formatos de respuesta de sequelize.query
+        let user = null;
+        if (Array.isArray(userInfo) && userInfo.length > 0) {
+            user = userInfo[0];
+        } else if (userInfo && typeof userInfo === 'object' && !Array.isArray(userInfo)) {
+            user = userInfo;
         }
 
-        const user = userInfo[0];
+        if (!user) {
+            return res.json({
+                success: true,
+                employee: null,
+                metrics: null,
+                message: 'No se encontraron datos del empleado'
+            });
+        }
 
         // Obtener asistencias del empleado
         const [attendances] = await sequelize.query(`
             SELECT
                 a.id,
                 a.date,
-                a.check_in,
-                a.check_out,
+                a."checkInTime" as check_in,
+                a."checkOutTime" as check_out,
                 a.status,
-                a.is_late,
+                CASE WHEN a.status = 'late' THEN true ELSE false END as is_late,
                 EXTRACT(DOW FROM a.date) as day_of_week
-            FROM attendance a
-            WHERE a.user_id = :userId
+            FROM attendances a
+            WHERE a."UserId" = :userId
               AND a.date BETWEEN :startDate AND :endDate
             ORDER BY a.date DESC
         `, {
             replacements: { userId, startDate: start, endDate: end },
             type: sequelize.QueryTypes?.SELECT || 'SELECT'
         });
+
+        // Manejar diferentes formatos de respuesta - asegurar que sea iterable
+        const attendancesList = Array.isArray(attendances) ? attendances : [];
 
         // Crear objeto shift para el cálculo
         const shift = user.shift_id ? {
@@ -945,7 +955,7 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
 
         const dailyBreakdown = [];
 
-        for (const att of attendances) {
+        for (const att of attendancesList) {
             const isWeekend = att.day_of_week === 0 || att.day_of_week === 6;
 
             const breakdown = OvertimeCalculatorService.calculateHoursBreakdown(
@@ -1024,7 +1034,7 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
                 email: user.email,
                 department: { id: user.department_id, name: user.department_name },
                 branch: { id: user.branch_id, name: user.branch_name },
-                sector: user.sector,
+                sector: null,
                 shift: shift ? {
                     id: shift.id,
                     name: shift.name,
@@ -1042,7 +1052,7 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
             dailyBreakdown: dailyBreakdown.slice(0, 31), // Últimos 31 registros
             metadata: {
                 generatedAt: new Date().toISOString(),
-                recordsProcessed: attendances.length
+                recordsProcessed: attendancesList.length
             }
         });
 

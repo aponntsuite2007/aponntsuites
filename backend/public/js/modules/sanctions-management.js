@@ -917,9 +917,10 @@ function showSanctionsManagementContent() {
         </div>
 
         <!-- Modals - Se crean dinámicamente cuando se necesitan -->
-        <div id="create-modal-container"></div>
-        <div id="detail-modal-container"></div>
-        <div id="workflow-action-modal-container"></div>
+        <!-- pointer-events:none para no bloquear clicks cuando están vacíos -->
+        <div id="create-modal-container" style="pointer-events: none;"></div>
+        <div id="detail-modal-container" style="pointer-events: none;"></div>
+        <div id="workflow-action-modal-container" style="pointer-events: none;"></div>
     `;
 
     // Load initial data
@@ -1253,12 +1254,12 @@ function renderCreateModal() {
                             </div>
                         </div>
 
-                        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-top: 10px; display: flex; justify-content: flex-end; gap: 15px;">
+                        <div class="sanctions-modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-top: 10px; display: flex; justify-content: flex-end; gap: 15px;">
                             <button type="button" class="action-btn secondary" onclick="SanctionsManagement.closeModals()">
                                 Cancelar
                             </button>
-                            <button type="submit" class="action-btn danger">
-                                📝 Crear como Borrador
+                            <button type="submit" id="sanctions-submit-btn" class="action-btn danger" data-testid="save-sanction" style="display: inline-flex !important; visibility: visible !important; opacity: 1 !important;">
+                                💾 Guardar Sanción
                             </button>
                         </div>
                     </form>

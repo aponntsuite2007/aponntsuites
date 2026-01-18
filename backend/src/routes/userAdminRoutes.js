@@ -255,11 +255,30 @@ router.post('/:userId/disciplinary', auth, verifyCompanyAccess, async (req, res)
         const { userId } = req.params;
         const companyId = req.user.company_id;
 
+        // FIX: Mapear campos del frontend a campos del modelo
+        const {
+            action_type,
+            action_date,      // Frontend envía action_date
+            date_occurred,    // Modelo espera date_occurred
+            reason,           // Frontend envía reason
+            action_taken,     // Modelo espera action_taken
+            description,
+            follow_up_required,
+            follow_up_date,
+            ...otherFields
+        } = req.body;
+
         const action = await UserDisciplinaryActions.create({
             user_id: userId,
             company_id: companyId,
-            issued_by: req.user.user_id, // Usuario que crea la acción
-            ...req.body
+            issued_by: req.user.id, // FIX: Token JWT usa 'id', no 'user_id'
+            action_type,
+            date_occurred: date_occurred || action_date || new Date(), // Aceptar ambos nombres
+            action_taken: action_taken || reason || description || 'Acción registrada', // Aceptar ambos nombres
+            description: description || reason || '',
+            follow_up_required: follow_up_required || false,
+            follow_up_date: follow_up_date || null,
+            ...otherFields
         });
 
         res.status(201).json(action);

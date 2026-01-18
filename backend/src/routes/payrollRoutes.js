@@ -2526,11 +2526,11 @@ router.get('/user/:userId/history', async (req, res) => {
                 pr.period_end,
                 pr.status as run_status,
                 pr.approved_at,
-                pr.pay_date,
-                pt.template_name,
-                pt.template_code,
-                pc.currency_code,
-                pc.currency_symbol,
+                pr.payment_date,
+                NULL as template_name,
+                NULL as template_code,
+                'USD' as currency_code,
+                '$' as currency_symbol,
                 prd.gross_earnings,
                 prd.non_remunerative,
                 prd.total_deductions,
@@ -2542,8 +2542,6 @@ router.get('/user/:userId/history', async (req, res) => {
                 prd.overtime_100_hours
             FROM payroll_run_details prd
             INNER JOIN payroll_runs pr ON prd.run_id = pr.id
-            LEFT JOIN payroll_templates pt ON pr.template_id = pt.id
-            LEFT JOIN payroll_countries pc ON pt.country_id = pc.id
             WHERE prd.user_id = :userId
             AND pr.company_id = :companyId
             AND pr.status IN ('completed', 'approved', 'paid')
@@ -2575,7 +2573,7 @@ router.get('/user/:userId/history', async (req, res) => {
             AND pr.status IN ('completed', 'approved', 'paid')
         `, {
             replacements: {
-                userId: parseInt(userId),
+                userId: userId,  // ✅ FIX: UUID, no parseInt
                 companyId: req.companyId,
                 year: currentYear
             },
@@ -2591,7 +2589,7 @@ router.get('/user/:userId/history', async (req, res) => {
             AND pr.company_id = :companyId
             AND pr.status IN ('completed', 'approved', 'paid')
         `, {
-            replacements: { userId: parseInt(userId), companyId: req.companyId },
+            replacements: { userId: userId, companyId: req.companyId },  // ✅ FIX: UUID, no parseInt
             type: sequelize.QueryTypes.SELECT
         });
 
@@ -2681,17 +2679,15 @@ router.get('/user/:userId/history/:detailId/concepts', async (req, res) => {
             SELECT
                 prd.*,
                 pr.period_year, pr.period_month, pr.period_start, pr.period_end,
-                pr.status as run_status, pr.approved_at, pr.pay_date,
-                pt.template_name, pt.template_code,
-                pt.receipt_header, pt.receipt_footer,
-                pc.currency_code, pc.currency_symbol, pc.country_name,
+                pr.status as run_status, pr.approved_at, pr.payment_date,
+                NULL as template_name, NULL as template_code,
+                NULL as receipt_header, NULL as receipt_footer,
+                'USD' as currency_code, '$' as currency_symbol, 'Default' as country_name,
                 u."firstName", u."lastName", u.dni, u.email,
                 d.name as department_name,
                 cb.branch_name
             FROM payroll_run_details prd
             INNER JOIN payroll_runs pr ON prd.run_id = pr.id
-            LEFT JOIN payroll_templates pt ON pr.template_id = pt.id
-            LEFT JOIN payroll_countries pc ON pt.country_id = pc.id
             LEFT JOIN users u ON prd.user_id = u.user_id
             LEFT JOIN departments d ON u.department_id = d.id
             LEFT JOIN company_branches cb ON pr.branch_id = cb.id

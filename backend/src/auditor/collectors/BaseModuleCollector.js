@@ -590,6 +590,37 @@ class BaseModuleCollector {
             throw new Error(`No se encontró elemento con texto "${txt}" en selector "${sel}"`);
         }, selector, text);
     }
+
+    /**
+     * ═══════════════════════════════════════════════════════════
+     * RUN SINGLE TEST - Re-ejecutar test específico (para retest loop)
+     * ═══════════════════════════════════════════════════════════
+     *
+     * Re-ejecutar un test específico después de aplicar un fix.
+     * Formato testName esperado: "module-name:test-type" o solo "test-name"
+     *
+     * NOTA: Este es el método BASE que debe ser sobrescrito por subclases.
+     * Cada collector implementa su propia lógica de re-test.
+     *
+     * @param {string} testName - Nombre del test a re-ejecutar
+     * @param {string} execution_id - ID de ejecución
+     * @returns {Promise<Object>} - { status: 'passed'|'failed', ...details }
+     */
+    async runSingleTest(testName, execution_id) {
+        console.log(`  🔄 [COLLECTOR] Re-ejecutando test: ${testName}`);
+
+        // Parsear testName para extraer módulo y tipo de test
+        // Formato esperado: "module-name:test-type" (ej: "users:create-endpoint")
+        const parts = testName.split(':');
+        const moduleName = parts.length > 1 ? parts[0] : this.moduleName;
+        const testType = parts.length > 1 ? parts[1] : testName;
+
+        // Por defecto, lanzar error indicando que debe ser implementado por subclase
+        throw new Error(
+            `runSingleTest() not implemented in ${this.constructor.name}. ` +
+            `Subclasses must override this method to support retest functionality.`
+        );
+    }
 }
 
 module.exports = BaseModuleCollector;

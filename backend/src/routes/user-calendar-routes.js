@@ -59,7 +59,7 @@ router.get('/:userId/calendar', auth, async (req, res) => {
     // Verificar usuario
     const user = await User.findOne({
       where: { user_id: userId },
-      attributes: ['user_id', 'nombre', 'apellido', 'usuario', 'legajo', 'company_id']
+      attributes: ['user_id', 'firstName', 'lastName', 'usuario', 'legajo', 'company_id']
     });
 
     if (!user) {
@@ -110,7 +110,7 @@ router.get('/:userId/calendar', auth, async (req, res) => {
           [Op.between]: [startDate, endDate]
         }
       },
-      attributes: ['date', 'status', 'check_in', 'check_out', 'workingHours', 'isLate', 'delay_minutes', 'notes'],
+      attributes: ['date', 'status', 'check_in', 'check_out', 'workingHours', 'notes'],
       order: [['date', 'ASC']]
     });
 
@@ -143,7 +143,7 @@ router.get('/:userId/calendar', auth, async (req, res) => {
         // Día que DEBÍA trabajar
         if (attendance) {
           // Asistió
-          if (attendance.isLate || attendance.status === 'late') {
+          if (attendance.status === 'late') {
             dayStatus = 'late';
             statusColor = 'orange';
             statusLabel = 'Llegó Tarde';
@@ -201,8 +201,7 @@ router.get('/:userId/calendar', auth, async (req, res) => {
           check_in: attendance.check_in,
           check_out: attendance.check_out,
           workingHours: attendance.workingHours,
-          isLate: attendance.isLate,
-          delay_minutes: attendance.delay_minutes,
+          isLate: attendance.status === 'late',
           notes: attendance.notes
         } : null,
 
@@ -342,7 +341,7 @@ router.get('/:userId/calendar/summary', auth, async (req, res) => {
         user_id: userId,
         date: { [Op.between]: [startDate, endDate] }
       },
-      attributes: ['date', 'status', 'isLate']
+      attributes: ['date', 'status']
     });
 
     const attendanceMap = {};
@@ -362,7 +361,7 @@ router.get('/:userId/calendar/summary', auth, async (req, res) => {
     pastWorkDays.forEach(day => {
       const att = attendanceMap[day.date];
       if (att) {
-        if (att.isLate || att.status === 'late') {
+        if (att.status === 'late') {
           late++;
         } else if (att.status === 'present') {
           attended++;

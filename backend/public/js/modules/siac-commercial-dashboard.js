@@ -933,19 +933,439 @@ const SiacCommercialDashboard = {
     // =============================================================================
 
     showNuevoRemito() {
-        alert('Modal Nuevo Remito - Por implementar');
+        // Remover modal existente si hay
+        document.querySelector('.siac-modal.active')?.remove();
+
+        const modal = document.createElement('div');
+        modal.className = 'siac-modal active';
+        modal.id = 'nuevo-remito-modal';
+        modal.innerHTML = `
+            <div class="siac-modal-content" style="max-width: 700px;">
+                <div class="siac-modal-header">
+                    <h3><i class="fas fa-truck"></i> Nuevo Remito</h3>
+                    <button class="siac-modal-close" onclick="this.closest('.siac-modal').remove()">&times;</button>
+                </div>
+                <div class="siac-modal-body">
+                    <form id="nuevo-remito-form" onsubmit="SiacCommercialDashboard.submitNuevoRemito(event)">
+                        <div class="siac-form-row">
+                            <div class="siac-form-group">
+                                <label>Cliente *</label>
+                                <select name="cliente_id" id="remito-cliente" required>
+                                    <option value="">Seleccionar cliente...</option>
+                                </select>
+                            </div>
+                            <div class="siac-form-group">
+                                <label>Fecha *</label>
+                                <input type="date" name="fecha" value="${new Date().toISOString().split('T')[0]}" required>
+                            </div>
+                        </div>
+                        <div class="siac-form-row">
+                            <div class="siac-form-group">
+                                <label>Punto de Venta *</label>
+                                <input type="number" name="punto_venta" value="1" min="1" max="99999" required>
+                            </div>
+                            <div class="siac-form-group">
+                                <label>Dirección de Entrega</label>
+                                <input type="text" name="direccion_entrega" placeholder="Dirección de entrega...">
+                            </div>
+                        </div>
+                        <div class="siac-form-group">
+                            <label>Observaciones</label>
+                            <textarea name="observaciones" rows="3" placeholder="Notas adicionales..."></textarea>
+                        </div>
+                        <div class="siac-form-group">
+                            <label>Items del Remito</label>
+                            <div id="remito-items-container">
+                                <div class="remito-item-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                    <input type="text" name="item_descripcion_0" placeholder="Descripción del item *" style="flex: 3;" required>
+                                    <input type="number" name="item_cantidad_0" placeholder="Cant." value="1" min="1" style="flex: 1;" required>
+                                    <input type="text" name="item_unidad_0" placeholder="Unidad" value="UN" style="flex: 1;">
+                                </div>
+                            </div>
+                            <button type="button" onclick="SiacCommercialDashboard.addRemitoItem()" class="siac-btn" style="margin-top: 8px;">
+                                <i class="fas fa-plus"></i> Agregar Item
+                            </button>
+                        </div>
+                        <div class="siac-modal-footer" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" class="siac-btn" onclick="this.closest('.siac-modal').remove()">Cancelar</button>
+                            <button type="submit" class="siac-btn siac-btn-primary">
+                                <i class="fas fa-save"></i> Crear Remito
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Cargar lista de clientes
+        this.loadClientesForSelect('remito-cliente');
+    },
+
+    remitoItemCount: 1,
+
+    addRemitoItem() {
+        const container = document.getElementById('remito-items-container');
+        const idx = this.remitoItemCount++;
+        const row = document.createElement('div');
+        row.className = 'remito-item-row';
+        row.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px;';
+        row.innerHTML = `
+            <input type="text" name="item_descripcion_${idx}" placeholder="Descripción del item *" style="flex: 3;" required>
+            <input type="number" name="item_cantidad_${idx}" placeholder="Cant." value="1" min="1" style="flex: 1;" required>
+            <input type="text" name="item_unidad_${idx}" placeholder="Unidad" value="UN" style="flex: 1;">
+            <button type="button" onclick="this.parentElement.remove()" class="siac-btn" style="background: #e74c3c;">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        container.appendChild(row);
+    },
+
+    async loadClientesForSelect(selectId) {
+        try {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            const response = await fetch(`${this.apiBaseUrl}/clientes?company_id=${this.companyId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+
+            const select = document.getElementById(selectId);
+            if (select && data.success && data.data) {
+                data.data.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.id;
+                    option.textContent = `${c.razon_social || c.nombre} - ${c.cuit || 'Sin CUIT'}`;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error cargando clientes:', error);
+        }
+    },
+
+    async submitNuevoRemito(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        // Recopilar items
+        const items = [];
+        let idx = 0;
+        while (formData.has(`item_descripcion_${idx}`)) {
+            items.push({
+                descripcion: formData.get(`item_descripcion_${idx}`),
+                cantidad: parseInt(formData.get(`item_cantidad_${idx}`)) || 1,
+                unidad: formData.get(`item_unidad_${idx}`) || 'UN'
+            });
+            idx++;
+        }
+
+        const data = {
+            company_id: this.companyId,
+            cliente_id: formData.get('cliente_id'),
+            fecha: formData.get('fecha'),
+            punto_venta: formData.get('punto_venta'),
+            direccion_entrega: formData.get('direccion_entrega'),
+            observaciones: formData.get('observaciones'),
+            items: items
+        };
+
+        try {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            const response = await fetch(`${this.apiBaseUrl}/remitos`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✅ Remito creado exitosamente');
+                document.querySelector('.siac-modal.active')?.remove();
+                this.loadRemitos();
+            } else {
+                alert('❌ Error: ' + (result.error || 'Error creando remito'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ Error de conexión: ' + error.message);
+        }
     },
 
     showNuevoRecibo() {
-        alert('Modal Nuevo Recibo - Por implementar');
+        // Remover modal existente si hay
+        document.querySelector('.siac-modal.active')?.remove();
+
+        const modal = document.createElement('div');
+        modal.className = 'siac-modal active';
+        modal.id = 'nuevo-recibo-modal';
+        modal.innerHTML = `
+            <div class="siac-modal-content" style="max-width: 600px;">
+                <div class="siac-modal-header">
+                    <h3><i class="fas fa-receipt"></i> Nuevo Recibo</h3>
+                    <button class="siac-modal-close" onclick="this.closest('.siac-modal').remove()">&times;</button>
+                </div>
+                <div class="siac-modal-body">
+                    <form id="nuevo-recibo-form" onsubmit="SiacCommercialDashboard.submitNuevoRecibo(event)">
+                        <div class="siac-form-row">
+                            <div class="siac-form-group">
+                                <label>Cliente *</label>
+                                <select name="cliente_id" id="recibo-cliente" required>
+                                    <option value="">Seleccionar cliente...</option>
+                                </select>
+                            </div>
+                            <div class="siac-form-group">
+                                <label>Fecha *</label>
+                                <input type="date" name="fecha" value="${new Date().toISOString().split('T')[0]}" required>
+                            </div>
+                        </div>
+                        <div class="siac-form-row">
+                            <div class="siac-form-group">
+                                <label>Monto *</label>
+                                <input type="number" name="monto" step="0.01" min="0.01" placeholder="0.00" required>
+                            </div>
+                            <div class="siac-form-group">
+                                <label>Medio de Pago *</label>
+                                <select name="medio_pago" required>
+                                    <option value="efectivo">💵 Efectivo</option>
+                                    <option value="transferencia">🏦 Transferencia</option>
+                                    <option value="cheque">📄 Cheque</option>
+                                    <option value="tarjeta">💳 Tarjeta</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="siac-form-group">
+                            <label>Concepto / Observaciones</label>
+                            <textarea name="concepto" rows="2" placeholder="Descripción del pago..."></textarea>
+                        </div>
+                        <div class="siac-modal-footer" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" class="siac-btn" onclick="this.closest('.siac-modal').remove()">Cancelar</button>
+                            <button type="submit" class="siac-btn siac-btn-primary">
+                                <i class="fas fa-save"></i> Crear Recibo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Cargar lista de clientes
+        this.loadClientesForSelect('recibo-cliente');
+    },
+
+    async submitNuevoRecibo(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {
+            company_id: this.companyId,
+            cliente_id: formData.get('cliente_id'),
+            fecha: formData.get('fecha'),
+            monto: parseFloat(formData.get('monto')),
+            medio_pago: formData.get('medio_pago'),
+            concepto: formData.get('concepto')
+        };
+
+        try {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            const response = await fetch(`${this.apiBaseUrl}/cobranzas/recibos`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✅ Recibo creado exitosamente');
+                document.querySelector('.siac-modal.active')?.remove();
+                this.loadCobranzas();
+            } else {
+                alert('❌ Error: ' + (result.error || 'Error creando recibo'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ Error de conexión: ' + error.message);
+        }
     },
 
     showMovimientoCaja(cajaId, sesionId) {
-        alert(`Modal Movimiento Caja ${cajaId} Sesion ${sesionId} - Por implementar`);
+        // Remover modal existente si hay
+        document.querySelector('.siac-modal.active')?.remove();
+
+        const modal = document.createElement('div');
+        modal.className = 'siac-modal active';
+        modal.id = 'movimiento-caja-modal';
+        modal.innerHTML = `
+            <div class="siac-modal-content" style="max-width: 500px;">
+                <div class="siac-modal-header">
+                    <h3><i class="fas fa-exchange-alt"></i> Movimiento de Caja</h3>
+                    <button class="siac-modal-close" onclick="this.closest('.siac-modal').remove()">&times;</button>
+                </div>
+                <div class="siac-modal-body">
+                    <form id="movimiento-caja-form" onsubmit="SiacCommercialDashboard.submitMovimientoCaja(event, ${cajaId || 1}, ${sesionId || 0})">
+                        <div class="siac-form-group">
+                            <label>Tipo de Movimiento *</label>
+                            <select name="tipo" required>
+                                <option value="ingreso">📥 Ingreso</option>
+                                <option value="egreso">📤 Egreso</option>
+                            </select>
+                        </div>
+                        <div class="siac-form-group">
+                            <label>Monto *</label>
+                            <input type="number" name="monto" step="0.01" min="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="siac-form-group">
+                            <label>Concepto *</label>
+                            <input type="text" name="concepto" placeholder="Descripción del movimiento" required>
+                        </div>
+                        <div class="siac-modal-footer" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" class="siac-btn" onclick="this.closest('.siac-modal').remove()">Cancelar</button>
+                            <button type="submit" class="siac-btn siac-btn-primary">
+                                <i class="fas fa-save"></i> Registrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    async submitMovimientoCaja(event, cajaId, sesionId) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {
+            company_id: this.companyId,
+            caja_id: cajaId,
+            sesion_id: sesionId,
+            tipo: formData.get('tipo'),
+            monto: parseFloat(formData.get('monto')),
+            concepto: formData.get('concepto')
+        };
+
+        try {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            const response = await fetch(`${this.apiBaseUrl}/caja/movimientos`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✅ Movimiento registrado exitosamente');
+                document.querySelector('.siac-modal.active')?.remove();
+                this.loadCaja();
+            } else {
+                alert('❌ Error: ' + (result.error || 'Error registrando movimiento'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ Error de conexión: ' + error.message);
+        }
     },
 
     showEstadoCuenta() {
-        alert('Modal Estado de Cuenta - Por implementar');
+        // Modal para ver estado de cuenta de un cliente
+        document.querySelector('.siac-modal.active')?.remove();
+
+        const modal = document.createElement('div');
+        modal.className = 'siac-modal active';
+        modal.id = 'estado-cuenta-modal';
+        modal.innerHTML = `
+            <div class="siac-modal-content" style="max-width: 600px;">
+                <div class="siac-modal-header">
+                    <h3><i class="fas fa-file-invoice-dollar"></i> Estado de Cuenta</h3>
+                    <button class="siac-modal-close" onclick="this.closest('.siac-modal').remove()">&times;</button>
+                </div>
+                <div class="siac-modal-body">
+                    <div class="siac-form-group">
+                        <label>Seleccionar Cliente</label>
+                        <select id="estado-cuenta-cliente" onchange="SiacCommercialDashboard.loadEstadoCuentaCliente(this.value)">
+                            <option value="">Seleccionar cliente...</option>
+                        </select>
+                    </div>
+                    <div id="estado-cuenta-content" style="margin-top: 20px;">
+                        <p style="color: #888; text-align: center;">Seleccione un cliente para ver su estado de cuenta</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Cargar lista de clientes
+        this.loadClientesForSelect('estado-cuenta-cliente');
+    },
+
+    async loadEstadoCuentaCliente(clienteId) {
+        if (!clienteId) return;
+
+        const container = document.getElementById('estado-cuenta-content');
+        container.innerHTML = '<p style="text-align: center;">Cargando...</p>';
+
+        try {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            const response = await fetch(`${this.apiBaseUrl}/cuenta-corriente/cliente/${clienteId}?company_id=${this.companyId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                const saldo = data.data?.saldo || 0;
+                const movimientos = data.data?.movimientos || [];
+                container.innerHTML = `
+                    <div style="background: #1a1a2e; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <div style="font-size: 12px; color: #888;">Saldo Actual</div>
+                        <div style="font-size: 24px; font-weight: bold; color: ${saldo >= 0 ? '#2ecc71' : '#e74c3c'};">
+                            $${Math.abs(saldo).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            ${saldo >= 0 ? ' (A Favor)' : ' (Debe)'}
+                        </div>
+                    </div>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #21262d;">
+                                    <th style="padding: 8px; text-align: left;">Fecha</th>
+                                    <th style="padding: 8px; text-align: left;">Concepto</th>
+                                    <th style="padding: 8px; text-align: right;">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${movimientos.slice(0, 10).map(m => `
+                                    <tr style="border-bottom: 1px solid #30363d;">
+                                        <td style="padding: 8px;">${new Date(m.fecha).toLocaleDateString('es-AR')}</td>
+                                        <td style="padding: 8px;">${m.concepto || m.tipo || '-'}</td>
+                                        <td style="padding: 8px; text-align: right; color: ${m.monto >= 0 ? '#2ecc71' : '#e74c3c'};">
+                                            ${m.monto >= 0 ? '+' : ''}$${Math.abs(m.monto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                        </td>
+                                    </tr>
+                                `).join('') || '<tr><td colspan="3" style="padding: 15px; text-align: center; color: #888;">Sin movimientos</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `<p style="color: #e74c3c;">Error: ${data.error}</p>`;
+            }
+        } catch (error) {
+            container.innerHTML = `<p style="color: #e74c3c;">Error: ${error.message}</p>`;
+        }
     },
 
     async viewRemito(id) {

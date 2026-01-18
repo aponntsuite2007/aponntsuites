@@ -278,7 +278,7 @@ router.get('/company/:companyId/critical-patterns', async (req, res) => {
         {
           model: require('../config/database').User,
           as: 'user',
-          attributes: ['user_id', 'firstName', 'lastName', 'employee_id']
+          attributes: ['user_id', 'firstName', 'lastName', 'employeeId']
         }
       ],
       order: [['detection_date', 'DESC']]

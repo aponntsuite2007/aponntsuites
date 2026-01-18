@@ -6,6 +6,7 @@
 
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const {
     UserAnthropometricData,
     ChronicConditionsCatalog,
@@ -16,6 +17,28 @@ const {
     UserSportsActivities,
     UserHealthyHabits
 } = require('../config/database');
+
+// ============================================================================
+// AUTH MIDDLEWARE
+// ============================================================================
+const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
+
+async function auth(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ success: false, error: 'Token no proporcionado' });
+    }
+
+    try {
+        const user = jwt.verify(token, JWT_SECRET);
+        req.user = user;
+        next();
+    } catch (error) {
+        return res.status(403).json({ success: false, error: 'Token inválido' });
+    }
+}
 
 // ============================================================================
 // HELPER: Validar formato UUID
@@ -193,6 +216,34 @@ router.get('/surgeries/:userId', async (req, res) => {
 router.post('/surgeries', async (req, res) => {
     try {
         const data = await UserSurgeries.create(req.body);
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('Error creating surgery record:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /api/medical-advanced/surgeries/:userId - FIX: Obtener company_id del body o token
+router.post('/surgeries/:userId', auth, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { company_id, ...restBody } = req.body;
+
+        // FIX 100: company_id puede venir del body, del token o del usuario autenticado
+        const companyId = company_id || req.user?.company_id || req.user?.companyId;
+        if (!companyId) {
+            return res.status(400).json({
+                success: false,
+                error: 'company_id es requerido en el body del request o token'
+            });
+        }
+
+        const surgeryData = {
+            ...restBody,
+            user_id: userId,
+            company_id: companyId // FIX 100: usar companyId resuelto
+        };
+        const data = await UserSurgeries.create(surgeryData);
         res.json({ success: true, data });
     } catch (error) {
         console.error('Error creating surgery record:', error);

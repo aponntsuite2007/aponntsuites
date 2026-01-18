@@ -4422,6 +4422,105 @@ class EcosystemBrainService {
       return [];
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TESTING FEEDBACK LOOP - Registro de Resultados de Tests
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Registrar resultados de tests y actualizar metadata VIVO
+   *
+   * @param {string} moduleKey - ID del módulo testeado
+   * @param {Object} results - Resultados del test
+   * @param {Object} discoveries - Descubrimientos del test (botones, modales, campos)
+   *
+   * PROPÓSITO:
+   * - Actualizar cache del Brain con resultados de testing
+   * - Incrementar progress si tests pasaron
+   * - Registrar descubrimientos (botones, modales, campos)
+   * - Notificar a WebSocket (si BrainNervousSystem está disponible)
+   */
+  async recordTestResults(moduleKey, results, discoveries) {
+    try {
+      console.log(`🧠 [BRAIN] Registrando resultados de test para módulo: ${moduleKey}`);
+
+      // 1. Actualizar cache del Brain
+      const technicalModulesData = await this.getTechnicalModules();
+      const technicalModules = technicalModulesData.modules || [];  // ⭐ FIX: Extraer array de módulos
+      const module = technicalModules.find(m => m.key === moduleKey);
+
+      if (module) {
+        // Actualizar progress si tests pasaron
+        if (results.status === 'passed') {
+          module.progress = Math.min(100, (module.progress || 0) + 5);
+          module.status = module.progress === 100 ? 'production' : 'in_progress';
+          console.log(`   ✅ Progress actualizado: ${module.progress}%`);
+        }
+
+        // Agregar descubrimientos a metadata
+        module.testResults = {
+          lastTested: new Date(),
+          status: results.status,
+          discoveries: {
+            buttons: discoveries.buttons?.length || 0,
+            modals: discoveries.modals?.length || 0,
+            fields: discoveries.fields?.length || 0
+          },
+          crudStats: results.crudStats || null,
+          metrics: {
+            totalTests: results.totalTests || 0,
+            passed: results.passed || 0,
+            failed: results.failed || 0,
+            skipped: results.skipped || 0,
+            timeouts: results.timeouts || 0
+          }
+        };
+
+        console.log(`   📊 Métricas registradas:`);
+        console.log(`      - Tests: ${results.passed || 0}/${results.totalTests || 0}`);
+        console.log(`      - Descubrimientos: ${discoveries.buttons?.length || 0} botones, ${discoveries.modals?.length || 0} modales`);
+
+        if (results.crudStats) {
+          console.log(`      - CRUD: ${results.crudStats.tested || 0} tests CRUD ejecutados`);
+        }
+      } else {
+        console.log(`   ⚠️  Módulo "${moduleKey}" no encontrado en cache del Brain`);
+      }
+
+      // 2. Notificar a WebSocket (si está disponible)
+      if (this.brainNervous) {
+        this.brainNervous.emit('test-completed', {
+          module: moduleKey,
+          status: results.status,
+          timestamp: new Date(),
+          metrics: results
+        });
+        console.log(`   📡 Notificación enviada a BrainNervousSystem`);
+      }
+
+      return {
+        success: true,
+        module: moduleKey,
+        updated: !!module
+      };
+
+    } catch (error) {
+      console.error(`❌ [BRAIN] Error registrando resultados de test:`, error.message);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Conectar BrainNervousSystem para notificaciones en tiempo real
+   * @param {Object} brainNervous - Instancia de BrainNervousSystem
+   */
+  setBrainNervousSystem(brainNervous) {
+    this.brainNervous = brainNervous;
+    console.log('🧠 [BRAIN] BrainNervousSystem conectado');
+  }
 }
 
 module.exports = EcosystemBrainService;

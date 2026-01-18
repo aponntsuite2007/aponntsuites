@@ -5,6 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
+const { auth } = require('../middleware/auth');
 const {
     LaborAgreementsCatalog,
     SalaryCategories,
@@ -180,19 +181,41 @@ router.put('/config/:id', async (req, res) => {
 });
 
 // POST /api/salary-advanced/config/:userId/update-salary - Actualizar salario (con historial)
-router.post('/config/:userId/update-salary', async (req, res) => {
+router.post('/config/:userId/update-salary', auth, async (req, res) => {
     try {
         const { userId } = req.params;
-        const { newBaseSalary, increasePercentage, reason, effectiveFrom } = req.body;
+        const { newBaseSalary, increasePercentage, reason, effectiveFrom, company_id } = req.body;
 
         // Obtener config actual
         const currentConfig = await UserSalaryConfigV2.findOne({
             where: { user_id: userId, is_current: true }
         });
 
+        let previousSalary = 0;
+
         if (!currentConfig) {
-            return res.status(404).json({ success: false, error: 'No current salary config found' });
+            // FIX: Si no existe config, crear una nueva (primer registro salarial)
+            const companyId = company_id || req.user?.company_id || req.user?.companyId;
+
+            const newConfig = await UserSalaryConfigV2.create({
+                user_id: userId,
+                company_id: companyId,
+                base_salary: newBaseSalary,
+                previous_base_salary: 0,
+                salary_increase_percentage: null,
+                salary_increase_reason: reason || 'initial_config',
+                last_salary_update: new Date(),
+                effective_from: effectiveFrom || new Date(),
+                effective_to: null,
+                is_current: true,
+                currency: 'ARS',
+                payment_frequency: 'monthly'
+            });
+
+            return res.json({ success: true, data: newConfig, previousSalary: 0, isNewConfig: true });
         }
+
+        previousSalary = currentConfig.base_salary;
 
         // Desactivar config actual
         await UserSalaryConfigV2.update(
@@ -216,7 +239,7 @@ router.post('/config/:userId/update-salary', async (req, res) => {
             updated_at: undefined
         });
 
-        res.json({ success: true, data: newConfig, previousSalary: currentConfig.base_salary });
+        res.json({ success: true, data: newConfig, previousSalary });
     } catch (error) {
         console.error('Error updating salary:', error);
         res.status(500).json({ success: false, error: error.message });

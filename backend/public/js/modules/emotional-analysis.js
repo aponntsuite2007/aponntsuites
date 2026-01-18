@@ -47,8 +47,8 @@ async function showEmotionalAnalysisContent() {
             <div id="emotional-content-area"></div>
         </div>
 
-        <!-- Modal Container -->
-        <div id="emotional-modal-container"></div>
+        <!-- Modal Container - pointer-events:none para no bloquear clicks cuando está vacío -->
+        <div id="emotional-modal-container" style="pointer-events: none;"></div>
     `;
 
     // Load initial view

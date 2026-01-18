@@ -4,10 +4,23 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment variables
+# Environment variables (ALL .env files - SECURITY)
 .env
+.env.*
 .env.local
 .env.production
+.env.postgres
+.env.postgresql
+.env.e2e
+**/.env
+**/.env.*
+
+# Render config (contains secrets)
+render.yaml
+
+# Claude Code local settings (contains secrets)
+**/.claude/settings.local.json
+.claude/settings.local.json
 
 # Logs
 logs/
@@ -48,6 +61,9 @@ dist/
 *.swo
 *~
 
+# Claude Code local settings (contains secrets)
+.claude/settings.local.json
+
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -86,3 +102,39 @@ backend/nul
 **/nul
 .aider*
 backend/nlp-service/
+
+# Brain tickets (auto-generated during testing)
+backend/src/brain/tickets/
+**/brain/tickets/
+
+# Debug screenshots (auto-generated during testing)
+debug-*.png
+**/debug-*.png
+
+# Test results (auto-generated)
+*-test-results.json
+*-results.json
+**/*-test-results.json
+
+# Claude temporary files
+tmpclaude-*
+**/tmpclaude-*
+
+# Session documentation (not functional code)
+SESSION-*.md
+**/SESSION-*.md
+
+# Audit results (auto-generated)
+backend/audit-results/
+
+# LLM context (auto-generated)
+backend/public/llm-context.json
+
+# Quick test outputs
+backend/ssot-*.txt
+backend/ssot-*.json
+backend/focused-*.json
+backend/filtered-*.json
+backend/isi-*.json
+backend/quick-*.json
+backend/accessible-*.json

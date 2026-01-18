@@ -2667,6 +2667,7 @@ app.use('/api/aponnt/leads', leadRoutes); // ✅ Gestión de leads con scoring y
 app.use('/api/seed-demo', seedDemoRoute); // ⚠️ TEMPORAL: GET /api/seed-demo?key=DEMO_SEED_2024_SECURE
 app.use('/api/v1/legal', legalRoutes);
 app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exitosa
+app.use('/api/users', userRoutes);      // ⭐ ALIAS sin /v1/ para compatibilidad con frontend legacy
 app.use('/api/v1/users', userCalendarRoutes); // ✅ Calendario personal del empleado
 app.use('/api/v1/shifts', shiftRoutes);
 app.use('/api/v1/shifts', shiftCalendarRoutes); // ✅ Calendario visual de turnos rotativos
@@ -2946,6 +2947,15 @@ app.use('/api/v1/kiosks', kioskRoutes);
 const sanctionRoutes = require('./src/routes/sanctionRoutes');
 app.use('/api/v1/sanctions', sanctionRoutes);
 
+// 🏥 CONFIGURAR API DE ART (Aseguradoras de Riesgos del Trabajo)
+const artRoutes = require('./src/routes/artRoutes');
+app.use('/api/art', artRoutes);
+console.log('🏥 [ART] Rutas de ART configuradas:');
+console.log('   📋 /api/art/providers/* - CRUD Proveedores ART');
+console.log('   🚨 /api/art/accidents/* - CRUD Accidentes');
+console.log('   📅 /api/art/exams/* - CRUD Exámenes');
+console.log('   📊 /api/art/dashboard - Estadísticas');
+
 // 👥 CONFIGURAR API DE VISITANTES
 const visitorRoutes = require('./src/routes/visitorRoutes');
 app.use('/api/v1/visitors', visitorRoutes);
@@ -3010,6 +3020,10 @@ app.use('/api/modules', modulesRoutes);
 // ✅ CONFIGURAR SISTEMA DE AUDITORÍA Y AUTO-DIAGNÓSTICO
 const auditorRoutes = require('./src/routes/auditorRoutes')(database);
 app.use('/api/audit', auditorRoutes);
+
+// ✅ CONFIGURAR SISTEMA DE TESTING (AI Testing Dashboard)
+const testingRoutes = require('./src/routes/testingRoutes');
+app.use('/api/testing', testingRoutes);
 // ✅ CONFIGURAR PHASE 4: AUTONOMOUS REPAIR + TECHNICAL REPORTS (opcional en producción)
 try {
     const auditorPhase4Routes = require('./src/routes/auditorPhase4Routes')(database);

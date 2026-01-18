@@ -261,8 +261,14 @@ const TechBadges = {
      * Destruir el componente
      */
     destroy() {
-        if (this.state.container && this.state.container.parentNode) {
-            this.state.container.parentNode.removeChild(this.state.container);
+        if (this.state.container) {
+            try {
+                if (this.state.container.parentNode) {
+                    this.state.container.parentNode.removeChild(this.state.container);
+                }
+            } catch (e) {
+                // Nodo ya fue removido por otro código - ignorar
+            }
             this.state.container = null;
         }
     },

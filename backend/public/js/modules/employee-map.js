@@ -128,7 +128,11 @@ const MapAPI = {
 // ============================================================================
 // WEBSOCKET - Real-time Updates
 // ============================================================================
+let wsReconnectEnabled = true; // Flag para controlar reconexión
+
 function initMapWebSocket() {
+    if (!wsReconnectEnabled) return; // No reconectar si el módulo no está activo
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/employee-location-ws`;
 
@@ -158,7 +162,10 @@ function initMapWebSocket() {
         MapState.webSocket.onclose = () => {
             console.log('[MAP] WebSocket desconectado');
             updateConnectionStatus(false);
-            setTimeout(initMapWebSocket, 5000);
+            // Solo reconectar si el módulo sigue activo
+            if (wsReconnectEnabled) {
+                setTimeout(initMapWebSocket, 5000);
+            }
         };
 
         MapState.webSocket.onerror = () => {
@@ -168,6 +175,30 @@ function initMapWebSocket() {
         console.warn('[MAP] WebSocket no soportado');
     }
 }
+
+// Función de cleanup para llamar cuando se navega fuera del módulo
+function cleanupEmployeeMap() {
+    console.log('[MAP] Cleanup - Cerrando WebSocket y limpiando recursos');
+    wsReconnectEnabled = false;
+
+    if (MapState.webSocket) {
+        MapState.webSocket.close();
+        MapState.webSocket = null;
+    }
+
+    if (MapState.autoRefreshInterval) {
+        clearInterval(MapState.autoRefreshInterval);
+        MapState.autoRefreshInterval = null;
+    }
+
+    if (MapState.map) {
+        MapState.map.remove();
+        MapState.map = null;
+    }
+}
+
+// Exportar cleanup para uso externo
+window.cleanupEmployeeMap = cleanupEmployeeMap;
 
 function handleLocationUpdate(update) {
     const idx = MapState.locations.findIndex(l => l.employee?.id === update.employee?.id);
@@ -742,7 +773,7 @@ function updateMapMarkers() {
 
     filtered.forEach(loc => {
         const { employee, location, status } = loc;
-        if (!location?.latitude || !location?.longitude) return;
+        if (!employee || !location?.latitude || !location?.longitude) return;
 
         const lat = parseFloat(location.latitude);
         const lng = parseFloat(location.longitude);
@@ -954,7 +985,9 @@ function updateEmployeeList() {
         return;
     }
 
-    listEl.innerHTML = filtered.map(loc => {
+    listEl.innerHTML = filtered
+        .filter(loc => loc.employee) // Filtrar empleados válidos
+        .map(loc => {
         const { employee, location, status, minutesWorking, isOutsideGeofence } = loc;
         const photoUrl = employee.photoUrl || employee.photo_url || employee.biometric_photo_url;
         const initials = getInitials(employee.name);
@@ -1356,6 +1389,7 @@ function translateActivity(activity) {
 const EmployeeMapEngine = {
     async init() {
         console.log('[MAP] Inicializando v5.0...');
+        wsReconnectEnabled = true; // Habilitar reconexión cuando se inicia el módulo
         await initLeafletMap();
         initMapWebSocket();
         await loadLocations();
