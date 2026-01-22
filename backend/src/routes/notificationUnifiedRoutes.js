@@ -30,7 +30,7 @@ const authenticate = async (req, res, next) => {
             const token = authHeader.substring(7);
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
             req.user = {
-                user_id: decoded.user_id || decoded.userId,
+                user_id: decoded.user_id || decoded.userId || decoded.id,
                 company_id: decoded.company_id || decoded.companyId,
                 role: decoded.role,
                 email: decoded.email,
@@ -442,7 +442,7 @@ router.get('/config/templates', authenticate, async (req, res) => {
             replacements.category = category;
         }
 
-        query += ` ORDER BY company_id DESC NULLS LAST, template_name`;
+        query += ` ORDER BY company_id DESC NULLS LAST, workflow_key`;
 
         const templates = await sequelize.query(query, { replacements, type: QueryTypes.SELECT });
 
@@ -467,7 +467,7 @@ router.get('/config/workflows', authenticate, async (req, res) => {
             SELECT * FROM notification_workflows
             WHERE (company_id IS NULL OR company_id = :companyId)
               AND is_active = TRUE
-            ORDER BY company_id DESC NULLS LAST, workflow_name
+            ORDER BY company_id DESC NULLS LAST, process_name
         `, {
             replacements: { companyId: req.user.company_id },
             type: QueryTypes.SELECT

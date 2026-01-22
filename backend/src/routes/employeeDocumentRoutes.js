@@ -1,5 +1,7 @@
 /**
  * Rutas para documentación personal de empleados
+ *
+ * ✅ INTEGRADO CON DMS - Todos los documentos se registran en DMS (SSOT)
  */
 
 const express = require('express');
@@ -9,6 +11,77 @@ const path = require('path');
 const fs = require('fs');
 const { Op } = require('sequelize');
 const { EmployeeDocument, User } = require('../config/database');
+
+// ========== INTEGRACIÓN DMS - SSOT DOCUMENTAL ==========
+/**
+ * Registra un documento de empleado en el DMS centralizado
+ * @param {Object} req - Request de Express
+ * @param {Object} file - Archivo subido (multer)
+ * @param {string} documentType - Tipo de documento (dni, passport, license, etc.)
+ * @param {string} userId - ID del empleado
+ * @param {Object} additionalMetadata - Metadata adicional
+ */
+const registerEmployeeDocInDMS = async (req, file, documentType, userId, additionalMetadata = {}) => {
+  try {
+    const dmsService = req.app.get('dmsIntegrationService');
+    if (!dmsService) {
+      console.warn('⚠️ [EMPLOYEE-DOCS] DMSIntegrationService no disponible');
+      return null;
+    }
+
+    const companyId = req.user?.company_id || req.body?.company_id;
+    const createdById = req.user?.user_id || req.user?.id;
+
+    // Mapear tipo de documento local a tipo DMS
+    const typeMapping = {
+      'dni': 'dni',
+      'dni_front': 'dni-front',
+      'dni_back': 'dni-back',
+      'passport': 'passport',
+      'visa': 'visa',
+      'license': 'license',
+      'driver_license': 'license',
+      'certificate': 'certificate',
+      'insurance': 'insurance',
+      'general': 'general'
+    };
+
+    const dmsDocType = typeMapping[documentType?.toLowerCase()] || 'general';
+
+    const result = await dmsService.registerDocument({
+      module: 'employee-documents',
+      documentType: dmsDocType,
+      companyId,
+      employeeId: userId,
+      createdById,
+      sourceEntityType: 'employee-document',
+      sourceEntityId: null, // Se actualiza después de crear el registro local
+      file: {
+        buffer: fs.readFileSync(file.path),
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size
+      },
+      title: `${documentType?.toUpperCase() || 'Documento'} - ${file.originalname}`,
+      description: additionalMetadata.description || `Documento de empleado: ${documentType}`,
+      expirationDate: additionalMetadata.expirationDate,
+      metadata: {
+        originalPath: file.path,
+        uploadRoute: req.originalUrl,
+        documentType,
+        userId,
+        ...additionalMetadata
+      }
+    });
+
+    console.log(`📄 [DMS] Registrado documento de empleado: ${result.document?.id} (${documentType})`);
+    return result;
+
+  } catch (error) {
+    console.error('❌ [DMS] Error registrando documento de empleado:', error.message);
+    return null;
+  }
+};
 
 // Configurar multer para subida de archivos
 const storage = multer.diskStorage({
@@ -181,10 +254,36 @@ router.post('/', upload.fields([
         status: calculateDocumentStatus(expiryDate)
       });
 
+      // ✅ Registrar nuevos archivos en DMS si se subieron
+      const dmsResults = [];
+      if (req.files) {
+        const expirationDate = expiryDate ? new Date(expiryDate) : null;
+        const metadata = { documentId: existingDoc.id, documentNumber, isUpdate: true };
+
+        if (req.files.frontPhoto) {
+          const result = await registerEmployeeDocInDMS(req, req.files.frontPhoto[0], `${documentType}_front`, userId, { expirationDate, ...metadata });
+          if (result) dmsResults.push(result.document);
+        }
+        if (req.files.backPhoto) {
+          const result = await registerEmployeeDocInDMS(req, req.files.backPhoto[0], `${documentType}_back`, userId, { expirationDate, ...metadata });
+          if (result) dmsResults.push(result.document);
+        }
+        if (req.files.additionalFiles) {
+          for (const file of req.files.additionalFiles) {
+            const result = await registerEmployeeDocInDMS(req, file, documentType, userId, { expirationDate, ...metadata });
+            if (result) dmsResults.push(result.document);
+          }
+        }
+      }
+
       res.json({
         success: true,
         data: existingDoc,
-        message: 'Documento actualizado exitosamente'
+        message: 'Documento actualizado exitosamente',
+        dms: dmsResults.length > 0 ? {
+          registeredCount: dmsResults.length,
+          documentIds: dmsResults.map(d => d.id)
+        } : null
       });
     } else {
       // Crear nuevo documento
@@ -205,10 +304,36 @@ router.post('/', upload.fields([
         status: calculateDocumentStatus(expiryDate)
       });
 
+      // ✅ Registrar archivos en DMS (SSOT Documental)
+      const dmsResults = [];
+      if (req.files) {
+        const expirationDate = expiryDate ? new Date(expiryDate) : null;
+        const metadata = { documentId: newDocument.id, documentNumber };
+
+        if (req.files.frontPhoto) {
+          const result = await registerEmployeeDocInDMS(req, req.files.frontPhoto[0], `${documentType}_front`, userId, { expirationDate, ...metadata });
+          if (result) dmsResults.push(result.document);
+        }
+        if (req.files.backPhoto) {
+          const result = await registerEmployeeDocInDMS(req, req.files.backPhoto[0], `${documentType}_back`, userId, { expirationDate, ...metadata });
+          if (result) dmsResults.push(result.document);
+        }
+        if (req.files.additionalFiles) {
+          for (const file of req.files.additionalFiles) {
+            const result = await registerEmployeeDocInDMS(req, file, documentType, userId, { expirationDate, ...metadata });
+            if (result) dmsResults.push(result.document);
+          }
+        }
+      }
+
       res.status(201).json({
         success: true,
         data: newDocument,
-        message: 'Documento creado exitosamente'
+        message: 'Documento creado exitosamente',
+        dms: dmsResults.length > 0 ? {
+          registeredCount: dmsResults.length,
+          documentIds: dmsResults.map(d => d.id)
+        } : null
       });
     }
   } catch (error) {
@@ -272,10 +397,42 @@ router.put('/:id', upload.fields([
 
     await document.update(updateData);
 
+    // ✅ Registrar archivos actualizados en DMS (SSOT)
+    const dmsResults = [];
+    if (req.files) {
+      if (req.files.frontPhoto) {
+        const result = await registerEmployeeDocInDMS(req, req.files.frontPhoto[0], 'doc_front', document.userId, {
+          documentId: document.id,
+          documentType: document.documentType
+        });
+        if (result) dmsResults.push(result.document);
+      }
+      if (req.files.backPhoto) {
+        const result = await registerEmployeeDocInDMS(req, req.files.backPhoto[0], 'doc_back', document.userId, {
+          documentId: document.id,
+          documentType: document.documentType
+        });
+        if (result) dmsResults.push(result.document);
+      }
+      if (req.files.additionalFiles) {
+        for (const file of req.files.additionalFiles) {
+          const result = await registerEmployeeDocInDMS(req, file, 'doc_additional', document.userId, {
+            documentId: document.id,
+            documentType: document.documentType
+          });
+          if (result) dmsResults.push(result.document);
+        }
+      }
+    }
+
     res.json({
       success: true,
       data: document,
-      message: 'Documento actualizado exitosamente'
+      message: 'Documento actualizado exitosamente',
+      dms: dmsResults.length > 0 ? {
+        registeredCount: dmsResults.length,
+        documentIds: dmsResults.map(d => d.id)
+      } : null
     });
   } catch (error) {
     console.error('❌ Error actualizando documento:', error);
@@ -302,9 +459,10 @@ router.post('/dni/:userId/photos', upload.fields([
       });
     }
 
+    const userId = req.params.userId;
     let document = await EmployeeDocument.findOne({
       where: {
-        userId: req.params.userId,
+        userId,
         documentType: 'dni',
         isActive: true
       }
@@ -322,16 +480,31 @@ router.post('/dni/:userId/photos', upload.fields([
       await document.update(updateData);
     } else {
       document = await EmployeeDocument.create({
-        userId: req.params.userId,
+        userId,
         documentType: 'dni',
         ...updateData
       });
     }
 
+    // ✅ Registrar fotos de DNI en DMS (SSOT)
+    const dmsResults = [];
+    if (req.files.frontPhoto) {
+      const result = await registerEmployeeDocInDMS(req, req.files.frontPhoto[0], 'dni_front', userId, { documentId: document.id });
+      if (result) dmsResults.push(result.document);
+    }
+    if (req.files.backPhoto) {
+      const result = await registerEmployeeDocInDMS(req, req.files.backPhoto[0], 'dni_back', userId, { documentId: document.id });
+      if (result) dmsResults.push(result.document);
+    }
+
     res.json({
       success: true,
       data: document,
-      message: 'Fotos de DNI subidas exitosamente'
+      message: 'Fotos de DNI subidas exitosamente',
+      dms: dmsResults.length > 0 ? {
+        registeredCount: dmsResults.length,
+        documentIds: dmsResults.map(d => d.id)
+      } : null
     });
   } catch (error) {
     console.error('❌ Error subiendo fotos DNI:', error);
@@ -399,10 +572,36 @@ router.post('/passport/:userId', upload.fields([
       });
     }
 
+    // ✅ Registrar fotos de pasaporte en DMS (SSOT)
+    const userId = req.params.userId;
+    const dmsResults = [];
+    if (req.files) {
+      if (req.files.page1Photo) {
+        const result = await registerEmployeeDocInDMS(req, req.files.page1Photo[0], 'passport_page1', userId, {
+          documentId: document.id,
+          passportNumber: passportNumber,
+          issuingCountry: issuingCountry
+        });
+        if (result) dmsResults.push(result.document);
+      }
+      if (req.files.page2Photo) {
+        const result = await registerEmployeeDocInDMS(req, req.files.page2Photo[0], 'passport_page2', userId, {
+          documentId: document.id,
+          passportNumber: passportNumber,
+          issuingCountry: issuingCountry
+        });
+        if (result) dmsResults.push(result.document);
+      }
+    }
+
     res.json({
       success: true,
       data: document,
-      message: 'Información de pasaporte actualizada exitosamente'
+      message: 'Información de pasaporte actualizada exitosamente',
+      dms: dmsResults.length > 0 ? {
+        registeredCount: dmsResults.length,
+        documentIds: dmsResults.map(d => d.id)
+      } : null
     });
   } catch (error) {
     console.error('❌ Error actualizando pasaporte:', error);

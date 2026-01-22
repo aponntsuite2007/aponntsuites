@@ -361,7 +361,7 @@ router.get('/', auth, async (req, res) => {
         u.branch_id,
         u.department_id,
         u.sector_id,
-        cb.name as branch_name,
+        br.name as branch_name,
         d.name as department_name,
         sec.name as sector_name,
         s.id as shift_id,
@@ -374,7 +374,7 @@ router.get('/', auth, async (req, res) => {
         s."breakEndTime" as shift_break_end
       FROM attendances a
       INNER JOIN users u ON a."UserId" = u.user_id
-      LEFT JOIN company_branches cb ON u.branch_id = cb.id
+      LEFT JOIN branches br ON u.branch_id = br.id
       LEFT JOIN departments d ON u.department_id = d.id
       LEFT JOIN sectors sec ON u.sector_id = sec.id
       LEFT JOIN user_shift_assignments usa ON usa.user_id = u.user_id AND usa.is_active = true

@@ -8,7 +8,6 @@ const { v4: uuidv4 } = require('uuid');
 const { sequelize } = require('../config/database-postgresql');
 const { QueryTypes } = require('sequelize');
 const websocket = require('../config/websocket');
-const nodemailer = require('nodemailer');
 // 🆕 Integración con sistema central de notificaciones
 let notificationUnifiedService = null;
 try {
@@ -18,7 +17,7 @@ try {
   console.log('⚠️ [AUTH] NotificationUnifiedService not available, using fallback notifications');
 }
 
-// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+// 🔥 NCE: Central Telefónica de Notificaciones (SSOT - único canal de emails)
 const NCE = require('./NotificationCentralExchange');
 
 // 🆕 SSOT: Resolución de destinatarios de notificaciones departamentales
@@ -31,38 +30,11 @@ class LateArrivalAuthorizationService {
     this.whatsappToken = process.env.WHATSAPP_API_TOKEN;
     this.whatsappPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-    // Configuración Email (nodemailer)
-    this.emailTransporter = null;
-    this._initializeEmailTransporter();
-
     // URL base del servidor para links de autorización
     this.serverBaseUrl = process.env.SERVER_BASE_URL || 'http://localhost:3001';
-  }
 
-  /**
-   * Inicializar transporter de email
-   */
-  _initializeEmailTransporter() {
-    try {
-      const emailConfig = {
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: process.env.SMTP_PORT || 587,
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
-        }
-      };
-
-      if (emailConfig.auth.user && emailConfig.auth.pass) {
-        this.emailTransporter = nodemailer.createTransport(emailConfig);
-        console.log('✅ Email transporter initialized');
-      } else {
-        console.log('⚠️ Email credentials not configured, email notifications disabled');
-      }
-    } catch (error) {
-      console.error('❌ Error initializing email transporter:', error.message);
-    }
+    // 🔥 SSOT: Emails ahora van via NCE (NotificationCentralExchange) - no más nodemailer local
+    console.log('✅ LateArrivalAuthorizationService initialized (NCE para emails)');
   }
 
   /**

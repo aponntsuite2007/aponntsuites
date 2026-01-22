@@ -27,6 +27,61 @@ const upload = multer({
     limits: { fileSize: 25 * 1024 * 1024 } // 25MB max
 });
 
+// ==============================================
+// 📄 INTEGRACIÓN DMS - SSOT DOCUMENTAL
+// ==============================================
+const registerEmailAttachmentsInDMS = async (req, files, emailMetadata = {}) => {
+    try {
+        const dmsService = req.app.get('dmsIntegrationService');
+        if (!dmsService || !files || files.length === 0) {
+            return null;
+        }
+
+        const results = [];
+        const companyId = emailMetadata.companyId || 1; // Default company for inbound emails
+
+        for (const file of files) {
+            try {
+                const result = await dmsService.registerDocument({
+                    module: 'communications',
+                    documentType: 'EMAIL_ATTACHMENT',
+                    companyId,
+                    employeeId: null,
+                    createdById: null,
+                    sourceEntityType: 'inbound-email',
+                    sourceEntityId: emailMetadata.messageId || null,
+                    file: {
+                        buffer: file.buffer,
+                        originalname: file.originalname || file.filename || 'attachment',
+                        mimetype: file.mimetype || 'application/octet-stream',
+                        size: file.size
+                    },
+                    title: file.originalname || file.filename || 'Email Attachment',
+                    description: `Email attachment from ${emailMetadata.provider || 'unknown'} - ${emailMetadata.subject || 'No subject'}`,
+                    metadata: {
+                        emailProvider: emailMetadata.provider,
+                        fromEmail: emailMetadata.from,
+                        toEmail: emailMetadata.to,
+                        subject: emailMetadata.subject,
+                        receivedAt: new Date().toISOString()
+                    }
+                });
+                results.push({ documentId: result.document?.id, filename: file.originalname || file.filename });
+            } catch (error) {
+                console.error(`❌ [DMS-EMAIL] Error con attachment ${file.originalname}:`, error.message);
+            }
+        }
+
+        if (results.length > 0) {
+            console.log(`📄 [DMS-EMAIL] ${results.length} attachments registrados`);
+        }
+        return results.length > 0 ? results : null;
+    } catch (error) {
+        console.error('❌ [DMS-EMAIL] Error registrando attachments:', error.message);
+        return null;
+    }
+};
+
 /**
  * ============================================================================
  * WEBHOOK PRINCIPAL: Recepción universal de emails
@@ -51,6 +106,17 @@ router.post('/webhook', upload.any(), async (req, res) => {
 
         // Procesar email
         const result = await InboundEmailService.processInboundEmail(emailData, provider);
+
+        // ✅ Registrar attachments en DMS (SSOT)
+        if (req.files && req.files.length > 0) {
+            await registerEmailAttachmentsInDMS(req, req.files, {
+                provider,
+                messageId: result?.messageId || emailData.messageId,
+                from: emailData.from || emailData.sender,
+                to: emailData.to || emailData.recipient,
+                subject: emailData.subject
+            });
+        }
 
         // Responder según el proveedor
         if (provider === 'sendgrid') {
@@ -103,6 +169,16 @@ router.post('/sendgrid', upload.any(), async (req, res) => {
 
         await InboundEmailService.processInboundEmail(emailData, 'sendgrid');
 
+        // ✅ Registrar attachments en DMS (SSOT)
+        if (req.files && req.files.length > 0) {
+            await registerEmailAttachmentsInDMS(req, req.files, {
+                provider: 'sendgrid',
+                from: emailData.from || emailData.sender,
+                to: emailData.to || emailData.recipient,
+                subject: emailData.subject
+            });
+        }
+
         return res.status(200).send('OK');
 
     } catch (error) {
@@ -136,6 +212,16 @@ router.post('/mailgun', upload.any(), async (req, res) => {
         };
 
         await InboundEmailService.processInboundEmail(emailData, 'mailgun');
+
+        // ✅ Registrar attachments en DMS (SSOT)
+        if (req.files && req.files.length > 0) {
+            await registerEmailAttachmentsInDMS(req, req.files, {
+                provider: 'mailgun',
+                from: emailData.from || emailData.sender,
+                to: emailData.to || emailData.recipient,
+                subject: emailData.subject || emailData.Subject
+            });
+        }
 
         return res.status(200).json({ status: 'ok' });
 

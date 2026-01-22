@@ -83,6 +83,59 @@ const upload = multer({
   }
 });
 
+// ========== INTEGRACIÓN DMS - SSOT DOCUMENTAL ==========
+/**
+ * Registra CVs y documentos de reclutamiento en DMS
+ * @param {Object} req - Request de Express
+ * @param {Object} file - Archivo de multer
+ * @param {string} applicationId - ID de la postulación
+ * @param {Object} metadata - Metadata adicional
+ */
+const registerCVInDMS = async (req, file, applicationId, metadata = {}) => {
+  try {
+    const dmsService = req.app.get('dmsIntegrationService');
+    if (!dmsService) {
+      console.warn('⚠️ [JOB-POSTINGS] DMSIntegrationService no disponible');
+      return null;
+    }
+
+    // Para postulaciones públicas, usar company_id del job posting
+    const companyId = req.user?.company_id || metadata.companyId;
+
+    const result = await dmsService.registerDocument({
+      module: 'job-postings',
+      documentType: 'RECRUIT_CV',
+      companyId,
+      employeeId: null, // No es empleado aún
+      createdById: req.user?.user_id || null,
+      sourceEntityType: 'job-application',
+      sourceEntityId: applicationId,
+      file: {
+        buffer: fs.readFileSync(file.path),
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size
+      },
+      title: `CV - ${metadata.candidateName || file.originalname}`,
+      description: `CV de candidato para postulación ${applicationId}`,
+      metadata: {
+        originalPath: file.path,
+        uploadRoute: req.originalUrl,
+        candidateEmail: metadata.candidateEmail,
+        jobPostingId: metadata.jobPostingId,
+        ...metadata
+      }
+    });
+
+    console.log(`📄 [DMS-RECRUITMENT] CV registrado: ${result.document?.id}`);
+    return result;
+
+  } catch (error) {
+    console.error('❌ [DMS-RECRUITMENT] Error registrando CV:', error.message);
+    return null;
+  }
+};
+
 // Helper para construir contexto
 const buildContext = (req) => ({
   userId: req.user?.user_id || req.user?.id,
@@ -404,6 +457,18 @@ router.post('/public/apply', upload.single('cv'), async (req, res) => {
 
     console.log(`✅ [JOB-POSTINGS] Postulación pública creada: ID=${application.id} para oferta ${jobPosting.title}`);
 
+    // ✅ Registrar CV en DMS (SSOT) si existe
+    let dmsResult = null;
+    if (req.file) {
+      dmsResult = await registerCVInDMS(req, req.file, application.id, {
+        companyId: jobPosting.company_id,
+        candidateName: `${data.candidate_first_name} ${data.candidate_last_name}`,
+        candidateEmail: data.candidate_email,
+        jobPostingId: data.job_posting_id,
+        jobPostingTitle: jobPosting.title
+      });
+    }
+
     // Enviar notificación a RRHH de la empresa
     try {
       const rrhh = await User.findAll({
@@ -463,7 +528,11 @@ Acceda al módulo de Postulaciones Laborales para revisar esta candidatura.
       message: '¡Gracias por tu postulación! Hemos recibido tu información correctamente.',
       applicationId: application.id,
       candidateName: `${application.candidate_first_name} ${application.candidate_last_name}`,
-      jobTitle: jobPosting.title
+      jobTitle: jobPosting.title,
+      dms: dmsResult ? {
+        documentId: dmsResult.document?.id,
+        message: 'CV registrado en sistema documental centralizado'
+      } : null
     });
 
   } catch (error) {
@@ -887,6 +956,7 @@ router.put('/public/candidates/profile', upload.single('cv'), async (req, res) =
     }
 
     // Si se subió CV
+    let dmsResult = null;
     if (req.file) {
       // Eliminar CV anterior si existe
       if (candidate.cv_file_path && fs.existsSync(candidate.cv_file_path)) {
@@ -898,6 +968,14 @@ router.put('/public/candidates/profile', upload.single('cv'), async (req, res) =
       }
       updateData.cv_file_path = req.file.path;
       updateData.cv_original_name = req.file.originalname;
+
+      // ✅ Registrar CV en DMS (SSOT)
+      dmsResult = await registerCVInDMS(req, req.file, candidate.id, {
+        companyId: null, // Perfil público, sin empresa
+        candidateName: candidate.full_name,
+        candidateEmail: candidate.email,
+        isProfileUpdate: true
+      });
     }
 
     await candidate.update(updateData);
@@ -911,7 +989,11 @@ router.put('/public/candidates/profile', upload.single('cv'), async (req, res) =
         professional_title: candidate.professional_title,
         skills: candidate.skills,
         has_cv: !!candidate.cv_file_path
-      }
+      },
+      dms: dmsResult ? {
+        documentId: dmsResult.document?.id,
+        message: 'CV registrado en sistema documental centralizado'
+      } : null
     });
 
   } catch (error) {
@@ -2045,10 +2127,25 @@ router.post('/applications', upload.single('cv'), async (req, res) => {
 
     console.log(`✅ [JOB-POSTINGS] Postulación creada: ID=${application.id}`);
 
+    // ✅ Registrar CV en DMS (SSOT) si existe
+    let dmsResult = null;
+    if (req.file) {
+      dmsResult = await registerCVInDMS(req, req.file, application.id, {
+        companyId: context.companyId,
+        candidateName: `${data.candidate_first_name} ${data.candidate_last_name}`,
+        candidateEmail: data.candidate_email,
+        jobPostingId: data.job_posting_id
+      });
+    }
+
     res.status(201).json({
       success: true,
       application,
-      message: 'Postulación enviada exitosamente'
+      message: 'Postulación enviada exitosamente',
+      dms: dmsResult ? {
+        documentId: dmsResult.document?.id,
+        message: 'CV registrado en sistema documental centralizado'
+      } : null
     });
 
   } catch (error) {

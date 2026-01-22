@@ -5,12 +5,71 @@ const { auth } = require('../middleware/auth');
 const fs = require('fs');
 const path = require('path');
 
+// ========== INTEGRACIÓN DMS - SSOT DOCUMENTAL ==========
+// Todos los uploads se registran en DMS para centralizar la gestión documental
+const registerUploadInDMS = async (req, file, directory) => {
+  try {
+    const dmsService = req.app.get('dmsIntegrationService');
+    if (!dmsService) {
+      console.warn('⚠️ [UPLOAD] DMSIntegrationService no disponible');
+      return null;
+    }
+
+    const companyId = req.user?.company_id || req.body?.company_id;
+    const userId = req.user?.user_id || req.user?.id;
+
+    // Mapear directory a módulo DMS
+    const directoryToModule = {
+      'licenses': 'uploads',
+      'certificates': 'uploads',
+      'photos': 'uploads',
+      'documents': 'uploads',
+      'biometric': 'biometric',
+      'tasks': 'uploads',
+      'general': 'uploads'
+    };
+
+    const module = directoryToModule[directory] || 'uploads';
+    const documentType = directory || 'general';
+
+    const result = await dmsService.registerDocument({
+      module,
+      documentType,
+      companyId,
+      employeeId: req.body?.employee_id || userId,
+      createdById: userId,
+      sourceEntityType: 'generic-upload',
+      sourceEntityId: null,
+      file: {
+        buffer: fs.readFileSync(file.path),
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size
+      },
+      title: file.originalname,
+      description: req.body?.description || `Upload genérico: ${directory}`,
+      metadata: {
+        originalPath: file.path,
+        uploadRoute: '/api/v1/upload',
+        directory
+      }
+    });
+
+    console.log(`📄 [DMS] Registrado upload genérico: ${result.document?.id}`);
+    return result;
+
+  } catch (error) {
+    console.error('❌ [DMS] Error registrando upload:', error.message);
+    return null;
+  }
+};
+
 /**
  * @route POST /api/v1/upload/single
  * @desc Subir un solo archivo
  * @access Private
  */
-router.post('/single', auth, ...uploadSingle('file'), (req, res) => {
+router.post('/single', auth, ...uploadSingle('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -19,8 +78,12 @@ router.post('/single', auth, ...uploadSingle('file'), (req, res) => {
     }
 
     const fileUrl = getFileUrl(req, req.file.path);
+    const directory = req.query.directory || 'general';
 
-    console.log(`✅ [UPLOAD] Archivo subido: ${req.file.filename}`);
+    // ✅ Registrar en DMS para centralización documental
+    const dmsResult = await registerUploadInDMS(req, req.file, directory);
+
+    console.log(`✅ [UPLOAD] Archivo subido: ${req.file.filename}${dmsResult ? ' (DMS: ' + dmsResult.document?.id + ')' : ''}`);
 
     res.status(200).json({
       success: true,
@@ -32,7 +95,13 @@ router.post('/single', auth, ...uploadSingle('file'), (req, res) => {
         size: req.file.size,
         url: fileUrl,
         path: req.file.path
-      }
+      },
+      // Info de DMS si está disponible
+      dms: dmsResult ? {
+        documentId: dmsResult.document?.id,
+        status: dmsResult.document?.status,
+        message: 'Documento registrado en DMS (fuente única de verdad)'
+      } : null
     });
 
   } catch (error) {
@@ -54,7 +123,7 @@ router.post('/single', auth, ...uploadSingle('file'), (req, res) => {
  * @desc Subir múltiples archivos
  * @access Private
  */
-router.post('/multiple', auth, ...uploadMultiple('files', 10), (req, res) => {
+router.post('/multiple', auth, ...uploadMultiple('files', 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
@@ -62,22 +131,36 @@ router.post('/multiple', auth, ...uploadMultiple('files', 10), (req, res) => {
       });
     }
 
-    const uploadedFiles = req.files.map(file => ({
-      filename: file.filename,
-      originalName: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
-      url: getFileUrl(req, file.path),
-      path: file.path
+    const directory = req.query.directory || 'general';
+    const dmsResults = [];
+
+    const uploadedFiles = await Promise.all(req.files.map(async (file) => {
+      // ✅ Registrar cada archivo en DMS
+      const dmsResult = await registerUploadInDMS(req, file, directory);
+      if (dmsResult) dmsResults.push(dmsResult);
+
+      return {
+        filename: file.filename,
+        originalName: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        url: getFileUrl(req, file.path),
+        path: file.path,
+        dmsDocumentId: dmsResult?.document?.id || null
+      };
     }));
 
-    console.log(`✅ [UPLOAD] ${req.files.length} archivos subidos`);
+    console.log(`✅ [UPLOAD] ${req.files.length} archivos subidos (${dmsResults.length} registrados en DMS)`);
 
     res.status(200).json({
       success: true,
       message: `${req.files.length} archivos subidos exitosamente`,
       files: uploadedFiles,
-      count: req.files.length
+      count: req.files.length,
+      dms: {
+        registeredCount: dmsResults.length,
+        message: `${dmsResults.length} documentos registrados en DMS (fuente única de verdad)`
+      }
     });
 
   } catch (error) {

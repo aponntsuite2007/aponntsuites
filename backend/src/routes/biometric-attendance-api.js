@@ -16,6 +16,7 @@ const BiometricMatchingService = require('../services/biometric-matching-service
 const CompanyIsolationMiddleware = require('../middleware/company-isolation');
 const { auth } = require('../middleware/auth');
 const SuspensionBlockingService = require('../services/SuspensionBlockingService');
+const { checkConsentStatus, CONSENT_TYPES, CONSENT_ERROR_CODES } = require('../middleware/biometricConsentCheck');
 
 // Importar sequelize global para operaciones de BD (evita crear múltiples instancias)
 const { sequelize } = require('../config/database-postgresql');
@@ -43,6 +44,45 @@ const matchingService = new BiometricMatchingService({
   auditLogging: true,
   performanceLogging: true
 });
+
+// ==============================================
+// 📄 INTEGRACIÓN DMS - SSOT DOCUMENTAL
+// ==============================================
+const registerBiometricDocInDMS = async (req, file, documentType, metadata = {}) => {
+    try {
+        const dmsService = req.app.get('dmsIntegrationService');
+        if (!dmsService) return null;
+
+        const companyId = req.companyContext?.companyId || metadata.companyId;
+        const userId = metadata.userId;
+
+        const result = await dmsService.registerDocument({
+            module: 'biometric',
+            documentType: documentType === 'clock_in' ? 'BIOMETRIC_CLOCK_IN' :
+                          documentType === 'clock_out' ? 'BIOMETRIC_CLOCK_OUT' : 'BIOMETRIC_VERIFY',
+            companyId,
+            employeeId: userId,
+            createdById: userId,
+            sourceEntityType: 'biometric-attendance',
+            sourceEntityId: metadata.attendanceId || null,
+            file: {
+                buffer: file.buffer, // memoryStorage = buffer directo
+                originalname: file.originalname || 'biometric.jpg',
+                mimetype: file.mimetype,
+                size: file.size
+            },
+            title: `Biometric ${documentType} - User ${userId}`,
+            description: `Captura biométrica para ${documentType}`,
+            metadata: { uploadRoute: req.originalUrl, ...metadata }
+        });
+
+        console.log(`📄 [DMS-BIOMETRIC] Registrado: ${documentType} - ${result.document?.id}`);
+        return result;
+    } catch (error) {
+        console.error('❌ [DMS-BIOMETRIC] Error:', error.message);
+        return null;
+    }
+};
 
 // Initialize company isolation middleware
 const companyIsolation = new CompanyIsolationMiddleware({
@@ -122,10 +162,51 @@ router.post('/clock-in',
             canRetry: false
           });
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        // VERIFICAR CONSENTIMIENTO BIOMÉTRICO (Ley 25.326 / GDPR / BIPA)
+        // ═══════════════════════════════════════════════════════════════
+        const consentResult = await checkConsentStatus(employeeId, companyId);
+
+        if (!consentResult.hasConsent) {
+          console.log(`🔒 [CLOCK-IN] Empleado ${employeeId} sin consentimiento biométrico: ${consentResult.errorCode}`);
+
+          return res.status(200).json({
+            success: false,
+            blocked: true,
+            blockReason: 'CONSENT_REQUIRED',
+            reason: consentResult.errorCode,
+            message: consentResult.message || 'Se requiere consentimiento biométrico para registrar asistencia.',
+            consentInfo: {
+              errorCode: consentResult.errorCode,
+              requestUrl: `/api/v1/biometric/consents/request?userId=${employeeId}`,
+              ...(consentResult.revokedDate && { revokedDate: consentResult.revokedDate }),
+              ...(consentResult.rejectedDate && { rejectedDate: consentResult.rejectedDate }),
+              ...(consentResult.expiredDate && { expiredDate: consentResult.expiredDate })
+            },
+            legal: {
+              regulation: 'Ley 25.326 (Argentina) / GDPR (EU) / BIPA (USA)',
+              requirement: 'Consentimiento explícito requerido para procesamiento biométrico'
+            },
+            sessionId: matchingResult.sessionId,
+            processingTime: Date.now() - startTime,
+            canRetry: false
+          });
+        }
       }
 
       // Process attendance record
       const attendanceResult = await processClockIn(matchingResult, companyId, req);
+
+      // ✅ Registrar en DMS (SSOT)
+      let dmsResult = null;
+      if (req.file) {
+        dmsResult = await registerBiometricDocInDMS(req, req.file, 'clock_in', {
+          companyId,
+          userId: matchingResult.match.employeeId,
+          attendanceId: attendanceResult.attendanceId
+        });
+      }
 
       const totalTime = Date.now() - startTime;
 
@@ -151,7 +232,8 @@ router.post('/clock-in',
           matchingTime: matchingResult.performance.totalTime,
           withinTarget: totalTime <= 1000 // 1 second total target
         },
-        sessionId: matchingResult.sessionId
+        sessionId: matchingResult.sessionId,
+        dms: dmsResult ? { documentId: dmsResult.document?.id } : null
       });
 
     } catch (error) {
@@ -240,10 +322,51 @@ router.post('/clock-out',
             canRetry: false
           });
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        // VERIFICAR CONSENTIMIENTO BIOMÉTRICO (Ley 25.326 / GDPR / BIPA)
+        // ═══════════════════════════════════════════════════════════════
+        const consentResultOut = await checkConsentStatus(employeeIdOut, companyId);
+
+        if (!consentResultOut.hasConsent) {
+          console.log(`🔒 [CLOCK-OUT] Empleado ${employeeIdOut} sin consentimiento biométrico: ${consentResultOut.errorCode}`);
+
+          return res.status(200).json({
+            success: false,
+            blocked: true,
+            blockReason: 'CONSENT_REQUIRED',
+            reason: consentResultOut.errorCode,
+            message: consentResultOut.message || 'Se requiere consentimiento biométrico para registrar asistencia.',
+            consentInfo: {
+              errorCode: consentResultOut.errorCode,
+              requestUrl: `/api/v1/biometric/consents/request?userId=${employeeIdOut}`,
+              ...(consentResultOut.revokedDate && { revokedDate: consentResultOut.revokedDate }),
+              ...(consentResultOut.rejectedDate && { rejectedDate: consentResultOut.rejectedDate }),
+              ...(consentResultOut.expiredDate && { expiredDate: consentResultOut.expiredDate })
+            },
+            legal: {
+              regulation: 'Ley 25.326 (Argentina) / GDPR (EU) / BIPA (USA)',
+              requirement: 'Consentimiento explícito requerido para procesamiento biométrico'
+            },
+            sessionId: matchingResult.sessionId,
+            processingTime: Date.now() - startTime,
+            canRetry: false
+          });
+        }
       }
 
       // Process attendance record
       const attendanceResult = await processClockOut(matchingResult, companyId, req);
+
+      // ✅ Registrar en DMS (SSOT)
+      let dmsResult = null;
+      if (req.file) {
+        dmsResult = await registerBiometricDocInDMS(req, req.file, 'clock_out', {
+          companyId,
+          userId: matchingResult.match.employeeId,
+          attendanceId: attendanceResult.attendanceId
+        });
+      }
 
       const totalTime = Date.now() - startTime;
 
@@ -270,7 +393,8 @@ router.post('/clock-out',
           matchingTime: matchingResult.performance.totalTime,
           withinTarget: totalTime <= 1000
         },
-        sessionId: matchingResult.sessionId
+        sessionId: matchingResult.sessionId,
+        dms: dmsResult ? { documentId: dmsResult.document?.id } : null
       });
 
     } catch (error) {
@@ -319,6 +443,15 @@ router.post('/verify',
         ipAddress: req.ip
       });
 
+      // ✅ Registrar en DMS (SSOT) - Solo si match exitoso
+      let dmsResult = null;
+      if (req.file && matchingResult.success) {
+        dmsResult = await registerBiometricDocInDMS(req, req.file, 'verify', {
+          companyId,
+          userId: matchingResult.match?.employeeId
+        });
+      }
+
       const totalTime = Date.now() - startTime;
 
       res.json({
@@ -341,7 +474,8 @@ router.post('/verify',
           withinTarget: totalTime <= 500
         },
         sessionId: matchingResult.sessionId,
-        reason: matchingResult.reason || null
+        reason: matchingResult.reason || null,
+        dms: dmsResult ? { documentId: dmsResult.document?.id } : null
       });
 
     } catch (error) {
@@ -1144,6 +1278,16 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
           type: QueryTypes.SELECT
         });
 
+        // ✅ Registrar en DMS (SSOT) - Solo si se registró asistencia
+        let dmsResult = null;
+        if (req.file && wasRegistered) {
+          dmsResult = await registerBiometricDocInDMS(req, req.file, operationType, {
+            companyId,
+            userId: bestMatch.employeeId,
+            attendanceId: attendanceId
+          });
+        }
+
         // Respuesta para semáforo
         return res.json({
           success: true,
@@ -1164,7 +1308,8 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
           },
           performance: {
             processingTime: Date.now() - startTime
-          }
+          },
+          dms: dmsResult ? { documentId: dmsResult.document?.id } : null
         });
 
       } catch (attendanceError) {

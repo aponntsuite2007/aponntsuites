@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const { User, FacialBiometricData, Attendance } = require('../config/database');
 const { auth } = require('../middleware/auth');
 const rateLimit = require('express-rate-limit');
+const { requireBiometricConsent, checkConsentStatus, CONSENT_ERROR_CODES } = require('../middleware/biometricConsentCheck');
 const { Op } = require('sequelize');
 
 // Rate limiting más estricto para autenticación facial
@@ -29,7 +30,7 @@ const faceRegisterLimiter = rateLimit({
  * @route POST /api/v1/face-auth/register
  * @desc Registra datos biométricos faciales de un usuario (ultra-robusto)
  */
-router.post('/register', faceRegisterLimiter, auth, async (req, res) => {
+router.post('/register', faceRegisterLimiter, auth, requireBiometricConsent, async (req, res) => {
   try {
     const { 
       userId, 
@@ -271,6 +272,32 @@ router.post('/authenticate', faceAuthLimiter, async (req, res) => {
     // Obtener el mejor match
     const bestMatch = Object.values(userMatches)
       .reduce((best, current) => current.confidence > best.confidence ? current : best);
+
+    // ═══════════════════════════════════════════════════════════════
+    // VERIFICAR CONSENTIMIENTO BIOMÉTRICO (Ley 25.326 / GDPR / BIPA)
+    // ═══════════════════════════════════════════════════════════════
+    const consentResult = await checkConsentStatus(bestMatch.userId, bestMatch.user?.company_id);
+
+    if (!consentResult.hasConsent) {
+      console.log(`🔒 [FACE-AUTH] Usuario ${bestMatch.userId} sin consentimiento: ${consentResult.errorCode}`);
+
+      return res.status(403).json({
+        success: false,
+        error: 'CONSENT_REQUIRED',
+        message: consentResult.message || 'Se requiere consentimiento biométrico para autenticación facial.',
+        consentInfo: {
+          errorCode: consentResult.errorCode,
+          requestUrl: `/api/v1/biometric/consents/request?userId=${bestMatch.userId}`,
+          ...(consentResult.revokedDate && { revokedDate: consentResult.revokedDate }),
+          ...(consentResult.rejectedDate && { rejectedDate: consentResult.rejectedDate }),
+          ...(consentResult.expiredDate && { expiredDate: consentResult.expiredDate })
+        },
+        legal: {
+          regulation: 'Ley 25.326 (Argentina) / GDPR (EU) / BIPA (USA)',
+          requirement: 'Consentimiento explícito requerido para autenticación biométrica'
+        }
+      });
+    }
 
     // Validaciones contextuales adicionales
     const contextualWarnings = [];

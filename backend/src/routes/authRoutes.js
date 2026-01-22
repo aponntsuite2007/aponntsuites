@@ -126,11 +126,11 @@ router.post('/login', async (req, res) => {
       company_id: user.company_id // CRITICAL: Multi-tenant isolation
     };
 
-    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET || 'default-secret-change-in-production', {
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN || '24h'
     });
 
-    const refreshToken = jwt.sign(tokenPayload, process.env.JWT_SECRET || 'default-secret-change-in-production', {
+    const refreshToken = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
     });
 

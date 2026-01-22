@@ -49,6 +49,65 @@ class AttendanceQueueService extends EventEmitter {
         this.pendingCallbacks = new Map();
 
         console.log('🚀 [QUEUE] AttendanceQueueService inicializado');
+
+        // DMS Integration Service reference (set externally)
+        this.dmsService = null;
+    }
+
+    /**
+     * ========================================================================
+     * CONFIGURAR DMS SERVICE (llamar desde server.js después de init)
+     * ========================================================================
+     */
+    setDMSService(dmsService) {
+        this.dmsService = dmsService;
+        console.log('📄 [QUEUE-DMS] DMS Integration Service configurado');
+    }
+
+    /**
+     * ========================================================================
+     * REGISTRAR ASISTENCIA EN DMS (SSOT) - Async background
+     * ========================================================================
+     */
+    async registerAttendanceInDMS(attendanceRecord, attendanceData, matchResult) {
+        try {
+            if (!this.dmsService) {
+                return null;
+            }
+
+            const result = await this.dmsService.registerDocument({
+                module: 'attendance',
+                documentType: 'ATTENDANCE_RECORD',
+                companyId: attendanceData.companyId,
+                employeeId: matchResult.userId,
+                createdById: matchResult.userId,
+                sourceEntityType: 'attendance-queue',
+                sourceEntityId: attendanceRecord.id,
+                file: attendanceData.captureData ? {
+                    buffer: attendanceData.captureData,
+                    originalname: `attendance_${attendanceRecord.id}.jpg`,
+                    mimetype: 'image/jpeg',
+                    size: attendanceData.captureData.length
+                } : null,
+                title: `Attendance Check-in - ${matchResult.userId}`,
+                description: `Fichaje biométrico procesado por queue`,
+                metadata: {
+                    attendanceId: attendanceRecord.id,
+                    clockInTime: attendanceRecord.clockInTime,
+                    biometricScore: matchResult.similarity,
+                    deviceInfo: attendanceData.deviceInfo,
+                    latitude: attendanceData.latitude,
+                    longitude: attendanceData.longitude,
+                    processedBy: 'attendance-queue-service'
+                }
+            });
+
+            console.log(`📄 [QUEUE-DMS] Asistencia registrada en DMS: ${result.document?.id}`);
+            return result;
+        } catch (error) {
+            console.error('❌ [QUEUE-DMS] Error registrando en DMS:', error.message);
+            return null;
+        }
     }
 
     /**
@@ -144,6 +203,10 @@ class AttendanceQueueService extends EventEmitter {
 
             // Registrar asistencia en BD
             const attendanceRecord = await this.recordAttendance(item.data, matchResult);
+
+            // ✅ Registrar en DMS (SSOT) - Async, no bloquea
+            this.registerAttendanceInDMS(attendanceRecord, item.data, matchResult)
+                .catch(err => console.error('❌ [QUEUE-DMS] Background error:', err.message));
 
             const processingTime = Date.now() - startTime;
             this.updateMetrics(processingTime, true);

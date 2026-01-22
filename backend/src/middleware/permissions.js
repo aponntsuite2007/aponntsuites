@@ -1,8 +1,8 @@
 const { sequelize } = require('../config/database');
 const jwt = require('jsonwebtoken');
 
-// Usar el mismo secreto que el resto del sistema
-const JWT_SECRET = process.env.JWT_SECRET || 'tu_secreto_jwt_aqui';
+// 🔐 SEGURIDAD: JWT_SECRET debe venir de .env sin fallback
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware para verificar permisos granulares
 const checkPermission = (moduleId, action = 'view') => {

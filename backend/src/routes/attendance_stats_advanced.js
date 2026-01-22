@@ -17,6 +17,7 @@ const { sequelize, Sequelize } = require('../config/database');
 const { QueryTypes, Op } = Sequelize;
 const { auth } = require('../middleware/auth');
 const ShiftCalculatorService = require('../services/ShiftCalculatorService');
+const ConsentFilterService = require('../services/ConsentFilterService');
 
 /**
  * @route GET /api/v1/attendance/stats/advanced
@@ -183,6 +184,63 @@ router.get('/advanced', auth, async (req, res) => {
         expected_total = parseInt(fallbackResult?.expected_count || 0);
         console.log(`⚠️  [STATS ADVANCED] Usando fallback: ${expected_total}`);
       }
+    }
+
+    // ========================================
+    // A.2) FILTRAR POR CONSENTIMIENTO BIOMÉTRICO
+    // ========================================
+    // Excluir usuarios sin consentimiento válido para cumplimiento legal
+    // Ley 25.326 (Argentina) / GDPR (EU) / BIPA (USA)
+
+    let consentMetadata = null;
+    try {
+      const consentStats = await ConsentFilterService.getConsentStats(company_id);
+      const usersWithConsent = await ConsentFilterService.getUsersWithBiometricConsent(company_id);
+
+      // Ajustar expected_total para excluir usuarios sin consentimiento
+      // Solo si hay usuarios sin consentimiento y están afectando las estadísticas
+      const originalExpected = expected_total;
+
+      if (consentStats.withoutConsent > 0) {
+        // Calcular cuántos de los esperados tienen consentimiento
+        const expectedWithConsent = usersWithConsent.length;
+
+        // Ajustar expected_total solo si es relevante
+        if (expectedWithConsent < expected_total) {
+          expected_total = expectedWithConsent;
+          console.log(`🔒 [STATS ADVANCED] Ajustado expected_total por consent: ${originalExpected} -> ${expected_total}`);
+        }
+      }
+
+      // Generar metadata de consentimiento para incluir en respuesta
+      consentMetadata = {
+        applied: true,
+        originalTotal: originalExpected,
+        adjustedTotal: expected_total,
+        totalUsersInCompany: consentStats.totalUsers,
+        withConsent: consentStats.withConsent,
+        withoutConsent: consentStats.withoutConsent,
+        complianceRate: consentStats.complianceRate,
+        excludedUsers: consentStats.excludedUsers.slice(0, 5), // Primeros 5
+        hasMoreExcluded: consentStats.excludedUsers.length > 5,
+        warning: consentStats.withoutConsent > 0
+          ? `⚠️ ${consentStats.withoutConsent} empleados excluidos de estadísticas por falta de consentimiento biométrico (${100 - consentStats.complianceRate}% del total)`
+          : null,
+        legal: {
+          regulation: 'Ley 25.326 / GDPR / BIPA',
+          note: 'Usuarios sin consentimiento biométrico válido son excluidos para cumplimiento legal'
+        }
+      };
+
+      console.log(`📊 [STATS ADVANCED] Consent filter: ${consentStats.withConsent}/${consentStats.totalUsers} con consent (${consentStats.complianceRate}%)`);
+
+    } catch (consentError) {
+      console.warn('⚠️  [STATS ADVANCED] Error obteniendo stats de consent:', consentError.message);
+      consentMetadata = {
+        applied: false,
+        error: 'No se pudo obtener información de consentimiento',
+        note: 'Estadísticas pueden incluir usuarios sin consentimiento válido'
+      };
     }
 
     // ========================================
@@ -431,7 +489,8 @@ router.get('/advanced', auth, async (req, res) => {
         by_branch: byBranch,
         by_shift: byShift
       },
-      top_users: topUsers
+      top_users: topUsers,
+      consent_compliance: consentMetadata
     };
 
     console.log('✅ [STATS ADVANCED] Response generated successfully');

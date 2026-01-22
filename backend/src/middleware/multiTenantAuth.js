@@ -129,7 +129,7 @@ const multiTenantAuth = async (req, res, next) => {
     // Verify token
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret_key');
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (jwtError) {
       return res.status(401).json({
         success: false,

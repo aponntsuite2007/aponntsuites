@@ -272,7 +272,8 @@ class PaymentService {
       );
 
       console.log(`   ✅ Usuario admin creado`);
-      console.log(`   🔑 Password temporal: ${tempPassword}`);
+      // 🔐 SEGURIDAD: No loguear passwords - se envían por email
+      console.log(`   🔑 Password temporal generado (se enviará por email)`);
 
       // 7. TODO: Enviar email de bienvenida (implementar con EmailService)
       console.log(`   📧 Email de bienvenida programado (TODO: implementar EmailService)`);

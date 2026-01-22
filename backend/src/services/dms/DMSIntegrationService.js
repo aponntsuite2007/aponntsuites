@@ -67,10 +67,35 @@ class DMSIntegrationService {
       // Financiero
       'expenses': 'FINANCIERO',
       'benefits': 'FINANCIERO',
+      'invoicing': 'FINANCIERO',
 
       // General
       'communications': 'COMUNICACIONES',
-      'announcements': 'COMUNICACIONES'
+      'announcements': 'COMUNICACIONES',
+
+      // ============ NUEVOS MÓDULOS - MIGRACIÓN DMS SSOT ============
+      // Reclutamiento
+      'job-postings': 'RRHH',
+      'recruitment': 'RRHH',
+
+      // Documentos de Empleados
+      'employee-documents': 'RRHH',
+      'identity-documents': 'RRHH',
+
+      // Biométrico
+      'biometric': 'OPERACIONES',
+      'biometric-consent': 'LEGAL',
+
+      // Proveedores
+      'suppliers': 'PROVEEDORES',
+      'rfq': 'PROVEEDORES',
+      'purchase-orders': 'PROVEEDORES',
+      'supplier-invoices': 'PROVEEDORES',
+      'supplier-messages': 'PROVEEDORES',
+
+      // Genérico
+      'general': 'GENERAL',
+      'uploads': 'GENERAL'
     };
 
     // Mapeo de tipos de documento por módulo
@@ -113,7 +138,9 @@ class DMSIntegrationService {
         'exam-result': { typeCode: 'MEDICAL_EXAM', requiresValidation: false },
         'prescription': { typeCode: 'MEDICAL_PRESCRIPTION', requiresValidation: true },
         'disability': { typeCode: 'MEDICAL_DISABILITY', requiresValidation: true },
-        'fit-note': { typeCode: 'MEDICAL_FIT_NOTE', requiresValidation: false }
+        'fit-note': { typeCode: 'MEDICAL_FIT_NOTE', requiresValidation: false },
+        'case-attachment': { typeCode: 'MED_CASE_ATTACHMENT', requiresValidation: false },
+        'MED_CASE_ATTACHMENT': { typeCode: 'MED_CASE_ATTACHMENT', requiresValidation: false }
       },
 
       // === SALUD OCUPACIONAL ===
@@ -170,6 +197,104 @@ class DMSIntegrationService {
         'announcement': { typeCode: 'COMM_ANNOUNCEMENT', requiresValidation: false },
         'memo': { typeCode: 'COMM_MEMO', requiresValidation: false },
         'circular': { typeCode: 'COMM_CIRCULAR', requiresValidation: false }
+      },
+
+      // ============ NUEVOS MÓDULOS - MIGRACIÓN DMS SSOT ============
+
+      // === RECLUTAMIENTO / JOB POSTINGS ===
+      'job-postings': {
+        'cv': { typeCode: 'RECRUIT_CV', requiresValidation: false },
+        'cover-letter': { typeCode: 'RECRUIT_COVER_LETTER', requiresValidation: false },
+        'portfolio': { typeCode: 'RECRUIT_PORTFOLIO', requiresValidation: false },
+        'reference-letter': { typeCode: 'RECRUIT_REFERENCE', requiresValidation: false }
+      },
+      'recruitment': {
+        'cv': { typeCode: 'RECRUIT_CV', requiresValidation: false },
+        'application': { typeCode: 'RECRUIT_APPLICATION', requiresValidation: false },
+        'interview-notes': { typeCode: 'RECRUIT_INTERVIEW', requiresValidation: false },
+        'offer-letter': { typeCode: 'RECRUIT_OFFER', requiresValidation: false }
+      },
+
+      // === DOCUMENTOS DE EMPLEADOS ===
+      'employee-documents': {
+        'PROFILE_PHOTO': { typeCode: 'EMP_PROFILE_PHOTO', requiresValidation: false },
+        'EMPLOYEE_DOC': { typeCode: 'EMP_GENERAL', requiresValidation: false },
+        'dni': { typeCode: 'EMP_DNI', requiresValidation: false },
+        'dni-front': { typeCode: 'EMP_DNI_FRONT', requiresValidation: false },
+        'dni-back': { typeCode: 'EMP_DNI_BACK', requiresValidation: false },
+        'passport': { typeCode: 'EMP_PASSPORT', requiresValidation: false },
+        'visa': { typeCode: 'EMP_VISA', requiresValidation: false },
+        'license': { typeCode: 'EMP_LICENSE', requiresValidation: false },
+        'certificate': { typeCode: 'EMP_CERTIFICATE', requiresValidation: false },
+        'insurance': { typeCode: 'EMP_INSURANCE', requiresValidation: false },
+        'general': { typeCode: 'EMP_GENERAL', requiresValidation: false }
+      },
+      'identity-documents': {
+        'dni': { typeCode: 'ID_DNI', requiresValidation: false },
+        'passport': { typeCode: 'ID_PASSPORT', requiresValidation: false },
+        'driver-license': { typeCode: 'ID_DRIVER_LICENSE', requiresValidation: false }
+      },
+
+      // === BIOMÉTRICO ===
+      'biometric': {
+        'photo': { typeCode: 'BIO_PHOTO', requiresValidation: false },
+        'face-enrollment': { typeCode: 'BIO_FACE_ENROLL', requiresValidation: false },
+        'fingerprint': { typeCode: 'BIO_FINGERPRINT', requiresValidation: false },
+        'attendance-photo': { typeCode: 'BIO_ATTENDANCE_PHOTO', requiresValidation: false }
+      },
+      'biometric-consent': {
+        'acceptance': { typeCode: 'BIO_CONSENT_ACCEPT', requiresValidation: false },
+        'rejection': { typeCode: 'BIO_CONSENT_REJECT', requiresValidation: false }
+      },
+
+      // === PROVEEDORES ===
+      'suppliers': {
+        'document': { typeCode: 'SUPP_DOC', requiresValidation: false },
+        'certification': { typeCode: 'SUPP_CERT', requiresValidation: false },
+        'contract': { typeCode: 'SUPP_CONTRACT', requiresValidation: false }
+      },
+      'rfq': {
+        'attachment': { typeCode: 'RFQ_ATTACHMENT', requiresValidation: false },
+        'technical-spec': { typeCode: 'RFQ_TECH_SPEC', requiresValidation: false },
+        'drawing': { typeCode: 'RFQ_DRAWING', requiresValidation: false },
+        'quote': { typeCode: 'RFQ_QUOTE', requiresValidation: false }
+      },
+      'purchase-orders': {
+        'attachment': { typeCode: 'PO_ATTACHMENT', requiresValidation: false },
+        'delivery-note': { typeCode: 'PO_DELIVERY_NOTE', requiresValidation: false },
+        'quality-report': { typeCode: 'PO_QUALITY_REPORT', requiresValidation: false }
+      },
+      'supplier-invoices': {
+        'invoice': { typeCode: 'SUPP_INVOICE', requiresValidation: true },
+        'credit-note': { typeCode: 'SUPP_CREDIT_NOTE', requiresValidation: true },
+        'debit-note': { typeCode: 'SUPP_DEBIT_NOTE', requiresValidation: true },
+        'remito': { typeCode: 'SUPP_REMITO', requiresValidation: false }
+      },
+      'supplier-messages': {
+        'attachment': { typeCode: 'SUPP_MSG_ATTACHMENT', requiresValidation: false }
+      },
+
+      // === FACTURACIÓN / PAGOS ===
+      'invoicing': {
+        'receipt': { typeCode: 'INV_RECEIPT', requiresValidation: false },
+        'payment-proof': { typeCode: 'INV_PAYMENT_PROOF', requiresValidation: false },
+        'invoice': { typeCode: 'INV_INVOICE', requiresValidation: false }
+      },
+
+      // === GENÉRICO / UPLOADS ===
+      'general': {
+        'document': { typeCode: 'GEN_DOCUMENT', requiresValidation: false },
+        'image': { typeCode: 'GEN_IMAGE', requiresValidation: false },
+        'file': { typeCode: 'GEN_FILE', requiresValidation: false }
+      },
+      'uploads': {
+        'licenses': { typeCode: 'UPL_LICENSE', requiresValidation: false },
+        'certificates': { typeCode: 'UPL_CERTIFICATE', requiresValidation: false },
+        'photos': { typeCode: 'UPL_PHOTO', requiresValidation: false },
+        'documents': { typeCode: 'UPL_DOCUMENT', requiresValidation: false },
+        'biometric': { typeCode: 'UPL_BIOMETRIC', requiresValidation: false },
+        'tasks': { typeCode: 'UPL_TASK', requiresValidation: false },
+        'general': { typeCode: 'UPL_GENERAL', requiresValidation: false }
       }
     };
 
@@ -249,7 +374,14 @@ class DMSIntegrationService {
     }
 
     // Crear documento en DMS
-    const { Document, DocumentAudit } = this.models;
+    const { Document, DocumentAccessLog } = this.models;
+
+    // Extraer nombre y extensión del archivo
+    const originalFilename = file.originalname || `${module}_${documentType}_${Date.now()}.bin`;
+    const fileExtension = originalFilename.includes('.')
+      ? originalFilename.split('.').pop().toLowerCase()
+      : 'bin';
+    const storedFilename = `${require('crypto').randomUUID()}.${fileExtension}`;
 
     const document = await Document.create({
       company_id: companyId,
@@ -258,56 +390,66 @@ class DMSIntegrationService {
       type_code: typeConfig.typeCode,
       title: title || this._generateTitle(module, documentType, sourceEntityId),
       description: description || '',
-      file_name: file.originalname || `${module}_${documentType}_${Date.now()}`,
-      file_path: '', // Se actualiza después del upload
-      file_size: fileBuffer.length,
+      // Campos de archivo corregidos para coincidir con el modelo
+      original_filename: originalFilename,
+      stored_filename: storedFilename,
+      storage_path: '', // Se actualiza después del upload
+      file_size_bytes: fileBuffer.length,
+      file_extension: fileExtension,
       mime_type: file.mimetype || 'application/octet-stream',
       checksum_sha256: checksum,
       status: initialStatus,
+      owner_type: 'user',
       owner_id: employeeId || createdById,
       created_by: createdById,
       expiration_date: expirationDate,
       tags: tags,
       source_module: module,
       source_entity_type: sourceEntityType,
-      source_entity_id: sourceEntityId,
-      metadata: {
-        ...metadata,
-        module,
-        documentType,
-        requiresValidation: typeConfig.requiresValidation,
-        registeredAt: new Date().toISOString()
-      }
+      source_entity_id: sourceEntityId
     });
 
     // Subir archivo al storage
     try {
-      const storagePath = await this.storageService.upload({
-        companyId,
-        documentId: document.id,
-        fileName: file.originalname || document.file_name,
+      // Preparar objeto file para el storage service
+      const fileForStorage = {
         buffer: fileBuffer,
-        mimeType: file.mimetype
-      });
+        originalname: file.originalname || document.original_filename,
+        mimetype: file.mimetype || 'application/octet-stream'
+      };
 
-      await document.update({ file_path: storagePath });
+      // Generar número de documento si no existe
+      const documentNumber = document.document_number ||
+        `DOC-${companyId}-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+
+      const storageResult = await this.storageService.uploadFile(
+        fileForStorage,
+        companyId,
+        documentNumber,
+        document.version || 1
+      );
+
+      await document.update({
+        storage_path: storageResult.filePath,
+        stored_filename: storageResult.fileName,
+        document_number: documentNumber
+      });
     } catch (storageError) {
       // Si falla el storage, marcar documento como fallido
       await document.update({
         status: 'upload_failed',
-        metadata: { ...document.metadata, storageError: storageError.message }
+        status_reason: storageError.message
       });
       throw storageError;
     }
 
-    // Registrar auditoría
-    await DocumentAudit.create({
-      company_id: companyId,
-      document_id: document.id,
-      action: 'created',
-      performed_by: createdById,
-      old_values: null,
-      new_values: {
+    // Registrar auditoría usando el método estático
+    await DocumentAccessLog.logAction({
+      documentId: document.id,
+      companyId,
+      userId: createdById,
+      action: 'upload',
+      details: {
         status: initialStatus,
         source: `${module}/${documentType}`,
         sourceEntity: `${sourceEntityType}:${sourceEntityId}`
@@ -512,7 +654,7 @@ class DMSIntegrationService {
       linkedById
     } = params;
 
-    const { Document, DocumentAudit } = this.models;
+    const { Document, DocumentAccessLog } = this.models;
 
     const document = await Document.findOne({
       where: {
@@ -539,15 +681,17 @@ class DMSIntegrationService {
     });
 
     // Auditoría
-    await DocumentAudit.create({
-      company_id: companyId,
-      document_id: documentId,
-      action: 'linked',
-      performed_by: linkedById,
-      old_values: oldValues,
-      new_values: {
-        source_entity_type: sourceEntityType,
-        source_entity_id: sourceEntityId
+    await DocumentAccessLog.logAction({
+      documentId,
+      companyId,
+      userId: linkedById,
+      action: 'metadata_update',
+      details: {
+        oldValues,
+        newValues: {
+          source_entity_type: sourceEntityType,
+          source_entity_id: sourceEntityId
+        }
       }
     });
 

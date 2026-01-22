@@ -4,6 +4,14 @@
  * Representa presupuestos enviados a empresas prospect en el workflow altaEmpresa.
  * Incluye módulos seleccionados, pricing personalizado y estados del flujo.
  * Trace ID: ONBOARDING-{UUID}
+ *
+ * FLUJO CORRECTO:
+ * 1. Lead en etapa final → se crea Budget con lead_id (SIN company_id)
+ * 2. Cliente acepta presupuesto → se genera contrato
+ * 3. Cliente firma contrato → se crea Company INACTIVA y se asigna company_id
+ * 4. Cliente paga factura → se activa Company
+ *
+ * REGLA: Solo puede haber 1 presupuesto VIGENTE por empresa/lead
  */
 
 const { DataTypes } = require('sequelize');
@@ -21,15 +29,34 @@ module.exports = (sequelize) => {
     unique: true,
     comment: 'ONBOARDING-{UUID} - Trazabilidad completa del proceso'
   },
+
+  // ═══════════════════════════════════════════════════════════
+  // ORIGEN DEL PRESUPUESTO (Lead o Empresa existente)
+  // ═══════════════════════════════════════════════════════════
+  lead_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'sales_leads',
+      key: 'id'
+    },
+    onDelete: 'SET NULL',
+    comment: 'Lead de origen (para nuevas empresas). Mutualmente excluyente con company_id inicial.'
+  },
   company_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,  // CAMBIO CRÍTICO: ahora es opcional para permitir presupuestos desde leads
     references: {
       model: 'companies',
       key: 'company_id'
     },
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE',
+    comment: 'Empresa destino. NULL al inicio si viene de lead, se asigna al firmar contrato.'
   },
+
+  // ═══════════════════════════════════════════════════════════
+  // VENDEDOR Y METADATA
+  // ═══════════════════════════════════════════════════════════
   vendor_id: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -87,9 +114,62 @@ module.exports = (sequelize) => {
     defaultValue: 'PENDING',
     allowNull: false,
     validate: {
-      isIn: [['PENDING', 'SENT', 'VIEWED', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'MODIFIED']]
-    }
+      isIn: [['PENDING', 'SENT', 'VIEWED', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'MODIFIED', 'SUPERSEDED', 'ACTIVE']]
+    },
+    comment: 'SUPERSEDED: reemplazado por otro presupuesto. ACTIVE: presupuesto vigente de la empresa.'
   },
+
+  // ═══════════════════════════════════════════════════════════
+  // VERSIONADO Y TRAZABILIDAD (para upgrade/downgrade)
+  // ═══════════════════════════════════════════════════════════
+  previous_budget_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'budgets',
+      key: 'id'
+    },
+    comment: 'Presupuesto anterior de esta empresa (para historial)'
+  },
+  replaces_budget_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'budgets',
+      key: 'id'
+    },
+    comment: 'Presupuesto que este reemplaza (cuando es upgrade/downgrade)'
+  },
+  replaced_by_budget_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'budgets',
+      key: 'id'
+    },
+    comment: 'Presupuesto que reemplazó a este (cuando queda SUPERSEDED)'
+  },
+  is_upgrade: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    comment: 'True si agrega módulos vs presupuesto anterior'
+  },
+  is_downgrade: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    comment: 'True si quita módulos vs presupuesto anterior'
+  },
+  added_modules: {
+    type: DataTypes.JSONB,
+    allowNull: true,
+    comment: 'Array de module_keys agregados vs presupuesto anterior'
+  },
+  removed_modules: {
+    type: DataTypes.JSONB,
+    allowNull: true,
+    comment: 'Array de module_keys removidos vs presupuesto anterior'
+  },
+
   sent_at: {
     type: DataTypes.DATE,
     allowNull: true
@@ -154,10 +234,26 @@ module.exports = (sequelize) => {
       fields: ['company_id']
     },
     {
+      fields: ['lead_id'],
+      comment: 'Para buscar presupuestos por lead de origen'
+    },
+    {
       fields: ['vendor_id']
     },
     {
       fields: ['trace_id']
+    },
+    {
+      name: 'idx_one_active_budget_per_company',
+      fields: ['company_id', 'status'],
+      where: { status: ['PENDING', 'SENT', 'VIEWED', 'ACCEPTED'] },
+      comment: 'Solo 1 presupuesto vigente por empresa'
+    },
+    {
+      name: 'idx_one_active_budget_per_lead',
+      fields: ['lead_id', 'status'],
+      where: { status: ['PENDING', 'SENT', 'VIEWED', 'ACCEPTED'] },
+      comment: 'Solo 1 presupuesto vigente por lead'
     },
     {
       fields: ['status']

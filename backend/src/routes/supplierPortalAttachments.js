@@ -12,6 +12,39 @@ const {
   SupplierInvoice,
   sequelize
 } = require('../config/database');
+const jwt = require('jsonwebtoken');
+
+// ============================================================================
+// MIDDLEWARE DE AUTENTICACIÓN DEL PORTAL DE PROVEEDORES
+// ============================================================================
+
+const authenticateSupplier = (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Token de autenticación requerido' });
+        }
+
+        const token = authHeader.substring(7);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supplier_portal_secret_key');
+
+        if (decoded.type !== 'supplier_portal') {
+            return res.status(403).json({ error: 'Token no válido para portal de proveedores' });
+        }
+
+        req.supplierUser = decoded;
+        req.supplierId = decoded.supplierId;
+        req.supplier = { supplierId: decoded.supplierId, supplierEmail: decoded.email };
+        req.portalUserId = decoded.userId;
+
+        next();
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Token expirado' });
+        }
+        return res.status(401).json({ error: 'Token inválido' });
+    }
+};
 
 // ============================================================================
 // MULTER CONFIGURATION - File upload handling
@@ -95,6 +128,75 @@ const authMiddleware = (req, res, next) => {
 };
 
 // ============================================================================
+// INTEGRACIÓN DMS - SSOT DOCUMENTAL
+// ============================================================================
+
+// Módulo fs síncrono para DMS
+const fsSync = require('fs');
+
+/**
+ * Registra documentos del portal de proveedores en DMS
+ * @param {Object} req - Request de Express
+ * @param {Object} file - Archivo de multer
+ * @param {string} documentType - Tipo de documento (rfq, po, invoice)
+ * @param {string} entityId - ID de la entidad (RFQ, PO, etc.)
+ * @param {Object} metadata - Metadata adicional
+ */
+const registerSupplierDocInDMS = async (req, file, documentType, entityId, metadata = {}) => {
+  try {
+    const dmsService = req.app.get('dmsIntegrationService');
+    if (!dmsService) {
+      console.warn('⚠️ [SUPPLIER-PORTAL] DMSIntegrationService no disponible');
+      return null;
+    }
+
+    const companyId = req.user?.company_id;
+
+    // Mapeo de tipos de documento de proveedores
+    const supplierTypeMap = {
+      'rfq_attachment': 'SUPPLIER_RFQ',
+      'po_attachment': 'SUPPLIER_PO',
+      'invoice': 'SUPPLIER_INVOICE',
+      'supplier_response': 'SUPPLIER_RESPONSE'
+    };
+
+    const result = await dmsService.registerDocument({
+      module: documentType.includes('rfq') ? 'rfq' :
+              documentType.includes('po') ? 'purchase-orders' :
+              documentType.includes('invoice') ? 'supplier-invoices' : 'suppliers',
+      documentType: supplierTypeMap[documentType] || 'SUPPLIER_DOC',
+      companyId,
+      employeeId: null,
+      createdById: req.user?.user_id,
+      sourceEntityType: documentType.split('_')[0],
+      sourceEntityId: entityId,
+      file: {
+        buffer: fsSync.readFileSync(file.path),
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size
+      },
+      title: file.originalname,
+      description: metadata.description || `Documento de proveedor: ${documentType}`,
+      metadata: {
+        originalPath: file.path,
+        uploadRoute: req.originalUrl,
+        attachmentType: metadata.attachmentType,
+        supplierId: metadata.supplierId,
+        ...metadata
+      }
+    });
+
+    console.log(`📄 [DMS-SUPPLIER] Registrado: ${documentType} - ${result.document?.id}`);
+    return result;
+
+  } catch (error) {
+    console.error('❌ [DMS-SUPPLIER] Error registrando documento:', error.message);
+    return null;
+  }
+};
+
+// ============================================================================
 // EMPRESA → PROVEEDOR: Upload adjuntos en RFQ
 // ============================================================================
 
@@ -158,6 +260,13 @@ router.post('/rfq/:rfqId/company-attachments', authMiddleware, upload.single('fi
 
     await transaction.commit();
 
+    // ✅ Registrar en DMS (SSOT)
+    const dmsResult = await registerSupplierDocInDMS(req, req.file, 'rfq_attachment', rfqId, {
+      attachmentId: attachment.id,
+      attachmentType: attachment_type,
+      description
+    });
+
     res.json({
       success: true,
       attachment: {
@@ -167,7 +276,11 @@ router.post('/rfq/:rfqId/company-attachments', authMiddleware, upload.single('fi
         binding_level: attachment.binding_level,
         is_required: attachment.is_required,
         created_at: attachment.created_at
-      }
+      },
+      dms: dmsResult ? {
+        documentId: dmsResult.document?.id,
+        message: 'Documento registrado en DMS centralizado'
+      } : null
     });
   } catch (error) {
     await transaction.rollback();
@@ -353,6 +466,13 @@ router.post('/purchase-order/:poId/attachments', authMiddleware, upload.single('
 
     await transaction.commit();
 
+    // ✅ Registrar en DMS (SSOT)
+    const dmsResult = await registerSupplierDocInDMS(req, req.file, 'po_attachment', poId, {
+      attachmentId: attachment.id,
+      attachmentType: attachment_type,
+      purchaseOrderId: poId
+    });
+
     res.json({
       success: true,
       attachment: {
@@ -362,7 +482,11 @@ router.post('/purchase-order/:poId/attachments', authMiddleware, upload.single('
         binding_level: attachment.binding_level,
         is_required: attachment.is_required,
         created_at: attachment.created_at
-      }
+      },
+      dms: dmsResult ? {
+        documentId: dmsResult.document?.id,
+        message: 'Documento registrado en DMS centralizado'
+      } : null
     });
   } catch (error) {
     await transaction.rollback();
@@ -501,6 +625,13 @@ router.post('/invoice/upload', authMiddleware, upload.single('file'), async (req
 
     await transaction.commit();
 
+    // ✅ Registrar en DMS (SSOT)
+    const dmsResult = await registerSupplierDocInDMS(req, req.file, 'invoice', invoice.id, {
+      invoiceNumber: invoice_number,
+      purchaseOrderId: purchase_order_id,
+      supplierId: supplier_id
+    });
+
     res.json({
       success: true,
       invoice: {
@@ -509,7 +640,11 @@ router.post('/invoice/upload', authMiddleware, upload.single('file'), async (req
         total: invoice.total,
         status: invoice.status,
         uploaded_at: invoice.uploaded_at
-      }
+      },
+      dms: dmsResult ? {
+        documentId: dmsResult.document?.id,
+        message: 'Factura registrada en DMS centralizado'
+      } : null
     });
   } catch (error) {
     await transaction.rollback();
@@ -649,9 +784,25 @@ router.post('/rfq/:rfqId/supplier-upload',
 
             await transaction.commit();
 
+            // ✅ Registrar cada archivo en DMS (SSOT)
+            const dmsResults = [];
+            for (const file of req.files) {
+                const dmsResult = await registerSupplierDocInDMS(req, file, 'supplier_response', rfqId, {
+                    attachmentType: attachment_type,
+                    supplierId,
+                    supplierEmail,
+                    description
+                });
+                if (dmsResult) dmsResults.push(dmsResult.document);
+            }
+
             res.status(201).json({
                 message: `${attachments.length} archivo(s) subido(s) correctamente`,
-                attachments
+                attachments,
+                dms: dmsResults.length > 0 ? {
+                    registeredCount: dmsResults.length,
+                    documentIds: dmsResults.map(d => d.id)
+                } : null
             });
         } catch (error) {
             await transaction.rollback();
@@ -710,9 +861,25 @@ router.post('/purchase-order/:poId/supplier-upload',
 
             await transaction.commit();
 
+            // ✅ Registrar cada archivo en DMS (SSOT)
+            const dmsResults = [];
+            for (const file of req.files) {
+                const dmsResult = await registerSupplierDocInDMS(req, file, 'po_attachment', poId, {
+                    attachmentType: attachment_type,
+                    supplierId,
+                    supplierEmail,
+                    description
+                });
+                if (dmsResult) dmsResults.push(dmsResult.document);
+            }
+
             res.status(201).json({
                 message: `${attachments.length} archivo(s) subido(s) correctamente`,
-                attachments
+                attachments,
+                dms: dmsResults.length > 0 ? {
+                    registeredCount: dmsResults.length,
+                    documentIds: dmsResults.map(d => d.id)
+                } : null
             });
         } catch (error) {
             await transaction.rollback();

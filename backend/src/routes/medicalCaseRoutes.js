@@ -56,6 +56,51 @@ const upload = multer({
     }
 });
 
+// ==============================================
+// 📄 INTEGRACIÓN DMS - SSOT DOCUMENTAL
+// ==============================================
+const registerMedicalCaseDocsInDMS = async (req, files, userId, companyId, caseId, docType = 'MEDICAL_CASE') => {
+    try {
+        const dmsService = req.app.get('dmsIntegrationService');
+        if (!dmsService || !files || files.length === 0) {
+            return null;
+        }
+
+        const results = [];
+        for (const file of files) {
+            try {
+                const result = await dmsService.registerDocument({
+                    module: 'medical',
+                    documentType: docType,
+                    companyId,
+                    employeeId: userId,
+                    createdById: userId,
+                    sourceEntityType: 'medical-case',
+                    sourceEntityId: caseId,
+                    file: {
+                        buffer: fs.readFileSync(file.path),
+                        originalname: file.originalname,
+                        mimetype: file.mimetype,
+                        size: file.size
+                    },
+                    title: file.originalname,
+                    description: `Adjunto de caso médico ${caseId}`,
+                    metadata: { caseId, originalPath: file.path, uploadRoute: req.originalUrl }
+                });
+                results.push({ documentId: result.document?.id, filename: file.originalname });
+            } catch (error) {
+                console.error(`❌ [DMS-MEDICAL] Error con archivo ${file.originalname}:`, error.message);
+            }
+        }
+
+        console.log(`📄 [DMS-MEDICAL] ${results.length} documentos registrados para caso ${caseId}`);
+        return results.length > 0 ? results : null;
+    } catch (error) {
+        console.error('❌ [DMS-MEDICAL] Error registrando documentos:', error.message);
+        return null;
+    }
+};
+
 // ============================================================================
 // ENDPOINTS PARA RRHH/EMPLEADOS
 // ============================================================================
@@ -138,6 +183,14 @@ router.post('/', auth, upload.array('attachments', 5), async (req, res) => {
 
         const newCase = result[0];
 
+        // ✅ Registrar adjuntos en DMS (SSOT)
+        let dmsResults = null;
+        if (req.files && req.files.length > 0) {
+            dmsResults = await registerMedicalCaseDocsInDMS(
+                req, req.files, employee_id, companyId, newCase.id, 'MED_CASE_ATTACHMENT'
+            );
+        }
+
         // Obtener datos del empleado y médico asignado para respuesta
         const [caseDetails] = await db.sequelize.query(`
             SELECT
@@ -163,7 +216,8 @@ router.post('/', auth, upload.array('attachments', 5), async (req, res) => {
             data: caseDetails[0],
             notification: newCase.assigned_doctor_id ?
                 'Se notificó al médico asignado' :
-                'En espera de asignación de médico'
+                'En espera de asignación de médico',
+            dms: dmsResults ? { documents: dmsResults } : null
         });
 
     } catch (error) {
@@ -618,9 +672,18 @@ router.post('/:caseId/messages', auth, upload.array('attachments', 3), async (re
             }
         });
 
+        // ✅ Registrar adjuntos en DMS (SSOT)
+        let dmsResults = null;
+        if (req.files && req.files.length > 0) {
+            dmsResults = await registerMedicalCaseDocsInDMS(
+                req, req.files, sender_id, companyId, caseId, 'MED_COMMUNICATION'
+            );
+        }
+
         res.json({
             success: true,
-            message: 'Mensaje enviado exitosamente'
+            message: 'Mensaje enviado exitosamente',
+            dms: dmsResults ? { documents: dmsResults } : null
         });
 
     } catch (error) {

@@ -786,14 +786,8 @@ class DocumentService {
       type: this.models.Document.sequelize.QueryTypes.SELECT
     });
 
-    // Registrar búsqueda
-    await this.models.DocumentAccessLog.logAction({
-      document_id: null,
-      company_id: companyId,
-      user_id: userId,
-      action: 'search',
-      details: { query, results_count: results.length }
-    });
+    // Nota: No registramos log de búsqueda porque DocumentAccessLog requiere document_id
+    // Las búsquedas no son accesos a documentos específicos
 
     return results;
   }

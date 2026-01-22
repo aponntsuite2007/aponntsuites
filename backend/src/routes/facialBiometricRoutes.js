@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { FacialBiometricData, User } = require('../config/database');
 const { auth } = require('../middleware/auth');
+const { requireBiometricConsent } = require('../middleware/biometricConsentCheck');
 
 // ============================================================================
 // HELPER: Validar formato UUID
@@ -12,7 +13,7 @@ function isValidUUID(str) {
 }
 
 // 📷 Register facial biometric data
-router.post('/register', auth, async (req, res) => {
+router.post('/register', auth, requireBiometricConsent, async (req, res) => {
   try {
     const {
       userId,

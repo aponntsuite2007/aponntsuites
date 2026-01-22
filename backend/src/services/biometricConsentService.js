@@ -1,40 +1,16 @@
-const nodemailer = require('nodemailer');
 const { sequelize } = require('../config/database');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const PrivacyRegulationService = require('./PrivacyRegulationService');
-// 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
+// 🔥 NCE: Central Telefónica de Notificaciones (SSOT)
 const NCE = require('./NotificationCentralExchange');
+// 🔥 EmailService: Para fallback multi-tenant cuando NCE falla
+const EmailService = require('./EmailService');
 
 class BiometricConsentService {
     constructor() {
-        this.emailTransporter = null;
-        this.initializeEmailTransporter();
-    }
-
-    initializeEmailTransporter() {
-        try {
-            // Verificar que nodemailer esté disponible
-            if (!nodemailer || typeof nodemailer.createTransport !== 'function') {
-                console.warn('⚠️ nodemailer no está disponible. Servicio de email deshabilitado.');
-                return;
-            }
-
-            this.emailTransporter = nodemailer.createTransport({
-                host: process.env.SMTP_HOST || 'smtp.gmail.com',
-                port: process.env.SMTP_PORT || 587,
-                secure: false,
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS
-                }
-            });
-            console.log('✅ Email transporter inicializado correctamente');
-        } catch (error) {
-            console.error('⚠️ Error inicializando email transporter:', error.message);
-            console.warn('⚠️ Servicio de consentimientos funcionará sin envío de emails');
-            this.emailTransporter = null;
-        }
+        // 🔥 SSOT: Ya no usa nodemailer local. Usa NCE como primario y EmailService como fallback multi-tenant
+        console.log('✅ BiometricConsentService inicializado (NCE + EmailService fallback)');
     }
 
     /**
@@ -43,7 +19,7 @@ class BiometricConsentService {
     async requestConsent(userId, companyId, requestedBy) {
         try {
             // Obtener usuario
-            const [users] = await sequelize.query(`
+            const users = await sequelize.query(`
                 SELECT user_id, "firstName", "lastName", email
                 FROM users
                 WHERE user_id = :userId AND company_id = :companyId
@@ -52,7 +28,7 @@ class BiometricConsentService {
                 type: sequelize.QueryTypes.SELECT
             });
 
-            if (users.length === 0) {
+            if (!users || users.length === 0) {
                 throw new Error('Usuario no encontrado');
             }
 
@@ -356,23 +332,26 @@ Al aceptar este consentimiento mediante el enlace recibido por email, usted decl
             const tokenExpiry = new Date();
             tokenExpiry.setDate(tokenExpiry.getDate() + 7); // 7 días
 
-            // Crear registro de consentimiento pendiente con solo columnas básicas
-            // (la tabla en producción no tiene todas las columnas de la migración completa)
+            // Crear registro de consentimiento pendiente con token
             try {
                 await sequelize.query(`
                     INSERT INTO biometric_consents (
                         company_id, user_id, consent_type, consent_given,
-                        consent_text, consent_version
+                        consent_text, consent_version, consent_token, consent_token_expires_at,
+                        consent_email_sent_at
                     ) VALUES (
                         :companyId, :userId, 'biometric_analysis', false,
-                        :consentText, :version
+                        :consentText, :version, :token, :tokenExpiry,
+                        NOW()
                     )
                 `, {
                     replacements: {
                         companyId,
                         userId,
                         consentText: legalDoc.content,
-                        version: legalDoc.version
+                        version: legalDoc.version,
+                        token,
+                        tokenExpiry: tokenExpiry.toISOString()
                     },
                     type: sequelize.QueryTypes.INSERT
                 });
@@ -381,35 +360,38 @@ Al aceptar este consentimiento mediante el enlace recibido por email, usted decl
                 throw new Error(`No se pudo crear el registro de consentimiento: ${insertError.message}`);
             }
 
-            // Log en auditoría
-            await sequelize.query(`
-                INSERT INTO consent_audit_log (
-                    company_id, user_id, action, action_timestamp,
-                    performed_by_user_id, automated, metadata
-                ) VALUES (
-                    :companyId, :userId, 'REQUESTED', NOW(),
-                    :requestedBy, false,
-                    :metadata
-                )
-            `, {
-                replacements: {
-                    companyId,
-                    userId,
-                    requestedBy,
-                    metadata: JSON.stringify({ token, version: legalDoc.version })
-                },
-                type: sequelize.QueryTypes.INSERT
-            });
+            // Log en auditoría (try-catch para no fallar si hay problemas con la tabla)
+            // Nota: changed_by es INTEGER, pero requestedBy es UUID, así que lo guardamos en metadata
+            try {
+                await sequelize.query(`
+                    INSERT INTO consent_audit_log (
+                        action, old_status, new_status, notes, metadata, created_at
+                    ) VALUES (
+                        'REQUESTED', NULL, 'PENDING',
+                        'Solicitud de consentimiento enviada',
+                        :metadata,
+                        NOW()
+                    )
+                `, {
+                    replacements: {
+                        metadata: JSON.stringify({ userId, companyId, token, version: legalDoc.version, requestedBy })
+                    },
+                    type: sequelize.QueryTypes.INSERT
+                });
+            } catch (auditError) {
+                console.warn('⚠️ [CONSENT-AUDIT] No se pudo escribir log de auditoría:', auditError.message);
+                // Continuar sin fallar - el log de auditoría no es crítico
+            }
 
             // Obtener datos de la empresa para el email
-            const [companies] = await sequelize.query(`
-                SELECT name, email FROM companies WHERE company_id = :companyId
+            const companies = await sequelize.query(`
+                SELECT company_id, name, email FROM companies WHERE company_id = :companyId
             `, {
                 replacements: { companyId },
                 type: sequelize.QueryTypes.SELECT
             });
 
-            const company = companies[0] || { name: 'Empresa', email: null };
+            const company = (companies && companies.length > 0) ? companies[0] : { company_id: companyId, name: 'Empresa', email: null };
 
             // Enviar email
             const consentUrl = `${process.env.FRONTEND_URL || 'https://aponntsuites.onrender.com'}/consent/${token}`;
@@ -616,54 +598,59 @@ Al aceptar este consentimiento mediante el enlace recibido por email, usted decl
 </html>
         `;
 
+        const fromEmail = company.email || process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@aponnt.com';
+        const fromName = `${company.name} - RRHH`;
+        const consentLink = `${process.env.FRONTEND_URL || 'http://localhost:9998'}/biometric-consent?token=${token}`;
+
+        // Intentar enviar via NCE, con fallback a email directo
         try {
-            if (!this.emailTransporter) {
-                console.warn(`⚠️ Email transporter no disponible. No se puede enviar email a ${user.email}`);
-                return { messageId: 'email-disabled', warning: 'Email service not available' };
-            }
-
-            const fromEmail = company.email || process.env.FROM_EMAIL || process.env.SMTP_USER;
-            const fromName = `${company.name} - RRHH`;
-
-            // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
             const result = await NCE.send({
                 companyId: company.company_id,
                 module: 'biometric',
                 originType: 'biometric_consent_request',
                 originId: token,
-
                 workflowKey: 'biometric.consent_request',
-
                 recipientType: 'user',
                 recipientId: user.user_id,
                 recipientEmail: user.email,
-
                 title: '🔐 Solicitud de Consentimiento para Análisis Biométrico',
                 message: `${company.name} solicita su consentimiento para el procesamiento de datos biométricos (GDPR/BIPA)`,
                 metadata: {
                     userId: user.user_id,
-                    userName: `${user.first_name} ${user.last_name}`,
+                    userName: `${user.firstName} ${user.lastName}`,
                     companyName: company.name,
                     token,
                     legalDocVersion: legalDoc.version,
                     regulation: legalDoc.regulation,
-                    consentLink: `${process.env.FRONTEND_URL || 'http://localhost:9998'}/biometric-consent?token=${token}`
+                    consentLink
                 },
-
                 priority: 'high',
                 requiresAction: true,
                 actionType: 'acknowledgement',
-                slaHours: 168,  // 7 días (1 semana)
-
+                slaHours: 168,
                 channels: ['email'],
             });
-
             console.log(`✅ [NCE] Biometric consent request sent to ${user.email}`);
             return result;
 
-        } catch (error) {
-            console.error(`❌ Error enviando email a ${user.email}:`, error);
-            throw error;
+        } catch (nceError) {
+            console.warn(`⚠️ [NCE] Falló, usando EmailService SSOT como fallback: ${nceError.message}`);
+
+            // 🔥 Fallback SSOT: usa EmailService multi-tenant (respeta configuración de empresa)
+            try {
+                const mailResult = await EmailService.sendFromCompany(company.company_id, {
+                    to: user.email,
+                    subject: `🔐 Solicitud de Consentimiento Biométrico - ${company.name}`,
+                    html: html,
+                    recipientName: `${user.firstName} ${user.lastName}`
+                });
+                console.log(`✅ [FALLBACK-SSOT] Email enviado via EmailService a ${user.email}`);
+                return { messageId: mailResult?.messageId || 'email-service-ok', method: 'emailservice-fallback' };
+            } catch (emailError) {
+                console.error(`❌ Error en fallback EmailService a ${user.email}:`, emailError.message);
+                // No lanzar error - el registro de consentimiento ya fue creado
+                return { messageId: 'email-failed', warning: emailError.message };
+            }
         }
     }
 
@@ -821,16 +808,7 @@ Al aceptar este consentimiento mediante el enlace recibido por email, usted decl
         `;
 
         try {
-            if (!this.emailTransporter) {
-                console.warn(`⚠️ Email transporter no disponible. No se puede enviar confirmación a ${user.email}`);
-                return { messageId: 'email-disabled', warning: 'Email service not available' };
-            }
-
-            // Enviar email de confirmación
-            const fromEmail = company.email || process.env.FROM_EMAIL || process.env.SMTP_USER;
-            const fromName = `${company.name} - RRHH`;
-
-            // 🔥 REEMPLAZO: Email directo → NCE (Central Telefónica)
+            // 🔥 SSOT: Usa NCE como único canal de envío (respeta configuración multi-tenant)
             const result = await NCE.send({
                 companyId: company.company_id,
                 module: 'biometric',

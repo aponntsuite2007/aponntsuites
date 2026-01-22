@@ -490,7 +490,31 @@ router.post('/tickets/:ticket_id/messages', authenticate, async (req, res) => {
 
     // Enviar notificación al destinatario (quien NO envió el mensaje)
     if (!is_internal) {
-      await SupportNotificationService.notifyNewMessage(ticket_id, newMessage.message_id, user_id);
+      try {
+        // Obtener datos del sender
+        const sender = await User.findByPk(user_id, { attributes: ['user_id', 'firstName', 'lastName', 'email', 'role'] });
+
+        // Determinar el recipient (quien NO envió el mensaje)
+        let recipient = null;
+        if (user_id === ticket.created_by) {
+          // El creador del ticket envía mensaje → notificar al soporte asignado
+          if (ticket.assigned_to) {
+            recipient = await User.findByPk(ticket.assigned_to, { attributes: ['user_id', 'firstName', 'lastName', 'email', 'role'] });
+          }
+        } else {
+          // Soporte envía mensaje → notificar al creador del ticket
+          recipient = await User.findByPk(ticket.created_by, { attributes: ['user_id', 'firstName', 'lastName', 'email', 'role'] });
+        }
+
+        if (sender && recipient) {
+          await SupportNotificationService.notifyNewMessage(ticket, newMessage, sender, recipient);
+        } else {
+          console.log('⚠️ [SUPPORT] No se pudo determinar sender/recipient para notificación');
+        }
+      } catch (notifError) {
+        console.error('⚠️ [SUPPORT] Error enviando notificación de mensaje:', notifError.message);
+        // No falla el endpoint si la notificación falla
+      }
     }
 
     res.status(201).json({

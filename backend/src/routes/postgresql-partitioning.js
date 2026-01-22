@@ -120,13 +120,24 @@ router.get('/performance/:companyId', async (req, res) => {
   try {
     const { companyId } = req.params;
 
-    const performanceQuery = `SELECT * FROM analyze_company_biometric_performance(${companyId})`;
-    const [results] = await require('../config/database').sequelize.query(performanceQuery);
+    // 🔐 SEGURIDAD: Usar parámetros bind para prevenir SQL injection
+    const numericCompanyId = parseInt(companyId);
+    if (isNaN(numericCompanyId) || numericCompanyId <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'companyId debe ser un número válido mayor a 0'
+      });
+    }
+
+    const performanceQuery = `SELECT * FROM analyze_company_biometric_performance($1)`;
+    const [results] = await require('../config/database').sequelize.query(performanceQuery, {
+      bind: [numericCompanyId]
+    });
 
     res.json({
       success: true,
       data: {
-        companyId: parseInt(companyId),
+        companyId: numericCompanyId,
         performance: results[0] || null,
         timestamp: new Date().toISOString()
       }

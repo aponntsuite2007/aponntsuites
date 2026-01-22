@@ -11,16 +11,10 @@
 const express = require('express');
 const router = express.Router();
 const auditReportService = require('../services/auditReportService');
+const { auth } = require('../middleware/auth');
 
-// Middleware de autenticación
-const authenticate = (req, res, next) => {
-    req.user = {
-        employee_id: req.headers['x-employee-id'] || 'EMP-ISI-001',
-        company_id: parseInt(req.headers['x-company-id']) || 11,
-        role: req.headers['x-role'] || 'employee'
-    };
-    next();
-};
+// Alias para compatibilidad
+const authenticate = auth;
 
 // Middleware para verificar rol de RRHH o admin
 const requireRRHH = (req, res, next) => {

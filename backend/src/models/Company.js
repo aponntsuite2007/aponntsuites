@@ -231,16 +231,66 @@ module.exports = (sequelize) => {
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: true,
+      defaultValue: false,  // CAMBIO: false por defecto hasta que se active
       field: 'is_active',
-      comment: 'Whether the company is active'
+      comment: 'Whether the company is active (true solo después de pago confirmado)'
     },
     status: {
       type: DataTypes.STRING(20),
       allowNull: false,
-      defaultValue: 'active',
-      comment: 'Company status (active, suspended, trial, expired)'
+      defaultValue: 'pending',  // CAMBIO: pending por defecto
+      validate: {
+        isIn: [['pending', 'active', 'suspended', 'trial', 'expired', 'cancelled']]
+      },
+      comment: 'Company status: pending (creada sin activar), active (pago confirmado), suspended, trial, expired, cancelled'
     },
+
+    // ═══════════════════════════════════════════════════════════
+    // ONBOARDING & TRAZABILIDAD
+    // ═══════════════════════════════════════════════════════════
+    onboardingStatus: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: null,
+      field: 'onboarding_status',
+      validate: {
+        isIn: [[
+          null,
+          'PENDING',                  // Pendiente inicial
+          'BUDGET_ACCEPTED',          // Presupuesto aceptado
+          'CONTRACT_SENT',            // Contrato enviado para firma
+          'CONTRACT_SIGNED',          // Contrato firmado (empresa creada INACTIVA)
+          'INVOICE_GENERATED',        // Factura generada
+          'INVOICE_SUPERVISED',       // Factura supervisada
+          'PAYMENT_PENDING',          // Pago pendiente
+          'PAYMENT_CONFIRMED',        // Pago confirmado
+          'ACTIVE',                   // Empresa activada completamente
+          'SUSPENDED',                // Empresa suspendida
+          'CANCELLED'                 // Proceso cancelado
+        ]]
+      },
+      comment: 'Estado del proceso de onboarding'
+    },
+    traceId: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      unique: true,
+      field: 'trace_id',
+      comment: 'ONBOARDING-{UUID} - Trazabilidad del proceso de alta'
+    },
+    activatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'activated_at',
+      comment: 'Fecha de activación definitiva (después de pago)'
+    },
+    activatedBy: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'activated_by',
+      comment: 'Usuario que activó la empresa'
+    },
+
     isTrial: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

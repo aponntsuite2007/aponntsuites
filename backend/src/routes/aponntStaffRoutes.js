@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const { AponntStaff, AponntStaffRole } = require('../config/database');
 
 /**
@@ -11,7 +12,60 @@ const { AponntStaff, AponntStaffRole } = require('../config/database');
  *
  * Autor: Claude Code
  * Fecha: 2025-01-21
+ *
+ * 🔐 SEGURIDAD: Todas las rutas requieren autenticación de staff Aponnt
  */
+
+// 🔐 MIDDLEWARE DE AUTENTICACIÓN
+const verifyAponntStaffToken = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'Token de autenticación requerido',
+        code: 'AUTH_REQUIRED'
+      });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const JWT_SECRET = process.env.JWT_SECRET;
+
+    if (!JWT_SECRET) {
+      console.error('❌ [AUTH] JWT_SECRET no configurado');
+      return res.status(500).json({
+        success: false,
+        error: 'Error de configuración del servidor'
+      });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    if (!decoded.staff_id && !decoded.staffId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Acceso denegado: Se requiere token de staff Aponnt'
+      });
+    }
+
+    req.staff = {
+      id: decoded.staff_id || decoded.staffId,
+      email: decoded.email,
+      level: decoded.level || 1
+    };
+
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, error: 'Token expirado' });
+    }
+    return res.status(401).json({ success: false, error: 'Token inválido' });
+  }
+};
+
+// 🔐 Aplicar autenticación a TODAS las rutas
+router.use(verifyAponntStaffToken);
+console.log('🔐 [STAFF-ROUTES] Autenticación habilitada para todas las rutas');
 
 /**
  * GET /api/aponnt/staff

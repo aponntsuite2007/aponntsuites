@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const { Op } = require('sequelize');
 const {
   SupplierCommunication,
@@ -63,6 +64,56 @@ const upload = multer({
     }
   }
 });
+
+// ==============================================
+// 📄 INTEGRACIÓN DMS - SSOT DOCUMENTAL
+// ==============================================
+const registerSupplierMessageDocsInDMS = async (req, files, supplierId, companyId, messageId) => {
+    try {
+        const dmsService = req.app.get('dmsIntegrationService');
+        if (!dmsService || !files || files.length === 0) {
+            return null;
+        }
+
+        const results = [];
+        for (const file of files) {
+            try {
+                const result = await dmsService.registerDocument({
+                    module: 'supplier-messages',
+                    documentType: 'SUPPLIER_MSG_ATTACHMENT',
+                    companyId,
+                    employeeId: null, // No aplica a proveedores
+                    createdById: null,
+                    sourceEntityType: 'supplier-message',
+                    sourceEntityId: messageId,
+                    file: {
+                        buffer: fsSync.readFileSync(file.path),
+                        originalname: file.originalname,
+                        mimetype: file.mimetype,
+                        size: file.size
+                    },
+                    title: file.originalname,
+                    description: `Adjunto de mensaje de proveedor ${supplierId}`,
+                    metadata: {
+                        supplierId,
+                        messageId,
+                        originalPath: file.path,
+                        uploadRoute: req.originalUrl
+                    }
+                });
+                results.push({ documentId: result.document?.id, filename: file.originalname });
+            } catch (error) {
+                console.error(`❌ [DMS-SUPPLIER-MSG] Error con archivo ${file.originalname}:`, error.message);
+            }
+        }
+
+        console.log(`📄 [DMS-SUPPLIER-MSG] ${results.length} documentos registrados para mensaje ${messageId}`);
+        return results.length > 0 ? results : null;
+    } catch (error) {
+        console.error('❌ [DMS-SUPPLIER-MSG] Error registrando documentos:', error.message);
+        return null;
+    }
+};
 
 // ============================================================================
 // ENDPOINT: GET /api/supplier-messages/unread-count
@@ -321,6 +372,14 @@ router.post('/send', authenticateSupplier, upload.array('attachments', 5), async
 
     await transaction.commit();
 
+    // ✅ Registrar adjuntos en DMS (SSOT) - después del commit
+    let dmsResults = null;
+    if (req.files && req.files.length > 0) {
+        dmsResults = await registerSupplierMessageDocsInDMS(
+            req, req.files, supplierId, companyId, newMessage.id
+        );
+    }
+
     // Cargar mensaje completo con relaciones
     const messageWithRelations = await SupplierCommunication.findByPk(newMessage.id, {
       include: [
@@ -330,7 +389,8 @@ router.post('/send', authenticateSupplier, upload.array('attachments', 5), async
 
     res.status(201).json({
       message: 'Mensaje enviado correctamente',
-      data: messageWithRelations
+      data: messageWithRelations,
+      dms: dmsResults ? { documents: dmsResults } : null
     });
   } catch (error) {
     await transaction.rollback();

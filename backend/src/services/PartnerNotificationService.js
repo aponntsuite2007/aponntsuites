@@ -14,24 +14,15 @@
  */
 
 const database = require('../config/database');
-const nodemailer = require('nodemailer');
 const { QueryTypes } = require('sequelize');
 
-// 🔥 NCE: Sistema central de notificaciones (central telefónica)
+// 🔥 NCE: Sistema central de notificaciones (SSOT - único canal de emails)
 const NCE = require('./NotificationCentralExchange');
 
 class PartnerNotificationService {
   constructor() {
-    // Configurar transporter de email (usa variables de entorno)
-    this.emailTransporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: process.env.SMTP_PORT || 587,
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+    // 🔥 SSOT: Emails ahora van via NCE (NotificationCentralExchange) - no más nodemailer local
+    console.log('✅ PartnerNotificationService initialized (NCE para emails)');
   }
 
   /**

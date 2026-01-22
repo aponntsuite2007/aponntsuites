@@ -104,10 +104,10 @@ router.post('/sectors', async (req, res) => {
             company_id: companyId,
             department_id,
             name,
-            code,
-            description,
-            supervisor_id,
-            max_employees,
+            code: code || null,
+            description: description || null,
+            supervisor_id: supervisor_id || null,
+            max_employees: max_employees ? parseInt(max_employees) : null,
             is_active: true
         });
 
@@ -134,7 +134,16 @@ router.put('/sectors/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Sector no encontrado' });
         }
 
-        await sector.update(req.body);
+        // Sanitizar campos vacíos para evitar errores de tipo integer
+        const { department_id, max_employees, supervisor_id, ...rest } = req.body;
+        const updateData = {
+            ...rest,
+            department_id: department_id ? parseInt(department_id) : sector.department_id,
+            max_employees: max_employees ? parseInt(max_employees) : null,
+            supervisor_id: supervisor_id ? parseInt(supervisor_id) : null
+        };
+
+        await sector.update(updateData);
 
         res.json({
             success: true,
@@ -339,6 +348,56 @@ router.put('/agreements/:id', async (req, res) => {
     }
 });
 
+// DELETE /api/v1/organizational/agreements/:id - Eliminar convenio (solo de empresa)
+router.delete('/agreements/:id', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.query.company_id;
+
+        // Verificar que el convenio existe y pertenece a la empresa
+        const [agreements] = await sequelize.query(`
+            SELECT * FROM labor_agreements_v2
+            WHERE id = :id
+        `, { replacements: { id: req.params.id } });
+
+        if (agreements.length === 0) {
+            return res.status(404).json({ success: false, message: 'Convenio no encontrado' });
+        }
+
+        const agreement = agreements[0];
+
+        // No permitir eliminar convenios globales
+        if (!agreement.company_id) {
+            return res.status(403).json({
+                success: false,
+                message: 'No puede eliminar convenios globales'
+            });
+        }
+
+        // Verificar que pertenece a la empresa del usuario
+        if (agreement.company_id !== companyId) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tiene permiso para eliminar este convenio'
+            });
+        }
+
+        // Soft delete
+        await sequelize.query(`
+            UPDATE labor_agreements_v2
+            SET is_active = false, updated_at = NOW()
+            WHERE id = :id
+        `, { replacements: { id: req.params.id } });
+
+        res.json({
+            success: true,
+            message: 'Convenio eliminado exitosamente'
+        });
+    } catch (error) {
+        console.error('❌ Error eliminando convenio:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ============================================================================
 // CATEGORÍAS SALARIALES
 // ============================================================================
@@ -390,17 +449,27 @@ router.post('/categories', async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
         const {
-            labor_agreement_id, category_code, category_name, description,
-            base_salary_min, base_salary_max, hourly_rate_min, hourly_rate_max,
-            recommended_base_salary, recommended_hourly_rate, seniority_level
+            labor_agreement_id, agreement_id, // Aceptar ambos nombres
+            category_code, category_name, description,
+            base_salary, base_salary_min, base_salary_max, // Aceptar base_salary directo
+            hourly_rate, hourly_rate_min, hourly_rate_max,
+            recommended_base_salary, recommended_hourly_rate, seniority_level, level
         } = req.body;
 
-        if (!labor_agreement_id || !category_code || !category_name) {
+        // Usar agreement_id si labor_agreement_id no viene
+        const agreementId = labor_agreement_id || agreement_id;
+
+        if (!agreementId || !category_code || !category_name) {
             return res.status(400).json({
                 success: false,
-                message: 'labor_agreement_id, category_code y category_name son requeridos'
+                message: 'agreement_id, category_code y category_name son requeridos'
             });
         }
+
+        // Calcular valores de salario
+        const salaryMin = base_salary_min || base_salary || 0;
+        const salaryMax = base_salary_max || base_salary || 0;
+        const seniorityLvl = seniority_level || level || 1;
 
         const [result] = await sequelize.query(`
             INSERT INTO salary_categories_v2 (
@@ -417,18 +486,18 @@ router.post('/categories', async (req, res) => {
             RETURNING *
         `, {
             replacements: {
-                labor_agreement_id,
+                labor_agreement_id: agreementId,
                 company_id: companyId,
                 category_code,
                 category_name,
                 description: description || null,
-                base_salary_min: base_salary_min || 0,
-                base_salary_max: base_salary_max || 0,
-                hourly_rate_min: hourly_rate_min || 0,
-                hourly_rate_max: hourly_rate_max || 0,
-                recommended_base_salary: recommended_base_salary || 0,
+                base_salary_min: salaryMin,
+                base_salary_max: salaryMax,
+                hourly_rate_min: hourly_rate_min || hourly_rate || 0,
+                hourly_rate_max: hourly_rate_max || hourly_rate || 0,
+                recommended_base_salary: recommended_base_salary || salaryMin,
                 recommended_hourly_rate: recommended_hourly_rate || 0,
-                seniority_level: seniority_level || 1
+                seniority_level: parseInt(seniorityLvl) || 1
             }
         });
 
@@ -446,11 +515,20 @@ router.post('/categories', async (req, res) => {
 // PUT /api/v1/organizational/categories/:id - Actualizar categoría
 router.put('/categories/:id', async (req, res) => {
     try {
+        const companyId = req.user?.company_id || req.body.company_id;
         const {
             category_code, category_name, description,
-            base_salary_min, base_salary_max, hourly_rate_min, hourly_rate_max,
-            recommended_base_salary, recommended_hourly_rate, seniority_level
+            base_salary, base_salary_min, base_salary_max,
+            hourly_rate, hourly_rate_min, hourly_rate_max,
+            recommended_base_salary, recommended_hourly_rate, seniority_level, level
         } = req.body;
+
+        // Calcular valores de salario (igual que en CREATE)
+        const salaryMin = base_salary_min || base_salary || null;
+        const salaryMax = base_salary_max || base_salary || null;
+        const seniorityLvl = seniority_level || level || null;
+        const hourlyMin = hourly_rate_min || hourly_rate || null;
+        const hourlyMax = hourly_rate_max || hourly_rate || null;
 
         await sequelize.query(`
             UPDATE salary_categories_v2
@@ -465,20 +543,21 @@ router.put('/categories/:id', async (req, res) => {
                 recommended_hourly_rate = COALESCE(:recommended_hourly_rate, recommended_hourly_rate),
                 seniority_level = COALESCE(:seniority_level, seniority_level),
                 updated_at = NOW()
-            WHERE id = :id
+            WHERE id = :id AND (company_id = :company_id OR company_id IS NULL)
         `, {
             replacements: {
                 id: req.params.id,
-                category_code,
-                category_name,
-                description,
-                base_salary_min,
-                base_salary_max,
-                hourly_rate_min,
-                hourly_rate_max,
-                recommended_base_salary,
-                recommended_hourly_rate,
-                seniority_level
+                company_id: companyId,
+                category_code: category_code || null,
+                category_name: category_name || null,
+                description: description || null,
+                base_salary_min: salaryMin,
+                base_salary_max: salaryMax,
+                hourly_rate_min: hourlyMin,
+                hourly_rate_max: hourlyMax,
+                recommended_base_salary: recommended_base_salary || salaryMin,
+                recommended_hourly_rate: recommended_hourly_rate || null,
+                seniority_level: seniorityLvl ? parseInt(seniorityLvl) : null
             }
         });
 
@@ -578,7 +657,7 @@ router.post('/roles', async (req, res) => {
                 icon, color, requires_certification,
                 certification_validity_months, scoring_bonus,
                 responsibilities, required_training,
-                company_id, is_active, created_at, updated_at
+                company_id, is_active, "createdAt", "updatedAt"
             ) VALUES (
                 :role_key, :role_name, :description, :category,
                 :icon, :color, :requires_certification,
@@ -622,7 +701,12 @@ router.put('/roles/:id', async (req, res) => {
         const companyId = req.user?.company_id || req.body.company_id;
         const { role_name, description, category, icon, color,
                 requires_certification, certification_validity_months,
-                scoring_bonus, responsibilities, required_training } = req.body;
+                scoring_bonus, responsibilities, required_training,
+                hierarchy_level } = req.body;
+
+        // Sanitizar campos numéricos vacíos
+        const certMonths = certification_validity_months ? parseInt(certification_validity_months) : null;
+        const bonus = scoring_bonus ? parseFloat(scoring_bonus) : null;
 
         await sequelize.query(`
             UPDATE additional_role_types
@@ -636,20 +720,20 @@ router.put('/roles/:id', async (req, res) => {
                 scoring_bonus = COALESCE(:scoring_bonus, scoring_bonus),
                 responsibilities = COALESCE(:responsibilities, responsibilities),
                 required_training = COALESCE(:required_training, required_training),
-                updated_at = NOW()
+                "updatedAt" = NOW()
             WHERE id = :id AND (company_id IS NULL OR company_id = :companyId)
         `, {
             replacements: {
                 id: req.params.id,
                 companyId,
-                role_name,
-                description,
-                category,
-                icon,
-                color,
-                requires_certification,
-                certification_validity_months,
-                scoring_bonus,
+                role_name: role_name || null,
+                description: description || null,
+                category: category || hierarchy_level || null,
+                icon: icon || null,
+                color: color || null,
+                requires_certification: requires_certification === true || requires_certification === 'true',
+                certification_validity_months: certMonths,
+                scoring_bonus: bonus,
                 responsibilities: responsibilities ? JSON.stringify(responsibilities) : null,
                 required_training: required_training ? JSON.stringify(required_training) : null
             }

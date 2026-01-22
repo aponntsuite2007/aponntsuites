@@ -3,6 +3,13 @@
  *
  * Contratos generados a partir de presupuestos aceptados.
  * Define los términos comerciales, módulos contratados, y vigencia del servicio.
+ *
+ * REGLAS DE NEGOCIO:
+ * 1. SIEMPRE se genera desde un presupuesto aceptado (quote_id o budget_id REQUIRED)
+ * 2. modules_data DEBE ser copia EXACTA del presupuesto (no puede diferir)
+ * 3. Solo puede haber 1 contrato VIGENTE por empresa
+ * 4. Cualquier cambio = nuevo ciclo (nuevo presupuesto → nuevo contrato)
+ * 5. trace_id conecta todo el ciclo de comercialización
  */
 
 const { DataTypes } = require('sequelize');
@@ -20,24 +27,48 @@ module.exports = (sequelize) => {
       allowNull: false,
       comment: 'Formato: CONT-YYYY-NNNN (auto-generado)'
     },
+
+    // ═══════════════════════════════════════════════════════════
+    // TRAZABILIDAD
+    // ═══════════════════════════════════════════════════════════
+    trace_id: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'ONBOARDING-{UUID} - Trazabilidad del proceso de alta'
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // RELACIONES
+    // ═══════════════════════════════════════════════════════════
     company_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,  // CAMBIO: opcional hasta que se cree la empresa
       references: {
         model: 'companies',
         key: 'company_id'
       },
-      onDelete: 'CASCADE'
+      onDelete: 'CASCADE',
+      comment: 'NULL al inicio si viene de lead, se asigna al firmar contrato'
+    },
+    budget_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'budgets',
+        key: 'id'
+      },
+      onDelete: 'RESTRICT',
+      comment: 'Presupuesto (Budget) del cual se generó este contrato (sistema nuevo)'
     },
     quote_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,  // CAMBIO: ahora opcional (puede venir de Budget)
       references: {
         model: 'quotes',
         key: 'id'
       },
       onDelete: 'RESTRICT',
-      comment: 'Presupuesto del cual se generó este contrato'
+      comment: 'Presupuesto (Quote) del cual se generó este contrato (sistema antiguo)'
     },
     seller_id: {
       type: DataTypes.INTEGER,
@@ -109,11 +140,42 @@ module.exports = (sequelize) => {
     status: {
       type: DataTypes.STRING(20),
       allowNull: false,
-      defaultValue: 'active',
+      defaultValue: 'draft',
       validate: {
-        isIn: [['active', 'suspended', 'terminated', 'cancelled']]
+        isIn: [['draft', 'sent', 'signed', 'active', 'suspended', 'terminated', 'cancelled', 'superseded']]
       },
-      comment: 'Estados: active (activo), suspended (suspendido por falta de pago), terminated (terminado), cancelled (cancelado)'
+      comment: 'Estados: draft (borrador), sent (enviado para firma), signed (firmado, empresa aún inactiva), active (activo, empresa activada), suspended (por falta de pago), terminated, cancelled, superseded (reemplazado)'
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // VERSIONADO (para upgrade/downgrade)
+    // ═══════════════════════════════════════════════════════════
+    previous_contract_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'contracts',
+        key: 'id'
+      },
+      comment: 'Contrato anterior (para historial de upgrades/downgrades)'
+    },
+    replaces_contract_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'contracts',
+        key: 'id'
+      },
+      comment: 'Contrato que este reemplaza'
+    },
+    replaced_by_contract_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'contracts',
+        key: 'id'
+      },
+      comment: 'Contrato que reemplazó a este (cuando queda SUPERSEDED)'
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -279,12 +341,20 @@ module.exports = (sequelize) => {
     indexes: [
       { fields: ['company_id'] },
       { fields: ['quote_id'] },
+      { fields: ['budget_id'], comment: 'Para contratos del sistema nuevo (Budget)' },
+      { fields: ['trace_id'], comment: 'Trazabilidad del proceso de onboarding' },
       { fields: ['seller_id'] },
       { fields: ['support_partner_id'] },
       { fields: ['status'] },
       { fields: ['contract_number'], unique: true },
       { fields: ['start_date'] },
       { fields: ['end_date'] },
+      {
+        name: 'idx_one_active_contract_per_company',
+        fields: ['company_id', 'status'],
+        where: { status: 'active' },
+        comment: 'Solo 1 contrato activo por empresa'
+      },
       {
         name: 'idx_active_contracts',
         fields: ['status', 'company_id'],

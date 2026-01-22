@@ -1,13 +1,133 @@
 const express = require('express');
-// Middleware básico para auth (SuperUser eliminado)
-const verifyToken = (req, res, next) => {
-  // TODO: Implementar autenticación con User table
+const jwt = require('jsonwebtoken');
+
+// 🔐 MIDDLEWARE DE AUTENTICACIÓN PARA PANEL ADMINISTRATIVO APONNT
+// Verifica el token JWT de staff Aponnt (aponnt_token_staff)
+const verifyAponntStaffToken = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'Token de autenticación requerido',
+        code: 'AUTH_REQUIRED'
+      });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const JWT_SECRET = process.env.JWT_SECRET;
+
+    if (!JWT_SECRET) {
+      console.error('❌ [AUTH] JWT_SECRET no configurado en variables de entorno');
+      return res.status(500).json({
+        success: false,
+        error: 'Error de configuración del servidor',
+        code: 'CONFIG_ERROR'
+      });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Verificar que sea un token de staff Aponnt
+    if (!decoded.staff_id && !decoded.staffId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Acceso denegado: Se requiere token de staff Aponnt',
+        code: 'INVALID_TOKEN_TYPE'
+      });
+    }
+
+    // Agregar datos del staff al request
+    req.staff = {
+      id: decoded.staff_id || decoded.staffId,
+      email: decoded.email,
+      firstName: decoded.firstName || decoded.first_name,
+      lastName: decoded.lastName || decoded.last_name,
+      area: decoded.area,
+      level: decoded.level || 1,
+      permissions: decoded.permissions || []
+    };
+
+    console.log(`✅ [AUTH] Staff autenticado: ${req.staff.email} (level: ${req.staff.level})`);
+    next();
+
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        error: 'Token expirado, por favor inicie sesión nuevamente',
+        code: 'TOKEN_EXPIRED'
+      });
+    }
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        error: 'Token inválido',
+        code: 'INVALID_TOKEN'
+      });
+    }
+    console.error('❌ [AUTH] Error verificando token:', error.message);
+    return res.status(401).json({
+      success: false,
+      error: 'Error de autenticación',
+      code: 'AUTH_ERROR'
+    });
+  }
+};
+
+// Middleware para verificar nivel mínimo de staff
+const requireLevel = (minLevel) => (req, res, next) => {
+  if (!req.staff) {
+    return res.status(401).json({
+      success: false,
+      error: 'Autenticación requerida',
+      code: 'AUTH_REQUIRED'
+    });
+  }
+
+  if (req.staff.level < minLevel) {
+    return res.status(403).json({
+      success: false,
+      error: `Se requiere nivel ${minLevel} o superior para esta acción`,
+      code: 'INSUFFICIENT_LEVEL'
+    });
+  }
+
   next();
 };
-const requirePermission = (permission) => (req, res, next) => next();
-const requireAdmin = (req, res, next) => next();
 
-console.log('🔄 Cargando aponntDashboard routes...');
+// Middleware para verificar permisos específicos
+const requirePermission = (permission) => (req, res, next) => {
+  if (!req.staff) {
+    return res.status(401).json({
+      success: false,
+      error: 'Autenticación requerida',
+      code: 'AUTH_REQUIRED'
+    });
+  }
+
+  // Level 5+ (admin) tiene todos los permisos
+  if (req.staff.level >= 5) {
+    return next();
+  }
+
+  // Verificar permiso específico
+  if (!req.staff.permissions.includes(permission) && !req.staff.permissions.includes('*')) {
+    return res.status(403).json({
+      success: false,
+      error: `Permiso '${permission}' requerido para esta acción`,
+      code: 'INSUFFICIENT_PERMISSIONS'
+    });
+  }
+
+  next();
+};
+
+// Alias para compatibilidad
+const verifyToken = verifyAponntStaffToken;
+const requireAdmin = requireLevel(5);
+
+console.log('🔄 Cargando aponntDashboard routes (con autenticación)...');
 
 // Usar modelos PostgreSQL del sistema
 const { sequelize, Company, User, Branch, AponntStaff } = require('../config/database');
@@ -109,10 +229,15 @@ function toRadians(degrees) {
 
 const router = express.Router();
 
+// 🔓 Rutas públicas (sin autenticación)
 // Test route to verify the router is working
 router.get('/test', (req, res) => {
-    res.json({ message: 'APONNT Dashboard routes working!' });
+    res.json({ message: 'APONNT Dashboard routes working!', auth: 'not-required' });
 });
+
+// 🔐 APLICAR AUTENTICACIÓN A TODAS LAS RUTAS SIGUIENTES
+router.use(verifyAponntStaffToken);
+console.log('🔐 [AUTH] Middleware de autenticación aplicado a todas las rutas del dashboard');
 
 // Endpoint simplificado para pagos (evitar errores 404)
 router.get('/payments', (req, res) => {
@@ -4270,5 +4395,1066 @@ router.get('/vendor-commissions', async (req, res) => {
     });
   }
 });
+
+// ============================================================================
+// CRUD - BUDGETS (Presupuestos)
+// ============================================================================
+
+/**
+ * POST /api/aponnt/dashboard/budgets
+ * Crear nuevo presupuesto
+ */
+router.post('/budgets', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const { v4: uuidv4 } = require('uuid');
+
+    const {
+      company_id,
+      contracted_employees,
+      selected_modules,
+      total_monthly,
+      valid_until,
+      notes,
+      pricing
+    } = req.body;
+
+    // Validaciones
+    if (!company_id || !total_monthly) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campos requeridos: company_id, total_monthly'
+      });
+    }
+
+    // Generar código único
+    const budgetCode = `BUD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+    const traceId = `BUDGET-${uuidv4()}`;
+
+    // Calcular fecha de validez (30 días si no se especifica)
+    const validUntilDate = valid_until || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const result = await sequelize.query(`
+      INSERT INTO budgets (
+        id, trace_id, company_id, budget_code,
+        contracted_employees, selected_modules, total_monthly,
+        valid_until, notes, pricing, status, created_at, updated_at
+      ) VALUES (
+        gen_random_uuid(), $1, $2, $3,
+        $4, $5, $6,
+        $7, $8, $9, 'PENDING', NOW(), NOW()
+      )
+      RETURNING id, budget_code, status, total_monthly, created_at
+    `, {
+      bind: [
+        traceId,
+        company_id,
+        budgetCode,
+        contracted_employees || 50,
+        JSON.stringify(selected_modules || []),
+        total_monthly,
+        validUntilDate,
+        notes || null,
+        JSON.stringify(pricing || {})
+      ],
+      type: sequelize.QueryTypes.INSERT
+    });
+
+    console.log(`✅ Presupuesto creado: ${budgetCode} para empresa ${company_id}`);
+
+    res.json({
+      success: true,
+      data: {
+        id: result[0]?.[0]?.id,
+        budget_code: budgetCode,
+        status: 'PENDING',
+        total_monthly: total_monthly
+      },
+      message: 'Presupuesto creado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('❌ Error creando presupuesto:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al crear presupuesto',
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// CRUD - INVOICES (Facturas)
+// ============================================================================
+
+/**
+ * POST /api/aponnt/dashboard/invoices
+ * Crear nueva factura manual
+ */
+router.post('/invoices', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+
+    const {
+      company_id,
+      total_amount,
+      period,
+      due_date,
+      concept
+    } = req.body;
+
+    // Validaciones
+    if (!company_id || !total_amount) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campos requeridos: company_id, total_amount'
+      });
+    }
+
+    // Generar número de factura
+    const year = new Date().getFullYear();
+    const countResult = await sequelize.query(
+      `SELECT COUNT(*) as count FROM invoices WHERE EXTRACT(YEAR FROM created_at) = $1`,
+      { bind: [year], type: sequelize.QueryTypes.SELECT }
+    );
+    const sequence = parseInt(countResult[0]?.count || 0) + 1;
+    const invoiceNumber = `INV-${year}-${String(sequence).padStart(6, '0')}`;
+
+    // Fecha de vencimiento (15 días si no se especifica)
+    const dueDateValue = due_date || new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const result = await sequelize.query(`
+      INSERT INTO invoices (
+        company_id, invoice_number, total_amount,
+        period, due_date, concept, status,
+        issue_date, created_at, updated_at
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, 'PENDING',
+        NOW(), NOW(), NOW()
+      )
+      RETURNING id, invoice_number, total_amount, status, issue_date
+    `, {
+      bind: [
+        company_id,
+        invoiceNumber,
+        total_amount,
+        period || null,
+        dueDateValue,
+        concept || 'Servicio mensual'
+      ],
+      type: sequelize.QueryTypes.INSERT
+    });
+
+    console.log(`✅ Factura creada: ${invoiceNumber} para empresa ${company_id}`);
+
+    res.json({
+      success: true,
+      data: {
+        id: result[0]?.[0]?.id,
+        invoice_number: invoiceNumber,
+        total_amount: total_amount,
+        status: 'PENDING'
+      },
+      message: 'Factura creada exitosamente'
+    });
+
+  } catch (error) {
+    console.error('❌ Error creando factura:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al crear factura',
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// CRUD - STAFF (Personal Aponnt)
+// ============================================================================
+
+/**
+ * GET /api/aponnt/dashboard/staff
+ * Listar staff de Aponnt
+ */
+router.get('/staff', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const { area, level, is_active } = req.query;
+
+    let whereClause = 'WHERE 1=1';
+    const bindings = [];
+    let bindIndex = 1;
+
+    if (area) {
+      whereClause += ` AND area = $${bindIndex++}`;
+      bindings.push(area);
+    }
+    if (level) {
+      whereClause += ` AND level = $${bindIndex++}`;
+      bindings.push(parseInt(level));
+    }
+    if (is_active !== undefined) {
+      whereClause += ` AND is_active = $${bindIndex++}`;
+      bindings.push(is_active === 'true');
+    }
+
+    const staff = await sequelize.query(`
+      SELECT
+        staff_id, first_name, last_name, email, phone,
+        area, level, is_active, global_rating,
+        created_at, updated_at
+      FROM aponnt_staff
+      ${whereClause}
+      ORDER BY level DESC, first_name ASC
+    `, {
+      bind: bindings,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    res.json({
+      success: true,
+      data: staff,
+      count: staff.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo staff:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener staff',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/aponnt/dashboard/staff
+ * Crear nuevo miembro del staff
+ */
+router.post('/staff', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const bcrypt = require('bcryptjs');
+    const { v4: uuidv4 } = require('uuid');
+
+    const {
+      first_name,
+      last_name,
+      email,
+      phone,
+      area,
+      level,
+      password,
+      is_active
+    } = req.body;
+
+    // Validaciones
+    if (!first_name || !last_name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campos requeridos: first_name, last_name, email, password'
+      });
+    }
+
+    // Verificar email duplicado
+    const existing = await sequelize.query(
+      `SELECT staff_id FROM aponnt_staff WHERE email = $1`,
+      { bind: [email], type: sequelize.QueryTypes.SELECT }
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Ya existe un staff con ese email'
+      });
+    }
+
+    // Hash de password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const staffId = uuidv4();
+
+    await sequelize.query(`
+      INSERT INTO aponnt_staff (
+        staff_id, first_name, last_name, email, phone,
+        area, level, password_hash, is_active,
+        country, created_at, updated_at
+      ) VALUES (
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9,
+        'AR', NOW(), NOW()
+      )
+    `, {
+      bind: [
+        staffId,
+        first_name.trim(),
+        last_name.trim(),
+        email.trim().toLowerCase(),
+        phone || null,
+        area || 'comercial',
+        level || 1,
+        hashedPassword,
+        is_active !== false
+      ],
+      type: sequelize.QueryTypes.INSERT
+    });
+
+    console.log(`✅ Staff creado: ${first_name} ${last_name} (${email})`);
+
+    res.json({
+      success: true,
+      data: {
+        staff_id: staffId,
+        first_name,
+        last_name,
+        email,
+        area,
+        level
+      },
+      message: 'Staff creado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('❌ Error creando staff:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al crear staff',
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// SUPPORT TICKETS - Para panel administrativo
+// ============================================================================
+
+/**
+ * GET /api/aponnt/dashboard/support-tickets
+ * Obtener todos los tickets de soporte (para admin)
+ */
+router.get('/support-tickets', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const { status, priority, company_id, assigned_to, limit = 50 } = req.query;
+
+    let whereClause = 'WHERE 1=1';
+    const bindings = [];
+    let bindIndex = 1;
+
+    if (status) {
+      whereClause += ` AND t.status = $${bindIndex++}`;
+      bindings.push(status);
+    }
+    if (priority) {
+      whereClause += ` AND t.priority = $${bindIndex++}`;
+      bindings.push(priority);
+    }
+    if (company_id) {
+      whereClause += ` AND t.company_id = $${bindIndex++}`;
+      bindings.push(parseInt(company_id));
+    }
+    if (assigned_to) {
+      whereClause += ` AND t.assigned_to_staff_id = $${bindIndex++}`;
+      bindings.push(assigned_to);
+    }
+
+    const tickets = await sequelize.query(`
+      SELECT
+        t.id, t.ticket_number, t.subject, t.description,
+        t.status, t.priority, t.module_name,
+        t.company_id, c.name as company_name,
+        t.created_by_user_id, u.name as created_by_name,
+        t.assigned_to_staff_id,
+        CONCAT(s.first_name, ' ', s.last_name) as assigned_to_name,
+        t.created_at, t.updated_at, t.resolved_at,
+        t.sla_deadline, t.response_time_minutes
+      FROM support_tickets_v2 t
+      LEFT JOIN companies c ON t.company_id = c.company_id
+      LEFT JOIN users u ON t.created_by_user_id = u.user_id
+      LEFT JOIN aponnt_staff s ON t.assigned_to_staff_id = s.staff_id
+      ${whereClause}
+      ORDER BY
+        CASE t.priority
+          WHEN 'critical' THEN 1
+          WHEN 'high' THEN 2
+          WHEN 'medium' THEN 3
+          WHEN 'low' THEN 4
+        END,
+        t.created_at DESC
+      LIMIT $${bindIndex}
+    `, {
+      bind: [...bindings, parseInt(limit)],
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    res.json({
+      success: true,
+      data: tickets,
+      count: tickets.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo tickets:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener tickets',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/aponnt/dashboard/support-tickets
+ * Crear ticket de soporte desde admin
+ */
+router.post('/support-tickets', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const { v4: uuidv4 } = require('uuid');
+
+    const {
+      company_id,
+      subject,
+      description,
+      priority = 'medium',
+      module_name,
+      assigned_to_staff_id
+    } = req.body;
+
+    if (!company_id || !subject) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campos requeridos: company_id, subject'
+      });
+    }
+
+    // Generar número de ticket
+    const year = new Date().getFullYear();
+    const countResult = await sequelize.query(
+      `SELECT COUNT(*) as count FROM support_tickets_v2 WHERE EXTRACT(YEAR FROM created_at) = $1`,
+      { bind: [year], type: sequelize.QueryTypes.SELECT }
+    );
+    const sequence = parseInt(countResult[0]?.count || 0) + 1;
+    const ticketNumber = `TKT-${year}-${String(sequence).padStart(6, '0')}`;
+
+    // Calcular SLA deadline según prioridad
+    const slaHours = { critical: 2, high: 4, medium: 8, low: 24 };
+    const deadline = new Date(Date.now() + (slaHours[priority] || 8) * 60 * 60 * 1000);
+
+    const ticketId = uuidv4();
+
+    await sequelize.query(`
+      INSERT INTO support_tickets_v2 (
+        id, ticket_number, company_id, subject, description,
+        priority, module_name, status, assigned_to_staff_id,
+        sla_deadline, created_at, updated_at
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, 'open', $8, $9, NOW(), NOW()
+      )
+    `, {
+      bind: [
+        ticketId,
+        ticketNumber,
+        company_id,
+        subject,
+        description || null,
+        priority,
+        module_name || 'general',
+        assigned_to_staff_id || null,
+        deadline.toISOString()
+      ],
+      type: sequelize.QueryTypes.INSERT
+    });
+
+    console.log(`✅ Ticket creado: ${ticketNumber}`);
+
+    res.json({
+      success: true,
+      data: {
+        id: ticketId,
+        ticket_number: ticketNumber,
+        status: 'open',
+        priority,
+        sla_deadline: deadline
+      },
+      message: 'Ticket creado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('❌ Error creando ticket:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al crear ticket',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * PUT /api/aponnt/dashboard/support-tickets/:id/assign
+ * Asignar ticket a un staff
+ */
+router.put('/support-tickets/:id/assign', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const { id } = req.params;
+    const { staff_id } = req.body;
+
+    await sequelize.query(`
+      UPDATE support_tickets_v2 SET
+        assigned_to_staff_id = $1,
+        status = CASE WHEN status = 'open' THEN 'in_progress' ELSE status END,
+        updated_at = NOW()
+      WHERE id = $2
+    `, {
+      bind: [staff_id, id],
+      type: sequelize.QueryTypes.UPDATE
+    });
+
+    res.json({
+      success: true,
+      message: 'Ticket asignado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('❌ Error asignando ticket:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al asignar ticket',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * PUT /api/aponnt/dashboard/support-tickets/:id/status
+ * Cambiar estado de un ticket
+ */
+router.put('/support-tickets/:id/status', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const { id } = req.params;
+    const { status, resolution_notes } = req.body;
+
+    const validStatuses = ['open', 'in_progress', 'waiting_customer', 'resolved', 'closed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Estado inválido'
+      });
+    }
+
+    let extraFields = '';
+    const bindings = [status];
+    let bindIndex = 2;
+
+    if (status === 'resolved' || status === 'closed') {
+      extraFields = `, resolved_at = NOW()`;
+      if (resolution_notes) {
+        extraFields += `, resolution_notes = $${bindIndex++}`;
+        bindings.push(resolution_notes);
+      }
+    }
+
+    bindings.push(id);
+
+    await sequelize.query(`
+      UPDATE support_tickets_v2 SET
+        status = $1,
+        updated_at = NOW()
+        ${extraFields}
+      WHERE id = $${bindIndex}
+    `, {
+      bind: bindings,
+      type: sequelize.QueryTypes.UPDATE
+    });
+
+    res.json({
+      success: true,
+      message: 'Estado actualizado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('❌ Error actualizando estado:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al actualizar estado',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/aponnt/dashboard/support-stats
+ * Estadísticas de soporte para dashboard
+ */
+router.get('/support-stats', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+
+    // Contar tickets por estado
+    const byStatus = await sequelize.query(`
+      SELECT status, COUNT(*) as count
+      FROM support_tickets_v2
+      GROUP BY status
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // Contar tickets por prioridad
+    const byPriority = await sequelize.query(`
+      SELECT priority, COUNT(*) as count
+      FROM support_tickets_v2
+      WHERE status NOT IN ('resolved', 'closed')
+      GROUP BY priority
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // Tickets vencidos (pasaron SLA)
+    const overdueResult = await sequelize.query(`
+      SELECT COUNT(*) as count
+      FROM support_tickets_v2
+      WHERE status NOT IN ('resolved', 'closed')
+        AND sla_deadline < NOW()
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // Tickets sin asignar
+    const unassignedResult = await sequelize.query(`
+      SELECT COUNT(*) as count
+      FROM support_tickets_v2
+      WHERE status = 'open'
+        AND assigned_to_staff_id IS NULL
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // Tiempo promedio de resolución (últimos 30 días)
+    const avgResolutionResult = await sequelize.query(`
+      SELECT AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/60) as avg_minutes
+      FROM support_tickets_v2
+      WHERE resolved_at IS NOT NULL
+        AND resolved_at > NOW() - INTERVAL '30 days'
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // Total tickets hoy
+    const todayResult = await sequelize.query(`
+      SELECT COUNT(*) as count
+      FROM support_tickets_v2
+      WHERE created_at >= CURRENT_DATE
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    const statusMap = {};
+    byStatus.forEach(s => { statusMap[s.status] = parseInt(s.count); });
+
+    const priorityMap = {};
+    byPriority.forEach(p => { priorityMap[p.priority] = parseInt(p.count); });
+
+    res.json({
+      success: true,
+      data: {
+        by_status: statusMap,
+        by_priority: priorityMap,
+        overdue: parseInt(overdueResult[0]?.count || 0),
+        unassigned: parseInt(unassignedResult[0]?.count || 0),
+        avg_resolution_minutes: Math.round(avgResolutionResult[0]?.avg_minutes || 0),
+        today_count: parseInt(todayResult[0]?.count || 0),
+        total_open: (statusMap.open || 0) + (statusMap.in_progress || 0) + (statusMap.waiting_customer || 0)
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo estadísticas:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener estadísticas',
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// REPORTES - Generación y exportación
+// ============================================================================
+
+/**
+ * GET /api/aponnt/dashboard/reports/companies
+ * Reporte de empresas con métricas
+ */
+router.get('/reports/companies', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const { status, from_date, to_date, format = 'json' } = req.query;
+
+    let whereClause = 'WHERE 1=1';
+    const bindings = [];
+    let bindIndex = 1;
+
+    if (status) {
+      whereClause += ` AND c.status = $${bindIndex++}`;
+      bindings.push(status);
+    }
+    if (from_date) {
+      whereClause += ` AND c.created_at >= $${bindIndex++}`;
+      bindings.push(from_date);
+    }
+    if (to_date) {
+      whereClause += ` AND c.created_at <= $${bindIndex++}`;
+      bindings.push(to_date);
+    }
+
+    const companies = await sequelize.query(`
+      SELECT
+        c.company_id, c.name, c.legal_name, c.tax_id,
+        c.contact_email, c.phone, c.status, c.is_active,
+        c.max_employees, c.license_type,
+        c.created_at,
+        (SELECT COUNT(*) FROM users u WHERE u.company_id = c.company_id) as user_count,
+        (SELECT COUNT(*) FROM invoices i WHERE i.company_id = c.company_id) as invoice_count,
+        (SELECT COALESCE(SUM(total_amount), 0) FROM invoices i WHERE i.company_id = c.company_id AND i.status = 'PAID') as total_billed
+      FROM companies c
+      ${whereClause}
+      ORDER BY c.created_at DESC
+    `, {
+      bind: bindings,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    // Estadísticas generales
+    const stats = {
+      total_companies: companies.length,
+      active: companies.filter(c => c.is_active).length,
+      inactive: companies.filter(c => !c.is_active).length,
+      total_users: companies.reduce((sum, c) => sum + parseInt(c.user_count || 0), 0),
+      total_billed: companies.reduce((sum, c) => sum + parseFloat(c.total_billed || 0), 0)
+    };
+
+    if (format === 'csv') {
+      const csv = generateCSV(companies, ['company_id', 'name', 'tax_id', 'contact_email', 'status', 'user_count', 'total_billed', 'created_at']);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=reporte-empresas.csv');
+      return res.send(csv);
+    }
+
+    res.json({
+      success: true,
+      report_type: 'companies',
+      generated_at: new Date().toISOString(),
+      stats,
+      data: companies
+    });
+
+  } catch (error) {
+    console.error('❌ Error generando reporte:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/aponnt/dashboard/reports/billing
+ * Reporte de facturación
+ */
+router.get('/reports/billing', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const { from_date, to_date, status, format = 'json' } = req.query;
+
+    let whereClause = 'WHERE 1=1';
+    const bindings = [];
+    let bindIndex = 1;
+
+    if (status) {
+      whereClause += ` AND i.status = $${bindIndex++}`;
+      bindings.push(status);
+    }
+    if (from_date) {
+      whereClause += ` AND i.created_at >= $${bindIndex++}`;
+      bindings.push(from_date);
+    }
+    if (to_date) {
+      whereClause += ` AND i.created_at <= $${bindIndex++}`;
+      bindings.push(to_date);
+    }
+
+    const invoices = await sequelize.query(`
+      SELECT
+        i.id, i.invoice_number, i.total_amount, i.status,
+        i.issue_date, i.due_date, i.paid_at,
+        i.company_id, c.name as company_name
+      FROM invoices i
+      LEFT JOIN companies c ON i.company_id = c.company_id
+      ${whereClause}
+      ORDER BY i.created_at DESC
+    `, {
+      bind: bindings,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    const stats = {
+      total_invoices: invoices.length,
+      pending: invoices.filter(i => i.status === 'PENDING').length,
+      paid: invoices.filter(i => i.status === 'PAID').length,
+      overdue: invoices.filter(i => i.status === 'OVERDUE').length,
+      total_amount: invoices.reduce((sum, i) => sum + parseFloat(i.total_amount || 0), 0),
+      total_paid: invoices.filter(i => i.status === 'PAID').reduce((sum, i) => sum + parseFloat(i.total_amount || 0), 0),
+      total_pending: invoices.filter(i => i.status === 'PENDING').reduce((sum, i) => sum + parseFloat(i.total_amount || 0), 0)
+    };
+
+    if (format === 'csv') {
+      const csv = generateCSV(invoices, ['invoice_number', 'company_name', 'total_amount', 'status', 'issue_date', 'due_date', 'paid_at']);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=reporte-facturacion.csv');
+      return res.send(csv);
+    }
+
+    res.json({
+      success: true,
+      report_type: 'billing',
+      generated_at: new Date().toISOString(),
+      stats,
+      data: invoices
+    });
+
+  } catch (error) {
+    console.error('❌ Error generando reporte:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/aponnt/dashboard/reports/support
+ * Reporte de tickets de soporte
+ */
+router.get('/reports/support', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const { from_date, to_date, status, priority, format = 'json' } = req.query;
+
+    let whereClause = 'WHERE 1=1';
+    const bindings = [];
+    let bindIndex = 1;
+
+    if (status) {
+      whereClause += ` AND t.status = $${bindIndex++}`;
+      bindings.push(status);
+    }
+    if (priority) {
+      whereClause += ` AND t.priority = $${bindIndex++}`;
+      bindings.push(priority);
+    }
+    if (from_date) {
+      whereClause += ` AND t.created_at >= $${bindIndex++}`;
+      bindings.push(from_date);
+    }
+    if (to_date) {
+      whereClause += ` AND t.created_at <= $${bindIndex++}`;
+      bindings.push(to_date);
+    }
+
+    const tickets = await sequelize.query(`
+      SELECT
+        t.id, t.ticket_number, t.subject, t.status, t.priority,
+        t.module_name, t.created_at, t.resolved_at,
+        t.response_time_minutes,
+        c.name as company_name,
+        CONCAT(s.first_name, ' ', s.last_name) as assigned_to
+      FROM support_tickets_v2 t
+      LEFT JOIN companies c ON t.company_id = c.company_id
+      LEFT JOIN aponnt_staff s ON t.assigned_to_staff_id = s.staff_id
+      ${whereClause}
+      ORDER BY t.created_at DESC
+    `, {
+      bind: bindings,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    const resolved = tickets.filter(t => t.resolved_at);
+    const avgResolution = resolved.length > 0
+      ? resolved.reduce((sum, t) => sum + (t.response_time_minutes || 0), 0) / resolved.length
+      : 0;
+
+    const stats = {
+      total_tickets: tickets.length,
+      by_status: {
+        open: tickets.filter(t => t.status === 'open').length,
+        in_progress: tickets.filter(t => t.status === 'in_progress').length,
+        resolved: tickets.filter(t => t.status === 'resolved').length,
+        closed: tickets.filter(t => t.status === 'closed').length
+      },
+      by_priority: {
+        critical: tickets.filter(t => t.priority === 'critical').length,
+        high: tickets.filter(t => t.priority === 'high').length,
+        medium: tickets.filter(t => t.priority === 'medium').length,
+        low: tickets.filter(t => t.priority === 'low').length
+      },
+      avg_resolution_minutes: Math.round(avgResolution),
+      resolution_rate: tickets.length > 0 ? Math.round((resolved.length / tickets.length) * 100) : 0
+    };
+
+    if (format === 'csv') {
+      const csv = generateCSV(tickets, ['ticket_number', 'company_name', 'subject', 'priority', 'status', 'assigned_to', 'created_at', 'resolved_at']);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=reporte-soporte.csv');
+      return res.send(csv);
+    }
+
+    res.json({
+      success: true,
+      report_type: 'support',
+      generated_at: new Date().toISOString(),
+      stats,
+      data: tickets
+    });
+
+  } catch (error) {
+    console.error('❌ Error generando reporte:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/aponnt/dashboard/reports/vendors
+ * Reporte de vendedores y comisiones
+ */
+router.get('/reports/vendors', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+    const { from_date, to_date, format = 'json' } = req.query;
+
+    const vendors = await sequelize.query(`
+      SELECT
+        s.staff_id, s.first_name, s.last_name, s.email,
+        s.area, s.level, s.global_rating,
+        COUNT(DISTINCT vc.company_id) as companies_count,
+        COALESCE(SUM(vc.monthly_amount), 0) as total_commissions
+      FROM aponnt_staff s
+      LEFT JOIN vendor_commissions vc ON s.staff_id = vc.vendor_id AND vc.is_active = true
+      WHERE s.area = 'comercial' AND s.is_active = true
+      GROUP BY s.staff_id, s.first_name, s.last_name, s.email, s.area, s.level, s.global_rating
+      ORDER BY total_commissions DESC
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    const stats = {
+      total_vendors: vendors.length,
+      total_commissions: vendors.reduce((sum, v) => sum + parseFloat(v.total_commissions || 0), 0),
+      avg_companies_per_vendor: vendors.length > 0
+        ? Math.round(vendors.reduce((sum, v) => sum + parseInt(v.companies_count || 0), 0) / vendors.length * 10) / 10
+        : 0
+    };
+
+    if (format === 'csv') {
+      const csv = generateCSV(vendors, ['first_name', 'last_name', 'email', 'level', 'companies_count', 'total_commissions', 'global_rating']);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=reporte-vendedores.csv');
+      return res.send(csv);
+    }
+
+    res.json({
+      success: true,
+      report_type: 'vendors',
+      generated_at: new Date().toISOString(),
+      stats,
+      data: vendors
+    });
+
+  } catch (error) {
+    console.error('❌ Error generando reporte:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/aponnt/dashboard/reports/executive
+ * Reporte ejecutivo (resumen general)
+ */
+router.get('/reports/executive', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+
+    // Empresas
+    const companiesResult = await sequelize.query(`
+      SELECT
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE is_active = true) as active,
+        COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '30 days') as new_last_30_days
+      FROM companies
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // Facturación
+    const billingResult = await sequelize.query(`
+      SELECT
+        COALESCE(SUM(total_amount), 0) as total_billed,
+        COALESCE(SUM(total_amount) FILTER (WHERE status = 'PAID'), 0) as total_collected,
+        COALESCE(SUM(total_amount) FILTER (WHERE status = 'PENDING'), 0) as total_pending,
+        COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '30 days') as invoices_last_30_days
+      FROM invoices
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // Soporte
+    const supportResult = await sequelize.query(`
+      SELECT
+        COUNT(*) as total_tickets,
+        COUNT(*) FILTER (WHERE status IN ('open', 'in_progress')) as open_tickets,
+        COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '7 days') as tickets_last_7_days,
+        AVG(response_time_minutes) FILTER (WHERE resolved_at IS NOT NULL) as avg_resolution
+      FROM support_tickets_v2
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    // Staff
+    const staffResult = await sequelize.query(`
+      SELECT
+        COUNT(*) as total_staff,
+        COUNT(*) FILTER (WHERE area = 'comercial') as vendors,
+        COUNT(*) FILTER (WHERE area = 'soporte') as support_staff
+      FROM aponnt_staff WHERE is_active = true
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    res.json({
+      success: true,
+      report_type: 'executive',
+      generated_at: new Date().toISOString(),
+      data: {
+        companies: {
+          total: parseInt(companiesResult[0]?.total || 0),
+          active: parseInt(companiesResult[0]?.active || 0),
+          new_last_30_days: parseInt(companiesResult[0]?.new_last_30_days || 0)
+        },
+        billing: {
+          total_billed: parseFloat(billingResult[0]?.total_billed || 0),
+          total_collected: parseFloat(billingResult[0]?.total_collected || 0),
+          total_pending: parseFloat(billingResult[0]?.total_pending || 0),
+          invoices_last_30_days: parseInt(billingResult[0]?.invoices_last_30_days || 0)
+        },
+        support: {
+          total_tickets: parseInt(supportResult[0]?.total_tickets || 0),
+          open_tickets: parseInt(supportResult[0]?.open_tickets || 0),
+          tickets_last_7_days: parseInt(supportResult[0]?.tickets_last_7_days || 0),
+          avg_resolution_minutes: Math.round(supportResult[0]?.avg_resolution || 0)
+        },
+        staff: {
+          total: parseInt(staffResult[0]?.total_staff || 0),
+          vendors: parseInt(staffResult[0]?.vendors || 0),
+          support: parseInt(staffResult[0]?.support_staff || 0)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error generando reporte ejecutivo:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Helper: Generar CSV
+function generateCSV(data, columns) {
+  if (!data || data.length === 0) return '';
+
+  const headers = columns.join(',');
+  const rows = data.map(row =>
+    columns.map(col => {
+      const value = row[col];
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      return str.includes(',') || str.includes('"') || str.includes('\n')
+        ? `"${str.replace(/"/g, '""')}"`
+        : str;
+    }).join(',')
+  );
+
+  return [headers, ...rows].join('\n');
+}
 
 module.exports = router;

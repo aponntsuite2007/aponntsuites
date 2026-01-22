@@ -13,11 +13,12 @@ const SupplierAuthTokenService = require('./SupplierAuthTokenService');
 
 class SupplierPortalService {
     constructor() {
+        // 🔐 SEGURIDAD: No usar fallback de password - debe venir de .env
         this.pool = new Pool({
             host: process.env.DB_HOST || 'localhost',
             port: process.env.DB_PORT || 5432,
             user: process.env.DB_USER || 'postgres',
-            password: process.env.DB_PASSWORD || 'Aedr15150302',
+            password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME || 'attendance_system'
         });
         this.authTokenService = new SupplierAuthTokenService(this.pool);

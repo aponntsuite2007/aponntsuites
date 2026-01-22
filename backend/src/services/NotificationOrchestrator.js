@@ -36,8 +36,9 @@
 
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
-const nodemailer = require('nodemailer');
 const NCE = require('./NotificationCentralExchange');
+// 🔐 SSOT: Usar EmailService en lugar de nodemailer directo
+const EmailService = require('./EmailService');
 
 class NotificationOrchestrator {
 
@@ -314,28 +315,16 @@ class NotificationOrchestrator {
 
     /**
      * ========================================================================
-     * SEND EMAIL - Enviar email
+     * SEND EMAIL - Enviar email (SSOT via EmailService)
      * ========================================================================
+     * @deprecated Este servicio está deprecado. Usar NCE.send() con channels: ['email']
      */
-    static async sendEmail(workflow, templateKey, recipientEmail, vars, logId) {
-        console.log(`📧 [EMAIL] Sending to: ${recipientEmail}`);
+    static async sendEmail(workflow, templateKey, recipientEmail, vars, logId, companyId = null) {
+        console.warn(`⚠️ [ORCHESTRATOR-DEPRECATED] sendEmail() is deprecated. Use NCE.send() instead.`);
+        console.log(`📧 [EMAIL-SSOT] Sending to: ${recipientEmail} via EmailService`);
 
         try {
-            // TODO: Obtener configuración SMTP de email_process_mapping o email_config
-            // Por ahora usar configuración básica
-
-            const transporter = nodemailer.createTransport({
-                host: process.env.SMTP_HOST || 'smtp.gmail.com',
-                port: process.env.SMTP_PORT || 587,
-                secure: false,
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS
-                }
-            });
-
-            // TODO: Obtener template de notification_templates
-            // Por ahora usar template simple
+            // Construir email
             const subject = `[${workflow.module.toUpperCase()}] ${workflow.process_name}`;
             const body = this.renderTemplate(workflow.description, vars);
 
@@ -345,24 +334,36 @@ class NotificationOrchestrator {
                 html += this.renderResponseButtons(workflow.response_options, logId);
             }
 
-            const info = await transporter.sendMail({
-                from: process.env.SMTP_USER,
-                to: recipientEmail,
-                subject,
-                text: body,
-                html
-            });
+            // 🔐 SSOT: Usar EmailService para envío multi-tenant
+            let result;
+            if (companyId) {
+                // Enviar desde la empresa específica
+                result = await EmailService.sendFromCompany(companyId, {
+                    to: recipientEmail,
+                    subject,
+                    text: body,
+                    html
+                });
+            } else {
+                // Fallback: Enviar desde Aponnt (nivel sistema)
+                result = await EmailService.sendFromAponnt({
+                    to: recipientEmail,
+                    subject,
+                    text: body,
+                    html
+                });
+            }
 
-            console.log(`✅ [EMAIL] Sent: ${info.messageId}`);
+            console.log(`✅ [EMAIL-SSOT] Sent via EmailService`);
 
             return {
                 success: true,
-                provider: 'nodemailer',
-                messageId: info.messageId
+                provider: 'EmailService-SSOT',
+                messageId: result?.messageId || 'sent'
             };
 
         } catch (error) {
-            console.error(`❌ [EMAIL] Error:`, error.message);
+            console.error(`❌ [EMAIL-SSOT] Error:`, error.message);
             return {
                 success: false,
                 error: error.message

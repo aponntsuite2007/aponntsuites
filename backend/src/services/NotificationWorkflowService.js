@@ -94,8 +94,9 @@ class NotificationWorkflowService {
       if (data.recipient) {
         recipientType = data.recipient.type || 'user';
         recipientId = data.recipient.userId || data.recipient.id;
-      } else if (data.recipientUserId) {
-        recipientId = data.recipientUserId;
+      } else if (data.recipientUserId || data.recipientId) {
+        recipientId = data.recipientUserId || data.recipientId;
+        recipientType = data.recipientType || 'user';
       } else if (data.recipientRole) {
         recipientType = 'role';
         recipientId = data.recipientRole;

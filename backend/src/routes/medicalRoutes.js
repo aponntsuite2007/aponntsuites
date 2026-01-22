@@ -66,6 +66,67 @@ const upload = multer({
   }
 });
 
+// ========== INTEGRACIÓN DMS - SSOT DOCUMENTAL ==========
+/**
+ * Registra archivos médicos en DMS para centralización documental
+ * @param {Object} req - Request de Express
+ * @param {Object} file - Archivo de multer
+ * @param {string} documentType - Tipo de documento (certificate, photo, study)
+ * @param {string} userId - ID del usuario/empleado
+ * @param {Object} metadata - Metadata adicional (certificateId, studyType, etc.)
+ */
+const registerMedicalDocInDMS = async (req, file, documentType, userId, metadata = {}) => {
+  try {
+    const dmsService = req.app.get('dmsIntegrationService');
+    if (!dmsService) {
+      console.warn('⚠️ [MEDICAL] DMSIntegrationService no disponible');
+      return null;
+    }
+
+    const companyId = req.user?.company_id || req.body?.company_id;
+
+    // Mapeo de tipos de documento médico
+    const medicalTypeMap = {
+      'certificate': 'MED_CERTIFICATE',
+      'photo': 'MED_PHOTO',
+      'study': 'MED_STUDY',
+      'prescription': 'MED_PRESCRIPTION',
+      'generic': 'MED_DOCUMENT'
+    };
+
+    const result = await dmsService.registerDocument({
+      module: 'medical',
+      documentType: medicalTypeMap[documentType] || 'MED_DOCUMENT',
+      companyId,
+      employeeId: userId,
+      createdById: req.user?.user_id,
+      sourceEntityType: 'medical-record',
+      sourceEntityId: metadata.certificateId || metadata.photoRequestId || metadata.studyId || null,
+      file: {
+        buffer: fs.readFileSync(file.path),
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size
+      },
+      title: file.originalname,
+      description: metadata.description || `Documento médico: ${documentType}`,
+      metadata: {
+        originalPath: file.path,
+        uploadRoute: req.originalUrl,
+        documentType,
+        ...metadata
+      }
+    });
+
+    console.log(`📄 [DMS-MEDICAL] Registrado: ${documentType} - ${result.document?.id}`);
+    return result;
+
+  } catch (error) {
+    console.error('❌ [DMS-MEDICAL] Error registrando en DMS:', error.message);
+    return null;
+  }
+};
+
 // ==== RUTAS DE CERTIFICADOS MÉDICOS ====
 
 // Crear nuevo certificado médico
@@ -496,7 +557,7 @@ router.get('/diagnoses', auth, async (req, res) => {
 router.post('/upload',
   auth,
   upload.single('file'),
-  (req, res) => {
+  async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -506,7 +567,16 @@ router.post('/upload',
       }
 
       const fileUrl = `/uploads/medical-certificates/${req.file.filename}`;
-      
+
+      // ✅ Registrar en DMS (SSOT)
+      const dmsResult = await registerMedicalDocInDMS(
+        req,
+        req.file,
+        'generic',
+        req.user?.user_id,
+        { certificateId: req.body?.certificateId }
+      );
+
       res.json({
         success: true,
         data: {
@@ -514,7 +584,11 @@ router.post('/upload',
           filename: req.file.filename,
           originalname: req.file.originalname,
           size: req.file.size
-        }
+        },
+        dms: dmsResult ? {
+          documentId: dmsResult.document?.id,
+          message: 'Documento registrado en DMS (fuente única de verdad)'
+        } : null
       });
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -837,6 +911,19 @@ router.post('/photos/:id/upload',
         employeeNotes: req.body.notes
       });
 
+      // ✅ Registrar foto en DMS (SSOT)
+      const dmsResult = await registerMedicalDocInDMS(
+        req,
+        req.file,
+        'photo',
+        req.user?.user_id,
+        {
+          photoRequestId: photoRequest.id,
+          bodyPart: photoRequest.bodyPart,
+          photoType: photoRequest.photoType
+        }
+      );
+
       // Notificar al médico
       await Message.create({
         senderId: req.user.user_id,
@@ -867,7 +954,11 @@ router.post('/photos/:id/upload',
 
       res.json({
         success: true,
-        data: photoRequest
+        data: photoRequest,
+        dms: dmsResult ? {
+          documentId: dmsResult.document?.id,
+          message: 'Foto registrada en DMS (fuente única de verdad)'
+        } : null
       });
     } catch (error) {
       console.error('Error uploading photo:', error);
@@ -987,9 +1078,30 @@ router.post('/studies',
         studyDate: new Date(req.body.studyDate)
       });
 
+      // ✅ Registrar estudio en DMS (SSOT)
+      let dmsResult = null;
+      if (req.file) {
+        dmsResult = await registerMedicalDocInDMS(
+          req,
+          req.file,
+          'study',
+          req.user?.user_id,
+          {
+            studyId: study.id,
+            certificateId: req.body.certificateId,
+            studyType: req.body.studyType,
+            studyName: req.body.studyName
+          }
+        );
+      }
+
       res.status(201).json({
         success: true,
-        data: study
+        data: study,
+        dms: dmsResult ? {
+          documentId: dmsResult.document?.id,
+          message: 'Estudio registrado en DMS (fuente única de verdad)'
+        } : null
       });
     } catch (error) {
       console.error('Error creating study:', error);

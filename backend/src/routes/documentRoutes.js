@@ -3,7 +3,52 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const { body, validationResult } = require('express-validator');
+
+// ==============================================
+// 📄 INTEGRACIÓN DMS - SSOT DOCUMENTAL
+// ==============================================
+const registerDocumentInDMS = async (req, file, userId, companyId, metadata = {}) => {
+    try {
+        const dmsService = req.app.get('dmsIntegrationService');
+        if (!dmsService) {
+            console.warn('⚠️ [DOC-DMS] DMSIntegrationService no disponible');
+            return null;
+        }
+
+        const result = await dmsService.registerDocument({
+            module: 'employee-documents',
+            documentType: metadata.documentType || 'EMPLOYEE_DOC',
+            companyId,
+            employeeId: userId,
+            createdById: userId,
+            sourceEntityType: metadata.requestId ? 'document-request' : 'document-upload',
+            sourceEntityId: metadata.requestId || metadata.documentId || null,
+            file: {
+                buffer: fsSync.readFileSync(file.path),
+                originalname: file.originalname,
+                mimetype: file.mimetype,
+                size: file.size
+            },
+            title: file.originalname,
+            description: metadata.description || `Documento: ${metadata.type || 'general'}`,
+            metadata: {
+                originalPath: file.path,
+                uploadRoute: req.originalUrl,
+                category: metadata.category,
+                requestId: metadata.requestId,
+                ...metadata
+            }
+        });
+
+        console.log(`📄 [DMS-DOC] Documento registrado: ${result.document?.id}`);
+        return result;
+    } catch (error) {
+        console.error('❌ [DMS-DOC] Error registrando:', error.message);
+        return null;
+    }
+};
 
 // Integración NCE - Notificaciones
 const DocumentsNotifications = require('../services/integrations/documents-notifications');
@@ -156,6 +201,15 @@ router.post('/upload',
 
       console.log(`📄 Documento subido: ${document.filename} por ${document.employeeName}`);
 
+      // ✅ Registrar en DMS (SSOT)
+      const dmsResult = await registerDocumentInDMS(req, req.file, req.user.user_id, req.user.company_id, {
+        type,
+        category,
+        description,
+        documentId: document.id,
+        documentType: 'EMPLOYEE_DOC'
+      });
+
       // Enviar notificación al personal médico
       try {
         await notificationService.sendFehacienteNotification({
@@ -191,7 +245,8 @@ Revise el documento en el panel administrativo.`,
           filename: document.filename,
           type: document.type,
           uploadedAt: document.uploadedAt
-        }
+        },
+        dms: dmsResult ? { documentId: dmsResult.document?.id } : null
       });
 
     } catch (error) {
@@ -272,6 +327,14 @@ router.post('/upload-for-request',
 
       console.log(`📄 Documento para solicitud ${requestId}: ${document.filename} por ${document.employeeName}`);
 
+      // ✅ Registrar en DMS (SSOT)
+      const dmsResult = await registerDocumentInDMS(req, req.file, req.user.user_id, req.user.company_id, {
+        type,
+        requestId,
+        documentId: document.id,
+        documentType: 'EMPLOYEE_DOC_REQUEST'
+      });
+
       // Enviar notificación fehaciente de cumplimiento
       try {
         await notificationService.sendFehacienteNotification({
@@ -329,7 +392,8 @@ Gracias por cumplir con la solicitud médica.`,
           filename: document.filename,
           status: 'completed',
           uploadedAt: document.uploadedAt
-        }
+        },
+        dms: dmsResult ? { documentId: dmsResult.document?.id } : null
       });
 
     } catch (error) {

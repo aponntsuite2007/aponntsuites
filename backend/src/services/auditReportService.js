@@ -962,25 +962,25 @@ class AuditReportService {
         query += ` ORDER BY generated_at DESC LIMIT $${paramCount + 1}`;
         params.push(limit);
 
-        const result = await database.sequelize.query(query, params);
-        return result.rows;
+        const [rows] = await database.sequelize.query(query, { bind: params });
+        return rows || [];
     }
 
     /**
      * Descargar reporte
      */
     async downloadReport(reportId, companyId) {
-        const result = await database.sequelize.query(`
+        const [rows] = await database.sequelize.query(`
             SELECT file_path, report_type, verification_code
             FROM audit_reports
             WHERE id = $1 AND company_id = $2
-        `, [reportId, companyId]);
+        `, { bind: [reportId, companyId] });
 
-        if (result.rows.length === 0) {
+        if (!rows || rows.length === 0) {
             throw new Error('Reporte no encontrado');
         }
 
-        const report = result.rows[0];
+        const report = rows[0];
         const filepath = path.join(this.reportsDir, report.file_path);
 
         // Registrar acceso

@@ -277,16 +277,24 @@ class OnboardingService {
    * @param {UUID} contractId
    * @param {String} action - 'sign' | 'reject'
    * @param {Object} signatureData - IP, user agent, checkbox acceptance
+   *
+   * FLUJO CORRECTO:
+   * 1. Cliente firma contrato
+   * 2. SI no existe company_id → CREAR EMPRESA INACTIVA
+   * 3. Actualizar Budget y Contract con company_id
+   * 4. Generar factura
    */
   async handleContractSignature(contractId, action, signatureData) {
     try {
-      const contract = await Contract.findByPk(contractId);
+      const contract = await Contract.findByPk(contractId, {
+        include: [{ model: Budget, as: 'budget' }]
+      });
       if (!contract) throw new Error('Contrato no encontrado');
 
       if (action === 'sign') {
         // Cliente firma → Actualizar contrato
         await contract.update({
-          status: 'SIGNED',
+          status: 'signed',  // Cambiado a minúscula para consistencia
           signed_at: new Date(),
           signed_ip: signatureData.ip,
           signed_user_agent: signatureData.userAgent,
@@ -294,6 +302,35 @@ class OnboardingService {
         });
 
         console.log(`✅ [ONBOARDING] Contrato firmado: ${contract.contract_number}`);
+
+        // ═══════════════════════════════════════════════════════════
+        // PASO CRÍTICO: Si no hay empresa, CREARLA INACTIVA
+        // ═══════════════════════════════════════════════════════════
+        let companyId = contract.company_id;
+
+        if (!companyId) {
+          console.log(`🏢 [ONBOARDING] Creando empresa INACTIVA desde contrato firmado...`);
+
+          // Obtener datos del lead/budget para crear la empresa
+          const budget = contract.budget || await Budget.findByPk(contract.budget_id);
+          if (!budget) throw new Error('No se encontró el presupuesto asociado al contrato');
+
+          // Crear empresa INACTIVA
+          const newCompany = await this.createInactiveCompany(budget, contract);
+          companyId = newCompany.company_id;
+
+          // Actualizar Budget y Contract con el nuevo company_id
+          await budget.update({ company_id: companyId });
+          await contract.update({ company_id: companyId });
+
+          console.log(`✅ [ONBOARDING] Empresa INACTIVA creada: ${newCompany.name} (ID: ${companyId})`);
+        } else {
+          // Empresa ya existía → actualizar onboarding_status
+          await Company.update(
+            { onboarding_status: 'CONTRACT_SIGNED' },
+            { where: { company_id: companyId } }
+          );
+        }
 
         // → Avanzar a FASE 3: Facturación
         return await this.generateInitialInvoice(contract);
@@ -491,9 +528,15 @@ class OnboardingService {
       const company = await Company.findByPk(invoice.company_id);
 
       // Step 17: Alta definitiva empresa
+      // VALIDACIÓN CRÍTICA: Verificar que la factura esté PAGADA
+      if (invoice.status !== 'PAID') {
+        throw new Error(`No se puede activar empresa sin factura pagada. Estado actual: ${invoice.status}`);
+      }
+
       await company.update({
-        status: 'ACTIVE',
-        onboarding_status: 'ALTA_DEFINITIVA',
+        status: 'active',  // Minúscula para consistencia con modelo
+        is_active: true,   // ACTIVAR el flag
+        onboarding_status: 'ACTIVATED',
         activated_at: new Date()
       });
 
@@ -552,6 +595,123 @@ class OnboardingService {
     });
 
     return adminUser;
+  }
+
+  /**
+   * ============================================================================
+   * CREAR EMPRESA INACTIVA (al firmar contrato, antes de facturar)
+   * ============================================================================
+   * Esta función se llama cuando el contrato se firma y aún no existe empresa.
+   * La empresa se crea con status='pending' y is_active=false.
+   * Solo se activará cuando se confirme el pago de la factura.
+   */
+  async createInactiveCompany(budget, contract) {
+    const { sequelize } = require('../config/database');
+    const { v4: uuidv4 } = require('uuid');
+
+    // Obtener datos del lead si existe
+    let leadData = {};
+    if (budget.lead_id) {
+      const leadResult = await sequelize.query(
+        `SELECT * FROM sales_leads WHERE id = :leadId`,
+        { replacements: { leadId: budget.lead_id }, type: sequelize.QueryTypes.SELECT }
+      );
+      if (leadResult.length > 0) {
+        leadData = leadResult[0];
+      }
+    }
+
+    // Generar slug único
+    const baseName = leadData.company_name || `Empresa-${Date.now()}`;
+    const slug = baseName
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    // Crear empresa INACTIVA
+    const newCompany = await Company.create({
+      name: leadData.company_name || baseName,
+      slug: `${slug}-${uuidv4().substring(0, 8)}`,
+      email: leadData.contact_email || budget.client_email,
+      phone: leadData.contact_phone || null,
+      address: leadData.address || null,
+      city: leadData.city || null,
+      country: leadData.country || 'Argentina',
+      taxId: leadData.tax_id || null,
+
+      // ESTADO INACTIVO
+      status: 'pending',
+      isActive: false,
+      onboardingStatus: 'CONTRACT_SIGNED',
+      traceId: budget.trace_id,
+
+      // Módulos del presupuesto (pero NO activos aún)
+      activeModules: this.convertModulesToActiveFormat(budget.selected_modules, false),
+
+      // Configuración por defecto
+      licenseType: 'professional',
+      subscriptionType: 'professional',
+      maxEmployees: budget.contracted_employees || 50,
+      contractedEmployees: budget.contracted_employees || 1,
+
+      // Vendedor
+      assignedVendorId: budget.vendor_id
+    });
+
+    console.log(`🏢 [ONBOARDING] Empresa INACTIVA creada: ${newCompany.name} (ID: ${newCompany.company_id})`);
+    console.log(`   - Status: ${newCompany.status}`);
+    console.log(`   - isActive: ${newCompany.isActive}`);
+    console.log(`   - trace_id: ${newCompany.traceId}`);
+
+    // Crear sucursal CENTRAL (inactiva también)
+    const { Branch } = require('../config/database');
+    await Branch.create({
+      name: 'CENTRAL',
+      code: `CENTRAL-${newCompany.company_id}`,
+      company_id: newCompany.company_id,
+      is_main: true,
+      isActive: false,  // Inactiva hasta que se active la empresa
+      address: newCompany.address
+    });
+
+    console.log(`   - Sucursal CENTRAL creada`);
+
+    // Marcar lead como convertido (si existe)
+    if (budget.lead_id) {
+      await sequelize.query(
+        `UPDATE sales_leads SET
+          lifecycle_stage = 'customer',
+          converted_to_customer_at = NOW(),
+          converted_company_id = :companyId
+         WHERE id = :leadId`,
+        { replacements: { leadId: budget.lead_id, companyId: newCompany.company_id } }
+      );
+      console.log(`   - Lead marcado como convertido`);
+    }
+
+    return newCompany;
+  }
+
+  /**
+   * Convierte array de módulos del presupuesto a formato activeModules
+   * @param {Array} selectedModules - [{module_key, module_name, price}, ...]
+   * @param {Boolean} active - true si activar, false si solo "reservar"
+   */
+  convertModulesToActiveFormat(selectedModules, active = false) {
+    if (!selectedModules || !Array.isArray(selectedModules)) {
+      return {};
+    }
+
+    const result = {};
+    selectedModules.forEach(mod => {
+      const key = mod.module_key || mod.key || mod.name;
+      if (key) {
+        result[key] = active;  // false = módulo contratado pero no activo aún
+      }
+    });
+
+    return result;
   }
 
   /**

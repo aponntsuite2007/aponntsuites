@@ -281,7 +281,7 @@ router.post('/', auth, async (req, res) => {
     // Verificar que el empleado responsable existe y pertenece a la empresa
     const responsibleEmployee = await User.findOne({
       where: {
-        id: responsibleEmployeeId,
+        user_id: responsibleEmployeeId,
         company_id: companyId
       }
     });
@@ -798,6 +798,98 @@ router.post('/:id/gps-tracking', auth, gpsTrackingLimiter, async (req, res) => {
 
   } catch (error) {
     console.error('❌ [VISITORS] Error registrando GPS:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+/**
+ * @route PUT /api/v1/visitors/:id
+ * @desc Actualizar datos de visitante
+ * @access Admin o empleado responsable
+ */
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const companyId = req.user?.company_id || 1;
+    const userId = req.user?.user_id || req.user?.id;
+
+    console.log('✏️ [VISITORS] Actualizando visitante:', req.params.id);
+
+    const visitor = await Visitor.findOne({
+      where: {
+        id: req.params.id,
+        company_id: companyId
+      }
+    });
+
+    if (!visitor) {
+      return res.status(404).json({
+        error: 'Visitante no encontrado',
+        success: false
+      });
+    }
+
+    // Validar permisos: solo admin o empleado responsable puede editar
+    const isAdmin = req.user?.role === 'admin';
+    const isResponsible = visitor.responsible_employee_id === userId;
+
+    if (!isAdmin && !isResponsible) {
+      return res.status(403).json({
+        error: 'No tiene permisos para editar esta visita',
+        success: false
+      });
+    }
+
+    // Campos permitidos para actualización
+    const allowedFields = [
+      'firstName', 'lastName', 'email', 'phone', 'dni',
+      'visitReason', 'notes', 'scheduledVisitDate',
+      'responsibleEmployeeId', 'vehiclePlate', 'vehicleModel'
+    ];
+
+    // Mapear camelCase a snake_case
+    const fieldMapping = {
+      firstName: 'first_name',
+      lastName: 'last_name',
+      visitReason: 'visit_reason',
+      scheduledVisitDate: 'scheduled_visit_date',
+      responsibleEmployeeId: 'responsible_employee_id',
+      vehiclePlate: 'vehicle_plate',
+      vehicleModel: 'vehicle_model'
+    };
+
+    const updateData = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        const dbField = fieldMapping[field] || field;
+        updateData[dbField] = req.body[field];
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        error: 'No se proporcionaron campos para actualizar',
+        success: false
+      });
+    }
+
+    await visitor.update(updateData);
+
+    const updatedVisitor = await Visitor.findByPk(req.params.id);
+
+    console.log('✅ [VISITORS] Visitante actualizado:', req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Visitante actualizado exitosamente',
+      visitor: updatedVisitor
+    });
+
+  } catch (error) {
+    console.error('❌ [VISITORS] Error actualizando visitante:', error);
     res.status(500).json({
       error: 'Error interno del servidor',
       success: false,

@@ -64,6 +64,51 @@ const companyIsolation = new CompanyIsolationMiddleware({
   auditLogging: true
 });
 
+// ==============================================
+// 📄 INTEGRACIÓN DMS - SSOT DOCUMENTAL
+// Solo cuando BIOMETRIC_SAVE_VISIBLE_PHOTO=true
+// ==============================================
+const registerBiometricEnrollInDMS = async (req, file, metadata = {}) => {
+    try {
+        const dmsService = req.app.get('dmsIntegrationService');
+        if (!dmsService) {
+            console.warn('⚠️ [BIOMETRIC-DMS] DMSIntegrationService no disponible');
+            return null;
+        }
+
+        const result = await dmsService.registerDocument({
+            module: 'biometric',
+            documentType: 'BIOMETRIC_ENROLLMENT',
+            companyId: metadata.companyId,
+            employeeId: metadata.employeeId,
+            createdById: metadata.createdById || metadata.employeeId,
+            sourceEntityType: 'biometric-enrollment',
+            sourceEntityId: metadata.templateId || null,
+            file: {
+                buffer: file.buffer,
+                originalname: file.originalname || 'biometric_enrollment.jpg',
+                mimetype: file.mimetype,
+                size: file.size
+            },
+            title: `Biometric Enrollment - Employee ${metadata.employeeId}`,
+            description: `Foto biométrica de enrolamiento - Template ${metadata.templateId}`,
+            metadata: {
+                sessionId: metadata.sessionId,
+                algorithm: metadata.algorithm,
+                provider: metadata.provider,
+                qualityScore: metadata.qualityScore,
+                gdprCompliant: true
+            }
+        });
+
+        console.log(`📄 [DMS-BIOMETRIC] Enrolamiento registrado: ${result.document?.id}`);
+        return result;
+    } catch (error) {
+        console.error('❌ [DMS-BIOMETRIC] Error registrando:', error.message);
+        return null;
+    }
+};
+
 /**
  * @route POST /api/v2/biometric-enterprise/enroll-face
  * @desc Register facial biometric with encrypted template (GDPR compliant)
@@ -304,6 +349,21 @@ router.post('/enroll-face',
         console.log('🔒 [BIOMETRIC-PHOTO] Guardado de foto visible DESHABILITADO (solo template encriptado)');
       }
 
+      // ✅ Registrar en DMS (SSOT) - Solo si se guardó foto visible
+      let dmsResult = null;
+      if (saveVisiblePhoto && photoUrl && req.file) {
+        dmsResult = await registerBiometricEnrollInDMS(req, req.file, {
+          companyId,
+          employeeId,
+          templateId: savedTemplate.id,
+          sessionId,
+          algorithm: embeddingResult.provider || 'face-api-js',
+          provider: embeddingResult.provider,
+          qualityScore: embeddingResult.qualityScore,
+          createdById: req.user?.id
+        });
+      }
+
       const processingTime = Date.now() - startTime;
 
       console.log(`✅ [BIOMETRIC-ENTERPRISE] Face template encrypted and saved: ${savedTemplate.id} in ${processingTime}ms`);
@@ -337,7 +397,8 @@ router.post('/enroll-face',
           processingTime: processingTime,
           withinTarget: processingTime <= 2000
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        dms: dmsResult ? { documentId: dmsResult.document?.id } : null
       });
 
     } catch (error) {

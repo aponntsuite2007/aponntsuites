@@ -387,7 +387,7 @@ class NotificationUnifiedService {
             n.recipient_id = :userId OR
             n.recipient_type = 'broadcast' OR
             (n.recipient_type = 'role' AND n.recipient_role IN (
-                SELECT role FROM users WHERE user_id = :userId::uuid
+                SELECT role::text FROM users WHERE user_id = :userId::uuid
             ))
         )`;
 

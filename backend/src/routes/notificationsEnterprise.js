@@ -253,6 +253,157 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+// =========================================================================
+// ENDPOINTS: WORKFLOWS (Must be BEFORE /:id route)
+// =========================================================================
+
+/**
+ * GET /api/v1/workflows
+ * Listar workflows de la empresa
+ */
+router.get('/workflows', requireRRHH, async (req, res) => {
+  try {
+    const { module } = req.query;
+
+    const workflows = await NotificationWorkflow.getActiveForCompany(
+      req.user.company_id,
+      module
+    );
+
+    res.json({
+      success: true,
+      data: workflows.map(w => w.toAPI())
+    });
+
+  } catch (error) {
+    console.error('[notificationsEnterprise] Error listing workflows:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener workflows'
+    });
+  }
+});
+
+/**
+ * GET /api/v1/workflows/:wid
+ * Obtener workflow específico
+ */
+router.get('/workflows/:wid', requireRRHH, async (req, res) => {
+  try {
+    const workflow = await NotificationWorkflow.findByPk(req.params.wid);
+
+    if (!workflow) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workflow no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: workflow.toAPI()
+    });
+
+  } catch (error) {
+    console.error('[notificationsEnterprise] Error getting workflow:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener workflow'
+    });
+  }
+});
+
+// =========================================================================
+// ENDPOINTS: TEMPLATES (Must be BEFORE /:id route)
+// =========================================================================
+
+/**
+ * GET /api/v1/notification-templates
+ * Listar templates
+ */
+router.get('/templates', requireRRHH, async (req, res) => {
+  try {
+    const { module } = req.query;
+
+    const templates = await NotificationTemplate.getActiveForCompany(
+      req.user.company_id,
+      module
+    );
+
+    res.json({
+      success: true,
+      data: templates.map(t => t.toAPI())
+    });
+
+  } catch (error) {
+    console.error('[notificationsEnterprise] Error listing templates:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener templates'
+    });
+  }
+});
+
+// =========================================================================
+// ENDPOINTS: PREFERENCIAS (Must be BEFORE /:id route)
+// =========================================================================
+
+/**
+ * GET /api/v1/notification-preferences
+ * Obtener preferencias del usuario
+ */
+router.get('/preferences', async (req, res) => {
+  try {
+    const preferences = await UserNotificationPreference.getAllForUser(
+      req.user.user_id,
+      req.user.company_id
+    );
+
+    res.json({
+      success: true,
+      data: preferences.map(p => p.toAPI())
+    });
+
+  } catch (error) {
+    console.error('[notificationsEnterprise] Error getting preferences:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener preferencias'
+    });
+  }
+});
+
+/**
+ * PUT /api/v1/notification-preferences/:module
+ * Actualizar preferencias para un módulo
+ */
+router.put('/preferences/:module', async (req, res) => {
+  try {
+    const preference = await UserNotificationPreference.updatePreferences(
+      req.user.user_id,
+      req.user.company_id,
+      req.params.module,
+      req.body
+    );
+
+    res.json({
+      success: true,
+      data: preference.toAPI()
+    });
+
+  } catch (error) {
+    console.error('[notificationsEnterprise] Error updating preferences:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al actualizar preferencias'
+    });
+  }
+});
+
+// =========================================================================
+// ENDPOINTS: NOTIFICATION BY ID (Generic - Must be AFTER specific routes)
+// =========================================================================
+
 /**
  * GET /api/v1/notifications/:id
  * Obtener notificación específica
@@ -486,153 +637,6 @@ router.delete('/:id', requireRRHH, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error al eliminar notificación'
-    });
-  }
-});
-
-// =========================================================================
-// ENDPOINTS: WORKFLOWS
-// =========================================================================
-
-/**
- * GET /api/v1/workflows
- * Listar workflows de la empresa
- */
-router.get('/workflows', requireRRHH, async (req, res) => {
-  try {
-    const { module } = req.query;
-
-    const workflows = await NotificationWorkflow.getActiveForCompany(
-      req.user.company_id,
-      module
-    );
-
-    res.json({
-      success: true,
-      data: workflows.map(w => w.toAPI())
-    });
-
-  } catch (error) {
-    console.error('[notificationsEnterprise] Error listing workflows:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al obtener workflows'
-    });
-  }
-});
-
-/**
- * GET /api/v1/workflows/:id
- * Obtener workflow específico
- */
-router.get('/workflows/:id', requireRRHH, async (req, res) => {
-  try {
-    const workflow = await NotificationWorkflow.findByPk(req.params.id);
-
-    if (!workflow) {
-      return res.status(404).json({
-        success: false,
-        error: 'Workflow no encontrado'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: workflow.toAPI()
-    });
-
-  } catch (error) {
-    console.error('[notificationsEnterprise] Error getting workflow:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al obtener workflow'
-    });
-  }
-});
-
-// =========================================================================
-// ENDPOINTS: TEMPLATES
-// =========================================================================
-
-/**
- * GET /api/v1/notification-templates
- * Listar templates
- */
-router.get('/templates', requireRRHH, async (req, res) => {
-  try {
-    const { module } = req.query;
-
-    const templates = await NotificationTemplate.getActiveForCompany(
-      req.user.company_id,
-      module
-    );
-
-    res.json({
-      success: true,
-      data: templates.map(t => t.toAPI())
-    });
-
-  } catch (error) {
-    console.error('[notificationsEnterprise] Error listing templates:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al obtener templates'
-    });
-  }
-});
-
-// =========================================================================
-// ENDPOINTS: PREFERENCIAS
-// =========================================================================
-
-/**
- * GET /api/v1/notification-preferences
- * Obtener preferencias del usuario
- */
-router.get('/preferences', async (req, res) => {
-  try {
-    const preferences = await UserNotificationPreference.getAllForUser(
-      req.user.user_id,
-      req.user.company_id
-    );
-
-    res.json({
-      success: true,
-      data: preferences.map(p => p.toAPI())
-    });
-
-  } catch (error) {
-    console.error('[notificationsEnterprise] Error getting preferences:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al obtener preferencias'
-    });
-  }
-});
-
-/**
- * PUT /api/v1/notification-preferences/:module
- * Actualizar preferencias para un módulo
- */
-router.put('/preferences/:module', async (req, res) => {
-  try {
-    const preference = await UserNotificationPreference.updatePreferences(
-      req.user.user_id,
-      req.user.company_id,
-      req.params.module,
-      req.body
-    );
-
-    res.json({
-      success: true,
-      data: preference.toAPI()
-    });
-
-  } catch (error) {
-    console.error('[notificationsEnterprise] Error updating preferences:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al actualizar preferencias'
     });
   }
 });

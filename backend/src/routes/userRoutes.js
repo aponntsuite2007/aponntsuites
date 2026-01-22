@@ -18,8 +18,47 @@ const { Op } = require('sequelize');
 const { auth, adminOnly, supervisorOrAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const EmailVerificationService = require('../services/EmailVerificationService');
 const ConsentService = require('../services/ConsentService');
+
+// ==============================================
+// 📄 INTEGRACIÓN DMS - SSOT DOCUMENTAL
+// ==============================================
+const registerProfilePhotoInDMS = async (req, file, userId, companyId) => {
+    try {
+        const dmsService = req.app.get('dmsIntegrationService');
+        if (!dmsService) {
+            console.warn('⚠️ [USER-DMS] DMSIntegrationService no disponible');
+            return null;
+        }
+
+        const result = await dmsService.registerDocument({
+            module: 'employee-documents',
+            documentType: 'PROFILE_PHOTO',
+            companyId,
+            employeeId: userId,
+            createdById: req.user?.user_id,
+            sourceEntityType: 'user-profile',
+            sourceEntityId: userId,
+            file: {
+                buffer: fs.readFileSync(file.path), // diskStorage = leer de path
+                originalname: file.originalname,
+                mimetype: file.mimetype,
+                size: file.size
+            },
+            title: `Profile Photo - User ${userId}`,
+            description: `Foto de perfil del usuario`,
+            metadata: { originalPath: file.path, uploadRoute: req.originalUrl }
+        });
+
+        console.log(`📄 [DMS-USER] Foto de perfil registrada: ${result.document?.id}`);
+        return result;
+    } catch (error) {
+        console.error('❌ [DMS-USER] Error registrando foto:', error.message);
+        return null;
+    }
+};
 
 // Helper function to convert database fields to frontend format
 function formatUserForFrontend(user) {
@@ -745,9 +784,13 @@ router.post('/:id/upload-photo', auth, upload.single('photo'), async (req, res) 
     const photoUrl = `/uploads/profiles/${req.file.filename}`;
     await user.update({ profilePhoto: photoUrl });
 
+    // ✅ Registrar en DMS (SSOT)
+    const dmsResult = await registerProfilePhotoInDMS(req, req.file, req.params.id, user.companyId);
+
     res.json({
       message: 'Foto de perfil subida exitosamente',
-      photoUrl
+      photoUrl,
+      dms: dmsResult ? { documentId: dmsResult.document?.id } : null
     });
 
   } catch (error) {

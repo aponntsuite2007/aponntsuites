@@ -15,6 +15,7 @@ const {
 
 const AttendanceScoringEngine = require('./AttendanceScoringEngine');
 const PatternDetectionService = require('./PatternDetectionService');
+const ConsentFilterService = require('./ConsentFilterService');
 
 /**
  * AttendanceAnalyticsService
@@ -39,6 +40,23 @@ class AttendanceAnalyticsService {
   static async analyzeEmployee(userId, companyId) {
     try {
       console.log(`📊 [ANALYTICS] Análisis completo para user ${userId}`);
+
+      // 0. Verificar consentimiento biométrico
+      const consentCheck = await ConsentFilterService.checkUserConsent(userId, companyId);
+
+      if (!consentCheck.hasConsent) {
+        console.log(`🔒 [ANALYTICS] Usuario ${userId} sin consentimiento válido: ${consentCheck.details.reason}`);
+        return {
+          success: false,
+          error: 'CONSENT_REQUIRED',
+          message: 'El usuario no tiene consentimiento biométrico válido para análisis',
+          consentStatus: consentCheck.details,
+          legal: {
+            regulation: 'Ley 25.326 / GDPR / BIPA',
+            note: 'Se requiere consentimiento explícito para análisis biométrico'
+          }
+        };
+      }
 
       // 1. Calcular scoring
       const scoringResult = await AttendanceScoringEngine.calculateUserScoring(userId, companyId);
@@ -162,9 +180,28 @@ class AttendanceAnalyticsService {
       // 7. Generar distribución por turno
       const shiftStats = await this._generateShiftStats(companyId);
 
+      // 8. Obtener metadata de consentimiento biométrico
+      let consentMetadata = null;
+      try {
+        const consentStats = await ConsentFilterService.getConsentStats(companyId);
+        consentMetadata = {
+          totalUsers: consentStats.totalUsers,
+          withConsent: consentStats.withConsent,
+          withoutConsent: consentStats.withoutConsent,
+          complianceRate: consentStats.complianceRate,
+          excludedFromStats: consentStats.excludedUsers.slice(0, 5),
+          warning: consentStats.withoutConsent > 0
+            ? `${consentStats.withoutConsent} empleados sin consentimiento biométrico - estadísticas pueden ser parciales`
+            : null
+        };
+      } catch (err) {
+        console.warn('⚠️  [ANALYTICS] No se pudo obtener stats de consent:', err.message);
+      }
+
       const result = {
         success: true,
         company_id: companyId,
+        consent_compliance: consentMetadata,
         summary: {
           total_employees: stats.totalEmployees,
           averages: stats.averages,

@@ -8,6 +8,8 @@ const router = express.Router();
 
 // 🌐 Azure Face API Service (Enterprise-grade recognition)
 const { azureFaceService } = require('../services/azure-face-service');
+// 🔐 Biometric Consent Middleware (Ley 25.326 / GDPR / BIPA)
+const { requireBiometricConsent, checkConsentStatus } = require('../middleware/biometricConsentCheck');
 
 // Configuración de multer para subida de archivos biométricos
 const storage = multer.diskStorage({
@@ -38,6 +40,63 @@ const upload = multer({
         }
     }
 });
+
+// ==============================================
+// 📄 INTEGRACIÓN DMS - SSOT DOCUMENTAL
+// ==============================================
+
+/**
+ * Registra archivos móviles/biométricos en DMS
+ */
+const registerMobileDocInDMS = async (req, file, documentType, metadata = {}) => {
+    try {
+        const dmsService = req.app.get('dmsIntegrationService');
+        if (!dmsService) {
+            console.warn('⚠️ [MOBILE] DMSIntegrationService no disponible');
+            return null;
+        }
+
+        const companyId = req.body?.company_id || req.user?.company_id;
+        const userId = req.body?.user_id || req.user?.user_id;
+
+        const typeMap = {
+            'face_register': 'BIOMETRIC_FACE',
+            'face_verify': 'BIOMETRIC_VERIFY',
+            'medical_certificate': 'MED_CERTIFICATE'
+        };
+
+        const result = await dmsService.registerDocument({
+            module: documentType.includes('face') ? 'biometric' : 'medical',
+            documentType: typeMap[documentType] || 'BIOMETRIC_GENERAL',
+            companyId,
+            employeeId: userId,
+            createdById: userId,
+            sourceEntityType: 'mobile-upload',
+            sourceEntityId: metadata.attendanceId || null,
+            file: {
+                buffer: fs.readFileSync(file.path),
+                originalname: file.originalname,
+                mimetype: file.mimetype,
+                size: file.size
+            },
+            title: `${documentType} - ${file.originalname}`,
+            description: metadata.description || `Upload móvil: ${documentType}`,
+            metadata: {
+                originalPath: file.path,
+                uploadRoute: req.originalUrl,
+                deviceInfo: req.body?.deviceInfo,
+                ...metadata
+            }
+        });
+
+        console.log(`📄 [DMS-MOBILE] Registrado: ${documentType} - ${result.document?.id}`);
+        return result;
+
+    } catch (error) {
+        console.error('❌ [DMS-MOBILE] Error registrando:', error.message);
+        return null;
+    }
+};
 
 // ==============================================
 // 🔧 CONFIGURACIÓN Y CONEXIÓN INICIAL
@@ -185,15 +244,43 @@ router.post('/biometric/face/register', upload.single('faceImage'), async (req, 
             });
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // VERIFICAR CONSENTIMIENTO BIOMÉTRICO (Ley 25.326 / GDPR / BIPA)
+        // ═══════════════════════════════════════════════════════════════
+        const consentResult = await checkConsentStatus(userId, companyId);
+
+        if (!consentResult.hasConsent) {
+            console.log(`🔒 [BIOMETRIC] Usuario ${userId} sin consentimiento: ${consentResult.errorCode}`);
+            return res.status(403).json({
+                success: false,
+                code: 'CONSENT_REQUIRED',
+                message: consentResult.message || 'Se requiere consentimiento biométrico para registro facial.',
+                consentInfo: {
+                    errorCode: consentResult.errorCode,
+                    requestUrl: `/api/v1/biometric/consents/request?userId=${userId}`
+                },
+                legal: {
+                    regulation: 'Ley 25.326 (Argentina) / GDPR (EU) / BIPA (USA)',
+                    requirement: 'Consentimiento explícito requerido'
+                }
+            });
+        }
+
         // Procesar imagen con IA biométrica (integrar con ai-biometric-engine.js)
         const biometricResult = await processFacialBiometric(faceImage, userId, companyId);
+
+        // ✅ Registrar en DMS (SSOT)
+        const dmsResult = await registerMobileDocInDMS(req, faceImage, 'face_register', {
+            userId, companyId, biometricId: biometricResult.id
+        });
 
         res.json({
             success: true,
             biometricId: biometricResult.id,
             confidence: biometricResult.confidence,
             features: biometricResult.features,
-            message: 'Registro facial completado exitosamente'
+            message: 'Registro facial completado exitosamente',
+            dms: dmsResult ? { documentId: dmsResult.document?.id } : null
         });
 
     } catch (error) {
@@ -220,6 +307,28 @@ router.post('/biometric/face/verify', upload.single('faceImage'), async (req, re
             });
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // VERIFICAR CONSENTIMIENTO BIOMÉTRICO (Ley 25.326 / GDPR / BIPA)
+        // ═══════════════════════════════════════════════════════════════
+        const consentResult = await checkConsentStatus(userId, companyId);
+
+        if (!consentResult.hasConsent) {
+            console.log(`🔒 [BIOMETRIC] Usuario ${userId} sin consentimiento: ${consentResult.errorCode}`);
+            return res.status(403).json({
+                success: false,
+                code: 'CONSENT_REQUIRED',
+                message: consentResult.message || 'Se requiere consentimiento biométrico para verificación facial.',
+                consentInfo: {
+                    errorCode: consentResult.errorCode,
+                    requestUrl: `/api/v1/biometric/consents/request?userId=${userId}`
+                },
+                legal: {
+                    regulation: 'Ley 25.326 (Argentina) / GDPR (EU) / BIPA (USA)',
+                    requirement: 'Consentimiento explícito requerido'
+                }
+            });
+        }
+
         // Verificar con IA biométrica y detectar violencia/bullying
         const verificationResult = await verifyFacialBiometric(faceImage, userId, companyId);
 
@@ -239,13 +348,19 @@ router.post('/biometric/face/verify', upload.single('faceImage'), async (req, re
                 await processHealthAlerts(userId, verificationResult.alerts);
             }
 
+            // ✅ Registrar en DMS (SSOT)
+            const dmsResult = await registerMobileDocInDMS(req, faceImage, 'face_verify', {
+                userId, companyId, attendanceId: attendanceRecord.id
+            });
+
             res.json({
                 success: true,
                 verified: true,
                 attendanceId: attendanceRecord.id,
                 confidence: verificationResult.confidence,
                 alerts: verificationResult.alerts || [],
-                message: 'Verificación exitosa - Asistencia registrada'
+                message: 'Verificación exitosa - Asistencia registrada',
+                dms: dmsResult ? { documentId: dmsResult.document?.id } : null
             });
         } else {
             res.json({
@@ -662,13 +777,26 @@ router.post('/medical/appointment', (req, res) => {
 });
 
 // Subir certificado médico
-router.post('/medical/certificate', upload.single('certificate'), (req, res) => {
+router.post('/medical/certificate', upload.single('certificate'), async (req, res) => {
     console.log('📄 [MEDICAL] Subida de certificado médico');
+
+    const certificateId = crypto.randomUUID();
+
+    // ✅ Registrar en DMS (SSOT)
+    let dmsResult = null;
+    if (req.file) {
+        dmsResult = await registerMobileDocInDMS(req, req.file, 'medical_certificate', {
+            certificateId,
+            userId: req.body?.user_id,
+            companyId: req.body?.company_id
+        });
+    }
 
     res.json({
         success: true,
-        certificateId: crypto.randomUUID(),
-        message: 'Certificado médico subido exitosamente'
+        certificateId,
+        message: 'Certificado médico subido exitosamente',
+        dms: dmsResult ? { documentId: dmsResult.document?.id } : null
     });
 });
 

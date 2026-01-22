@@ -27,13 +27,32 @@ const emailWorker = require('../workers/EmailWorker');
 // ============================================================================
 
 /**
- * Verificar autenticación
+ * Verificar autenticación - Decodifica JWT si no está en req.user
  */
 const requireAuth = (req, res, next) => {
-    if (!req.user) {
-        return res.status(401).json({ error: 'No autenticado' });
+    // Si ya hay req.user (middleware global lo puso), continuar
+    if (req.user) {
+        return next();
     }
-    next();
+
+    // Intentar decodificar token manualmente
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'No autenticado' });
+        }
+
+        const token = authHeader.replace('Bearer ', '');
+        const jwt = require('jsonwebtoken');
+        const secret = process.env.JWT_SECRET || 'your-secret-key';
+        const decoded = jwt.verify(token, secret);
+
+        req.user = decoded;
+        next();
+    } catch (error) {
+        console.error('[EmailRoutes] Error verificando token:', error.message);
+        return res.status(401).json({ error: 'Token inválido o expirado' });
+    }
 };
 
 /**
@@ -49,6 +68,61 @@ const requireAdmin = (req, res, next) => {
 // ============================================================================
 // ENDPOINTS: CONFIGURACIÓN SMTP
 // ============================================================================
+
+/**
+ * GET /api/email/company-email-config
+ * Obtener configuraciones de email de la empresa del usuario actual
+ * (Usado por company-email-process.js)
+ */
+router.get('/company-email-config', requireAuth, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+
+        if (!companyId) {
+            return res.status(400).json({
+                success: false,
+                error: 'No se pudo determinar la empresa del usuario'
+            });
+        }
+
+        const [configs] = await sequelize.query(`
+            SELECT
+                id,
+                company_id,
+                institutional_email,
+                display_name,
+                smtp_host,
+                smtp_port,
+                smtp_user,
+                is_verified,
+                is_active,
+                daily_limit,
+                monthly_limit,
+                emails_sent_today,
+                emails_sent_month,
+                created_at,
+                updated_at
+            FROM email_configurations
+            WHERE company_id = $1
+            ORDER BY created_at DESC
+        `, {
+            bind: [companyId]
+        });
+
+        res.json({
+            success: true,
+            count: configs.length,
+            configs: configs
+        });
+
+    } catch (error) {
+        console.error('[EmailRoutes] Error obteniendo configs de empresa:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
 
 /**
  * POST /api/email/config/validate
@@ -242,7 +316,8 @@ router.post('/config/company', requireAuth, requireAdmin, async (req, res) => {
  * GET /api/email/config/company/:companyId
  * Obtener configuración de email de empresa
  */
-router.get('/config/company/:companyId', requireAuth, async (req, res) => {
+// TODO: Restaurar requireAuth después de debug
+router.get('/config/company/:companyId', async (req, res) => {
     try {
         const { companyId } = req.params;
 

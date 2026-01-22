@@ -19,7 +19,8 @@ const jwt = require('jsonwebtoken');
 const { AponntStaff, AponntStaffCompany, Partner, Company, sequelize } = require('../config/database');
 const { Op } = require('sequelize');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
+// 🔐 SEGURIDAD: JWT_SECRET debe venir de .env
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 

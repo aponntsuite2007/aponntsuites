@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Kiosk } = require('../config/database');
 const { auth } = require('../middleware/auth');
+const { checkConsentStatus, CONSENT_ERROR_CODES } = require('../middleware/biometricConsentCheck');
 
 // Helper: Transformar kiosko al formato del frontend
 function formatKiosk(kiosk) {
@@ -23,6 +24,47 @@ function formatKiosk(kiosk) {
     companyId: kioskData.company_id
   };
 }
+
+// ==============================================
+// 📄 INTEGRACIÓN DMS - SSOT DOCUMENTAL
+// ==============================================
+const registerKioskDocInDMS = async (req, file, documentType, metadata = {}) => {
+    try {
+        const dmsService = req.app.get('dmsIntegrationService');
+        if (!dmsService) {
+            console.warn('⚠️ [KIOSK-DMS] DMSIntegrationService no disponible');
+            return null;
+        }
+
+        const companyId = metadata.companyId || req.body?.companyId;
+        const userId = metadata.userId;
+
+        const result = await dmsService.registerDocument({
+            module: 'biometric',
+            documentType: documentType === 'security_photo' ? 'BIOMETRIC_SECURITY' : 'BIOMETRIC_GENERAL',
+            companyId,
+            employeeId: userId,
+            createdById: userId,
+            sourceEntityType: 'kiosk-auth',
+            sourceEntityId: metadata.kioskId || null,
+            file: {
+                buffer: file.buffer, // memoryStorage = buffer directo
+                originalname: file.originalname || 'security_photo.jpg',
+                mimetype: file.mimetype,
+                size: file.size
+            },
+            title: `Kiosk Security Photo - User ${userId}`,
+            description: `Foto de seguridad capturada en autenticación por password`,
+            metadata: { uploadRoute: req.originalUrl, deviceId: metadata.deviceId, ...metadata }
+        });
+
+        console.log(`📄 [DMS-KIOSK] Registrado: ${documentType} - ${result.document?.id}`);
+        return result;
+    } catch (error) {
+        console.error('❌ [DMS-KIOSK] Error registrando:', error.message);
+        return null;
+    }
+};
 
 /**
  * @route GET /api/v1/kiosks/available
@@ -841,6 +883,31 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
     }
 
     const user = users[0];
+
+    // ═══════════════════════════════════════════════════════════════
+    // VERIFICAR CONSENTIMIENTO BIOMÉTRICO (Ley 25.326 / GDPR / BIPA)
+    // Se requiere para captura de foto de seguridad
+    // ═══════════════════════════════════════════════════════════════
+    const consentResult = await checkConsentStatus(user.user_id, companyId);
+
+    if (!consentResult.hasConsent) {
+      console.log(`🔒 [KIOSK] Usuario ${user.user_id} sin consentimiento biométrico: ${consentResult.errorCode}`);
+
+      return res.status(403).json({
+        success: false,
+        code: 'CONSENT_REQUIRED',
+        error: consentResult.message || 'Se requiere consentimiento biométrico para autenticación con foto.',
+        consentInfo: {
+          errorCode: consentResult.errorCode,
+          requestUrl: `/api/v1/biometric/consents/request?userId=${user.user_id}`
+        },
+        legal: {
+          regulation: 'Ley 25.326 (Argentina) / GDPR (EU) / BIPA (USA)',
+          requirement: 'Consentimiento explícito requerido para captura de datos biométricos'
+        }
+      });
+    }
+
     const bcrypt = require('bcryptjs');
     const passwordValid = await bcrypt.compare(password, user.password);
 
@@ -894,6 +961,18 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
       });
     }
 
+    // ✅ Registrar foto de seguridad en DMS (SSOT)
+    let dmsResult = null;
+    if (req.file) {
+      dmsResult = await registerKioskDocInDMS(req, req.file, 'security_photo', {
+        companyId,
+        userId: user.user_id,
+        kioskId,
+        deviceId,
+        legajo
+      });
+    }
+
     console.log(`✅ [KIOSKS] Password auth exitoso para legajo ${legajo}`);
 
     res.json({
@@ -910,7 +989,8 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
       password_valid: true,
       facial_similarity: facialSimilarity,
       requires_hr_review: requiresHRReview,
-      warning: requiresHRReview ? 'Autenticación exitosa pero con baja similaridad facial. Enviado a revisión de RRHH.' : null
+      warning: requiresHRReview ? 'Autenticación exitosa pero con baja similaridad facial. Enviado a revisión de RRHH.' : null,
+      dms: dmsResult ? { documentId: dmsResult.document?.id } : null
     });
 
   } catch (error) {
