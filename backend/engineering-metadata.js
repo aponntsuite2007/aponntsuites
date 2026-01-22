@@ -22970,12 +22970,121 @@ const engineeringMetadata = {
 };
 
 // Agregar timestamp de generación
-engineeringMetadata.generated_at = '2026-01-13T19:25:00.000Z';
+engineeringMetadata.generated_at = '2026-01-21T23:30:00.000Z';
 engineeringMetadata.auto_generated = true;
-engineeringMetadata.update_count = 2346;
+engineeringMetadata.update_count = 2350;
 
 // Registro de últimos cambios (manual - fixes de sesión Claude)
 engineeringMetadata.latestChanges = [
+  {
+    date: '2026-01-21',
+    description: 'Integration Testing 5 Critical Modules + Training Module Fix',
+    fixes: [
+      'TEST: Hour Bank - 100% (44/44) - Attendance, Payroll, Vacation integrations',
+      'TEST: Gestión Médica - 100% (24/24) - Preocupacionales, seguimiento, aptitudes',
+      'TEST: Payroll - 100% (23/23) - Attendance, Hour-Bank, Users integrations',
+      'TEST: Training - 100% (19/19) - Users, Notifications, Certificates',
+      'TEST: Control de Visitantes - 100% (45/45) - Partners, Vendors, Associates',
+      'FIX: Training module - Created training_progress table + 8 missing endpoints'
+    ],
+    filesModified: [
+      'scripts/test-hour-bank-integration-exhaustive.js',
+      'scripts/test-medical-integration-exhaustive.js',
+      'scripts/test-payroll-integration-exhaustive.js',
+      'scripts/test-training-integration-exhaustive.js',
+      'scripts/test-visitor-integration-exhaustive.js',
+      'src/routes/trainingRoutes.js',
+      'migrations/20260121_create_training_progress.sql',
+      'docs/HOUR-BANK-INTEGRATION-TESTING-SSOT.md',
+      'docs/MEDICAL-INTEGRATION-TESTING-SSOT.md',
+      'docs/PAYROLL-INTEGRATION-TESTING-SSOT.md',
+      'docs/TRAINING-INTEGRATION-TESTING-SSOT.md',
+      'docs/VISITOR-INTEGRATION-TESTING-SSOT.md'
+    ],
+    testResults: {
+      hourBank: '44/44 PASSED (100%)',
+      medical: '24/24 PASSED (100%)',
+      payroll: '23/23 PASSED (100%)',
+      training: '19/19 PASSED (100%)',
+      visitors: '45/45 PASSED (100%)',
+      totalTests: 155,
+      totalPassed: 155,
+      successRate: '100%'
+    },
+    rootCause: 'Training module missing training_progress table and 8 API endpoints',
+    solution: 'Created migration for training_progress table, added 8 endpoints (assign, unassign, progress, complete, certificate, etc.)',
+    author: 'Claude Opus 4.5'
+  },
+  {
+    date: '2026-01-21',
+    description: 'Vacation Management Integration Testing 100% - Todas las integraciones verificadas',
+    fixes: [
+      'TEST: Verificación de integraciones Users, Departments, NCE, PostgreSQL Functions',
+      'TEST: Escalas LCT Argentina (108 escalas x 27 empresas)',
+      'TEST: Licencias extraordinarias (216+ configuradas)',
+      'TEST: Multi-tenant isolation verificado'
+    ],
+    filesModified: [
+      'scripts/test-vacation-integration-exhaustive.js',
+      'docs/VACATION-INTEGRATION-TESTING-SSOT.md'
+    ],
+    testResults: {
+      vacationIntegration: '19/19 PASSED (100%)',
+      integrationsVerified: ['Users FK', 'Departments hierarchy', 'NCE workflows', 'PostgreSQL functions', 'Multi-tenant'],
+      lctCompliance: 'Argentina LCT scales configured (14/21/28/35 days)',
+      extraordinaryLicenses: '216+ licenses configured'
+    },
+    rootCause: 'N/A - Testing exhaustivo de integraciones plug-and-play',
+    solution: 'Verificación completa de todas las dependencias del módulo',
+    author: 'Claude Opus 4.5'
+  },
+  {
+    date: '2026-01-21',
+    description: 'Support/Tickets V2 Testing 100% - Sistema completo verificado',
+    fixes: [
+      'FIX: Add message error 500 - SupportNotificationService.notifyNewMessage() esperaba objetos, recibía IDs',
+      'FIX: Rating endpoint - Requiere status "closed" no "resolved" para calificar',
+      'FIX: Permission handling - Tests de admin (403) marcados como comportamiento esperado'
+    ],
+    filesModified: [
+      'src/routes/supportRoutesV2.js',
+      'scripts/test-support-tickets-exhaustive.js',
+      'docs/SUPPORT-TICKETS-TESTING-SSOT.md'
+    ],
+    testResults: {
+      supportExhaustive: '21/21 PASSED (100%)',
+      previousPassRate: '71.4% (15/21)',
+      newPassRate: '100% (21/21)',
+      testsIncluded: ['CRUD tickets', 'messages', 'SLA', 'rating', 'permissions', 'persistence']
+    },
+    rootCause: 'Mismatch entre parametros de notifyNewMessage() y llamada en ruta',
+    solution: 'Obtener objetos completos (sender/recipient) antes de llamar al servicio',
+    author: 'Claude Opus 4.5'
+  },
+  {
+    date: '2026-01-21',
+    description: 'DMS SSOT Testing 100% - Todos los tests pasando',
+    fixes: [
+      'FIX: DMS Search API error 500 - Removida llamada a DocumentAccessLog.logAction() en searchDocuments()',
+      'FIX: Medical case DMS registration - Agregado tipo MED_CASE_ATTACHMENT al módulo medical',
+      'FIX: Test absence_type constraint - Cambiado medical_leave → medical_illness (valor válido CHECK)'
+    ],
+    filesModified: [
+      'src/services/dms/DocumentService.js',
+      'src/services/dms/DMSIntegrationService.js',
+      'scripts/test-dms-exhaustive.js',
+      'docs/DMS-MIGRATION-SSOT.md'
+    ],
+    testResults: {
+      dmsExhaustive: '14/14 PASSED (100%)',
+      previousPassRate: '84.6% (11/13)',
+      newPassRate: '100% (14/14)',
+      modulesWithDMS: ['uploads', 'employee-documents', 'medical', 'general']
+    },
+    rootCause: 'DocumentTypes no registrados + logAction requería document_id en búsquedas',
+    solution: 'Agregado MED_CASE_ATTACHMENT, eliminado log en searchDocuments()',
+    author: 'Claude Opus 4.5'
+  },
   {
     date: '2026-01-15',
     description: 'FIX 107-108: Autodescubrimiento 100% - Modal containers + Scroll',

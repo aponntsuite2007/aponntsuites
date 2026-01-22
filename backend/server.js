@@ -2316,45 +2316,12 @@ app.get(`${API_PREFIX}/shifts/:id`, (req, res) => {
   res.json({ shift });
 });
 
-// Endpoint para actualizar turno
-app.put(`${API_PREFIX}/shifts/:id`, (req, res) => {
-  const { id } = req.params;
-  const updateData = req.body;
+// COMENTADO: Handlers mock removidos - shiftRoutes.js maneja PUT y DELETE con persistencia real
+// Los handlers estaban interceptando antes de que shiftRoutes.js pudiera procesarlos
+// Ver shiftRoutes.js líneas 223-290 para la implementación real con BD
 
-  const shiftIndex = createdShifts.findIndex(s => s.id === id);
-
-  if (shiftIndex === -1) {
-    return res.status(404).json({ error: 'Turno no encontrado' });
-  }
-
-  // Actualizar turno
-  createdShifts[shiftIndex] = {
-    ...createdShifts[shiftIndex],
-    ...updateData,
-    updatedAt: new Date().toISOString()
-  };
-
-  res.json({
-    message: 'Turno actualizado exitosamente',
-    shift: createdShifts[shiftIndex]
-  });
-});
-
-// Endpoint para eliminar turno (soft delete)
-app.delete(`${API_PREFIX}/shifts/:id`, (req, res) => {
-  const { id } = req.params;
-
-  const shiftIndex = createdShifts.findIndex(s => s.id === id);
-
-  if (shiftIndex === -1) {
-    return res.status(404).json({ error: 'Turno no encontrado' });
-  }
-
-  // Soft delete - marcar como inactivo
-  createdShifts[shiftIndex].isActive = false;
-
-  res.json({ message: 'Turno desactivado exitosamente' });
-});
+// app.put(`${API_PREFIX}/shifts/:id`, ...) - REMOVIDO, usar shiftRoutes.js
+// app.delete(`${API_PREFIX}/shifts/:id`, ...) - REMOVIDO, usar shiftRoutes.js
 
 // ========== PÁGINAS WEB - www.aponnt.com ==========
 
@@ -2919,6 +2886,23 @@ async function initializeDMS() {
     const dmsModels = initDMSModels(database.sequelize, appModels);
     Object.assign(database, dmsModels); // Agregar modelos DMS a database
     const dmsServices = initDMSServices({ ...database, ...dmsModels });
+
+    // ✅ Registrar DMSIntegrationService globalmente para middleware
+    if (dmsServices.integrationService) {
+      app.set('dmsIntegrationService', dmsServices.integrationService);
+      console.log('   ✅ DMSIntegrationService disponible globalmente para middleware');
+
+      // ✅ Conectar DMS a AttendanceQueueService para registros de asistencia
+      try {
+        const attendanceQueue = require('./src/services/AttendanceQueueService');
+        if (attendanceQueue && attendanceQueue.setDMSService) {
+          attendanceQueue.setDMSService(dmsServices.integrationService);
+        }
+      } catch (queueError) {
+        console.warn('   ⚠️ No se pudo conectar DMS a AttendanceQueueService:', queueError.message);
+      }
+    }
+
     const dmsRouter = dmsRoutes({
       services: dmsServices,
       models: { ...database, ...dmsModels },
