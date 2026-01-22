@@ -1,0 +1,784 @@
+{
+  "version": "1.0.0",
+  "description": "Configuración de módulos para tests E2E con Puppeteer - Campos exactos de cada modal",
+  "lastUpdated": "2026-01-22",
+  "baseUrl": "http://localhost:9998",
+  "credentials": {
+    "company": "aponnt-empresa-demo",
+    "username": "administrador",
+    "password": "admin123"
+  },
+
+  "modules": {
+    "users": {
+      "name": "Usuarios",
+      "jsFile": "users.js",
+      "menuSelector": ".module-card[data-module-key='users'][data-clickable='true']",
+      "addButtonSelector": ".btn-add-user",
+      "modalId": "userModal",
+      "openFunction": "showAddUser()",
+      "modalFields": {
+        "#newUserName": { "type": "text", "label": "Nombre completo", "required": true, "testValue": "Test Usuario E2E" },
+        "#newUserEmail": { "type": "email", "label": "Email", "required": true, "testValue": "test.e2e.{timestamp}@test.com" },
+        "#newUserLegajo": { "type": "text", "label": "Legajo/ID Empleado", "required": true, "testValue": "E2E{timestamp6}" },
+        "#newUserPassword": { "type": "password", "label": "Contraseña", "required": true, "testValue": "123456", "default": "123456" },
+        "#newUserRole": { "type": "select", "label": "Rol", "options": ["employee", "supervisor", "admin"], "testValue": "employee" },
+        "#newUserDept": { "type": "select", "label": "Departamento", "dynamic": true, "testValueIndex": 1 },
+        "#newUserConvenio": { "type": "select", "label": "Convenio Colectivo", "testValue": "Convenio General" },
+        "#newUserAllowOutsideRadius": { "type": "checkbox", "label": "Permitir fichar fuera del radio", "testValue": false }
+      },
+      "saveButtonSelector": "button[onclick*='saveNewUser']",
+      "saveFunction": "saveNewUser()",
+      "closeFunction": "closeUserModal()",
+      "tableSelector": ".users-table, table",
+      "successIndicator": "#userCredentialsModal, .alert-success"
+    },
+
+    "visitors": {
+      "name": "Visitantes",
+      "jsFile": "visitors.js",
+      "menuSelector": ".module-card[data-module-key='visitors'][data-clickable='true']",
+      "addButtonSelector": "button[onclick*='openNewVisitorModal']",
+      "modalId": "visitorModal",
+      "openFunction": "openNewVisitorModal()",
+      "modalFields": {
+        "#visitorDni": { "type": "text", "label": "DNI", "required": true, "testValue": "DNI{timestamp8}" },
+        "#visitorFirstName": { "type": "text", "label": "Nombre", "required": true, "testValue": "Visitante" },
+        "#visitorLastName": { "type": "text", "label": "Apellido", "required": true, "testValue": "E2E Test" },
+        "#visitorEmail": { "type": "email", "label": "Email", "testValue": "visitor.e2e@test.com" },
+        "#visitorPhone": { "type": "text", "label": "Teléfono", "testValue": "+5491123456789" },
+        "#visitorDepartment": { "type": "select", "label": "Departamento que visita", "dynamic": true, "testValueIndex": 1 },
+        "#visitorResponsible": { "type": "select", "label": "Empleado Responsable", "required": true, "dynamic": true, "testValueIndex": 1 },
+        "#visitorReason": { "type": "textarea", "label": "Motivo de la Visita", "required": true, "testValue": "Test E2E - Visita de prueba automatizada" },
+        "#visitorScheduledDate": { "type": "datetime-local", "label": "Fecha y Hora Programada", "required": true, "testValue": "{tomorrow}" },
+        "#visitorDuration": { "type": "number", "label": "Duración (min)", "testValue": "60", "default": "60" },
+        "#visitorGpsTracking": { "type": "checkbox", "label": "Habilitar tracking GPS", "testValue": false },
+        "#visitorNotes": { "type": "textarea", "label": "Notas adicionales", "testValue": "Generado por test E2E automatizado" }
+      },
+      "saveButtonSelector": "button[onclick*='saveVisitor']",
+      "saveFunction": "saveVisitor()",
+      "closeFunction": "closeVisitorModal()",
+      "successIndicator": ".alert-success, .toast-success"
+    },
+
+    "kiosks": {
+      "name": "Kioscos",
+      "jsFile": "kiosks.js",
+      "menuSelector": ".module-card[data-module-key='kiosks'][data-clickable='true']",
+      "addButtonSelector": "button[onclick*='showAddKioskModal']",
+      "modalId": "kioskModal",
+      "openFunction": "showAddKioskModal()",
+      "modalFields": {
+        "#kiosk-name": { "type": "text", "label": "Nombre del Kiosco", "required": true, "testValue": "Kiosk E2E Test" },
+        "#kiosk-location": { "type": "text", "label": "Ubicación", "testValue": "Test Location - Edificio A" },
+        "#kiosk-device-id": { "type": "text", "label": "Device ID", "testValue": "E2E-DEVICE-{timestamp6}" },
+        "#kiosk-active": { "type": "select", "label": "Estado", "options": ["1", "0"], "testValue": "1" },
+        "#facial-hardware-select": { "type": "select", "label": "Hardware Facial", "required": true, "testValueIndex": 1 }
+      },
+      "saveButtonSelector": "button[onclick*='saveKiosk']",
+      "saveFunction": "saveKiosk(null)",
+      "successIndicator": ".alert-success"
+    },
+
+    "hse-management": {
+      "name": "HSE - Catálogo EPP",
+      "jsFile": "hse-management.js",
+      "menuSelector": ".module-card[data-module-key='hse-management'][data-clickable='true']",
+      "tabSelector": "[data-tab='catalog']",
+      "addButtonSelector": "button[onclick*='openCatalogModal']",
+      "modalId": "hse-catalog-modal",
+      "openFunction": "openCatalogModal()",
+      "modalFields": {
+        "input[name='code']": { "type": "text", "label": "Código", "required": true, "testValue": "EPP-E2E-{timestamp6}" },
+        "select[name='category_id']": { "type": "select", "label": "Categoría", "required": true, "dynamic": true, "testValueIndex": 1 },
+        "input[name='name']": { "type": "text", "label": "Nombre", "required": true, "testValue": "EPP Test E2E - Casco" },
+        "input[name='brand']": { "type": "text", "label": "Marca", "testValue": "3M" },
+        "input[name='model']": { "type": "text", "label": "Modelo", "testValue": "E2E-Model" },
+        "input[name='default_lifespan_days']": { "type": "number", "label": "Vida Útil (días)", "testValue": "365", "default": "365" },
+        "input[name='unit_cost']": { "type": "number", "label": "Costo Unitario", "testValue": "1500.00" },
+        "input[name='certifications']": { "type": "text", "label": "Certificaciones", "testValue": "IRAM, EN 397" },
+        "textarea[name='description']": { "type": "textarea", "label": "Descripción", "testValue": "EPP de prueba creado por test E2E" }
+      },
+      "saveButtonSelector": "button[type='submit']",
+      "formSelector": "#hse-catalog-form",
+      "closeFunction": "closeModal('hse-catalog-modal')",
+      "successIndicator": ".notification-success"
+    },
+
+    "hse-deliveries": {
+      "name": "HSE - Entregas EPP",
+      "jsFile": "hse-management.js",
+      "menuSelector": ".module-card[data-module-key='hse-management'][data-clickable='true']",
+      "preNavigateFunction": "showHseTab('deliveries')",
+      "preNavigateWait": 500,
+      "openFunction": "openDeliveryModal()",
+      "modalId": "hse-delivery-modal",
+      "modalFields": {
+        "#hse-delivery-employee": { "type": "select", "label": "Empleado", "required": true, "dynamic": true, "testValueIndex": 1 },
+        "select[name='epp_catalog_id']": { "type": "select", "label": "EPP a Entregar", "required": true, "dynamic": true, "testValueIndex": 1 },
+        "input[name='delivery_date']": { "type": "date", "label": "Fecha Entrega", "testValue": "{today}" },
+        "input[name='quantity_delivered']": { "type": "number", "label": "Cantidad", "testValue": "1", "default": "1" },
+        "select[name='size_delivered']": { "type": "select", "label": "Talle", "testValue": "M" },
+        "input[name='serial_number']": { "type": "text", "label": "N° Serie", "testValue": "SN-E2E-{timestamp6}" },
+        "textarea[name='notes']": { "type": "textarea", "label": "Notas", "testValue": "Entrega EPP creada por test E2E automatizado" }
+      },
+      "saveButtonSelector": "button[type='submit']",
+      "formSelector": "#hse-delivery-form",
+      "closeFunction": "closeModal('hse-delivery-modal')",
+      "successIndicator": ".notification-success"
+    },
+
+    "benefits-management": {
+      "name": "Beneficios - Políticas",
+      "jsFile": "benefits-management.js",
+      "menuSelector": ".module-card[data-module-key='benefits-management'][data-clickable='true']",
+      "tabSelector": "[data-tab='policies']",
+      "addButtonSelector": "button[onclick*='openPolicyModal']",
+      "openFunction": "openPolicyModal()",
+      "modalFields": {
+        "#policy-benefit-type": { "type": "select", "label": "Tipo de Beneficio", "required": true, "dynamic": true, "testValueIndex": 1 },
+        "#policy-enabled": { "type": "checkbox", "label": "Política activa", "testValue": true, "default": true },
+        "#policy-requires-approval": { "type": "checkbox", "label": "Requiere aprobación", "testValue": true, "default": true },
+        "#policy-max-amount": { "type": "number", "label": "Monto máximo", "testValue": "50000" },
+        "#policy-duration": { "type": "number", "label": "Duración (meses)", "testValue": "12", "default": "12" },
+        "#policy-approval-levels": { "type": "number", "label": "Niveles de aprobación", "testValue": "1", "default": "1" },
+        "#policy-min-seniority": { "type": "number", "label": "Antigüedad mínima (meses)", "testValue": "3" },
+        "#policy-terms": { "type": "textarea", "label": "Términos y condiciones", "testValue": "Política creada por test E2E automatizado" }
+      },
+      "saveButtonSelector": "button[type='submit']",
+      "formSelector": "#policy-form",
+      "successIndicator": ".notification-success"
+    },
+
+    "vacation-management": {
+      "name": "Vacaciones",
+      "jsFile": "vacation-management.js",
+      "menuSelector": ".module-card[data-module-key='vacation-management'][data-clickable='true']",
+      "addButtonSelector": "button[onclick*='showNewRequestModal']",
+      "note": "Modal de nueva solicitud muestra TODO - No completamente implementado",
+      "isIncomplete": true
+    },
+
+    "attendance": {
+      "name": "Asistencia",
+      "jsFile": "attendance.js",
+      "menuSelector": ".module-card[data-module-key='attendance'][data-clickable='true']",
+      "note": "Módulo de dashboard - No tiene modal CRUD tradicional",
+      "isViewOnly": true
+    },
+
+    "shifts": {
+      "name": "Turnos",
+      "jsFile": "organizational-structure.js",
+      "menuSelector": ".module-card[data-module-key='organizational-structure'][data-clickable='true']",
+      "note": "El módulo activo es SOLO LECTURA (ver calendario de feriados). El CRUD de turnos está en módulo backup.",
+      "isViewOnly": true
+    },
+
+    "departments": {
+      "name": "Departamentos",
+      "jsFile": "organizational-structure.js",
+      "menuSelector": ".module-card[data-module-key='organizational-structure'][data-clickable='true']",
+      "waitForModuleLoad": 2000,
+      "preNavigateFunction": "OrgEngine.showTab('departments')",
+      "preNavigateWait": 500,
+      "openFunction": "OrgEngine.openDepartmentModal()",
+      "modalId": "org-modal",
+      "formSelector": "#org-department-form",
+      "modalFields": {
+        "#org-department-form input[name='name']": { "type": "text", "label": "Nombre", "required": true, "testValue": "Departamento E2E Test" },
+        "#org-department-form input[name='code']": { "type": "text", "label": "Código", "testValue": "DEPT-E2E-{timestamp6}" },
+        "#org-department-form textarea[name='description']": { "type": "textarea", "label": "Descripción", "testValue": "Departamento creado por test E2E" },
+        "#org-department-form input[name='address']": { "type": "text", "label": "Dirección", "testValue": "Piso 1, Oficina E2E" },
+        "#org-department-form select[name='branch_id']": { "type": "select", "label": "Sucursal", "dynamic": true, "testValueIndex": 1 }
+      },
+      "saveButtonSelector": ".org-modal button.org-btn-primary",
+      "saveFunction": "OrgEngine.saveDepartment()"
+    },
+
+    "medical-dashboard-professional": {
+      "name": "Gestión Médica",
+      "jsFile": "medical-dashboard-professional.js",
+      "menuSelector": ".module-card[data-module-key='medical'][data-clickable='true']",
+      "note": "Dashboard profesional - Modal resultado requiere applicationId previo",
+      "openFunction": "MedicalEngine.openMedicalResultModal(applicationId, candidateName, dni)",
+      "modalId": "modal-medical-result",
+      "modalFields": {
+        "#modal-result": { "type": "select", "label": "Resultado", "required": true, "testValue": "apto" },
+        "#modal-observations": { "type": "textarea", "label": "Observaciones", "testValue": "Observaciones E2E Test" },
+        "#modal-exam-date": { "type": "date", "label": "Fecha Examen", "testValue": "{today}" }
+      },
+      "saveFunction": "MedicalEngine.submitMedicalResult()",
+      "isViewOnly": true,
+      "viewOnlyReason": "Requiere applicationId de candidato previo"
+    },
+
+    "training-management": {
+      "name": "Capacitaciones",
+      "jsFile": "training-management.js",
+      "menuSelector": ".module-card[data-module-key='training-management'][data-clickable='true']",
+      "openFunction": "showModal('trainingModal')",
+      "modalId": "trainingModal",
+      "modalFields": {
+        "#training-title": { "type": "text", "label": "Título", "required": true, "testValue": "Capacitación E2E Test" },
+        "#training-category": { "type": "select", "label": "Categoría", "dynamic": true, "testValueIndex": 1 },
+        "#training-description": { "type": "textarea", "label": "Descripción", "testValue": "Descripción de capacitación E2E" },
+        "#training-type": { "type": "select", "label": "Tipo", "testValue": "presential" },
+        "#training-duration": { "type": "number", "label": "Duración (horas)", "testValue": "2" },
+        "#training-start-date": { "type": "datetime-local", "label": "Fecha Inicio", "testValue": "{tomorrow}" },
+        "#training-instructor": { "type": "text", "label": "Instructor", "testValue": "Instructor E2E" },
+        "#training-max-score": { "type": "number", "label": "Puntaje Máximo", "testValue": "100" },
+        "#training-min-score": { "type": "number", "label": "Puntaje Mínimo", "testValue": "70" },
+        "#training-mandatory": { "type": "checkbox", "label": "Obligatoria", "testValue": true }
+      },
+      "saveFunction": "saveTraining(event)",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "hour-bank": {
+      "name": "Banco de Horas",
+      "jsFile": "hour-bank.js",
+      "menuSelector": ".module-card[data-module-key='hour-bank'][data-clickable='true']",
+      "note": "Dashboard de banco de horas con reportes",
+      "isViewOnly": true
+    },
+
+    "notifications": {
+      "name": "Notificaciones",
+      "jsFile": "notifications-enterprise.js",
+      "menuSelector": ".module-card[data-module-key='notifications'][data-clickable='true']",
+      "note": "Sistema de notificaciones - Solo visualización, sin CRUD",
+      "isViewOnly": true
+    },
+
+    "dms-dashboard": {
+      "name": "Gestión Documental - Subir Documento",
+      "jsFile": "dms-dashboard.js",
+      "menuSelector": ".module-card[data-module-key='dms'][data-clickable='true']",
+      "openFunction": "DMS.openUpload()",
+      "modalId": "dms-modal",
+      "modalFields": {
+        "#upload-category": { "type": "select", "label": "Categoría", "required": true, "dynamic": true, "testValueIndex": 1 },
+        "#upload-description": { "type": "textarea", "label": "Descripción", "testValue": "Documento E2E Test" }
+      },
+      "saveFunction": "DMS.submitUpload()",
+      "saveButtonSelector": "button[onclick*='submitUpload']",
+      "note": "Requiere archivo - test parcial sin upload real"
+    },
+
+    "legal-dashboard": {
+      "name": "Legal - Nuevo Caso",
+      "jsFile": "legal-dashboard.js",
+      "menuSelector": ".module-card[data-module-key='legal'][data-clickable='true']",
+      "openFunction": "LegalEngine.showNewCaseModal()",
+      "modalId": "le-new-case-modal",
+      "modalFields": {
+        "#new-case-type": { "type": "select", "label": "Tipo de Caso", "required": true, "testValue": "labor_claim" },
+        "#new-case-employee": { "type": "select", "label": "Empleado", "required": true, "dynamic": true, "testValueIndex": 1 },
+        "#new-case-title": { "type": "text", "label": "Título", "required": true, "testValue": "Caso Legal E2E Test" },
+        "#new-case-description": { "type": "textarea", "label": "Descripción", "testValue": "Caso creado por test E2E automatizado" }
+      },
+      "saveFunction": "LegalEngine.createCase()",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "sanctions-management": {
+      "name": "Sanciones",
+      "jsFile": "sanctions-management.js",
+      "menuSelector": ".module-card[data-module-key='sanctions-management'][data-clickable='true']",
+      "openFunction": "SanctionsManagement.showCreateModal()",
+      "modalId": "create-sanction-modal",
+      "modalFields": {
+        "#sanction-employee": { "type": "select", "label": "Empleado", "required": true, "dynamic": true, "testValueIndex": 1 },
+        "#sanction-type": { "type": "select", "label": "Tipo de Sanción", "dynamic": true, "testValueIndex": 1 },
+        "#sanction-severity": { "type": "select", "label": "Severidad", "testValue": "minor" },
+        "#sanction-category": { "type": "select", "label": "Categoría", "testValue": "attendance" },
+        "input[name='title']": { "type": "text", "label": "Título", "required": true, "testValue": "Sanción E2E Test" },
+        "textarea[name='description']": { "type": "textarea", "label": "Descripción", "testValue": "Descripción de sanción E2E" },
+        "select[name='delivery_method']": { "type": "select", "label": "Método de Notificación", "testValue": "system" }
+      },
+      "saveFunction": "SanctionsManagement.submitCreate(event)",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "job-postings": {
+      "name": "Reclutamiento",
+      "jsFile": "job-postings.js",
+      "menuSelector": ".module-card[data-module-key='job-postings'][data-clickable='true']",
+      "openFunction": "TalentEngine.showCreateOfferModal()",
+      "modalId": "talent-modal",
+      "modalFields": {
+        "input[name='job_title']": { "type": "text", "label": "Título del Puesto", "required": true, "testValue": "Puesto E2E Test" },
+        "select[name='department']": { "type": "select", "label": "Departamento", "dynamic": true, "testValueIndex": 1 },
+        "textarea[name='job_description']": { "type": "textarea", "label": "Descripción", "testValue": "Descripción del puesto E2E" },
+        "select[name='job_type']": { "type": "select", "label": "Tipo de Contrato", "testValue": "full-time" },
+        "input[name='salary_range_min']": { "type": "number", "label": "Salario Mínimo", "testValue": "50000" },
+        "input[name='salary_range_max']": { "type": "number", "label": "Salario Máximo", "testValue": "80000" },
+        "input[name='publication_deadline']": { "type": "date", "label": "Fecha de Cierre", "testValue": "{today}" }
+      },
+      "saveFunction": "TalentEngine.createOffer()",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "finance-chart-of-accounts": {
+      "name": "Plan de Cuentas",
+      "jsFile": "finance-chart-of-accounts.js",
+      "menuSelector": ".module-card[data-module-key='finance-chart-of-accounts'][data-clickable='true']",
+      "openFunction": "FinanceChartOfAccounts.showCreateModal()",
+      "modalId": "account-modal",
+      "modalFields": {
+        "input[name='account_code']": { "type": "text", "label": "Código de Cuenta", "required": true, "testValue": "1.1.01.{timestamp6}" },
+        "input[name='name']": { "type": "text", "label": "Nombre", "required": true, "testValue": "Cuenta E2E Test" },
+        "select[name='account_type']": { "type": "select", "label": "Tipo de Cuenta", "testValue": "asset" },
+        "select[name='account_nature']": { "type": "select", "label": "Naturaleza", "testValue": "debit" },
+        "select[name='level']": { "type": "select", "label": "Nivel", "testValue": "1" },
+        "textarea[name='description']": { "type": "textarea", "label": "Descripción", "testValue": "Cuenta creada por test E2E" }
+      },
+      "saveFunction": "FinanceChartOfAccounts.saveAccount(event)",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "finance-cost-centers": {
+      "name": "Centros de Costos",
+      "jsFile": "finance-cost-centers.js",
+      "menuSelector": ".module-card[data-module-key='finance-cost-centers'][data-clickable='true']",
+      "openFunction": "FinanceCostCenters.showCreateModal()",
+      "modalId": "cost-center-modal",
+      "modalFields": {
+        "input[name='code']": { "type": "text", "label": "Código", "required": true, "testValue": "CC-E2E-{timestamp6}" },
+        "input[name='name']": { "type": "text", "label": "Nombre", "required": true, "testValue": "Centro de Costo E2E" },
+        "select[name='center_type']": { "type": "select", "label": "Tipo", "testValue": "cost_center" },
+        "textarea[name='description']": { "type": "textarea", "label": "Descripción", "testValue": "Centro creado por test E2E" },
+        "input[name='has_budget']": { "type": "checkbox", "label": "Tiene Presupuesto", "testValue": true }
+      },
+      "saveFunction": "FinanceCostCenters.saveCostCenter(event)",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "finance-budget": {
+      "name": "Presupuestos",
+      "jsFile": "finance-budget.js",
+      "menuSelector": ".module-card[data-module-key='finance-budget'][data-clickable='true']",
+      "openFunction": "window.FinanceBudget.showCreateModal()",
+      "modalId": "budget-modal",
+      "modalFields": {
+        "input[name='budget_code']": { "type": "text", "label": "Código", "required": true, "testValue": "PPTO-E2E-{timestamp6}" },
+        "input[name='name']": { "type": "text", "label": "Nombre", "required": true, "testValue": "Presupuesto E2E Test" },
+        "input[name='fiscal_year']": { "type": "number", "label": "Año Fiscal", "required": true, "testValue": "2026" },
+        "select[name='category']": { "type": "select", "label": "Categoría", "required": true, "testValue": "operational" },
+        "input[name='inflation_rate']": { "type": "number", "label": "Tasa Inflación %", "testValue": "5.5" },
+        "input[name='growth_rate']": { "type": "number", "label": "Tasa Crecimiento %", "testValue": "3.0" },
+        "textarea[name='description']": { "type": "textarea", "label": "Descripción", "testValue": "Presupuesto creado por E2E" }
+      },
+      "saveFunction": "window.FinanceBudget.saveBudget()",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "finance-treasury": {
+      "name": "Tesorería - Cuentas Bancarias",
+      "jsFile": "finance-treasury.js",
+      "menuSelector": ".module-card[data-module-key='finance-treasury'][data-clickable='true']",
+      "openFunction": "window.FinanceTreasury.showAddAccountModal()",
+      "modalId": "bank-account-modal",
+      "modalFields": {
+        "input[name='account_code']": { "type": "text", "label": "Código", "required": true, "testValue": "BCO-E2E-{timestamp6}" },
+        "input[name='account_name']": { "type": "text", "label": "Nombre Cuenta", "required": true, "testValue": "Cuenta E2E Test" },
+        "input[name='bank_name']": { "type": "text", "label": "Banco", "required": true, "testValue": "Banco E2E" },
+        "input[name='account_number']": { "type": "text", "label": "Número Cuenta", "required": true, "testValue": "{timestamp8}" },
+        "select[name='account_type']": { "type": "select", "label": "Tipo Cuenta", "required": true, "testValue": "checking" },
+        "select[name='currency']": { "type": "select", "label": "Moneda", "required": true, "testValue": "ARS" },
+        "input[name='current_balance']": { "type": "number", "label": "Saldo Inicial", "testValue": "0" }
+      },
+      "saveFunction": "window.FinanceTreasury.saveBankAccount(event)",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "finance-journal-entries": {
+      "name": "Asientos Contables",
+      "jsFile": "finance-journal-entries.js",
+      "menuSelector": ".module-card[data-module-key='finance-journal-entries'][data-clickable='true']",
+      "openFunction": "FinanceJournalEntries.showCreateModal()",
+      "modalId": "entry-create-modal",
+      "modalFields": {
+        "input[name='entry_date']": { "type": "date", "label": "Fecha", "required": true, "testValue": "{today}" },
+        "input[name='reference']": { "type": "text", "label": "Referencia", "testValue": "REF-E2E-{timestamp6}" },
+        "textarea[name='description']": { "type": "textarea", "label": "Descripción", "required": true, "testValue": "Asiento E2E Test" }
+      },
+      "saveFunction": "FinanceJournalEntries.saveEntry(event)",
+      "saveButtonSelector": "button[type='submit']",
+      "note": "Requiere agregar líneas de débito/crédito manualmente"
+    },
+
+    "procurement-management": {
+      "name": "Compras - Nueva Requisición",
+      "jsFile": "procurement-management.js",
+      "menuSelector": ".module-card[data-module-key='procurement'][data-clickable='true']",
+      "openFunction": "ProcurementManagement.showNewRequisitionModal()",
+      "modalId": "procurement-modal",
+      "modalFields": {
+        "input[name='title']": { "type": "text", "label": "Título", "required": true, "testValue": "Requisición E2E Test" },
+        "select[name='priority']": { "type": "select", "label": "Prioridad", "testValue": "medium" },
+        "input[name='required_date']": { "type": "date", "label": "Fecha Requerida", "testValue": "{today}" },
+        "select[name='sector_id']": { "type": "select", "label": "Sector", "dynamic": true, "testValueIndex": 1 },
+        "select[name='finance_cost_center_id']": { "type": "select", "label": "Centro Costo", "dynamic": true, "testValueIndex": 1 },
+        "textarea[name='justification']": { "type": "textarea", "label": "Justificación", "testValue": "Requisición creada por E2E Test" },
+        "textarea[name='observations']": { "type": "textarea", "label": "Observaciones", "testValue": "Test automatizado" }
+      },
+      "saveFunction": "ProcurementManagement.saveRequisition(false)",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "partners-admin": {
+      "name": "Partners - Administración",
+      "jsFile": "partners-admin.js",
+      "menuSelector": ".module-card[data-module-key='partners'][data-clickable='true']",
+      "note": "Solo aprobación/rechazo de partners, sin crear",
+      "isViewOnly": true
+    },
+
+    "procedures-manual": {
+      "name": "Manual de Procedimientos",
+      "jsFile": "procedures-manual.js",
+      "menuSelector": ".module-card[data-module-key='procedures'][data-clickable='true']",
+      "openFunction": "ProceduresEngine.showCreateModal()",
+      "modalId": "procedureModal",
+      "modalFields": {
+        "input[name='code']": { "type": "text", "label": "Código", "testValue": "PRO-E2E-{timestamp6}" },
+        "select[name='type']": { "type": "select", "label": "Tipo Documento", "required": true, "testValue": "procedimiento" },
+        "input[name='title']": { "type": "text", "label": "Título", "required": true, "testValue": "Procedimiento E2E Test" },
+        "textarea[name='objective']": { "type": "textarea", "label": "Objetivo", "testValue": "Objetivo del procedimiento E2E" },
+        "textarea[name='scope']": { "type": "textarea", "label": "Alcance", "testValue": "Alcance del procedimiento" },
+        "textarea[name='responsibilities']": { "type": "textarea", "label": "Responsabilidades", "testValue": "Responsabilidades E2E" },
+        "input[name='effective_date']": { "type": "date", "label": "Fecha Vigencia", "testValue": "{today}" },
+        "input[name='is_critical']": { "type": "checkbox", "label": "Crítico", "testValue": false }
+      },
+      "saveFunction": "ProceduresEngine.saveProcedure(event)",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "roles-permissions": {
+      "name": "Roles y Permisos",
+      "jsFile": "roles-permissions.js",
+      "menuSelector": ".module-card[data-module-key='roles-permissions'][data-clickable='true']",
+      "openFunction": "RolesPermissionsModule.showCreateRoleModal()",
+      "modalId": "create-role-modal",
+      "modalFields": {
+        "input[name='role_name']": { "type": "text", "label": "Nombre del Rol", "required": true, "testValue": "Rol E2E Test" },
+        "input[name='role_key']": { "type": "text", "label": "Clave del Rol", "required": true, "testValue": "role_e2e_{timestamp6}" },
+        "textarea[name='description']": { "type": "textarea", "label": "Descripción", "testValue": "Rol creado por test E2E" },
+        "select[name='default_scope']": { "type": "select", "label": "Alcance", "testValue": "department" },
+        "input[name='permission_level']": { "type": "number", "label": "Nivel Permisos", "testValue": "50" }
+      },
+      "saveFunction": "RolesPermissionsModule.createRole()",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "warehouse-management": {
+      "name": "Gestión de Almacén",
+      "jsFile": "warehouse-management.js",
+      "menuSelector": ".module-card[data-module-key='warehouse-management'][data-clickable='true']",
+      "openFunction": "openProductModal()",
+      "modalId": "wms-modal-container",
+      "modalFields": {
+        "#wms-product-sku": { "type": "text", "label": "SKU", "required": true, "testValue": "WMS-E2E-{timestamp6}" },
+        "#wms-product-name": { "type": "text", "label": "Nombre Producto", "required": true, "testValue": "Producto E2E Test" },
+        "#wms-product-description": { "type": "textarea", "label": "Descripción", "testValue": "Producto creado por test E2E" },
+        "#wms-product-category": { "type": "select", "label": "Categoría", "dynamic": true, "testValueIndex": 1 },
+        "#wms-product-unit": { "type": "select", "label": "Unidad Medida", "testValue": "unidad" },
+        "#wms-product-min-stock": { "type": "number", "label": "Stock Mínimo", "testValue": "10" },
+        "#wms-product-max-stock": { "type": "number", "label": "Stock Máximo", "testValue": "100" },
+        "#wms-product-unit-cost": { "type": "number", "label": "Costo Unitario", "testValue": "150.00" },
+        "#wms-product-is-active": { "type": "checkbox", "label": "Activo", "testValue": true }
+      },
+      "saveFunction": "saveProduct()",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "art-management": {
+      "name": "ART - Proveedores",
+      "jsFile": "art-management.js",
+      "menuSelector": ".module-card[data-module-key='art-management'][data-clickable='true']",
+      "openFunction": "addNewArtProvider()",
+      "modalId": "art-provider-modal",
+      "modalFields": {
+        "#art-provider-name": { "type": "text", "label": "Nombre Proveedor", "required": true, "testValue": "ART Proveedor E2E" },
+        "#art-provider-cuit": { "type": "text", "label": "CUIT", "required": true, "testValue": "30-{timestamp8}-9" },
+        "#art-provider-contract": { "type": "text", "label": "N° Contrato", "testValue": "CTR-E2E-{timestamp6}" },
+        "#art-provider-phone": { "type": "text", "label": "Teléfono", "testValue": "+54 11 4567-8901" },
+        "#art-provider-email": { "type": "email", "label": "Email", "testValue": "art.e2e@test.com" },
+        "#art-provider-start-date": { "type": "date", "label": "Fecha Inicio", "testValue": "{today}" },
+        "#art-provider-is-active": { "type": "checkbox", "label": "Activo", "testValue": true }
+      },
+      "saveFunction": "saveArtProvider()",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "temporary-access": {
+      "name": "Accesos Temporales",
+      "jsFile": "temporary-access.js",
+      "menuSelector": ".module-card[data-module-key='temporary-access'][data-clickable='true']",
+      "openFunction": "TemporaryAccessModule.showCreateModal()",
+      "modalId": "createAccessModal",
+      "modalFields": {
+        "#access-requester-name": { "type": "text", "label": "Nombre Solicitante", "required": true, "testValue": "Solicitante E2E Test" },
+        "#access-requester-dni": { "type": "text", "label": "DNI", "required": true, "testValue": "DNI{timestamp8}" },
+        "#access-requester-email": { "type": "email", "label": "Email", "testValue": "temp.access.e2e@test.com" },
+        "#access-requester-phone": { "type": "text", "label": "Teléfono", "testValue": "+5491123456789" },
+        "#access-requester-company": { "type": "text", "label": "Empresa Origen", "testValue": "Empresa Externa E2E" },
+        "#access-reason": { "type": "textarea", "label": "Motivo Acceso", "required": true, "testValue": "Acceso temporal creado por test E2E automatizado" },
+        "#access-start-date": { "type": "datetime-local", "label": "Fecha Inicio", "required": true, "testValue": "{tomorrow}" },
+        "#access-end-date": { "type": "datetime-local", "label": "Fecha Fin", "required": true, "testValue": "{tomorrow}" },
+        "#access-zones": { "type": "select", "label": "Zonas Permitidas", "dynamic": true, "testValueIndex": 1 },
+        "#access-responsible": { "type": "select", "label": "Responsable", "dynamic": true, "testValueIndex": 1 },
+        "#access-requires-escort": { "type": "checkbox", "label": "Requiere Escolta", "testValue": false }
+      },
+      "saveFunction": "TemporaryAccessModule.createAccess()",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "support-system": {
+      "name": "Sistema de Soporte",
+      "jsFile": "user-support-dashboard.js",
+      "menuSelector": ".module-card[data-module-key='support-system'][data-clickable='true']",
+      "openFunction": "showCreateTicket()",
+      "modalId": "create-ticket-form",
+      "modalFields": {
+        "#ticket-module": { "type": "select", "label": "Módulo Relacionado", "required": true, "testValue": "usuarios" },
+        "#ticket-subject": { "type": "text", "label": "Asunto", "required": true, "minLength": 5, "maxLength": 200, "testValue": "Ticket E2E Test - Asunto de prueba" },
+        "#ticket-description": { "type": "textarea", "label": "Descripción", "required": true, "minLength": 20, "testValue": "Descripción detallada del ticket E2E. Este es un test automatizado que verifica la creación de tickets." },
+        "#ticket-priority": { "type": "select", "label": "Prioridad", "testValue": "medium" }
+      },
+      "saveFunction": "createTicket(event)",
+      "saveButtonSelector": "button[type='submit']"
+    },
+
+    "finance-cash-flow": {
+      "name": "Flujo de Caja",
+      "jsFile": "finance-cash-flow.js",
+      "menuSelector": ".module-card[data-module-key='finance-cash-flow'][data-clickable='true']",
+      "note": "Dashboard de flujo de caja - Solo visualización y análisis",
+      "isViewOnly": true
+    },
+
+    "finance-reports": {
+      "name": "Informes Financieros",
+      "jsFile": "finance-reports.js",
+      "menuSelector": ".module-card[data-module-key='finance-reports'][data-clickable='true']",
+      "note": "Generación de reportes contables (Balance, Estado de Resultados, etc.) - Solo lectura y exportación",
+      "isViewOnly": true
+    },
+
+    "finance-executive-dashboard": {
+      "name": "Dashboard Ejecutivo Finanzas",
+      "jsFile": "finance-executive-dashboard.js",
+      "menuSelector": ".module-card[data-module-key='finance-executive-dashboard'][data-clickable='true']",
+      "note": "Dashboard para ejecutivos con KPIs - Approve/Reject de solicitudes, sin CRUD",
+      "isViewOnly": true
+    },
+
+    "employee-360": {
+      "name": "Expediente 360",
+      "jsFile": "employee-360.js",
+      "menuSelector": ".module-card[data-module-key='employee-360'][data-clickable='true']",
+      "note": "Vista completa del empleado con 10+ tabs - Solo lectura",
+      "isViewOnly": true
+    },
+
+    "employee-map": {
+      "name": "Mapa de Empleados",
+      "jsFile": "employee-map.js",
+      "menuSelector": ".module-card[data-module-key='employee-map'][data-clickable='true']",
+      "note": "Visualización geográfica de empleados - Solo mapa interactivo",
+      "isViewOnly": true
+    },
+
+    "mi-espacio": {
+      "name": "Mi Espacio Personal",
+      "jsFile": "mi-espacio.js",
+      "menuSelector": ".module-card[data-module-key='mi-espacio'][data-clickable='true']",
+      "note": "Dashboard personal del empleado - Solo visualización de datos propios",
+      "isViewOnly": true
+    },
+
+    "company-account": {
+      "name": "Cuenta de Empresa",
+      "jsFile": "company-account.js",
+      "menuSelector": ".module-card[data-module-key='company-account'][data-clickable='true']",
+      "note": "Información de la empresa - Solo lectura y comunicaciones",
+      "isViewOnly": true,
+      "viewOnlyReason": "Solo permite enviar comunicaciones, no CRUD completo"
+    },
+
+    "audit-reports": {
+      "name": "Reportes de Auditoría",
+      "jsFile": "audit-reports.js",
+      "menuSelector": ".module-card[data-module-key='audit-reports'][data-clickable='true']",
+      "openFunction": "submitReport()",
+      "note": "Generación de reportes de auditoría - Solo CREATE, sin UPDATE/DELETE",
+      "isViewOnly": true,
+      "viewOnlyReason": "Solo permite generar reportes, no editarlos"
+    },
+
+    "configurador-modulos": {
+      "name": "Configurador de Módulos",
+      "jsFile": "configurador-modulos.js",
+      "menuSelector": ".module-card[data-module-key='configurador-modulos'][data-clickable='true']",
+      "note": "Configuración de módulos activos - Solo activar/desactivar",
+      "isViewOnly": true
+    },
+
+    "compliance-dashboard": {
+      "name": "Dashboard de Compliance",
+      "jsFile": "compliance-dashboard.js",
+      "menuSelector": ".module-card[data-module-key='compliance-dashboard'][data-clickable='true']",
+      "note": "Dashboard de cumplimiento regulatorio - Solo visualización y config",
+      "isViewOnly": true
+    },
+
+    "payroll-liquidation": {
+      "name": "Liquidación de Sueldos - Plantillas",
+      "jsFile": "payroll-liquidation.js",
+      "menuSelector": ".module-card[data-module-key='payroll-liquidation'][data-clickable='true']",
+      "openFunction": "PayrollEngine.showCreateTemplateModal()",
+      "modalId": "pe-modal-overlay",
+      "formSelector": "#pe-template-form",
+      "modalFields": {
+        "input[name='template_code']": { "type": "text", "label": "Código", "required": true, "testValue": "PPTO-E2E-{timestamp6}" },
+        "input[name='template_name']": { "type": "text", "label": "Nombre", "required": true, "testValue": "Plantilla E2E Test" },
+        "textarea[name='description']": { "type": "textarea", "label": "Descripción", "testValue": "Plantilla creada por test E2E" },
+        "select[name='pay_frequency']": { "type": "select", "label": "Tipo Liquidación", "testValue": "MONTHLY" },
+        "input[name='is_default']": { "type": "checkbox", "label": "Plantilla por defecto", "testValue": false }
+      },
+      "saveFunction": "PayrollEngine.saveTemplate()",
+      "saveButtonSelector": "button[onclick*='saveTemplate']",
+      "note": "Requiere agregar conceptos manualmente con PayrollEngine.addConceptRow()"
+    },
+
+    "payroll-categories": {
+      "name": "Liquidación - Categorías",
+      "jsFile": "payroll-liquidation.js",
+      "menuSelector": ".module-card[data-module-key='payroll-liquidation'][data-clickable='true']",
+      "preNavigateFunction": "PayrollEngine.switchTab('categories')",
+      "preNavigateWait": 500,
+      "openFunction": "PayrollEngine.showCategoryModal()",
+      "modalId": "pe-modal-overlay",
+      "formSelector": "#pe-category-form",
+      "modalFields": {
+        "input[name='category_code']": { "type": "text", "label": "Código", "required": true, "testValue": "CAT-E2E-{timestamp6}" },
+        "input[name='category_name_short']": { "type": "text", "label": "Nombre Corto", "testValue": "Cat E2E" },
+        "input[name='category_name']": { "type": "text", "label": "Nombre Completo", "required": true, "testValue": "Categoría E2E Test" },
+        "textarea[name='description']": { "type": "textarea", "label": "Descripción", "testValue": "Categoría de prueba" },
+        "select[name='flow_direction']": { "type": "select", "label": "Dirección Flujo", "required": true, "testValue": "deduction" },
+        "input[name='consolidation_group']": { "type": "text", "label": "Grupo Consolidación", "testValue": "test_group" },
+        "input[name='color_hex']": { "type": "color", "label": "Color", "testValue": "#3B82F6" }
+      },
+      "saveFunction": "PayrollEngine.saveCategory()",
+      "saveButtonSelector": "button[onclick*='saveCategory']"
+    },
+
+    "inbox": {
+      "name": "Bandeja de Entrada - Notificaciones",
+      "jsFile": "inbox.js",
+      "menuSelector": ".module-card[data-module-key='inbox'][data-clickable='true']",
+      "openFunction": "InboxModule.showNewNotificationModal()",
+      "modalId": "newNotificationModal",
+      "modalFields": {
+        "[data-category='late_arrival']": { "type": "button", "label": "Categoría: Llegada Tarde", "testClick": true },
+        "#notifStartDate": { "type": "date", "label": "Fecha Inicio", "required": true, "testValue": "{today}" },
+        "#notifTime": { "type": "time", "label": "Hora Llegada", "testValue": "09:30" },
+        "#notifDelayMinutes": { "type": "number", "label": "Minutos Retraso", "testValue": "30" },
+        "#notifReason": { "type": "textarea", "label": "Motivo", "required": true, "testValue": "Notificación E2E - Tráfico en ruta" }
+      },
+      "saveFunction": "InboxModule.submitNotification()",
+      "saveButtonSelector": "#btnSubmitNotification",
+      "note": "Primero seleccionar categoría, luego aparecen campos dinámicos"
+    },
+
+    "vendor-dashboard": {
+      "name": "Gestión de Empresas (Vendor)",
+      "jsFile": "vendor-dashboard.js",
+      "menuSelector": ".module-card[data-module-key='vendor-dashboard'][data-clickable='true']",
+      "openFunction": "VendorDashboard.showNewCompany()",
+      "modalId": "workflow-modal-overlay",
+      "modalFields": {
+        "#wf-companyName": { "type": "text", "label": "Nombre Comercial", "required": true, "testValue": "Empresa E2E Test SA" },
+        "#wf-legalName": { "type": "text", "label": "Razón Social", "testValue": "Empresa E2E Test Sociedad Anónima" },
+        "#wf-taxId": { "type": "text", "label": "CUIT/ID Fiscal", "required": true, "testValue": "30-{timestamp8}-9" },
+        "#wf-email": { "type": "email", "label": "Email Contacto", "required": true, "testValue": "empresa.e2e@test.com" },
+        "#wf-phone": { "type": "text", "label": "Teléfono", "testValue": "+54 11 4567-8900" },
+        "#wf-contactName": { "type": "text", "label": "Responsable", "testValue": "Responsable E2E Test" },
+        "#wf-licenseType": { "type": "select", "label": "Tipo Soporte", "testValue": "premium" },
+        "#wf-employees": { "type": "number", "label": "Cantidad Empleados", "testValue": "50" }
+      },
+      "saveFunction": "CompanyWorkflow.saveNewCompany()",
+      "saveButtonSelector": "#wf-saveBtn",
+      "note": "Requiere: 1) Datos básicos, 2) Seleccionar módulos, 3) Agregar sucursal"
+    },
+
+    "cash-management": {
+      "name": "Gestión de Caja - Movimientos",
+      "jsFile": "cash-management.js",
+      "menuSelector": ".module-card[data-module-key='cash-management'][data-clickable='true']",
+      "openFunction": "CashManagement.showNewMovementModal()",
+      "modalId": "cash-modal-container",
+      "modalFields": {
+        "#movement-type": { "type": "select", "label": "Tipo", "required": true, "testValue": "income" },
+        "#movement-amount": { "type": "number", "label": "Monto", "required": true, "testValue": "500.50" },
+        "#movement-payment-method": { "type": "select", "label": "Medio de Pago", "required": true, "dynamic": true, "testValueIndex": 0 },
+        "#movement-category": { "type": "text", "label": "Categoría", "testValue": "ventas" },
+        "#movement-description": { "type": "textarea", "label": "Descripción", "testValue": "Movimiento E2E Test" }
+      },
+      "saveFunction": "CashManagement.createMovement()",
+      "saveButtonSelector": "button.cash-btn-primary",
+      "note": "Requiere sesión de caja abierta previamente"
+    },
+
+    "biometric-consent": {
+      "name": "Consentimiento Biométrico",
+      "jsFile": "biometric-consent.js",
+      "menuSelector": ".module-card[data-module-key='biometric-consent'][data-clickable='true']",
+      "note": "Módulo de visualización y gestión de consentimientos - Solo lectura y acciones",
+      "isViewOnly": true,
+      "viewOnlyReason": "No tiene modal CRUD, solo visualización de empleados y envío de solicitudes"
+    },
+
+    "admin-consent-management": {
+      "name": "Gestión de Consentimientos Admin",
+      "jsFile": "admin-consent-management.js",
+      "menuSelector": ".module-card[data-module-key='admin-consent-management'][data-clickable='true']",
+      "openFunction": "consentMgmt.openCreateModal()",
+      "modalId": "modal-overlay",
+      "formSelector": "#consentForm",
+      "modalFields": {
+        "#consentKey": { "type": "text", "label": "Clave Consentimiento", "required": true, "testValue": "consent_e2e_{timestamp6}" },
+        "#consentTitle": { "type": "text", "label": "Título", "required": true, "testValue": "Consentimiento E2E Test" },
+        "#consentDescription": { "type": "textarea", "label": "Descripción Breve", "testValue": "Descripción del consentimiento E2E" },
+        "#consentFullText": { "type": "textarea", "label": "Texto Completo", "required": true, "testValue": "Este es el texto completo del consentimiento para test E2E automatizado." },
+        "#consentCategory": { "type": "select", "label": "Categoría", "required": true, "testValue": "data_protection" },
+        ".role-checkbox[value='employee']": { "type": "checkbox", "label": "Rol Employee", "testValue": true },
+        "#isRequired": { "type": "checkbox", "label": "Es Obligatorio", "testValue": true },
+        "#isActive": { "type": "checkbox", "label": "Activo", "testValue": true }
+      },
+      "saveFunction": "consentMgmt.saveConsent(false)",
+      "saveButtonSelector": "button[type='submit']"
+    }
+  },
+
+  "testPatterns": {
+    "timestamp": "Date.now()",
+    "timestamp6": "Date.now().toString().slice(-6)",
+    "timestamp8": "Date.now().toString().slice(-8)",
+    "today": "new Date().toISOString().split('T')[0]",
+    "tomorrow": "new Date(Date.now() + 86400000).toISOString().slice(0, 16)"
+  },
+
+  "globalSelectors": {
+    "mainContent": "#mainContent",
+    "moduleMenu": ".sidebar-menu, .nav-menu",
+    "loadingIndicator": ".loading, .spinner, .ve-loading",
+    "alertSuccess": ".alert-success, .toast-success, .notification-success",
+    "alertError": ".alert-danger, .toast-error, .notification-error",
+    "modalBackdrop": ".modal-backdrop, .modal.show",
+    "confirmDialog": ".confirm-dialog, .swal2-popup"
+  }
+}
