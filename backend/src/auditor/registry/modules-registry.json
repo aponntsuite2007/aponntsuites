@@ -681,8 +681,8 @@
         "provides_to": []
       },
       "commercial": {
-        "is_core": false,
-        "standalone": true,
+        "is_core": true,
+        "standalone": false,
         "monthly_price": 0,
         "max_users_included": null,
         "additional_user_price": null
@@ -5486,7 +5486,7 @@
           "entry_point": "BIOMETRIC_CAPTURE",
           "final_states": [],
           "auto_generated": true,
-          "generated_at": "2026-01-18T00:33:45.669Z",
+          "generated_at": "2026-01-22T20:15:37.578Z",
           "stats": {
             "total": 152,
             "core": 37,
@@ -5496,7 +5496,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2026-01-18T00:33:45.685Z",
+      "lastBrainUpdate": "2026-01-22T20:15:37.591Z",
       "ssot": {
         "elements": [
           {
@@ -5900,7 +5900,7 @@
             "CASE_ARCHIVED"
           ],
           "auto_generated": true,
-          "generated_at": "2026-01-18T00:33:45.701Z",
+          "generated_at": "2026-01-22T20:15:37.605Z",
           "stats": {
             "total": 43,
             "core": 3,
@@ -5910,7 +5910,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2026-01-18T00:33:45.711Z",
+      "lastBrainUpdate": "2026-01-22T20:15:37.620Z",
       "ssot": {
         "elements": [
           {

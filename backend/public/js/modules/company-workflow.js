@@ -410,10 +410,12 @@
                                                              onclick="CompanyWorkflow.toggleModule('${m.key}')"
                                                              data-module="${m.key}"
                                                              data-contracted="${isSelected}">
+                                                            <div class="wf-corner-ribbon ${isCore ? 'core' : 'optional'}">
+                                                                <span>${isCore ? 'CORE' : 'OPCIONAL'}</span>
+                                                            </div>
                                                             <div class="wf-module-header">
                                                                 <span class="wf-module-icon">${m.icon || '📦'}</span>
                                                                 <span class="wf-module-name">${m.name}</span>
-                                                                ${isCore ? '<span class="wf-badge core">CORE</span>' : ''}
                                                             </div>
                                                             <div class="wf-module-desc">${m.description || ''}</div>
                                                             <div class="wf-module-price">
@@ -1625,6 +1627,7 @@
                     cursor: pointer;
                     transition: all 0.3s;
                     position: relative;
+                    overflow: hidden;
                 }
 
                 .wf-module-card:hover {
@@ -1663,6 +1666,43 @@
                     color: #fff;
                     font-size: 0.85rem;
                     flex: 1;
+                }
+
+                .wf-corner-ribbon {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    width: 60px;
+                    height: 60px;
+                    overflow: hidden;
+                    z-index: 2;
+                    pointer-events: none;
+                }
+
+                .wf-corner-ribbon span {
+                    position: absolute;
+                    top: 8px;
+                    right: -18px;
+                    display: block;
+                    width: 80px;
+                    padding: 2px 0;
+                    font-size: 0.5rem;
+                    font-weight: 800;
+                    text-align: center;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    transform: rotate(45deg);
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                }
+
+                .wf-corner-ribbon.core span {
+                    background: #dc2626;
+                    color: #ffffff;
+                }
+
+                .wf-corner-ribbon.optional span {
+                    background: #16a34a;
+                    color: #ffffff;
                 }
 
                 .wf-badge {

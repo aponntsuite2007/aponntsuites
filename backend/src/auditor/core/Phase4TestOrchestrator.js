@@ -1463,7 +1463,8 @@ class Phase4TestOrchestrator {
         console.log('\n\n🔥🔥🔥 ===== MÉTODO LOGIN() EJECUTÁNDOSE ===== 🔥🔥🔥');
         console.log(`🔥 Empresa: ${companySlug}`);
         console.log(`🔥 Usuario: ${username}`);
-        console.log(`🔥 Password: ${password}\n`);
+        // 🔐 SEGURIDAD: No loguear passwords en producción
+        console.log(`🔥 Password: ${'*'.repeat(password?.length || 8)}\n`);
 
         this.logger.info('BROWSER', `🔐 Iniciando login (3 pasos) con usuario ${username}`, {
             baseUrl: this.config.baseUrl,

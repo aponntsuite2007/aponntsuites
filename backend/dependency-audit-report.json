@@ -1,0 +1,1636 @@
+{
+  "generatedAt": "2026-01-22T21:19:17.414Z",
+  "summary": {
+    "totalModules": 72,
+    "core": 32,
+    "recommended": 4,
+    "optional": 18,
+    "standalone": 18
+  },
+  "classification": {
+    "CORE": [
+      "inbox",
+      "notification-center",
+      "configurador-modulos",
+      "auto-healing-dashboard",
+      "engineering-dashboard",
+      "testing-metrics-dashboard",
+      "predictive-workforce-dashboard",
+      "deploy-manager-3stages",
+      "organizational-structure",
+      "admin-consent-management",
+      "departments",
+      "shifts",
+      "dms-dashboard",
+      "phase4-integrated-manager",
+      "mi-espacio",
+      "associate-workflow-panel",
+      "roles-permissions",
+      "database-sync",
+      "deployment-sync",
+      "partner-scoring-system",
+      "user-support",
+      "users",
+      "companies",
+      "dashboard",
+      "attendance",
+      "kiosks",
+      "hours-cube-dashboard",
+      "associate-marketplace",
+      "temporary-access",
+      "partners",
+      "company-email-process",
+      "company-account"
+    ],
+    "RECOMMENDED": [
+      "biometric-consent",
+      "employee-360",
+      "visitors",
+      "employee-map"
+    ],
+    "OPTIONAL": [
+      "legal-dashboard",
+      "kiosks-apk",
+      "medical",
+      "hour-bank",
+      "payroll-liquidation",
+      "art-management",
+      "training-management",
+      "compliance-dashboard",
+      "hse-management",
+      "emotional-analysis",
+      "job-postings",
+      "sanctions-management",
+      "sla-tracking",
+      "audit-reports",
+      "benefits-management",
+      "siac-commercial-dashboard",
+      "voice-platform",
+      "procedures-manual"
+    ],
+    "STANDALONE": [
+      "finance-journal-entries",
+      "finance-cost-centers",
+      "finance-executive-dashboard",
+      "finance-dashboard",
+      "finance-cash-flow",
+      "warehouse-management",
+      "positions-management",
+      "my-procedures",
+      "finance-chart-of-accounts",
+      "finance-budget",
+      "finance-reports",
+      "finance-treasury",
+      "vacation-management",
+      "ai-assistant",
+      "procurement-management",
+      "vendors",
+      "auditor",
+      "logistics-dashboard"
+    ]
+  },
+  "moduleDetails": {
+    "finance-journal-entries": {
+      "id": "finance-journal-entries",
+      "name": "Asientos Contables",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "inbox": {
+      "id": "inbox",
+      "name": "Bandeja Notificaciones",
+      "category": "communication",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 7,
+      "isStandalone": true
+    },
+    "notification-center": {
+      "id": "notification-center",
+      "name": "Centro de Notificaciones",
+      "category": "communication",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "finance-cost-centers": {
+      "id": "finance-cost-centers",
+      "name": "Centros de Costo",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "configurador-modulos": {
+      "id": "configurador-modulos",
+      "name": "Configurador de Módulos",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "biometric-consent": {
+      "id": "biometric-consent",
+      "name": "Consentimientos y Privacidad",
+      "category": "compliance",
+      "type": "RECOMMENDED",
+      "reason": "Infraestructura importante",
+      "canDisable": true,
+      "disableImpact": "Funcionalidad reducida",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "auto-healing-dashboard": {
+      "id": "auto-healing-dashboard",
+      "name": "Dashboard de Auto-Healing",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "engineering-dashboard": {
+      "id": "engineering-dashboard",
+      "name": "Dashboard de Ingeniería",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "testing-metrics-dashboard": {
+      "id": "testing-metrics-dashboard",
+      "name": "Dashboard de Testing",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "finance-executive-dashboard": {
+      "id": "finance-executive-dashboard",
+      "name": "Dashboard Ejecutivo Financiero",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "predictive-workforce-dashboard": {
+      "id": "predictive-workforce-dashboard",
+      "name": "Dashboard Predictivo de Workforce",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "deploy-manager-3stages": {
+      "id": "deploy-manager-3stages",
+      "name": "Deploy Manager 3-Stage",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "organizational-structure": {
+      "id": "organizational-structure",
+      "name": "Estructura Organizacional",
+      "category": "rrhh",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [
+          "attendance",
+          "hse-management",
+          "procedures-manual"
+        ],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "finance-dashboard": {
+      "id": "finance-dashboard",
+      "name": "Finanzas",
+      "category": "admin",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "finance-cash-flow": {
+      "id": "finance-cash-flow",
+      "name": "Flujo de Caja",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "warehouse-management": {
+      "id": "warehouse-management",
+      "name": "Gestión de Almacenes",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "admin-consent-management": {
+      "id": "admin-consent-management",
+      "name": "Gestión de Consentimientos (Admin)",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "departments": {
+      "id": "departments",
+      "name": "Gestión de Departamentos",
+      "category": "core",
+      "type": "CORE",
+      "reason": "Módulo fundamental del sistema",
+      "canDisable": false,
+      "disableImpact": "SISTEMA NO FUNCIONA",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "positions-management": {
+      "id": "positions-management",
+      "name": "Gestión de Puestos",
+      "category": "rrhh",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "shifts": {
+      "id": "shifts",
+      "name": "Gestión de Turnos",
+      "category": "core",
+      "type": "CORE",
+      "reason": "Módulo fundamental del sistema",
+      "canDisable": false,
+      "disableImpact": "SISTEMA NO FUNCIONA",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "dms-dashboard": {
+      "id": "dms-dashboard",
+      "name": "Gestión Documental (DMS)",
+      "category": "core",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "phase4-integrated-manager": {
+      "id": "phase4-integrated-manager",
+      "name": "Manager de Phase4",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "mi-espacio": {
+      "id": "mi-espacio",
+      "name": "Mi Espacio",
+      "category": "core",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "my-procedures": {
+      "id": "my-procedures",
+      "name": "Mis Procedimientos",
+      "category": "support",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "associate-workflow-panel": {
+      "id": "associate-workflow-panel",
+      "name": "Panel de Workflow de Asociados",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "finance-chart-of-accounts": {
+      "id": "finance-chart-of-accounts",
+      "name": "Plan de Cuentas",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "finance-budget": {
+      "id": "finance-budget",
+      "name": "Presupuestos",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "finance-reports": {
+      "id": "finance-reports",
+      "name": "Reportes Financieros",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "roles-permissions": {
+      "id": "roles-permissions",
+      "name": "Roles y Permisos",
+      "category": "security",
+      "type": "CORE",
+      "reason": "Módulo fundamental del sistema",
+      "canDisable": false,
+      "disableImpact": "SISTEMA NO FUNCIONA",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "database-sync": {
+      "id": "database-sync",
+      "name": "Sincronización de BD",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "deployment-sync": {
+      "id": "deployment-sync",
+      "name": "Sincronización de Deploy",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "partner-scoring-system": {
+      "id": "partner-scoring-system",
+      "name": "Sistema de Scoring de Partners",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "user-support": {
+      "id": "user-support",
+      "name": "Soporte / Tickets",
+      "category": "support",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "finance-treasury": {
+      "id": "finance-treasury",
+      "name": "Tesorería",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "users": {
+      "id": "users",
+      "name": "Gestión de Usuarios",
+      "category": "core",
+      "type": "CORE",
+      "reason": "Módulo fundamental del sistema",
+      "canDisable": false,
+      "disableImpact": "SISTEMA NO FUNCIONA",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [
+          "dashboard",
+          "attendance",
+          "legal-dashboard",
+          "employee-360",
+          "medical",
+          "hour-bank",
+          "payroll-liquidation",
+          "art-management",
+          "training-management",
+          "compliance-dashboard",
+          "visitors",
+          "hse-management",
+          "emotional-analysis",
+          "employee-map",
+          "job-postings",
+          "sanctions-management",
+          "sla-tracking",
+          "audit-reports",
+          "benefits-management"
+        ],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "companies": {
+      "id": "companies",
+      "name": "Gestión de Empresas",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Módulo fundamental del sistema",
+      "canDisable": false,
+      "disableImpact": "SISTEMA NO FUNCIONA",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "dashboard": {
+      "id": "dashboard",
+      "name": "Dashboard Principal",
+      "category": "core",
+      "type": "CORE",
+      "reason": "Módulo fundamental del sistema",
+      "canDisable": false,
+      "disableImpact": "SISTEMA NO FUNCIONA",
+      "dependencies": {
+        "requires": [
+          "users"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "attendance": {
+      "id": "attendance",
+      "name": "Control de Asistencia",
+      "category": "core",
+      "type": "CORE",
+      "reason": "Módulo fundamental del sistema",
+      "canDisable": false,
+      "disableImpact": "SISTEMA NO FUNCIONA",
+      "dependencies": {
+        "requires": [
+          "users",
+          "organizational-structure"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [
+          "employee-360",
+          "hour-bank",
+          "payroll-liquidation",
+          "employee-map"
+        ],
+        "optionalFor": []
+      },
+      "pricing": 5,
+      "isStandalone": true
+    },
+    "legal-dashboard": {
+      "id": "legal-dashboard",
+      "name": "Gestión Legal",
+      "category": "compliance",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users",
+          "document-management"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 15,
+      "isStandalone": true
+    },
+    "kiosks": {
+      "id": "kiosks",
+      "name": "Gestión de Kioscos",
+      "category": "hardware",
+      "type": "CORE",
+      "reason": "Módulo fundamental del sistema",
+      "canDisable": false,
+      "disableImpact": "SISTEMA NO FUNCIONA",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [
+          "kiosks-apk"
+        ],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "kiosks-apk": {
+      "id": "kiosks-apk",
+      "name": "APK Kiosko Android",
+      "category": "hardware",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "kiosks"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "employee-360": {
+      "id": "employee-360",
+      "name": "Expediente 360°",
+      "category": "rrhh",
+      "type": "RECOMMENDED",
+      "reason": "Infraestructura importante",
+      "canDisable": true,
+      "disableImpact": "Funcionalidad reducida",
+      "dependencies": {
+        "requires": [
+          "users",
+          "attendance"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 150,
+      "isStandalone": true
+    },
+    "hours-cube-dashboard": {
+      "id": "hours-cube-dashboard",
+      "name": "Panel Ejecutivo de Horas",
+      "category": "analytics",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "medical": {
+      "id": "medical",
+      "name": "Gestión Médica",
+      "category": "medical",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "Menor impacto en 1 módulos",
+      "dependencies": {
+        "requires": [
+          "users"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [
+          "art-management"
+        ],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "associate-marketplace": {
+      "id": "associate-marketplace",
+      "name": "Asociados APONNT",
+      "category": "additional",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "vacation-management": {
+      "id": "vacation-management",
+      "name": "Gestión de Vacaciones",
+      "category": "rrhh",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 90,
+      "isStandalone": true
+    },
+    "ai-assistant": {
+      "id": "ai-assistant",
+      "name": "Asistente IA",
+      "category": "ai",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": false
+    },
+    "temporary-access": {
+      "id": "temporary-access",
+      "name": "Accesos Temporales",
+      "category": "security",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "procurement-management": {
+      "id": "procurement-management",
+      "name": "Compras y Proveedores",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "hour-bank": {
+      "id": "hour-bank",
+      "name": "Banco de Horas",
+      "category": "payroll",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users",
+          "attendance"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 2.5,
+      "isStandalone": true
+    },
+    "payroll-liquidation": {
+      "id": "payroll-liquidation",
+      "name": "Liquidación de Sueldos",
+      "category": "payroll",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users",
+          "attendance"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 3,
+      "isStandalone": true
+    },
+    "art-management": {
+      "id": "art-management",
+      "name": "Gestión de ART",
+      "category": "medical",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users",
+          "medical"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 2,
+      "isStandalone": true
+    },
+    "training-management": {
+      "id": "training-management",
+      "name": "Gestión de Capacitaciones",
+      "category": "rrhh",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 1.5,
+      "isStandalone": true
+    },
+    "compliance-dashboard": {
+      "id": "compliance-dashboard",
+      "name": "Inteligencia de Riesgos",
+      "category": "compliance",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 2,
+      "isStandalone": true
+    },
+    "visitors": {
+      "id": "visitors",
+      "name": "Control de Visitantes",
+      "category": "security",
+      "type": "RECOMMENDED",
+      "reason": "Infraestructura importante",
+      "canDisable": true,
+      "disableImpact": "Funcionalidad reducida",
+      "dependencies": {
+        "requires": [
+          "users"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 1,
+      "isStandalone": true
+    },
+    "hse-management": {
+      "id": "hse-management",
+      "name": "Seguridad e Higiene Laboral (HSE)",
+      "category": "security",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users",
+          "organizational-structure"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 99,
+      "isStandalone": true
+    },
+    "vendors": {
+      "id": "vendors",
+      "name": "Vendedores",
+      "category": "admin",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "partners": {
+      "id": "partners",
+      "name": "Asociados",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "auditor": {
+      "id": "auditor",
+      "name": "Auditor y Testing",
+      "category": "admin",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "emotional-analysis": {
+      "id": "emotional-analysis",
+      "name": "Análisis Emocional",
+      "category": "ai",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users",
+          "biometric-enterprise"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 2,
+      "isStandalone": true
+    },
+    "employee-map": {
+      "id": "employee-map",
+      "name": "Mapa de Empleados",
+      "category": "analytics",
+      "type": "RECOMMENDED",
+      "reason": "Infraestructura importante",
+      "canDisable": true,
+      "disableImpact": "Funcionalidad reducida",
+      "dependencies": {
+        "requires": [
+          "users",
+          "attendance"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 1.5,
+      "isStandalone": true
+    },
+    "job-postings": {
+      "id": "job-postings",
+      "name": "Búsquedas Laborales",
+      "category": "rrhh",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 1,
+      "isStandalone": true
+    },
+    "sanctions-management": {
+      "id": "sanctions-management",
+      "name": "Gestión de Sanciones",
+      "category": "rrhh",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 1,
+      "isStandalone": true
+    },
+    "sla-tracking": {
+      "id": "sla-tracking",
+      "name": "Seguimiento de SLA",
+      "category": "monitoring",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 1.5,
+      "isStandalone": true
+    },
+    "audit-reports": {
+      "id": "audit-reports",
+      "name": "Reportes de Auditoría",
+      "category": "compliance",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 2,
+      "isStandalone": true
+    },
+    "company-email-process": {
+      "id": "company-email-process",
+      "name": "Asignación de Emails a Procesos",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "benefits-management": {
+      "id": "benefits-management",
+      "name": "Beneficios Laborales",
+      "category": "rrhh",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "users"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 1500,
+      "isStandalone": true
+    },
+    "company-account": {
+      "id": "company-account",
+      "name": "Cuenta Comercial",
+      "category": "admin",
+      "type": "CORE",
+      "reason": "Marcado como core en registry",
+      "canDisable": false,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "logistics-dashboard": {
+      "id": "logistics-dashboard",
+      "name": "Logistica Avanzada",
+      "category": "additional",
+      "type": "STANDALONE",
+      "reason": "Funciona independiente",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "siac-commercial-dashboard": {
+      "id": "siac-commercial-dashboard",
+      "name": "SIAC Comercial Integral",
+      "category": "siac",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "clientes"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    },
+    "voice-platform": {
+      "id": "voice-platform",
+      "name": "Voz del Empleado 🎤",
+      "category": "rrhh",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "PostgreSQL 12+",
+          "Python 3.8+ (NLP service)",
+          "Min 50 empleados (recomendado)"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 29.99,
+      "isStandalone": true
+    },
+    "procedures-manual": {
+      "id": "procedures-manual",
+      "name": "Manual de Procedimientos",
+      "category": "support",
+      "type": "OPTIONAL",
+      "reason": "Feature adicional",
+      "canDisable": true,
+      "disableImpact": "none",
+      "dependencies": {
+        "requires": [
+          "notifications-enterprise",
+          "organizational-structure"
+        ],
+        "optionalDeps": [],
+        "requiredBy": [],
+        "optionalFor": []
+      },
+      "pricing": 0,
+      "isStandalone": true
+    }
+  },
+  "suggestedBundles": [
+    {
+      "name": "Bundle CORE (Obligatorio)",
+      "modules": [
+        "inbox",
+        "notification-center",
+        "configurador-modulos",
+        "auto-healing-dashboard",
+        "engineering-dashboard",
+        "testing-metrics-dashboard",
+        "predictive-workforce-dashboard",
+        "deploy-manager-3stages",
+        "organizational-structure",
+        "admin-consent-management",
+        "departments",
+        "shifts",
+        "dms-dashboard",
+        "phase4-integrated-manager",
+        "mi-espacio",
+        "associate-workflow-panel",
+        "roles-permissions",
+        "database-sync",
+        "deployment-sync",
+        "partner-scoring-system",
+        "user-support",
+        "users",
+        "companies",
+        "dashboard",
+        "attendance",
+        "kiosks",
+        "hours-cube-dashboard",
+        "associate-marketplace",
+        "temporary-access",
+        "partners",
+        "company-email-process",
+        "company-account"
+      ],
+      "description": "Incluido en todos los planes",
+      "pricing": "Base"
+    },
+    {
+      "name": "Bundle RRHH Completo",
+      "modules": [
+        "medical",
+        "vacation-management",
+        "sanctions-management",
+        "training-management",
+        "benefits-management"
+      ],
+      "description": "Gestión completa de recursos humanos",
+      "pricing": "Premium"
+    },
+    {
+      "name": "Bundle Nómina",
+      "modules": [
+        "payroll-liquidation",
+        "hour-bank"
+      ],
+      "description": "Cálculo de nómina y banco de horas",
+      "pricing": "Add-on"
+    },
+    {
+      "name": "Bundle Finanzas",
+      "modules": [
+        "finance-journal-entries",
+        "finance-chart-of-accounts",
+        "finance-cost-centers",
+        "finance-budget",
+        "finance-treasury",
+        "finance-cash-flow",
+        "finance-reports",
+        "finance-executive-dashboard"
+      ],
+      "description": "Suite completa de contabilidad",
+      "pricing": "Enterprise"
+    },
+    {
+      "name": "Bundle Seguridad HSE",
+      "modules": [
+        "hse-management"
+      ],
+      "description": "Salud, Seguridad y Medio Ambiente",
+      "pricing": "Add-on"
+    },
+    {
+      "name": "Bundle IA & Analytics",
+      "modules": [
+        "ai-assistant",
+        "emotional-analysis",
+        "auditor"
+      ],
+      "description": "Inteligencia artificial y análisis predictivo",
+      "pricing": "Enterprise+"
+    }
+  ],
+  "plugAndPlayRules": {
+    "alwaysEnabled": [
+      "inbox",
+      "notification-center",
+      "configurador-modulos",
+      "auto-healing-dashboard",
+      "engineering-dashboard",
+      "testing-metrics-dashboard",
+      "predictive-workforce-dashboard",
+      "deploy-manager-3stages",
+      "organizational-structure",
+      "admin-consent-management",
+      "departments",
+      "shifts",
+      "dms-dashboard",
+      "phase4-integrated-manager",
+      "mi-espacio",
+      "associate-workflow-panel",
+      "roles-permissions",
+      "database-sync",
+      "deployment-sync",
+      "partner-scoring-system",
+      "user-support",
+      "users",
+      "companies",
+      "dashboard",
+      "attendance",
+      "kiosks",
+      "hours-cube-dashboard",
+      "associate-marketplace",
+      "temporary-access",
+      "partners",
+      "company-email-process",
+      "company-account"
+    ],
+    "enableByDefault": [
+      "inbox",
+      "notification-center",
+      "configurador-modulos",
+      "auto-healing-dashboard",
+      "engineering-dashboard",
+      "testing-metrics-dashboard",
+      "predictive-workforce-dashboard",
+      "deploy-manager-3stages",
+      "organizational-structure",
+      "admin-consent-management",
+      "departments",
+      "shifts",
+      "dms-dashboard",
+      "phase4-integrated-manager",
+      "mi-espacio",
+      "associate-workflow-panel",
+      "roles-permissions",
+      "database-sync",
+      "deployment-sync",
+      "partner-scoring-system",
+      "user-support",
+      "users",
+      "companies",
+      "dashboard",
+      "attendance",
+      "kiosks",
+      "hours-cube-dashboard",
+      "associate-marketplace",
+      "temporary-access",
+      "partners",
+      "company-email-process",
+      "company-account",
+      "biometric-consent",
+      "employee-360",
+      "visitors",
+      "employee-map"
+    ],
+    "userControllable": [
+      "legal-dashboard",
+      "kiosks-apk",
+      "medical",
+      "hour-bank",
+      "payroll-liquidation",
+      "art-management",
+      "training-management",
+      "compliance-dashboard",
+      "hse-management",
+      "emotional-analysis",
+      "job-postings",
+      "sanctions-management",
+      "sla-tracking",
+      "audit-reports",
+      "benefits-management",
+      "siac-commercial-dashboard",
+      "voice-platform",
+      "procedures-manual",
+      "finance-journal-entries",
+      "finance-cost-centers",
+      "finance-executive-dashboard",
+      "finance-dashboard",
+      "finance-cash-flow",
+      "warehouse-management",
+      "positions-management",
+      "my-procedures",
+      "finance-chart-of-accounts",
+      "finance-budget",
+      "finance-reports",
+      "finance-treasury",
+      "vacation-management",
+      "ai-assistant",
+      "procurement-management",
+      "vendors",
+      "auditor",
+      "logistics-dashboard"
+    ],
+    "safeToDisable": [
+      "finance-journal-entries",
+      "finance-cost-centers",
+      "finance-executive-dashboard",
+      "finance-dashboard",
+      "finance-cash-flow",
+      "warehouse-management",
+      "positions-management",
+      "my-procedures",
+      "finance-chart-of-accounts",
+      "finance-budget",
+      "finance-reports",
+      "finance-treasury",
+      "vacation-management",
+      "ai-assistant",
+      "procurement-management",
+      "vendors",
+      "auditor",
+      "logistics-dashboard"
+    ]
+  }
+}
