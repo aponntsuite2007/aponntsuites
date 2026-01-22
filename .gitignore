@@ -138,3 +138,16 @@ backend/filtered-*.json
 backend/isi-*.json
 backend/quick-*.json
 backend/accessible-*.json
+
+# Test screenshots and E2E artifacts (auto-generated during testing)
+backend/test-screenshots/
+backend/test-screenshots-*/
+backend/e2e-screenshots/
+backend/backend/test-screenshots/
+backend/test-*.txt
+backend/test-*.png
+backend/stress-test-report-*.json
+
+# Uploads (test/dev data - production uses cloud storage)
+backend/uploads/
+backend/public/uploads/general/
