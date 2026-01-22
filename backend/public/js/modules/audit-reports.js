@@ -6,7 +6,11 @@
  * @date 2025-10-16
  */
 
-const AuditReports = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.AuditReports !== 'undefined') {
+    console.log('📄 [AUDIT-REPORTS] Módulo ya cargado');
+}
+window.AuditReports = window.AuditReports || {
     reportTypes: [],
     history: [],
 
@@ -507,8 +511,8 @@ const AuditReports = {
         alert('❌ ' + message);
     }
 };
-
-window.AuditReports = AuditReports;
+// Local alias for backward compatibility (use var to allow redeclaration)
+var AuditReports = window.AuditReports;
 
 // Función wrapper para integración con panel-empresa.html
 function showAuditReportsContent() {

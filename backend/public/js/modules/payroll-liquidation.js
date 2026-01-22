@@ -1210,7 +1210,11 @@ window.PayrollHelpSystem = PayrollHelpSystem;
 // ============================================================================
 // STATE MANAGEMENT - Redux-like pattern
 // ============================================================================
-const PayrollState = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.PayrollState !== 'undefined') {
+    console.log('💰 [PAYROLL] Estado ya inicializado');
+}
+window.PayrollState = window.PayrollState || {
     period: { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
     selectedEmployees: new Set(),
     templates: [],

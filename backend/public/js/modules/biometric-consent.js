@@ -634,7 +634,11 @@ PRODHAB es una entidad independiente con facultades de fiscalización y sanción
 // ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
-const ConsentState = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.ConsentState !== 'undefined') {
+    console.log('🔐 [CONSENT] Estado ya inicializado');
+}
+window.ConsentState = window.ConsentState || {
     employees: [],
     consents: [],
     stats: { total: 0, active: 0, pending: 0, revoked: 0 },

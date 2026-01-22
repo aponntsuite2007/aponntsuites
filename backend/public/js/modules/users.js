@@ -928,9 +928,15 @@ function displayUsersTable(users) {
                     <span class="users-badge ${biometricClass}">${user.biometric}</span>
                 </td>
                 <td>
-                    <div class="users-action-btns">
+                    <div class="users-action-btns" style="display: flex; gap: 8px; justify-content: center;">
                         <button class="users-action-btn view" onclick="viewUser('${user.id}')" title="Ver Empleado" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 38px; height: 38px; font-size: 1.1em; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center;">
                             <i class="fas fa-eye" style="color: white;"></i>
+                        </button>
+                        <button class="users-action-btn edit" onclick="editUser('${user.id}')" title="Editar Empleado" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; width: 38px; height: 38px; font-size: 1.1em; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-edit" style="color: white;"></i>
+                        </button>
+                        <button class="users-action-btn delete" onclick="deleteUser('${user.id}')" title="Eliminar Empleado" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; width: 38px; height: 38px; font-size: 1.1em; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-trash" style="color: white;"></i>
                         </button>
                     </div>
                 </td>
@@ -6944,23 +6950,42 @@ async function loadFamilyMembers(userId) {
         const familyRecords = await response.json();
         console.log('👨‍👩‍👧‍👦 Miembros de familia:', familyRecords);
 
-        const familyList = document.getElementById('family-list');
-        if (familyList && familyRecords.length > 0) {
-            const recordsHtml = familyRecords.map(member => `
-                <div style="background: #e8f5e9; padding: 10px; border-radius: 4px; margin-bottom: 8px;">
-                    <strong>${member.first_name || ''} ${member.last_name || ''}</strong> - ${member.relationship || 'Familiar'}
-                    <br><small>Fecha nacimiento: ${member.birth_date || 'N/A'}</small>
-                </div>
-            `).join('');
+        const familyList = document.getElementById('family-members-list');
+        if (familyList) {
+            // Limpiar mensaje "No hay familiares"
+            const noDataMsg = familyList.querySelector('.text-muted, .no-data, p');
+            if (noDataMsg && noDataMsg.textContent.includes('No hay')) {
+                noDataMsg.remove();
+            }
 
-            const existingRecords = familyList.querySelector('.family-records');
-            if (existingRecords) {
-                existingRecords.innerHTML = recordsHtml;
+            if (familyRecords.length > 0) {
+                const recordsHtml = familyRecords.map(member => `
+                    <div class="family-member-card" style="background: #e8f5e9; padding: 10px; border-radius: 4px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim()}</strong>
+                            - ${member.relationship || 'Familiar'}
+                            <br><small>DNI: ${member.dni || 'N/A'} | Nacimiento: ${member.birth_date ? new Date(member.birth_date).toLocaleDateString() : 'N/A'}</small>
+                        </div>
+                        <button class="btn btn-sm btn-danger" onclick="deleteFamilyMember('${member.id}', '${member.user_id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                const existingRecords = familyList.querySelector('.family-records');
+                if (existingRecords) {
+                    existingRecords.innerHTML = recordsHtml;
+                } else {
+                    const recordsDiv = document.createElement('div');
+                    recordsDiv.className = 'family-records';
+                    recordsDiv.innerHTML = recordsHtml;
+                    familyList.appendChild(recordsDiv);
+                }
             } else {
-                const recordsDiv = document.createElement('div');
-                recordsDiv.className = 'family-records';
-                recordsDiv.innerHTML = recordsHtml;
-                familyList.appendChild(recordsDiv);
+                // Mostrar mensaje si no hay familiares
+                if (!familyList.querySelector('.family-records')) {
+                    familyList.innerHTML = '<p class="text-muted text-center">No hay otros familiares registrados</p>';
+                }
             }
         }
         console.log('✅ Miembros de familia cargados');
@@ -6970,6 +6995,40 @@ async function loadFamilyMembers(userId) {
 }
 
 window.loadFamilyMembers = loadFamilyMembers;
+
+// =================== FUNCIÓN PARA ELIMINAR MIEMBRO DE FAMILIA ===================
+
+async function deleteFamilyMember(memberId, userId) {
+    console.log('🗑️ [FAMILY] Eliminando familiar:', memberId, 'de usuario:', userId);
+
+    if (!confirm('¿Está seguro que desea eliminar este familiar?')) {
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-profile/${userId}/family-members/${memberId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Error al eliminar familiar');
+        }
+
+        console.log('✅ Familiar eliminado exitosamente');
+        showUserMessage('✅ Familiar eliminado exitosamente', 'success');
+
+        // Recargar lista de familiares
+        loadFamilyMembers(userId);
+    } catch (error) {
+        console.error('❌ Error al eliminar familiar:', error);
+        showUserMessage(`❌ Error: ${error.message}`, 'error');
+    }
+}
+
+window.deleteFamilyMember = deleteFamilyMember;
 
 // =================== FUNCIÓN PARA CARGAR HIJOS ===================
 
@@ -15776,10 +15835,20 @@ window.saveCertificadoConducta = saveCertificadoConducta;
 window.closeEvaluacionModal = closeEvaluacionModal;
 window.saveEvaluacionAmbiental = saveEvaluacionAmbiental;
 
-// Report & Audit Functions
-window.closeReportModal = closeReportModal;
-window.downloadUserReport = downloadUserReport;
-window.closeAuditModal = closeAuditModal;
+// Report & Audit Functions - define stub if not already defined
+window.closeReportModal = window.closeReportModal || function() {
+    console.log('[USERS] closeReportModal called but no modal open');
+    const modal = document.getElementById('userReportModal');
+    if (modal) modal.remove();
+};
+window.downloadUserReport = window.downloadUserReport || function() {
+    console.log('[USERS] downloadUserReport called but no modal open');
+};
+window.closeAuditModal = window.closeAuditModal || function() {
+    console.log('[USERS] closeAuditModal called but no modal open');
+    const modal = document.getElementById('userAuditModal');
+    if (modal) modal.remove();
+};
 
 console.log('✅ [USERS] FIX 28: Todas las funciones onclick exportadas a window (100+ funciones)');
 

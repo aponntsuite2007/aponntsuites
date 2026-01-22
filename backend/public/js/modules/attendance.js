@@ -24,7 +24,11 @@ console.log('%c ATTENDANCE ENGINE v2.0 ', 'background: linear-gradient(90deg, #0
 // ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
-const AttendanceState = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.AttendanceState !== 'undefined') {
+    console.log('📅 [ATTENDANCE] Estado ya inicializado');
+}
+window.AttendanceState = window.AttendanceState || {
     dateRange: {
         start: new Date(new Date().setDate(1)).toISOString().split('T')[0],
         end: new Date().toISOString().split('T')[0]

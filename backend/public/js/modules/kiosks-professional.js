@@ -35,7 +35,11 @@ var editingKiosk = window.editingKiosk;
 // LOGOS SVG EMBEDIDOS (Alta Resolución)
 // ============================================================================
 
-const LOGOS = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.KIOSK_LOGOS !== 'undefined') {
+    console.log('📟 [KIOSKS-PRO] Módulo ya cargado, usando instancia existente');
+}
+window.KIOSK_LOGOS = window.KIOSK_LOGOS || {
     apple: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>`,
 
     samsung: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 4h-15A2.5 2.5 0 0 0 2 6.5v11A2.5 2.5 0 0 0 4.5 20h15a2.5 2.5 0 0 0 2.5-2.5v-11A2.5 2.5 0 0 0 19.5 4zm-7.25 11.5c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>`,
@@ -60,12 +64,18 @@ const LOGOS = {
 
     secugen: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#1E88E5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" fill="#fff"/></svg>`
 };
+// Local alias for backward compatibility (use var to allow redeclaration)
+var LOGOS = window.KIOSK_LOGOS;
 
 // ============================================================================
 // PERFILES DE HARDWARE - RECONOCIMIENTO FACIAL
 // ============================================================================
 
-const HARDWARE_FACIAL_PROFILES = {
+// Evitar redeclaración
+if (typeof window.HARDWARE_FACIAL_PROFILES !== 'undefined') {
+    console.log('📟 [KIOSKS-PRO] HARDWARE_FACIAL_PROFILES ya existe, saltando');
+}
+window.HARDWARE_FACIAL_PROFILES = window.HARDWARE_FACIAL_PROFILES || {
     // ========================================================================
     // ENTERPRISE - Hardware Dedicado con IA
     // ========================================================================
@@ -1466,12 +1476,18 @@ const HARDWARE_FACIAL_PROFILES = {
         certifications: ['CE', 'FCC']
     }
 };
+// Local alias for backward compatibility (use var to allow redeclaration)
+var HARDWARE_FACIAL_PROFILES = window.HARDWARE_FACIAL_PROFILES;
 
 // ============================================================================
 // PERFILES DE LECTORES DE HUELLAS DIGITALES
 // ============================================================================
 
-const HARDWARE_FINGERPRINT_PROFILES = {
+// Evitar redeclaración
+if (typeof window.HARDWARE_FINGERPRINT_PROFILES !== 'undefined') {
+    console.log('📟 [KIOSKS-PRO] HARDWARE_FINGERPRINT_PROFILES ya existe, saltando');
+}
+window.HARDWARE_FINGERPRINT_PROFILES = window.HARDWARE_FINGERPRINT_PROFILES || {
     // ========================================================================
     // PROFESSIONAL TIER - FBI Certified
     // ========================================================================
@@ -2249,12 +2265,18 @@ const HARDWARE_FINGERPRINT_PROFILES = {
         warranty: '1 año'
     }
 };
+// Local alias for backward compatibility (use var to allow redeclaration)
+var HARDWARE_FINGERPRINT_PROFILES = window.HARDWARE_FINGERPRINT_PROFILES;
 
 // ============================================================================
 // ESTILOS CSS PROFESIONALES
 // ============================================================================
 
-const PROFESSIONAL_STYLES = `
+// Evitar redeclaración
+if (typeof window.PROFESSIONAL_STYLES !== 'undefined') {
+    console.log('📟 [KIOSKS-PRO] PROFESSIONAL_STYLES ya existe, saltando');
+}
+window.PROFESSIONAL_STYLES = window.PROFESSIONAL_STYLES || `
 <style>
 /* ========================================================================
    ESTILOS DARK THEME - MÓDULO KIOSKS ENTERPRISE
@@ -2913,6 +2935,8 @@ const PROFESSIONAL_STYLES = `
 
 </style>
 `;
+// Local alias for backward compatibility (use var to allow redeclaration)
+var PROFESSIONAL_STYLES = window.PROFESSIONAL_STYLES;
 
 // ============================================================================
 // FUNCIONES UI - MÓDULO KIOSKS PROFESIONAL

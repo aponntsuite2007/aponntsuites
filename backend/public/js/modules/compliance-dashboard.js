@@ -138,7 +138,11 @@ if (typeof ModuleHelpSystem !== 'undefined') {
 // ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
-const RiskState = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.RiskState !== 'undefined') {
+    console.log('⚖️ [RISK] Estado ya inicializado, usando instancia existente');
+}
+window.RiskState = window.RiskState || {
     employees: [],
     riskAnalysis: [],
     indices: {},
@@ -148,11 +152,17 @@ const RiskState = {
     lastUpdate: null,
     aiEnabled: true
 };
+// Local alias for backward compatibility (use var to allow redeclaration)
+var RiskState = window.RiskState;
 
 // ============================================================================
 // ÍNDICES DE RIESGO - SE CARGAN DESDE BD (no hardcoded)
 // ============================================================================
-let RISK_INDICES = {
+// Use var to allow redeclaration when module loads multiple times in SPA
+if (typeof window.RISK_INDICES !== 'undefined') {
+    console.log('⚠️ [RISK] RISK_INDICES ya existe, usando instancia existente');
+}
+window.RISK_INDICES = window.RISK_INDICES || {
     FATIGUE: {
         id: 'fatigue',
         name: 'Índice de Fatiga',
@@ -205,6 +215,8 @@ let RISK_INDICES = {
         thresholds: { low: 30, medium: 50, high: 70, critical: 85 }
     }
 };
+// Local alias for backward compatibility (use var to allow redeclaration)
+var RISK_INDICES = window.RISK_INDICES;
 
 // Configuración cargada desde la BD
 let CompanyRiskConfig = null;

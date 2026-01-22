@@ -21,7 +21,11 @@ console.log('%c ORGANIZATIONAL STRUCTURE v1.0 ', 'background: linear-gradient(90
 // ============================================================================
 // STATE MANAGEMENT - Redux-like pattern
 // ============================================================================
-const OrgState = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.OrgState !== 'undefined') {
+    console.log('🏢 [ORG] Estado ya inicializado');
+}
+window.OrgState = window.OrgState || {
     currentTab: 'departments',
     departments: [],
     sectors: [],
@@ -52,7 +56,11 @@ function getCompanyId() {
 // ============================================================================
 // API SERVICE - Centralized fetch handler (con company_id en TODOS los endpoints)
 // ============================================================================
-const OrgAPI = {
+// Use var to allow redeclaration when module loads multiple times in SPA
+if (typeof window.OrgAPI !== 'undefined') {
+    console.log('🏢 [ORG] OrgAPI ya existe, usando instancia existente');
+}
+window.OrgAPI = window.OrgAPI || {
     baseUrl: '/api/v1/organizational',
 
     getToken() {
@@ -132,24 +140,26 @@ const OrgAPI = {
     // Sectors (todos con company_id automático via request())
     getSectors: () => OrgAPI.request('/sectors'),
     createSector: (data) => { data.company_id = getCompanyId(); return OrgAPI.request('/sectors', { method: 'POST', body: JSON.stringify(data) }); },
-    updateSector: (id, data) => OrgAPI.request(`/sectors/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    updateSector: (id, data) => { data.company_id = getCompanyId(); return OrgAPI.request(`/sectors/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
     deleteSector: (id) => OrgAPI.request(`/sectors/${id}`, { method: 'DELETE' }),
 
     // Agreements (todos con company_id automático via request())
     getAgreements: (extraParams = '') => OrgAPI.request(`/agreements${extraParams}`),
     createAgreement: (data) => { data.company_id = getCompanyId(); return OrgAPI.request('/agreements', { method: 'POST', body: JSON.stringify(data) }); },
-    updateAgreement: (id, data) => OrgAPI.request(`/agreements/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    updateAgreement: (id, data) => { data.company_id = getCompanyId(); return OrgAPI.request(`/agreements/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    deleteAgreement: (id) => OrgAPI.request(`/agreements/${id}`, { method: 'DELETE' }),
 
     // Categories (todos con company_id automático via request())
     getCategories: (extraParams = '') => OrgAPI.request(`/categories${extraParams}`),
     createCategory: (data) => { data.company_id = getCompanyId(); return OrgAPI.request('/categories', { method: 'POST', body: JSON.stringify(data) }); },
-    updateCategory: (id, data) => OrgAPI.request(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    updateCategory: (id, data) => { data.company_id = getCompanyId(); return OrgAPI.request(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
     deleteCategory: (id) => OrgAPI.request(`/categories/${id}`, { method: 'DELETE' }),
 
     // Roles (todos con company_id automático via request())
     getRoles: () => OrgAPI.request('/roles'),
     createRole: (data) => { data.company_id = getCompanyId(); return OrgAPI.request('/roles', { method: 'POST', body: JSON.stringify(data) }); },
-    updateRole: (id, data) => OrgAPI.request(`/roles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    updateRole: (id, data) => { data.company_id = getCompanyId(); return OrgAPI.request(`/roles/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    deleteRole: (id) => OrgAPI.request(`/roles/${id}`, { method: 'DELETE' }),
 
     // Shifts (usando API /api/v1/shifts)
     async getShifts() {
@@ -178,6 +188,8 @@ const OrgAPI = {
         body: JSON.stringify({ additional_roles: roles })
     })
 };
+// Local alias for backward compatibility (use var to allow redeclaration)
+var OrgAPI = window.OrgAPI;
 
 // ============================================================================
 // ORGANIZATIONAL ENGINE - Main Controller
@@ -1052,7 +1064,12 @@ const OrgEngine = {
                                         </span>
                                     </td>
                                     <td class="org-table-actions">
-                                        <button class="org-btn org-btn-secondary org-btn-sm" onclick="OrgEngine.openAgreementModal(${a.id})" ${!a.company_id ? 'title="Solo lectura (global)"' : ''}>👁️</button>
+                                        ${a.company_id ? `
+                                            <button class="org-btn org-btn-secondary org-btn-sm" onclick="OrgEngine.openAgreementModal(${a.id})">✏️</button>
+                                            <button class="org-btn org-btn-danger org-btn-sm" onclick="OrgEngine.deleteAgreement(${a.id})">🗑️</button>
+                                        ` : `
+                                            <button class="org-btn org-btn-secondary org-btn-sm" onclick="OrgEngine.openAgreementModal(${a.id})" title="Solo lectura (global)">👁️</button>
+                                        `}
                                     </td>
                                 </tr>
                             `).join('')}
@@ -1074,7 +1091,8 @@ const OrgEngine = {
                 OrgAPI.getCategories(),
                 OrgAPI.getAgreements()
             ]);
-            OrgState.categories = catsRes.data || [];
+            // Mapear id a category_id para compatibilidad
+            OrgState.categories = (catsRes.data || []).map(c => ({ ...c, category_id: c.category_id || c.id }));
             OrgState.agreements = agreementsRes.data || [];
         } catch (e) {
             OrgState.categories = [];
@@ -1140,7 +1158,8 @@ const OrgEngine = {
         try {
             const params = agreementId ? `?agreement_id=${agreementId}` : '';
             const result = await OrgAPI.getCategories(params);
-            OrgState.categories = result.data || [];
+            // Mapear id a category_id para compatibilidad
+            OrgState.categories = (result.data || []).map(c => ({ ...c, category_id: c.category_id || c.id }));
 
             // Solo actualizar la tabla
             const tbody = document.querySelector('.org-table tbody');
@@ -1330,7 +1349,12 @@ const OrgEngine = {
                                         </span>
                                     </td>
                                     <td class="org-table-actions">
-                                        <button class="org-btn org-btn-secondary org-btn-sm" onclick="OrgEngine.openRoleModal(${r.id})">✏️</button>
+                                        ${r.company_id ? `
+                                            <button class="org-btn org-btn-secondary org-btn-sm" onclick="OrgEngine.openRoleModal('${r.id}')">✏️</button>
+                                            <button class="org-btn org-btn-danger org-btn-sm" onclick="OrgEngine.deleteRole('${r.id}')">🗑️</button>
+                                        ` : `
+                                            <button class="org-btn org-btn-secondary org-btn-sm" onclick="OrgEngine.openRoleModal('${r.id}')" title="Solo lectura (global)">👁️</button>
+                                        `}
                                     </td>
                                 </tr>
                             `).join('')}
@@ -1520,22 +1544,24 @@ const OrgEngine = {
                                         border-radius: 6px;
                                         padding: 12px;
                                         border-left: 3px solid ${this.getLevelColor(level)};
-                                        cursor: pointer;
                                         transition: all 0.2s ease;
-                                    " onclick="OrgEngine.openPositionModal(${pos.id})" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                                        position: relative;
+                                    " onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
                                         <div style="display: flex; justify-content: space-between; align-items: start;">
-                                            <div>
+                                            <div style="cursor: pointer; flex: 1;" onclick="OrgEngine.openPositionModal(${pos.id})">
                                                 <strong style="color: var(--org-text-primary);">${pos.position_name}</strong>
                                                 <div style="font-size: 11px; color: var(--org-text-secondary); margin-top: 4px;">
                                                     ${pos.department_name ? `🏢 ${pos.department_name}` : ''}
                                                     ${pos.branch_code ? `<span style="margin-left: 8px;">🌳 Rama: ${pos.branch_code}</span>` : ''}
                                                 </div>
                                             </div>
-                                            <span class="org-badge" style="font-size: 10px; padding: 2px 6px;">
-                                                ${pos.is_approver ? '✅ Aprobador' : ''}
-                                            </span>
+                                            <div style="display: flex; gap: 4px; align-items: center;">
+                                                ${pos.is_approver ? '<span class="org-badge" style="font-size: 10px; padding: 2px 6px;">✅</span>' : ''}
+                                                <button class="org-btn org-btn-secondary org-btn-sm" style="padding: 4px 8px; font-size: 12px;" onclick="event.stopPropagation(); OrgEngine.openPositionModal(${pos.id})">✏️</button>
+                                                <button class="org-btn org-btn-danger org-btn-sm" style="padding: 4px 8px; font-size: 12px;" onclick="event.stopPropagation(); OrgEngine.deletePosition(${pos.id})">🗑️</button>
+                                            </div>
                                         </div>
-                                        ${pos.description ? `<div style="font-size: 11px; color: var(--org-text-muted); margin-top: 8px;">${pos.description.substring(0, 80)}...</div>` : ''}
+                                        ${pos.description ? `<div style="font-size: 11px; color: var(--org-text-muted); margin-top: 8px; cursor: pointer;" onclick="OrgEngine.openPositionModal(${pos.id})">${pos.description.substring(0, 80)}...</div>` : ''}
                                         <div style="display: flex; gap: 8px; margin-top: 8px; font-size: 11px;">
                                             ${pos.parent_position_name ? `<span style="color: var(--org-text-secondary);">↳ Reporta a: ${pos.parent_position_name}</span>` : ''}
                                         </div>
@@ -2102,6 +2128,18 @@ const OrgEngine = {
         }
     },
 
+    async deleteRole(id) {
+        if (!confirm('¿Eliminar este rol? Los empleados con este rol perderán la asignación.')) return;
+
+        try {
+            await OrgAPI.deleteRole(id);
+            this.showToast('Rol eliminado', 'success');
+            await this.renderRoles();
+        } catch (error) {
+            this.showToast(error.message, 'error');
+        }
+    },
+
     openAgreementModal(id = null) {
         const agreement = id ? OrgState.agreements.find(a => a.id === id) : null;
         const isEdit = !!agreement;
@@ -2204,6 +2242,18 @@ const OrgEngine = {
                 this.showToast('Convenio creado', 'success');
             }
             this.closeModal();
+            await this.renderAgreements();
+        } catch (error) {
+            this.showToast(error.message, 'error');
+        }
+    },
+
+    async deleteAgreement(id) {
+        if (!confirm('¿Eliminar este convenio? Las categorías asociadas quedarán sin convenio.')) return;
+
+        try {
+            await OrgAPI.deleteAgreement(id);
+            this.showToast('Convenio eliminado', 'success');
             await this.renderAgreements();
         } catch (error) {
             this.showToast(error.message, 'error');

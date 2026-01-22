@@ -298,7 +298,11 @@ if (typeof ModuleHelpSystem !== 'undefined') {
     console.log('✅ [PROCUREMENT] Sistema de ayuda contextual registrado');
 }
 
-const ProcurementManagement = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.ProcurementManagement !== 'undefined') {
+    console.log('🛒 [PROCUREMENT] Módulo ya cargado, usando instancia existente');
+}
+window.ProcurementManagement = window.ProcurementManagement || {
     name: 'procurement-management',
     currentTab: 'dashboard',
     currentRequisition: null,
@@ -4124,9 +4128,8 @@ const ProcurementManagement = {
         `).join('');
     }
 };
-
-// Exponer al scope global para el sistema de carga dinámica
-window.ProcurementManagement = ProcurementManagement;
+// Local alias for backward compatibility (use var to allow redeclaration)
+var ProcurementManagement = window.ProcurementManagement;
 
 // Registrar módulo en ModuleManager si existe
 if (typeof ModuleManager !== 'undefined') {

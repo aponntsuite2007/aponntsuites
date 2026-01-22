@@ -12,7 +12,11 @@
  * Created: 2025-12-17
  */
 
-const SiacCommercialDashboard = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.SiacCommercialDashboard !== 'undefined') {
+    console.log('📊 [SIAC] Módulo ya cargado');
+}
+window.SiacCommercialDashboard = window.SiacCommercialDashboard || {
     currentTab: 'overview',
     companyId: null,
     apiBaseUrl: '/api/siac',
@@ -4745,6 +4749,8 @@ const SiacCommercialDashboard = {
         `;
     }
 };
+// Local alias for backward compatibility (use var to allow redeclaration)
+var SiacCommercialDashboard = window.SiacCommercialDashboard;
 
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {

@@ -25,7 +25,11 @@ console.log('%c COMPANY ACCOUNT v1.0 ', 'background: linear-gradient(90deg, #6B4
 // ============================================================================
 // STATE
 // ============================================================================
-const AccountState = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.AccountState !== 'undefined') {
+    console.log('🏢 [ACCOUNT] Estado ya inicializado');
+}
+window.AccountState = window.AccountState || {
     isLoading: true,
     currentTab: 'dashboard',
     isAdmin: false,

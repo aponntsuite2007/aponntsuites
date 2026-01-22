@@ -18,6 +18,11 @@
 
 console.log('🎫 [USER-SUPPORT] User Support Dashboard v1.0.0 loaded');
 
+// Evitar redeclaración de la clase si el módulo se carga múltiples veces
+if (typeof window.UserSupportDashboard !== 'undefined') {
+    console.log('🎫 [USER-SUPPORT] Clase ya existe, saltando');
+} else {
+
 class UserSupportDashboard {
   constructor() {
     this.container = null;
@@ -1474,11 +1479,15 @@ class UserSupportDashboard {
   }
 }
 
-// Create global instance
-const userSupport = new UserSupportDashboard();
+// Close the else block
+window.UserSupportDashboard = UserSupportDashboard;
+}
+
+// Create global instance (outside the else block)
+// Use var to allow redeclaration when module loads multiple times in SPA
+var userSupport = window.userSupport || new window.UserSupportDashboard();
 
 // Export for use
-window.UserSupportDashboard = UserSupportDashboard;
 window.userSupport = userSupport;
 
 /**

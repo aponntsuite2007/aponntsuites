@@ -30,7 +30,11 @@ console.log('%c EMPLOYEE MAP v5.0 ENTERPRISE ', 'background: linear-gradient(90d
 // ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
-const MapState = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.MapState !== 'undefined') {
+    console.log('🗺️ [MAP] Estado ya inicializado');
+}
+window.MapState = window.MapState || {
     locations: [],
     visitors: [], // Visitantes activos con GPS
     visitorMarkers: [], // Marcadores de visitantes

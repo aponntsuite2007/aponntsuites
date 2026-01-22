@@ -35,7 +35,7 @@ const CompanyEmailProcessModule = (function() {
     // =========================================================================
 
     async function apiCall(url, options = {}) {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         if (!token) {
             throw new Error('No hay sesión activa');
         }
@@ -63,7 +63,7 @@ const CompanyEmailProcessModule = (function() {
     async function loadCompanyEmails() {
         try {
             console.log('[COMPANY-EMAIL-PROCESS] Cargando emails de la empresa...');
-            const response = await apiCall('/api/company-email-config');
+            const response = await apiCall('/api/email/company-email-config');
 
             state.emailConfigs = response.configs || [];
             console.log(`✅ ${state.emailConfigs.length} emails cargados`);

@@ -21,7 +21,11 @@ console.log('%c TALENT ACQUISITION v2.0 ', 'background: linear-gradient(90deg, #
 // ============================================================================
 // STATE MANAGEMENT - Redux-like pattern
 // ============================================================================
-const TalentState = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.TalentState !== 'undefined') {
+    console.log('💼 [TALENT] Estado ya inicializado');
+}
+window.TalentState = window.TalentState || {
     currentView: 'dashboard',
     offers: [],
     applications: [],

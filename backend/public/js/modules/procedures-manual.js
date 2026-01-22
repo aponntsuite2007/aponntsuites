@@ -39,15 +39,23 @@ window._proceduresManualLoaded = true;
 // ============================================================================
 // STATE & CONFIG
 // ============================================================================
-const ProceduresState = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.ProceduresState !== 'undefined') {
+    console.log('📋 [PROCEDURES] Estado ya inicializado');
+}
+window.ProceduresState = window.ProceduresState || {
     procedures: [],
     filters: { status: '', type: '', search: '' },
     pagination: { page: 1, limit: 20, total: 0 },
     currentView: 'dashboard',
     stats: null
 };
+var ProceduresState = window.ProceduresState;
 
-const ProceduresConfig = {
+if (typeof window.ProceduresConfig !== 'undefined') {
+    console.log('📋 [PROCEDURES] Config ya inicializado');
+}
+window.ProceduresConfig = window.ProceduresConfig || {
     API_BASE: '/api/procedures',
     TYPES: {
         procedimiento: { label: 'Procedimiento', color: '#00d4ff' },

@@ -1091,22 +1091,52 @@ const AdminPanelController = {
     },
 
     async _loadTicketsSoporte() {
+        // Cargar tickets después de renderizar
+        setTimeout(() => this._loadTicketsData(), 100);
+
         return `
             <div class="section-container">
                 <div class="section-header">
                     <h2>Tickets de Soporte</h2>
                     <p class="section-subtitle">Gestión de tickets de clientes</p>
+                    <div class="section-actions">
+                        <button class="btn btn-primary" onclick="AdminPanelController.showNewTicketModal()">
+                            <i class="fas fa-plus"></i> Nuevo Ticket
+                        </button>
+                    </div>
+                </div>
+                <div id="support-stats-cards" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div class="stat-card" style="background: rgba(239,68,68,0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #ef4444;" id="stat-critical">-</div>
+                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">Críticos</div>
+                    </div>
+                    <div class="stat-card" style="background: rgba(249,115,22,0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #f97316;" id="stat-open">-</div>
+                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">Abiertos</div>
+                    </div>
+                    <div class="stat-card" style="background: rgba(59,130,246,0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #3b82f6;" id="stat-inprogress">-</div>
+                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">En Progreso</div>
+                    </div>
+                    <div class="stat-card" style="background: rgba(234,179,8,0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #eab308;" id="stat-overdue">-</div>
+                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">Vencidos</div>
+                    </div>
+                    <div class="stat-card" style="background: rgba(34,197,94,0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #22c55e;" id="stat-resolved">-</div>
+                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">Resueltos Hoy</div>
+                    </div>
                 </div>
                 <div class="filter-bar">
-                    <input type="text" id="ticket-search" placeholder="Buscar ticket..." class="search-input">
-                    <select id="ticket-priority-filter" class="filter-select">
+                    <input type="text" id="ticket-search" placeholder="Buscar ticket..." class="search-input" onkeyup="AdminPanelController.filterTickets()">
+                    <select id="ticket-priority-filter" class="filter-select" onchange="AdminPanelController.filterTickets()">
                         <option value="">Todas las prioridades</option>
                         <option value="critical">Crítica</option>
                         <option value="high">Alta</option>
                         <option value="medium">Media</option>
                         <option value="low">Baja</option>
                     </select>
-                    <select id="ticket-status-filter" class="filter-select">
+                    <select id="ticket-status-filter" class="filter-select" onchange="AdminPanelController.filterTickets()">
                         <option value="">Todos los estados</option>
                         <option value="open">Abierto</option>
                         <option value="in_progress">En Progreso</option>
@@ -1122,6 +1152,259 @@ const AdminPanelController = {
                 </div>
             </div>
         `;
+    },
+
+    async _loadTicketsData() {
+        const container = document.getElementById('tickets-table-container');
+        if (!container) return;
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff');
+
+            // Cargar estadísticas
+            const statsRes = await fetch('/api/aponnt/dashboard/support-stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const statsData = await statsRes.json();
+
+            if (statsData.success) {
+                const stats = statsData.data;
+                document.getElementById('stat-critical').textContent = stats.by_priority?.critical || 0;
+                document.getElementById('stat-open').textContent = stats.by_status?.open || 0;
+                document.getElementById('stat-inprogress').textContent = stats.by_status?.in_progress || 0;
+                document.getElementById('stat-overdue').textContent = stats.overdue || 0;
+                document.getElementById('stat-resolved').textContent = stats.today_count || 0;
+            }
+
+            // Cargar tickets
+            const ticketsRes = await fetch('/api/aponnt/dashboard/support-tickets?limit=100', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const ticketsData = await ticketsRes.json();
+
+            if (ticketsData.success && ticketsData.data.length > 0) {
+                this._allTickets = ticketsData.data;
+                this._renderTicketsTable(ticketsData.data);
+            } else {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">🎫</div>
+                        <p>No hay tickets de soporte</p>
+                        <button class="btn btn-primary" onclick="AdminPanelController.showNewTicketModal()" style="margin-top: 15px;">
+                            Crear Primer Ticket
+                        </button>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error cargando tickets:', error);
+            container.innerHTML = `<div style="color: #ef4444; padding: 20px;">Error al cargar tickets: ${error.message}</div>`;
+        }
+    },
+
+    _renderTicketsTable(tickets) {
+        const container = document.getElementById('tickets-table-container');
+        if (!container) return;
+
+        const priorityColors = { critical: '#ef4444', high: '#f97316', medium: '#eab308', low: '#22c55e' };
+        const priorityLabels = { critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja' };
+        const statusLabels = { open: 'Abierto', in_progress: 'En Progreso', waiting_customer: 'Esperando', resolved: 'Resuelto', closed: 'Cerrado' };
+
+        container.innerHTML = `
+            <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 12px; text-align: left;">Ticket</th>
+                        <th style="padding: 12px; text-align: left;">Empresa</th>
+                        <th style="padding: 12px; text-align: left;">Asunto</th>
+                        <th style="padding: 12px; text-align: center;">Prioridad</th>
+                        <th style="padding: 12px; text-align: center;">Estado</th>
+                        <th style="padding: 12px; text-align: left;">Asignado</th>
+                        <th style="padding: 12px; text-align: center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tickets.map(t => `
+                        <tr class="ticket-row" data-priority="${t.priority}" data-status="${t.status}" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 12px;">
+                                <div style="font-weight: 600;">${t.ticket_number || 'N/A'}</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">${new Date(t.created_at).toLocaleDateString()}</div>
+                            </td>
+                            <td style="padding: 12px;">${t.company_name || 'Sin empresa'}</td>
+                            <td style="padding: 12px;">
+                                <div style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${t.subject}">${t.subject}</div>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <span style="background: ${priorityColors[t.priority]}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem;">
+                                    ${priorityLabels[t.priority] || t.priority}
+                                </span>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <span style="background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem;">
+                                    ${statusLabels[t.status] || t.status}
+                                </span>
+                            </td>
+                            <td style="padding: 12px;">${t.assigned_to_name || '<span style="color: rgba(255,255,255,0.4);">Sin asignar</span>'}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <button onclick="AdminPanelController.viewTicket('${t.id}')" style="background: rgba(74,158,255,0.2); color: #4a9eff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px;" title="Ver">
+                                    👁️
+                                </button>
+                                <button onclick="AdminPanelController.assignTicket('${t.id}')" style="background: rgba(34,197,94,0.2); color: #22c55e; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;" title="Asignar">
+                                    👤
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    },
+
+    filterTickets() {
+        const search = document.getElementById('ticket-search')?.value.toLowerCase() || '';
+        const priority = document.getElementById('ticket-priority-filter')?.value || '';
+        const status = document.getElementById('ticket-status-filter')?.value || '';
+
+        if (!this._allTickets) return;
+
+        const filtered = this._allTickets.filter(t => {
+            const matchSearch = !search ||
+                (t.ticket_number || '').toLowerCase().includes(search) ||
+                (t.subject || '').toLowerCase().includes(search) ||
+                (t.company_name || '').toLowerCase().includes(search);
+            const matchPriority = !priority || t.priority === priority;
+            const matchStatus = !status || t.status === status;
+            return matchSearch && matchPriority && matchStatus;
+        });
+
+        this._renderTicketsTable(filtered);
+    },
+
+    viewTicket(ticketId) {
+        const ticket = this._allTickets?.find(t => t.id === ticketId);
+        if (!ticket) return;
+
+        const priorityLabels = { critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja' };
+        const statusLabels = { open: 'Abierto', in_progress: 'En Progreso', waiting_customer: 'Esperando', resolved: 'Resuelto', closed: 'Cerrado' };
+
+        const modal = document.createElement('div');
+        modal.id = 'ticket-detail-modal';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+
+        modal.innerHTML = `
+            <div style="background: #1e2432; padding: 30px; border-radius: 12px; width: 95%; max-width: 600px; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">🎫 ${ticket.ticket_number}</h3>
+                    <button onclick="document.getElementById('ticket-detail-modal').remove()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">✕</button>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 8px;">
+                    <p><strong>Empresa:</strong> ${ticket.company_name || 'N/A'}</p>
+                    <p><strong>Asunto:</strong> ${ticket.subject}</p>
+                    <p><strong>Descripción:</strong> ${ticket.description || 'Sin descripción'}</p>
+                    <p><strong>Prioridad:</strong> ${priorityLabels[ticket.priority]}</p>
+                    <p><strong>Estado:</strong> ${statusLabels[ticket.status]}</p>
+                    <p><strong>Asignado a:</strong> ${ticket.assigned_to_name || 'Sin asignar'}</p>
+                    <p><strong>Creado:</strong> ${new Date(ticket.created_at).toLocaleString()}</p>
+                    ${ticket.sla_deadline ? `<p><strong>SLA Deadline:</strong> ${new Date(ticket.sla_deadline).toLocaleString()}</p>` : ''}
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+                    <button onclick="AdminPanelController.changeTicketStatus('${ticketId}', 'in_progress')" style="padding: 10px 20px; border-radius: 6px; border: none; background: #3b82f6; color: white; cursor: pointer;">En Progreso</button>
+                    <button onclick="AdminPanelController.changeTicketStatus('${ticketId}', 'resolved')" style="padding: 10px 20px; border-radius: 6px; border: none; background: #22c55e; color: white; cursor: pointer;">Resolver</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    },
+
+    async changeTicketStatus(ticketId, newStatus) {
+        try {
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch(`/api/aponnt/dashboard/support-tickets/${ticketId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('ticket-detail-modal')?.remove();
+                this.showNotification('Estado actualizado', 'success');
+                await this._loadTicketsData();
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            this.showNotification(error.message, 'error');
+        }
+    },
+
+    async assignTicket(ticketId) {
+        // Cargar lista de staff para asignar
+        try {
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/dashboard/staff?area=soporte', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+            const staff = result.data || [];
+
+            const modal = document.createElement('div');
+            modal.id = 'assign-ticket-modal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+
+            modal.innerHTML = `
+                <div style="background: #1e2432; padding: 30px; border-radius: 12px; width: 95%; max-width: 400px; color: white;">
+                    <h3 style="margin: 0 0 20px 0;">👤 Asignar Ticket</h3>
+                    <select id="assign-staff-select" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white; margin-bottom: 20px;">
+                        <option value="">Seleccionar staff...</option>
+                        ${staff.map(s => `<option value="${s.staff_id}">${s.first_name} ${s.last_name} (${s.area})</option>`).join('')}
+                    </select>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button onclick="document.getElementById('assign-ticket-modal').remove()" style="padding: 10px 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer;">Cancelar</button>
+                        <button onclick="AdminPanelController.submitAssignment('${ticketId}')" style="padding: 10px 20px; border-radius: 6px; border: none; background: #4a9eff; color: white; cursor: pointer;">Asignar</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        } catch (error) {
+            this.showNotification('Error cargando staff', 'error');
+        }
+    },
+
+    async submitAssignment(ticketId) {
+        const staffId = document.getElementById('assign-staff-select')?.value;
+        if (!staffId) {
+            this.showNotification('Selecciona un staff', 'error');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch(`/api/aponnt/dashboard/support-tickets/${ticketId}/assign`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ staff_id: staffId })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('assign-ticket-modal')?.remove();
+                this.showNotification('Ticket asignado', 'success');
+                await this._loadTicketsData();
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            this.showNotification(error.message, 'error');
+        }
     },
 
     async _loadSLAMetricas() {
@@ -1922,26 +2205,92 @@ const AdminPanelController = {
         return `
             <div class="section-container">
                 <div class="section-header">
-                    <h2>Reportes</h2>
-                    <p class="section-subtitle">Generación de reportes</p>
+                    <h2>📊 Centro de Reportes</h2>
+                    <p class="section-subtitle">Generación y exportación de reportes</p>
                 </div>
-                <div class="reports-grid">
-                    <div class="report-card" onclick="AdminPanelController.generateReport('ventas')">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Reporte de Ventas</span>
+
+                <style>
+                    .reports-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+                    .report-card-new {
+                        background: rgba(255,255,255,0.03);
+                        border: 1px solid rgba(255,255,255,0.08);
+                        border-radius: 12px;
+                        padding: 25px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                    }
+                    .report-card-new:hover {
+                        background: rgba(74,158,255,0.1);
+                        border-color: rgba(74,158,255,0.3);
+                        transform: translateY(-2px);
+                    }
+                    .report-card-new .icon {
+                        font-size: 2.5rem;
+                        margin-bottom: 15px;
+                    }
+                    .report-card-new h3 {
+                        margin: 0 0 8px 0;
+                        font-size: 1.1rem;
+                    }
+                    .report-card-new p {
+                        margin: 0;
+                        font-size: 0.85rem;
+                        color: rgba(255,255,255,0.6);
+                    }
+                    .report-card-new .badge {
+                        display: inline-block;
+                        margin-top: 12px;
+                        padding: 4px 10px;
+                        background: rgba(74,158,255,0.2);
+                        color: #4a9eff;
+                        border-radius: 20px;
+                        font-size: 0.75rem;
+                    }
+                </style>
+
+                <div class="reports-dashboard">
+                    <div class="report-card-new" onclick="AdminPanelController.generateReport('ejecutivo')">
+                        <div class="icon">📈</div>
+                        <h3>Reporte Ejecutivo</h3>
+                        <p>Resumen general del sistema: empresas, facturación, soporte y staff</p>
+                        <span class="badge">Dashboard</span>
                     </div>
-                    <div class="report-card" onclick="AdminPanelController.generateReport('facturacion')">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                        <span>Reporte de Facturación</span>
+
+                    <div class="report-card-new" onclick="AdminPanelController.generateReport('empresas')">
+                        <div class="icon">🏢</div>
+                        <h3>Reporte de Empresas</h3>
+                        <p>Listado completo de empresas con usuarios y facturación</p>
+                        <span class="badge">Exportable CSV</span>
                     </div>
-                    <div class="report-card" onclick="AdminPanelController.generateReport('comisiones')">
-                        <i class="fas fa-percentage"></i>
-                        <span>Reporte de Comisiones</span>
+
+                    <div class="report-card-new" onclick="AdminPanelController.generateReport('facturacion')">
+                        <div class="icon">💰</div>
+                        <h3>Reporte de Facturación</h3>
+                        <p>Facturas emitidas, cobradas y pendientes de cobro</p>
+                        <span class="badge">Exportable CSV</span>
                     </div>
-                    <div class="report-card" onclick="AdminPanelController.generateReport('soporte')">
-                        <i class="fas fa-headset"></i>
-                        <span>Reporte de Soporte</span>
+
+                    <div class="report-card-new" onclick="AdminPanelController.generateReport('soporte')">
+                        <div class="icon">🎫</div>
+                        <h3>Reporte de Soporte</h3>
+                        <p>Tickets por estado, prioridad y tiempo de resolución</p>
+                        <span class="badge">Exportable CSV</span>
                     </div>
+
+                    <div class="report-card-new" onclick="AdminPanelController.generateReport('vendedores')">
+                        <div class="icon">👥</div>
+                        <h3>Reporte de Vendedores</h3>
+                        <p>Performance de vendedores y comisiones acumuladas</p>
+                        <span class="badge">Exportable CSV</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px;">
+                    <h4 style="margin: 0 0 15px 0; color: rgba(255,255,255,0.7);">💡 Tip: Filtros disponibles</h4>
+                    <p style="margin: 0; font-size: 0.9rem; color: rgba(255,255,255,0.5);">
+                        Los reportes permiten filtrar por rango de fechas, estado y otros criterios.
+                        Usa el botón "Exportar CSV" en cada reporte para descargar los datos.
+                    </p>
                 </div>
             </div>
         `;
@@ -2687,29 +3036,1068 @@ const AdminPanelController = {
     // MODAL HELPERS (stubs)
     // ============================
 
+    // ============================
+    // MODAL: NUEVA EMPRESA
+    // ============================
     showNewCompanyModal() {
-        console.log('[AdminPanel] TODO: Implementar modal nueva empresa');
-        alert('Modal de Nueva Empresa - Por implementar');
+        console.log('[AdminPanel] Abriendo modal nueva empresa');
+
+        // Crear overlay del modal
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'new-company-modal-overlay';
+        modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+            align-items: center; z-index: 10000;
+        `;
+
+        modalOverlay.innerHTML = `
+            <div style="background: #1e2432; padding: 30px; border-radius: 12px; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem;">🏢</span> Nueva Empresa
+                    </h3>
+                    <button onclick="AdminPanelController.closeNewCompanyModal()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">✕</button>
+                </div>
+
+                <form id="new-company-form" onsubmit="AdminPanelController.submitNewCompany(event)">
+                    <!-- Datos Básicos -->
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">📋 Datos Básicos</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Nombre Comercial *</label>
+                                <input type="text" id="company-name" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Ej: Tech Solutions SA">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Razón Social</label>
+                                <input type="text" id="company-legal-name" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Ej: Tech Solutions S.A.">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">CUIT/RUT/NIT *</label>
+                                <input type="text" id="company-tax-id" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Ej: 30-12345678-9">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Empleados Máximos</label>
+                                <input type="number" id="company-max-employees" value="50" min="1" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Datos de Contacto -->
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">📧 Contacto</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Email de Contacto *</label>
+                                <input type="email" id="company-email" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="contacto@empresa.com">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Teléfono</label>
+                                <input type="tel" id="company-phone" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="+54 11 1234-5678">
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Dirección</label>
+                                <input type="text" id="company-address" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Av. Corrientes 1234, CABA, Argentina">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuración -->
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">⚙️ Configuración</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Tipo de Licencia</label>
+                                <select id="company-license-type" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                    <option value="basic">Básica</option>
+                                    <option value="professional">Profesional</option>
+                                    <option value="enterprise">Enterprise</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Estado Inicial</label>
+                                <select id="company-status" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                    <option value="inactive">Inactiva (Onboarding)</option>
+                                    <option value="active">Activa</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                        <button type="button" onclick="AdminPanelController.closeNewCompanyModal()" style="padding: 12px 24px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer;">Cancelar</button>
+                        <button type="submit" style="padding: 12px 24px; border-radius: 6px; border: none; background: linear-gradient(135deg, #4a9eff 0%, #6366f1 100%); color: white; cursor: pointer; font-weight: 600;">
+                            <span id="submit-company-text">Crear Empresa</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modalOverlay);
+        document.body.style.overflow = 'hidden';
+
+        // Focus en primer campo
+        setTimeout(() => document.getElementById('company-name')?.focus(), 100);
     },
 
-    showNewBudgetModal() {
-        console.log('[AdminPanel] TODO: Implementar modal nuevo presupuesto');
-        alert('Modal de Nuevo Presupuesto - Por implementar');
+    closeNewCompanyModal() {
+        const modal = document.getElementById('new-company-modal-overlay');
+        if (modal) {
+            modal.remove();
+            document.body.style.overflow = '';
+        }
     },
 
-    showNewInvoiceModal() {
-        console.log('[AdminPanel] TODO: Implementar modal nueva factura');
-        alert('Modal de Nueva Factura - Por implementar');
+    async submitNewCompany(event) {
+        event.preventDefault();
+
+        const submitBtn = document.getElementById('submit-company-text');
+        submitBtn.textContent = 'Creando...';
+
+        try {
+            const data = {
+                name: document.getElementById('company-name').value.trim(),
+                legalName: document.getElementById('company-legal-name').value.trim() || undefined,
+                taxId: document.getElementById('company-tax-id').value.trim(),
+                contactEmail: document.getElementById('company-email').value.trim(),
+                contactPhone: document.getElementById('company-phone').value.trim() || undefined,
+                address: document.getElementById('company-address').value.trim() || undefined,
+                maxEmployees: parseInt(document.getElementById('company-max-employees').value) || 50,
+                licenseType: document.getElementById('company-license-type').value
+            };
+
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/dashboard/companies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.closeNewCompanyModal();
+                this.showNotification('Empresa creada exitosamente', 'success');
+                // Recargar lista de empresas
+                await this.loadSection('mis-empresas');
+            } else {
+                throw new Error(result.error || 'Error al crear empresa');
+            }
+        } catch (error) {
+            console.error('Error creando empresa:', error);
+            this.showNotification(error.message, 'error');
+            submitBtn.textContent = 'Crear Empresa';
+        }
     },
 
+    // ============================
+    // MODAL: NUEVO PRESUPUESTO
+    // ============================
+    async showNewBudgetModal() {
+        console.log('[AdminPanel] Abriendo modal nuevo presupuesto');
+
+        // Obtener lista de empresas para el selector
+        let companies = [];
+        try {
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/dashboard/companies', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+            companies = result.data || [];
+        } catch (error) {
+            console.error('Error cargando empresas:', error);
+        }
+
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'new-budget-modal-overlay';
+        modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+            align-items: center; z-index: 10000;
+        `;
+
+        modalOverlay.innerHTML = `
+            <div style="background: #1e2432; padding: 30px; border-radius: 12px; width: 95%; max-width: 900px; max-height: 90vh; overflow-y: auto; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem;">💰</span> Nuevo Presupuesto
+                    </h3>
+                    <button onclick="AdminPanelController.closeNewBudgetModal()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">✕</button>
+                </div>
+
+                <form id="new-budget-form" onsubmit="AdminPanelController.submitNewBudget(event)">
+                    <!-- Empresa -->
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">🏢 Cliente</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Empresa *</label>
+                                <select id="budget-company" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                    <option value="">Seleccionar empresa...</option>
+                                    ${companies.map(c => `<option value="${c.company_id || c.id}">${c.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Empleados Contratados</label>
+                                <input type="number" id="budget-employees" value="50" min="1" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Módulos -->
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">📦 Módulos</h4>
+                        <div id="budget-modules-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" name="modules" value="asistencia" checked> Asistencia
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" name="modules" value="usuarios"> Usuarios
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" name="modules" value="turnos"> Turnos
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" name="modules" value="vacaciones"> Vacaciones
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" name="modules" value="biometrico"> Biométrico
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" name="modules" value="reportes"> Reportes
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" name="modules" value="notificaciones"> Notificaciones
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" name="modules" value="kioscos"> Kioscos
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" name="modules" value="mobile"> Mobile
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Precios -->
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">💵 Precios</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Precio Base (USD)</label>
+                                <input type="number" id="budget-base-price" value="100" step="0.01" min="0" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Precio por Usuario (USD)</label>
+                                <input type="number" id="budget-per-user" value="2.50" step="0.01" min="0" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Descuento (%)</label>
+                                <input type="number" id="budget-discount" value="0" step="1" min="0" max="100" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; padding: 15px; background: rgba(74,158,255,0.1); border-radius: 6px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 1.1rem;">
+                                <span>Total Mensual Estimado:</span>
+                                <span id="budget-total" style="font-weight: 600; color: #4a9eff;">USD 225.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Validez -->
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">📅 Validez</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Válido Hasta</label>
+                                <input type="date" id="budget-valid-until" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Notas</label>
+                                <input type="text" id="budget-notes" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Notas adicionales...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                        <button type="button" onclick="AdminPanelController.closeNewBudgetModal()" style="padding: 12px 24px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer;">Cancelar</button>
+                        <button type="submit" style="padding: 12px 24px; border-radius: 6px; border: none; background: linear-gradient(135deg, #4a9eff 0%, #6366f1 100%); color: white; cursor: pointer; font-weight: 600;">
+                            <span id="submit-budget-text">Crear Presupuesto</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modalOverlay);
+        document.body.style.overflow = 'hidden';
+
+        // Calcular fecha válida hasta (30 días)
+        const validUntil = new Date();
+        validUntil.setDate(validUntil.getDate() + 30);
+        document.getElementById('budget-valid-until').value = validUntil.toISOString().split('T')[0];
+
+        // Recalcular total al cambiar valores
+        ['budget-employees', 'budget-base-price', 'budget-per-user', 'budget-discount'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', () => this.calculateBudgetTotal());
+        });
+        document.querySelectorAll('input[name="modules"]').forEach(cb => {
+            cb.addEventListener('change', () => this.calculateBudgetTotal());
+        });
+
+        this.calculateBudgetTotal();
+    },
+
+    calculateBudgetTotal() {
+        const employees = parseInt(document.getElementById('budget-employees')?.value) || 50;
+        const basePrice = parseFloat(document.getElementById('budget-base-price')?.value) || 100;
+        const perUser = parseFloat(document.getElementById('budget-per-user')?.value) || 2.5;
+        const discount = parseFloat(document.getElementById('budget-discount')?.value) || 0;
+        const modulesCount = document.querySelectorAll('input[name="modules"]:checked').length;
+
+        // Fórmula: base + (usuarios * precio por usuario) + (módulos adicionales * 20)
+        let total = basePrice + (employees * perUser) + ((modulesCount - 1) * 20);
+        total = total * (1 - discount / 100);
+
+        const totalEl = document.getElementById('budget-total');
+        if (totalEl) {
+            totalEl.textContent = `USD ${total.toFixed(2)}`;
+        }
+    },
+
+    closeNewBudgetModal() {
+        const modal = document.getElementById('new-budget-modal-overlay');
+        if (modal) {
+            modal.remove();
+            document.body.style.overflow = '';
+        }
+    },
+
+    async submitNewBudget(event) {
+        event.preventDefault();
+
+        const submitBtn = document.getElementById('submit-budget-text');
+        submitBtn.textContent = 'Creando...';
+
+        try {
+            const modules = Array.from(document.querySelectorAll('input[name="modules"]:checked')).map(cb => cb.value);
+            const employees = parseInt(document.getElementById('budget-employees').value) || 50;
+            const basePrice = parseFloat(document.getElementById('budget-base-price').value) || 100;
+            const perUser = parseFloat(document.getElementById('budget-per-user').value) || 2.5;
+            const discount = parseFloat(document.getElementById('budget-discount').value) || 0;
+
+            let totalMonthly = basePrice + (employees * perUser) + ((modules.length - 1) * 20);
+            totalMonthly = totalMonthly * (1 - discount / 100);
+
+            const data = {
+                company_id: parseInt(document.getElementById('budget-company').value),
+                contracted_employees: employees,
+                selected_modules: modules,
+                total_monthly: totalMonthly,
+                valid_until: document.getElementById('budget-valid-until').value,
+                notes: document.getElementById('budget-notes').value.trim() || undefined,
+                pricing: {
+                    basePrice: basePrice,
+                    perUser: perUser,
+                    discount: discount
+                }
+            };
+
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/dashboard/budgets', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.closeNewBudgetModal();
+                this.showNotification('Presupuesto creado exitosamente', 'success');
+                await this.loadSection('presupuestos');
+            } else {
+                throw new Error(result.error || 'Error al crear presupuesto');
+            }
+        } catch (error) {
+            console.error('Error creando presupuesto:', error);
+            this.showNotification(error.message, 'error');
+            submitBtn.textContent = 'Crear Presupuesto';
+        }
+    },
+
+    // ============================
+    // MODAL: NUEVA FACTURA
+    // ============================
+    async showNewInvoiceModal() {
+        console.log('[AdminPanel] Abriendo modal nueva factura');
+
+        let companies = [];
+        try {
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/dashboard/companies', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+            companies = result.data || [];
+        } catch (error) {
+            console.error('Error cargando empresas:', error);
+        }
+
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'new-invoice-modal-overlay';
+        modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+            align-items: center; z-index: 10000;
+        `;
+
+        modalOverlay.innerHTML = `
+            <div style="background: #1e2432; padding: 30px; border-radius: 12px; width: 95%; max-width: 700px; max-height: 90vh; overflow-y: auto; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem;">🧾</span> Nueva Factura
+                    </h3>
+                    <button onclick="AdminPanelController.closeNewInvoiceModal()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">✕</button>
+                </div>
+
+                <form id="new-invoice-form" onsubmit="AdminPanelController.submitNewInvoice(event)">
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">📋 Datos de Factura</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Empresa *</label>
+                                <select id="invoice-company" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                    <option value="">Seleccionar empresa...</option>
+                                    ${companies.map(c => `<option value="${c.company_id || c.id}">${c.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Período</label>
+                                <input type="month" id="invoice-period" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Monto (USD) *</label>
+                                <input type="number" id="invoice-amount" required step="0.01" min="0" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Fecha de Vencimiento</label>
+                                <input type="date" id="invoice-due-date" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Concepto</label>
+                                <input type="text" id="invoice-concept" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Servicio de sistema biométrico - Enero 2026">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                        <button type="button" onclick="AdminPanelController.closeNewInvoiceModal()" style="padding: 12px 24px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer;">Cancelar</button>
+                        <button type="submit" style="padding: 12px 24px; border-radius: 6px; border: none; background: linear-gradient(135deg, #4a9eff 0%, #6366f1 100%); color: white; cursor: pointer; font-weight: 600;">
+                            <span id="submit-invoice-text">Crear Factura</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modalOverlay);
+        document.body.style.overflow = 'hidden';
+
+        // Fecha de vencimiento por defecto (15 días)
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 15);
+        document.getElementById('invoice-due-date').value = dueDate.toISOString().split('T')[0];
+
+        // Período actual
+        const now = new Date();
+        document.getElementById('invoice-period').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    },
+
+    closeNewInvoiceModal() {
+        const modal = document.getElementById('new-invoice-modal-overlay');
+        if (modal) {
+            modal.remove();
+            document.body.style.overflow = '';
+        }
+    },
+
+    async submitNewInvoice(event) {
+        event.preventDefault();
+
+        const submitBtn = document.getElementById('submit-invoice-text');
+        submitBtn.textContent = 'Creando...';
+
+        try {
+            const data = {
+                company_id: parseInt(document.getElementById('invoice-company').value),
+                total_amount: parseFloat(document.getElementById('invoice-amount').value),
+                period: document.getElementById('invoice-period').value,
+                due_date: document.getElementById('invoice-due-date').value,
+                concept: document.getElementById('invoice-concept').value.trim() || 'Servicio mensual'
+            };
+
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/dashboard/invoices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.closeNewInvoiceModal();
+                this.showNotification('Factura creada exitosamente', 'success');
+                await this.loadSection('facturas-aponnt');
+            } else {
+                throw new Error(result.error || 'Error al crear factura');
+            }
+        } catch (error) {
+            console.error('Error creando factura:', error);
+            this.showNotification(error.message, 'error');
+            submitBtn.textContent = 'Crear Factura';
+        }
+    },
+
+    // ============================
+    // MODAL: NUEVO STAFF
+    // ============================
     showNewStaffModal() {
-        console.log('[AdminPanel] TODO: Implementar modal nuevo staff');
-        alert('Modal de Nuevo Staff - Por implementar');
+        console.log('[AdminPanel] Abriendo modal nuevo staff');
+
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'new-staff-modal-overlay';
+        modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+            align-items: center; z-index: 10000;
+        `;
+
+        modalOverlay.innerHTML = `
+            <div style="background: #1e2432; padding: 30px; border-radius: 12px; width: 95%; max-width: 700px; max-height: 90vh; overflow-y: auto; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem;">👔</span> Nuevo Staff Aponnt
+                    </h3>
+                    <button onclick="AdminPanelController.closeNewStaffModal()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">✕</button>
+                </div>
+
+                <form id="new-staff-form" onsubmit="AdminPanelController.submitNewStaff(event)">
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">👤 Datos Personales</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Nombre *</label>
+                                <input type="text" id="staff-first-name" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Juan">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Apellido *</label>
+                                <input type="text" id="staff-last-name" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Pérez">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Email *</label>
+                                <input type="email" id="staff-email" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="juan.perez@aponnt.com">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Teléfono</label>
+                                <input type="tel" id="staff-phone" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="+54 11 1234-5678">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">🏢 Datos Laborales</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Área *</label>
+                                <select id="staff-area" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                    <option value="comercial">Comercial</option>
+                                    <option value="soporte">Soporte</option>
+                                    <option value="desarrollo">Desarrollo</option>
+                                    <option value="administracion">Administración</option>
+                                    <option value="direccion">Dirección</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Nivel *</label>
+                                <select id="staff-level" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                    <option value="1">1 - Vendedor Directo</option>
+                                    <option value="2">2 - Líder de Equipo</option>
+                                    <option value="3">3 - Coordinador</option>
+                                    <option value="4">4 - Supervisor</option>
+                                    <option value="5">5 - Gerente</option>
+                                    <option value="6">6 - Director</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Contraseña Inicial *</label>
+                                <input type="password" id="staff-password" required minlength="6" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Mínimo 6 caracteres">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Activo</label>
+                                <select id="staff-active" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                    <option value="true">Sí</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                        <button type="button" onclick="AdminPanelController.closeNewStaffModal()" style="padding: 12px 24px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer;">Cancelar</button>
+                        <button type="submit" style="padding: 12px 24px; border-radius: 6px; border: none; background: linear-gradient(135deg, #4a9eff 0%, #6366f1 100%); color: white; cursor: pointer; font-weight: 600;">
+                            <span id="submit-staff-text">Crear Staff</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modalOverlay);
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => document.getElementById('staff-first-name')?.focus(), 100);
     },
 
-    generateReport(type) {
-        console.log('[AdminPanel] TODO: Implementar generación de reporte:', type);
-        alert(`Generando reporte: ${type} - Por implementar`);
+    closeNewStaffModal() {
+        const modal = document.getElementById('new-staff-modal-overlay');
+        if (modal) {
+            modal.remove();
+            document.body.style.overflow = '';
+        }
+    },
+
+    async submitNewStaff(event) {
+        event.preventDefault();
+
+        const submitBtn = document.getElementById('submit-staff-text');
+        submitBtn.textContent = 'Creando...';
+
+        try {
+            const data = {
+                first_name: document.getElementById('staff-first-name').value.trim(),
+                last_name: document.getElementById('staff-last-name').value.trim(),
+                email: document.getElementById('staff-email').value.trim(),
+                phone: document.getElementById('staff-phone').value.trim() || undefined,
+                area: document.getElementById('staff-area').value,
+                level: parseInt(document.getElementById('staff-level').value),
+                password: document.getElementById('staff-password').value,
+                is_active: document.getElementById('staff-active').value === 'true'
+            };
+
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/dashboard/staff', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.closeNewStaffModal();
+                this.showNotification('Staff creado exitosamente', 'success');
+                await this.loadSection('staff-aponnt');
+            } else {
+                throw new Error(result.error || 'Error al crear staff');
+            }
+        } catch (error) {
+            console.error('Error creando staff:', error);
+            this.showNotification(error.message, 'error');
+            submitBtn.textContent = 'Crear Staff';
+        }
+    },
+
+    // ============================
+    // MODAL: NUEVO TICKET
+    // ============================
+    async showNewTicketModal() {
+        console.log('[AdminPanel] Abriendo modal nuevo ticket');
+
+        // Cargar empresas para el selector
+        let companies = [];
+        let staff = [];
+        try {
+            const token = localStorage.getItem('aponnt_token_staff');
+            const [companiesRes, staffRes] = await Promise.all([
+                fetch('/api/aponnt/dashboard/companies', { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch('/api/aponnt/dashboard/staff?area=soporte', { headers: { 'Authorization': `Bearer ${token}` } })
+            ]);
+            const companiesData = await companiesRes.json();
+            const staffData = await staffRes.json();
+            companies = companiesData.data || [];
+            staff = staffData.data || [];
+        } catch (error) {
+            console.error('Error cargando datos:', error);
+        }
+
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'new-ticket-modal-overlay';
+        modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+            align-items: center; z-index: 10000;
+        `;
+
+        modalOverlay.innerHTML = `
+            <div style="background: #1e2432; padding: 30px; border-radius: 12px; width: 95%; max-width: 600px; max-height: 90vh; overflow-y: auto; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem;">🎫</span> Nuevo Ticket de Soporte
+                    </h3>
+                    <button onclick="AdminPanelController.closeNewTicketModal()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">✕</button>
+                </div>
+
+                <form id="new-ticket-form" onsubmit="AdminPanelController.submitNewTicket(event)">
+                    <div style="display: grid; gap: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Empresa *</label>
+                            <select id="ticket-company" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                <option value="">Seleccionar empresa...</option>
+                                ${companies.map(c => `<option value="${c.company_id || c.id}">${c.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Asunto *</label>
+                            <input type="text" id="ticket-subject" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Breve descripción del problema">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Descripción</label>
+                            <textarea id="ticket-description" rows="4" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white; resize: vertical;" placeholder="Describe el problema en detalle..."></textarea>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Prioridad</label>
+                                <select id="ticket-priority" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                    <option value="low">Baja</option>
+                                    <option value="medium" selected>Media</option>
+                                    <option value="high">Alta</option>
+                                    <option value="critical">Crítica</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Módulo</label>
+                                <select id="ticket-module" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                    <option value="general">General</option>
+                                    <option value="asistencia">Asistencia</option>
+                                    <option value="usuarios">Usuarios</option>
+                                    <option value="turnos">Turnos</option>
+                                    <option value="vacaciones">Vacaciones</option>
+                                    <option value="biometrico">Biométrico</option>
+                                    <option value="reportes">Reportes</option>
+                                    <option value="facturacion">Facturación</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Asignar a (Opcional)</label>
+                            <select id="ticket-assigned" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
+                                <option value="">Sin asignar</option>
+                                ${staff.map(s => `<option value="${s.staff_id}">${s.first_name} ${s.last_name}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                        <button type="button" onclick="AdminPanelController.closeNewTicketModal()" style="padding: 12px 24px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer;">Cancelar</button>
+                        <button type="submit" style="padding: 12px 24px; border-radius: 6px; border: none; background: linear-gradient(135deg, #4a9eff 0%, #6366f1 100%); color: white; cursor: pointer; font-weight: 600;">
+                            <span id="submit-ticket-text">Crear Ticket</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modalOverlay);
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => document.getElementById('ticket-subject')?.focus(), 100);
+    },
+
+    closeNewTicketModal() {
+        const modal = document.getElementById('new-ticket-modal-overlay');
+        if (modal) {
+            modal.remove();
+            document.body.style.overflow = '';
+        }
+    },
+
+    async submitNewTicket(event) {
+        event.preventDefault();
+
+        const submitBtn = document.getElementById('submit-ticket-text');
+        submitBtn.textContent = 'Creando...';
+
+        try {
+            const data = {
+                company_id: parseInt(document.getElementById('ticket-company').value),
+                subject: document.getElementById('ticket-subject').value.trim(),
+                description: document.getElementById('ticket-description').value.trim() || undefined,
+                priority: document.getElementById('ticket-priority').value,
+                module_name: document.getElementById('ticket-module').value,
+                assigned_to_staff_id: document.getElementById('ticket-assigned').value || undefined
+            };
+
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/dashboard/support-tickets', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.closeNewTicketModal();
+                this.showNotification(`Ticket ${result.data.ticket_number} creado`, 'success');
+                await this._loadTicketsData();
+            } else {
+                throw new Error(result.error || 'Error al crear ticket');
+            }
+        } catch (error) {
+            console.error('Error creando ticket:', error);
+            this.showNotification(error.message, 'error');
+            submitBtn.textContent = 'Crear Ticket';
+        }
+    },
+
+    // ============================
+    // UTILIDADES
+    // ============================
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed; top: 20px; right: 20px; padding: 15px 25px;
+            border-radius: 8px; color: white; font-weight: 500; z-index: 10001;
+            animation: slideIn 0.3s ease; max-width: 400px;
+            background: ${type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#4a9eff'};
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    },
+
+    async generateReport(type) {
+        console.log('[AdminPanel] Generando reporte:', type);
+        this.showNotification(`Generando reporte: ${type}...`, 'info');
+
+        const reportEndpoints = {
+            'empresas': '/api/aponnt/dashboard/reports/companies',
+            'facturacion': '/api/aponnt/dashboard/reports/billing',
+            'soporte': '/api/aponnt/dashboard/reports/support',
+            'vendedores': '/api/aponnt/dashboard/reports/vendors',
+            'ejecutivo': '/api/aponnt/dashboard/reports/executive'
+        };
+
+        const endpoint = reportEndpoints[type];
+        if (!endpoint) {
+            this.showNotification('Tipo de reporte no válido', 'error');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch(endpoint, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                this.showReportModal(type, result);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Error generando reporte:', error);
+            this.showNotification(error.message, 'error');
+        }
+    },
+
+    showReportModal(type, report) {
+        const typeNames = {
+            'empresas': 'Empresas',
+            'facturacion': 'Facturación',
+            'soporte': 'Soporte',
+            'vendedores': 'Vendedores',
+            'ejecutivo': 'Ejecutivo'
+        };
+
+        const modal = document.createElement('div');
+        modal.id = 'report-modal-overlay';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+
+        let statsHtml = '';
+        let dataHtml = '';
+
+        if (report.stats) {
+            statsHtml = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    ${Object.entries(report.stats).map(([key, value]) => {
+                        if (typeof value === 'object') return '';
+                        const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                        const displayValue = typeof value === 'number' && key.includes('amount')
+                            ? `USD ${value.toFixed(2)}`
+                            : value;
+                        return `
+                            <div style="background: rgba(74,158,255,0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: #4a9eff;">${displayValue}</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">${label}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // Para reporte ejecutivo, mostrar dashboard
+        if (type === 'ejecutivo' && report.data) {
+            const d = report.data;
+            dataHtml = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 8px;">
+                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">🏢 Empresas</h4>
+                        <p>Total: <strong>${d.companies.total}</strong></p>
+                        <p>Activas: <strong>${d.companies.active}</strong></p>
+                        <p>Nuevas (30d): <strong>${d.companies.new_last_30_days}</strong></p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 8px;">
+                        <h4 style="margin: 0 0 15px 0; color: #22c55e;">💰 Facturación</h4>
+                        <p>Total Facturado: <strong>USD ${d.billing.total_billed.toFixed(2)}</strong></p>
+                        <p>Cobrado: <strong>USD ${d.billing.total_collected.toFixed(2)}</strong></p>
+                        <p>Pendiente: <strong>USD ${d.billing.total_pending.toFixed(2)}</strong></p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 8px;">
+                        <h4 style="margin: 0 0 15px 0; color: #f97316;">🎫 Soporte</h4>
+                        <p>Total Tickets: <strong>${d.support.total_tickets}</strong></p>
+                        <p>Abiertos: <strong>${d.support.open_tickets}</strong></p>
+                        <p>Últimos 7 días: <strong>${d.support.tickets_last_7_days}</strong></p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 8px;">
+                        <h4 style="margin: 0 0 15px 0; color: #8b5cf6;">👥 Staff</h4>
+                        <p>Total: <strong>${d.staff.total}</strong></p>
+                        <p>Vendedores: <strong>${d.staff.vendors}</strong></p>
+                        <p>Soporte: <strong>${d.staff.support}</strong></p>
+                    </div>
+                </div>
+            `;
+        } else if (report.data && Array.isArray(report.data) && report.data.length > 0) {
+            // Mostrar tabla con los primeros 10 registros
+            const columns = Object.keys(report.data[0]).slice(0, 6);
+            dataHtml = `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="background: rgba(255,255,255,0.05);">
+                                ${columns.map(col => `<th style="padding: 10px; text-align: left;">${col.replace(/_/g, ' ')}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${report.data.slice(0, 10).map(row => `
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    ${columns.map(col => {
+                                        let val = row[col];
+                                        if (val === null || val === undefined) val = '-';
+                                        if (typeof val === 'number' && col.includes('amount')) val = `USD ${val.toFixed(2)}`;
+                                        if (col.includes('_at') && val !== '-') val = new Date(val).toLocaleDateString();
+                                        return `<td style="padding: 10px;">${val}</td>`;
+                                    }).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    ${report.data.length > 10 ? `<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 10px;">Mostrando 10 de ${report.data.length} registros</p>` : ''}
+                </div>
+            `;
+        }
+
+        modal.innerHTML = `
+            <div style="background: #1e2432; padding: 30px; border-radius: 12px; width: 95%; max-width: 900px; max-height: 90vh; overflow-y: auto; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                    <div>
+                        <h3 style="margin: 0;">📊 Reporte de ${typeNames[type] || type}</h3>
+                        <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.5);">Generado: ${new Date(report.generated_at).toLocaleString()}</p>
+                    </div>
+                    <button onclick="document.getElementById('report-modal-overlay').remove()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">✕</button>
+                </div>
+
+                ${statsHtml}
+                ${dataHtml}
+
+                <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+                    <button onclick="AdminPanelController.exportReport('${type}', 'csv')" style="padding: 10px 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer;">
+                        📥 Exportar CSV
+                    </button>
+                    <button onclick="AdminPanelController.printReport()" style="padding: 10px 20px; border-radius: 6px; border: none; background: #4a9eff; color: white; cursor: pointer;">
+                        🖨️ Imprimir
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    },
+
+    async exportReport(type, format) {
+        const reportEndpoints = {
+            'empresas': '/api/aponnt/dashboard/reports/companies',
+            'facturacion': '/api/aponnt/dashboard/reports/billing',
+            'soporte': '/api/aponnt/dashboard/reports/support',
+            'vendedores': '/api/aponnt/dashboard/reports/vendors'
+        };
+
+        const endpoint = reportEndpoints[type];
+        if (!endpoint) {
+            this.showNotification('No se puede exportar este reporte', 'error');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff');
+            const response = await fetch(`${endpoint}?format=${format}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (format === 'csv') {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `reporte-${type}-${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                this.showNotification('Reporte exportado', 'success');
+            }
+        } catch (error) {
+            this.showNotification('Error exportando reporte', 'error');
+        }
+    },
+
+    printReport() {
+        window.print();
     }
 };
 

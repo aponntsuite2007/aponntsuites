@@ -21,7 +21,11 @@ console.log('%c LEGAL ENGINE v3.0 - MULTI-JURISDICTION ', 'background: linear-gr
 // ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
-const LegalState = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.LegalState !== 'undefined') {
+    console.log('⚖️ [LEGAL] Estado ya inicializado, usando instancia existente');
+}
+window.LegalState = window.LegalState || {
     communications: [],
     communicationTypes: [],
     judicialIssues: [],
@@ -49,11 +53,17 @@ const LegalState = {
     aiAnalysis: null,
     helpVisible: true // Sistema de ayuda visible por defecto
 };
+// Local alias for backward compatibility (use var to allow redeclaration)
+var LegalState = window.LegalState;
 
 // ============================================================================
 // HELP SYSTEM - Sistema de ayuda contextual con tooltips
 // ============================================================================
-const LegalHelpSystem = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.LegalHelpSystem !== 'undefined') {
+    console.log('⚖️ [LEGAL] LegalHelpSystem ya existe, usando instancia existente');
+}
+window.LegalHelpSystem = window.LegalHelpSystem || {
     // Definiciones de ayuda contextual
     tips: {
         dashboard: {
@@ -226,7 +236,11 @@ window.LegalHelpSystem = LegalHelpSystem;
 // ============================================================================
 // API SERVICE
 // ============================================================================
-const LegalAPI = {
+// Use var to allow redeclaration when module loads multiple times in SPA
+if (typeof window.LegalAPI !== 'undefined') {
+    console.log('⚖️ [LEGAL] LegalAPI ya existe, usando instancia existente');
+}
+window.LegalAPI = window.LegalAPI || {
     baseUrl: '/api/v1/legal',
 
     async request(endpoint, options = {}) {
@@ -462,6 +476,8 @@ const LegalAPI = {
         }
     }
 };
+// Local alias for backward compatibility (use var to allow redeclaration)
+var LegalAPI = window.LegalAPI;
 
 // ============================================================================
 // MAIN RENDER FUNCTION

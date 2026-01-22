@@ -21,7 +21,11 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // ESTILOS CSS - DARK THEME
 // ═══════════════════════════════════════════════════════════════════════════════
-const WMS_STYLES = `
+// Use var to allow redeclaration when module loads multiple times in SPA
+if (typeof window.WMS_STYLES !== 'undefined') {
+    console.log('📦 [WMS] WMS_STYLES ya existe, saltando');
+}
+window.WMS_STYLES = window.WMS_STYLES || `
 <style id="wms-dark-theme-styles">
 /* ═══════════════════════════════════════════════════════════════════════════════
    VARIABLES CSS - DARK THEME PALETTE
@@ -969,6 +973,8 @@ const WMS_STYLES = `
 }
 </style>
 `;
+// Local alias for backward compatibility (use var to allow redeclaration)
+var WMS_STYLES = window.WMS_STYLES;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SISTEMA DE AYUDA CONTEXTUAL

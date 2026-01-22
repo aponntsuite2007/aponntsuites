@@ -2200,6 +2200,11 @@
                         <div style="font-size: 11px; font-weight: 600; color: white;">👤 Mi Espacio</div>
                     </button>
 
+                    <!-- Botón Configuración - Solo visible para admins -->
+                    <button id="btnConfiguracion" onclick="if(typeof showSettingsContent==='function'){showSettingsContent();}else{alert('Función no disponible. Recargue la página.');}" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 90px; backdrop-filter: blur(5px); cursor: pointer; transition: all 0.3s ease; display: none;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Configuración de la empresa (Email SMTP, procesos, etc.)">
+                        <div style="font-size: 11px; font-weight: 600; color: white;">⚙️ Config</div>
+                    </button>
+
                     <!-- Botón Cerrar Sesión - CELESTE SUAVE -->
                     <button onclick="cerrarSesion()" style="background: linear-gradient(135deg, #64748b, #475569); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 90px; backdrop-filter: blur(5px); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <div style="font-size: 11px; font-weight: 600; color: white;">🚪 Salir</div>
@@ -3767,6 +3772,15 @@
                 console.log('✅ [ALL-USERS] Botón "Mi Dashboard" activado para todos');
             }
 
+            // ═══════════════════════════════════════════════════════════════
+            // BOTÓN "CONFIGURACIÓN" VISIBLE SOLO PARA ADMINS
+            // ═══════════════════════════════════════════════════════════════
+            const btnConfiguracion = document.getElementById('btnConfiguracion');
+            if (btnConfiguracion && (userRole === 'admin' || userRole === 'company_admin')) {
+                btnConfiguracion.style.display = 'block';
+                console.log('⚙️ [ADMIN] Botón "Configuración" activado para admin');
+            }
+
             if (userRole === 'employee') {
                 // Empleados ven SU dashboard personal por defecto
                 console.log('👤 [EMPLOYEE] Mostrando Dashboard del Empleado por defecto');
@@ -4503,7 +4517,6 @@
             { id: 'users', name: 'Usuarios', icon: '👥' },
             { id: 'attendance', name: 'Asistencia', icon: '📋' },
             { id: 'dms-dashboard', name: 'Gestión Documental (DMS)', icon: '📁' },
-            { id: 'settings', name: 'Configuración', icon: '⚙️' },
             { id: 'user-support', name: 'Soporte / Tickets', icon: '🎫' }
         ];
 
@@ -5304,6 +5317,134 @@
             .join('');
     }
 
+    // =========================================================================
+    // CONFIGURACIÓN DE LA EMPRESA - Settings Content
+    // =========================================================================
+    function showSettingsContent() {
+        console.log('⚙️ [SETTINGS] Abriendo módulo de Configuración');
+
+        // Ocultar grid de módulos
+        const moduleGrid = document.querySelector('.module-grid');
+        if (moduleGrid) {
+            moduleGrid.style.display = 'none';
+            console.log('⚙️ [SETTINGS] Grid de módulos ocultado');
+        }
+
+        // Ocultar login si está visible
+        const loginSection = document.querySelector('.login-section');
+        if (loginSection) loginSection.style.display = 'none';
+
+        // Mostrar contenido principal
+        const mainContent = document.getElementById('mainContent');
+        if (!mainContent) {
+            console.error('❌ [SETTINGS] mainContent no encontrado');
+            alert('Error: No se encontró el contenedor principal. Recargue la página.');
+            return;
+        }
+        mainContent.style.display = 'block';
+        mainContent.style.visibility = 'visible';
+        mainContent.style.opacity = '1';
+        console.log('⚙️ [SETTINGS] mainContent visible');
+
+        mainContent.innerHTML = `
+            <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+                <!-- Header -->
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px;">
+                    <div>
+                        <h1 style="margin: 0; color: #1a1a2e; font-size: 28px;">⚙️ Configuración de la Empresa</h1>
+                        <p style="color: #666; margin: 5px 0 0 0;">Administre los parámetros de su empresa</p>
+                    </div>
+                    <button onclick="location.reload()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                        ← Volver
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">
+                    <button onclick="showSettingsTab('email-smtp')" id="tab-email-smtp" class="settings-tab active" style="padding: 12px 24px; border: none; background: #3b82f6; color: white; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600;">
+                        📧 Email SMTP
+                    </button>
+                    <button onclick="showSettingsTab('email-process')" id="tab-email-process" class="settings-tab" style="padding: 12px 24px; border: none; background: #e0e0e0; color: #333; border-radius: 8px 8px 0 0; cursor: pointer;">
+                        📬 Asignar Emails a Procesos
+                    </button>
+                    <button onclick="showSettingsTab('general')" id="tab-general" class="settings-tab" style="padding: 12px 24px; border: none; background: #e0e0e0; color: #333; border-radius: 8px 8px 0 0; cursor: pointer;">
+                        🏢 Datos Generales
+                    </button>
+                </div>
+
+                <!-- Tab Content -->
+                <div id="settings-tab-content">
+                    <div id="settings-email-smtp-content">
+                        <!-- Aquí se cargará CompanyEmailSMTPConfigModule -->
+                        <div id="company-email-smtp-config-module"></div>
+                    </div>
+                    <div id="settings-email-process-content" style="display: none;">
+                        <div id="company-email-process-module"></div>
+                    </div>
+                    <div id="settings-general-content" style="display: none;">
+                        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                            <h3 style="margin-top: 0;">🏢 Datos Generales de la Empresa</h3>
+                            <p style="color: #666;">Próximamente: Edición de datos fiscales, dirección, contacto, etc.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Inicializar el módulo de Email SMTP
+        if (typeof CompanyEmailSMTPConfigModule !== 'undefined' && CompanyEmailSMTPConfigModule.init) {
+            console.log('📧 [SETTINGS] Inicializando CompanyEmailSMTPConfigModule');
+            CompanyEmailSMTPConfigModule.init();
+        } else {
+            console.warn('⚠️ [SETTINGS] CompanyEmailSMTPConfigModule no disponible');
+            document.getElementById('company-email-smtp-config-module').innerHTML = `
+                <div style="background: #fff3e0; padding: 20px; border-radius: 8px; border: 1px solid #ffcc80;">
+                    <h4 style="color: #e65100; margin-top: 0;">⚠️ Módulo no cargado</h4>
+                    <p>El módulo de configuración SMTP no está disponible. Recargue la página.</p>
+                </div>
+            `;
+        }
+    }
+
+    // Cambiar entre tabs de settings
+    window.showSettingsTab = function(tabId) {
+        console.log('⚙️ [SETTINGS] Cambiando a tab:', tabId);
+
+        // Ocultar todos los contenidos
+        document.getElementById('settings-email-smtp-content').style.display = 'none';
+        document.getElementById('settings-email-process-content').style.display = 'none';
+        document.getElementById('settings-general-content').style.display = 'none';
+
+        // Resetear estilos de tabs
+        document.querySelectorAll('.settings-tab').forEach(tab => {
+            tab.style.background = '#e0e0e0';
+            tab.style.color = '#333';
+        });
+
+        // Activar tab seleccionado
+        const activeTab = document.getElementById('tab-' + tabId);
+        if (activeTab) {
+            activeTab.style.background = '#3b82f6';
+            activeTab.style.color = 'white';
+        }
+
+        // Mostrar contenido correspondiente
+        const content = document.getElementById('settings-' + tabId + '-content');
+        if (content) {
+            content.style.display = 'block';
+        }
+
+        // Inicializar módulos según tab
+        if (tabId === 'email-smtp' && typeof CompanyEmailSMTPConfigModule !== 'undefined') {
+            CompanyEmailSMTPConfigModule.init();
+        } else if (tabId === 'email-process' && typeof CompanyEmailProcessModule !== 'undefined') {
+            CompanyEmailProcessModule.init();
+        }
+    };
+
+    // Exponer función globalmente
+    window.showSettingsContent = showSettingsContent;
+
     // Fallback para módulos no implementados o con errores
     function showModuleFallback(moduleId, moduleName, reason) {
         const mainContent = document.getElementById('mainContent');
@@ -5352,7 +5493,6 @@
             { id: 'employee-map', name: 'Mapa Empleados', icon: '🗺️' },
             { id: 'training-management', name: 'Capacitaciones', icon: '📚' },
             { id: 'job-postings', name: 'Postulaciones', icon: '💼' },
-            { id: 'settings', name: 'Configuración', icon: '⚙️' },
             { id: 'reports', name: 'Reportes', icon: '📊' },
             { id: 'psychological-assessment', name: 'Evaluación Psicológica', icon: '🧠' },
             { id: 'sanctions-management', name: 'Gestión de Sanciones', icon: '🚫' },
@@ -5363,7 +5503,7 @@
         return modules.map(module => {
             // Verificar si el módulo está contratado
             // Módulos CORE que siempre deben estar visibles
-            const coreModules = ['settings', 'dashboard', 'dms-dashboard', 'user-support'];
+            const coreModules = ['dashboard', 'dms-dashboard', 'user-support'];
             const isActive = (company.activeModules && (
                                Array.isArray(company.activeModules) ?
                                    company.activeModules.includes(module.id) :
@@ -5664,7 +5804,6 @@
                     { id: 'attendance', name: 'Asistencia', icon: '📋' },
                     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
                     { id: 'dms-dashboard', name: 'Gestión Documental (DMS)', icon: '📁' },
-                    { id: 'settings', name: 'Configuración', icon: '⚙️' },
 
                     // HARDWARE (1)
                     { id: 'kiosks', name: 'Kioscos', icon: '📟' },
@@ -7947,6 +8086,16 @@
                     document.body.style.overflow = 'auto';
                     isInitialPageLoad = false;
                     console.log('✅ [SCROLL] Página lista post-login');
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // BOTÓN "CONFIGURACIÓN" - Solo visible para admins
+                    // ═══════════════════════════════════════════════════════════════
+                    const btnConfig = document.getElementById('btnConfiguracion');
+                    const userRole = currentUser?.role || '';
+                    if (btnConfig && (userRole === 'admin' || userRole === 'company_admin' || userRole === 'administrador')) {
+                        btnConfig.style.display = 'block';
+                        console.log('⚙️ [LOGIN] Botón Configuración activado para rol:', userRole);
+                    }
                 }, 1200);
 
             } else {

@@ -6,7 +6,11 @@
  * @date 2025-10-16
  */
 
-const SLATracking = {
+// Evitar redeclaración si el módulo se carga múltiples veces
+if (typeof window.SLATracking !== 'undefined') {
+    console.log('⏱️ [SLA-TRACKING] Módulo ya cargado');
+}
+window.SLATracking = window.SLATracking || {
     currentData: null,
     currentPeriod: null,
 
@@ -620,8 +624,8 @@ const SLATracking = {
         alert('❌ ' + message);
     }
 };
-
-window.SLATracking = SLATracking;
+// Local alias for backward compatibility (use var to allow redeclaration)
+var SLATracking = window.SLATracking;
 
 // Función wrapper para integración con panel-empresa.html
 function showSlaTrackingContent() {

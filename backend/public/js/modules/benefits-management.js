@@ -10,17 +10,17 @@
  */
 
 // Evitar doble carga del módulo
-if (window.BenefitsEngine) {
-    console.log('[BENEFITS] Módulo ya cargado');
-    throw new Error('BenefitsModule already loaded');
+if (window.BenefitsModuleLoaded) {
+    console.log('[BENEFITS] Módulo ya cargado, usando instancia existente');
 }
+window.BenefitsModuleLoaded = true;
 
 console.log('%c BENEFITS & AMENITIES v2.0 ', 'background: linear-gradient(90deg, #1a1a2e 0%, #10B981 100%); color: #ffffff; font-size: 14px; padding: 8px 12px; border-radius: 4px; font-weight: bold;');
 
 // ============================================================================
 // STATE MANAGEMENT - Redux-like pattern
 // ============================================================================
-const BenefitsState = {
+window.BenefitsState = window.BenefitsState || {
     currentView: 'dashboard',
     benefitTypes: [],
     companyPolicies: [],
@@ -32,11 +32,13 @@ const BenefitsState = {
     currentBenefitFilter: null,
     isLoading: false
 };
+// Local alias for backward compatibility (use var to allow redeclaration)
+var BenefitsState = window.BenefitsState;
 
 // ============================================================================
 // CONSTANTS - Categorías y configuración
 // ============================================================================
-const BENEFITS_CONSTANTS = {
+window.BENEFITS_CONSTANTS = window.BENEFITS_CONSTANTS || {
     CATEGORIES: {
         CHILDCARE: { label: 'Cuidado Infantil', color: '#FF6B6B', icon: '👶' },
         EDUCATION: { label: 'Educación', color: '#4ECDC4', icon: '📚' },

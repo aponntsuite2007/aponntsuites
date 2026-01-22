@@ -2124,6 +2124,238 @@
 
         getRoleType() {
             return state.roleType;
+        },
+
+        // ========== GESTIÓN DE FACTURAS ==========
+
+        /**
+         * Muestra modal para gestionar una factura (subir PDF, enviar email)
+         */
+        async showInvoiceManager(invoiceId) {
+            try {
+                const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                const response = await fetch(`/api/invoicing/invoices/${invoiceId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+
+                if (!result.success || !result.invoice) {
+                    alert('Error cargando factura');
+                    return;
+                }
+
+                const inv = result.invoice;
+
+                const modalHtml = `
+                    <div id="invoiceManagerModal" style="
+                        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                        background: rgba(0,0,0,0.8); z-index: 10000;
+                        display: flex; align-items: center; justify-content: center;
+                    ">
+                        <div style="
+                            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                            border-radius: 16px; padding: 30px; width: 90%; max-width: 600px;
+                            border: 1px solid rgba(245,158,11,0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+                        ">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                                <h3 style="margin: 0; color: #f59e0b;">🧾 Gestión de Factura</h3>
+                                <button onclick="VendorDashboard.closeInvoiceManager()" style="
+                                    background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;
+                                ">&times;</button>
+                            </div>
+
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                    <div>
+                                        <label style="color: rgba(255,255,255,0.6); font-size: 12px;">NÚMERO</label>
+                                        <div style="color: #fff; font-weight: 600;">${inv.invoice_number}</div>
+                                    </div>
+                                    <div>
+                                        <label style="color: rgba(255,255,255,0.6); font-size: 12px;">TOTAL</label>
+                                        <div style="color: #22c55e; font-weight: 700; font-size: 1.2em;">${inv.currency || 'USD'} ${parseFloat(inv.total_amount).toFixed(2)}</div>
+                                    </div>
+                                    <div>
+                                        <label style="color: rgba(255,255,255,0.6); font-size: 12px;">EMPRESA</label>
+                                        <div style="color: #fff;">${inv.company_name || 'N/A'}</div>
+                                    </div>
+                                    <div>
+                                        <label style="color: rgba(255,255,255,0.6); font-size: 12px;">ESTADO</label>
+                                        <div style="color: ${inv.status === 'PAID' ? '#22c55e' : '#f59e0b'};">${inv.status}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PDF Section -->
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="color: #fff; font-weight: 500;">📄 PDF de Factura</div>
+                                        <div style="color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 5px;">
+                                            ${inv.invoice_pdf_path ? '✅ PDF adjunto: ' + inv.invoice_pdf_path : '❌ Sin PDF adjunto'}
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 10px;">
+                                        ${inv.invoice_pdf_path ? `
+                                            <button onclick="VendorDashboard.downloadInvoicePdf(${inv.id})" style="
+                                                background: #3b82f6; color: white; border: none; padding: 8px 16px;
+                                                border-radius: 8px; cursor: pointer; font-size: 13px;
+                                            ">⬇️ Descargar</button>
+                                        ` : ''}
+                                        <label style="
+                                            background: #f59e0b; color: white; padding: 8px 16px;
+                                            border-radius: 8px; cursor: pointer; font-size: 13px;
+                                        ">
+                                            ⬆️ ${inv.invoice_pdf_path ? 'Reemplazar' : 'Subir'} PDF
+                                            <input type="file" id="invoicePdfFile" accept=".pdf" style="display: none;"
+                                                onchange="VendorDashboard.uploadInvoicePdf(${inv.id})">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Email Section -->
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                                <div style="color: #fff; font-weight: 500; margin-bottom: 15px;">📧 Enviar por Email</div>
+
+                                <div style="margin-bottom: 15px;">
+                                    <label style="color: rgba(255,255,255,0.6); font-size: 12px; display: block; margin-bottom: 5px;">EMAIL DESTINO</label>
+                                    <input type="email" id="invoiceEmailTo" value="${inv.contact_email || ''}" style="
+                                        width: 100%; padding: 10px; border: 1px solid rgba(255,255,255,0.2);
+                                        background: rgba(0,0,0,0.3); color: #fff; border-radius: 8px;
+                                    " placeholder="ejemplo@empresa.com">
+                                </div>
+
+                                ${inv.sent_at ? `
+                                    <div style="color: #22c55e; font-size: 13px; margin-bottom: 10px;">
+                                        ✅ Enviada el ${new Date(inv.sent_at).toLocaleString()} a ${inv.sent_to_email}
+                                    </div>
+                                ` : ''}
+
+                                <button onclick="VendorDashboard.sendInvoiceEmail(${inv.id})" ${!inv.invoice_pdf_path ? 'disabled' : ''} style="
+                                    background: ${inv.invoice_pdf_path ? '#22c55e' : '#666'}; color: white;
+                                    border: none; padding: 12px 24px; border-radius: 8px;
+                                    cursor: ${inv.invoice_pdf_path ? 'pointer' : 'not-allowed'};
+                                    width: 100%; font-weight: 600;
+                                ">
+                                    ${inv.invoice_pdf_path ? '📤 Enviar Factura por Email' : '⚠️ Sube el PDF primero'}
+                                </button>
+                            </div>
+
+                            <button onclick="VendorDashboard.closeInvoiceManager()" style="
+                                background: rgba(255,255,255,0.1); color: #fff; border: none;
+                                padding: 12px 24px; border-radius: 8px; cursor: pointer; width: 100%;
+                            ">Cerrar</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            } catch (error) {
+                console.error('[VENDOR-DASHBOARD] Error en showInvoiceManager:', error);
+                alert('Error al cargar factura: ' + error.message);
+            }
+        },
+
+        closeInvoiceManager() {
+            const modal = document.getElementById('invoiceManagerModal');
+            if (modal) modal.remove();
+        },
+
+        async uploadInvoicePdf(invoiceId) {
+            const fileInput = document.getElementById('invoicePdfFile');
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                alert('Selecciona un archivo PDF');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('invoice_pdf', fileInput.files[0]);
+
+            try {
+                const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                const response = await fetch(`/api/invoicing/invoices/${invoiceId}/upload-pdf`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ PDF subido exitosamente');
+                    this.closeInvoiceManager();
+                    this.showInvoiceManager(invoiceId); // Recargar modal
+                } else {
+                    alert('❌ Error: ' + (result.message || 'Error subiendo PDF'));
+                }
+            } catch (error) {
+                console.error('[VENDOR-DASHBOARD] Error uploading PDF:', error);
+                alert('❌ Error de conexión');
+            }
+        },
+
+        async sendInvoiceEmail(invoiceId) {
+            const emailInput = document.getElementById('invoiceEmailTo');
+            const toEmail = emailInput?.value?.trim();
+
+            if (!toEmail) {
+                alert('Ingresa un email de destino');
+                return;
+            }
+
+            if (!confirm(`¿Enviar factura a ${toEmail}?`)) return;
+
+            try {
+                const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                const response = await fetch(`/api/invoicing/invoices/${invoiceId}/send-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ to_email: toEmail })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ Factura enviada exitosamente a ${toEmail}`);
+                    this.closeInvoiceManager();
+                    this.showInvoiceManager(invoiceId); // Recargar modal
+                } else {
+                    alert('❌ Error: ' + (result.message || 'Error enviando email'));
+                }
+            } catch (error) {
+                console.error('[VENDOR-DASHBOARD] Error sending email:', error);
+                alert('❌ Error de conexión');
+            }
+        },
+
+        async downloadInvoicePdf(invoiceId) {
+            try {
+                const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                const response = await fetch(`/api/invoicing/invoices/${invoiceId}/pdf`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `factura-${invoiceId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    alert('❌ Error descargando PDF');
+                }
+            } catch (error) {
+                console.error('[VENDOR-DASHBOARD] Error downloading PDF:', error);
+                alert('❌ Error de conexión');
+            }
         }
     };
 

@@ -73,7 +73,7 @@ const CompanyEmailSMTPConfigModule = (function() {
     // =========================================================================
 
     async function apiCall(url, options = {}) {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         if (!token) {
             throw new Error('No hay sesión activa');
         }
@@ -101,13 +101,16 @@ const CompanyEmailSMTPConfigModule = (function() {
             render();
 
             // Obtener company_id del token decodificado
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No hay sesión activa. Por favor inicie sesión nuevamente.');
+            }
             const payload = JSON.parse(atob(token.split('.')[1]));
             const companyId = payload.company_id;
 
             const response = await apiCall(`/api/email/config/company/${companyId}`);
 
-            state.config = response.config || null;
+            state.config = response.data || response.config || null;
             state.loading = false;
             render();
 
@@ -125,7 +128,7 @@ const CompanyEmailSMTPConfigModule = (function() {
             render();
 
             // Obtener company_id del token
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             const payload = JSON.parse(atob(token.split('.')[1]));
             const companyId = payload.company_id;
 
