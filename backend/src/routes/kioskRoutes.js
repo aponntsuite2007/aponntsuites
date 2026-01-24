@@ -1135,76 +1135,254 @@ router.post('/password-auth',
     console.log(`✅ [KIOSKS] Password auth exitoso para legajo ${legajo}`);
 
     // 📋 REGISTRO AUTOMÁTICO DE ASISTENCIA (ENTRADA/SALIDA)
+    // Integrado con: Turnos, Tolerancia, Autorización tardanza, Breaks
     let operationType = 'clock_in';
     let wasRegistered = false;
     let attendanceId = null;
     let registrationMessage = '';
+    let requiresAuthorization = false;
+    let authorizationData = null;
 
     try {
-      // 1. Buscar última asistencia del empleado HOY
-      const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+
+      // 1. Obtener turno asignado del empleado (SSOT: user_shift_assignments)
+      const [shiftRows] = await sequelize.query(`
+        SELECT
+          s.id as shift_id,
+          s.name as shift_name,
+          s."startTime" as start_time,
+          s."endTime" as end_time,
+          s."toleranceConfig" as tolerance_config,
+          s."breakStartTime" as break_start_time,
+          s."breakEndTime" as break_end_time,
+          s."hourlyRates" as hourly_rates
+        FROM user_shift_assignments usa
+        JOIN shifts s ON usa.shift_id = s.id
+        WHERE usa.user_id = :userId
+          AND usa.is_active = true
+          AND s.company_id = :companyId
+        ORDER BY usa.created_at DESC
+        LIMIT 1
+      `, { replacements: { userId: user.user_id, companyId } });
+
+      const shiftData = shiftRows.length > 0 ? shiftRows[0] : null;
+
+      // 2. Buscar última asistencia del empleado HOY
       const [todayRows] = await sequelize.query(`
-        SELECT id, "checkInTime", "checkOutTime", status
+        SELECT id, "checkInTime", "checkOutTime", status, authorization_status
         FROM attendances
         WHERE "UserId" = :employeeId
-          AND DATE("checkInTime") = :today
-        ORDER BY "checkInTime" DESC
+          AND (DATE("checkInTime") = :today OR work_date = :today)
+        ORDER BY "checkInTime" DESC NULLS LAST
         LIMIT 1
       `, { replacements: { employeeId: user.user_id, today } });
 
       const todayAttendance = todayRows.length > 0 ? todayRows[0] : null;
 
-      // 2. Determinar operación
-      if (!todayAttendance) {
-        operationType = 'clock_in';
-      } else if (!todayAttendance.checkOutTime) {
-        // Verificar mínimo entre entrada y salida (configurable, default 15 min)
-        const MIN_SECONDS = parseInt(process.env.MIN_SECONDS_ENTRY_EXIT || '900'); // 15 min
-        const checkInTime = new Date(todayAttendance.checkInTime);
-        const secondsSince = (Date.now() - checkInTime.getTime()) / 1000;
+      // 3. Si es clock_in y tiene turno: verificar tolerancia
+      if (!todayAttendance && shiftData && shiftData.start_time) {
+        const toleranceConfig = shiftData.tolerance_config || {};
+        const toleranceMinAfter = toleranceConfig.entryAfter || toleranceConfig.toleranceMinutesEntry || 10;
+        const shiftStartTime = new Date(`${today}T${shiftData.start_time}`);
+        const latestAllowed = new Date(shiftStartTime.getTime() + toleranceMinAfter * 60 * 1000);
 
-        if (secondsSince < MIN_SECONDS) {
-          const minutesRemaining = Math.ceil((MIN_SECONDS - secondsSince) / 60);
-          return res.json({
-            success: true,
-            registered: false,
-            message: `Debe esperar ${minutesRemaining} minutos más para registrar la salida.`,
-            employee: { name: `${user.firstName} ${user.lastName}` },
-            operationType: 'cooldown',
-            minutesRemaining
-          });
+        console.log(`⏰ [KIOSK-SHIFT] ${user.firstName} ${user.lastName}: Turno ${shiftData.shift_name} (${shiftData.start_time}), tolerancia ${toleranceMinAfter}min`);
+
+        if (now > latestAllowed) {
+          // FUERA DE TOLERANCIA: verificar autorización existente
+          const lateMinutes = Math.round((now - latestAllowed) / 60000);
+          console.log(`⚠️ [KIOSK-SHIFT] Llegada tardía: ${lateMinutes} minutos fuera de tolerancia`);
+
+          // Buscar autorización aprobada reciente (últimos 10 minutos)
+          const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
+          const [existingAuth] = await sequelize.query(`
+            SELECT id, authorization_token, authorization_status
+            FROM attendances
+            WHERE "UserId" = :userId AND work_date = :today
+              AND authorization_status = 'approved'
+              AND "checkInTime" IS NULL
+              AND authorized_at >= :since
+            ORDER BY authorized_at DESC LIMIT 1
+          `, { replacements: { userId: user.user_id, today, since: tenMinutesAgo } });
+
+          if (existingAuth.length > 0) {
+            // Tiene autorización aprobada: completar el registro
+            attendanceId = existingAuth[0].id;
+            await sequelize.query(`
+              UPDATE attendances
+              SET "checkInTime" = :now, status = 'present', "checkInMethod" = 'password',
+                  authorization_status = 'used', origin_type = 'kiosk', updated_at = NOW()
+              WHERE id = :attendanceId
+            `, { replacements: { now, attendanceId } });
+            wasRegistered = true;
+            operationType = 'clock_in';
+            registrationMessage = `Entrada registrada (autorización aprobada, ${lateMinutes}min tarde)`;
+            console.log(`✅ [KIOSK-SHIFT] Ingreso con autorización previa aprobada`);
+          } else {
+            // Sin autorización: crear solicitud vía LateArrivalAuthorizationService
+            const { v4: uuidv4 } = require('uuid');
+            const authorizationToken = uuidv4();
+
+            const [authInsert] = await sequelize.query(`
+              INSERT INTO attendances ("UserId", "checkInTime", status, authorization_status,
+                authorization_token, authorization_requested_at, company_id, work_date,
+                origin_type, "checkInMethod", created_at, updated_at)
+              VALUES (:userId, NULL, 'pending_authorization', 'pending', :authToken,
+                NOW(), :companyId, :today, 'kiosk', 'password', NOW(), NOW())
+              RETURNING id
+            `, { replacements: { userId: user.user_id, authToken: authorizationToken, companyId, today } });
+
+            attendanceId = authInsert[0]?.id;
+
+            // Notificar supervisor vía NCE
+            try {
+              const authService = require('../services/LateArrivalAuthorizationService');
+              await authService.sendAuthorizationRequest({
+                employeeData: { ...user, first_name: user.firstName, last_name: user.lastName },
+                attendanceId,
+                authorizationToken,
+                shiftData: { name: shiftData.shift_name, startTime: shiftData.start_time },
+                lateMinutes,
+                companyId
+              });
+              console.log(`📧 [KIOSK-SHIFT] Notificación enviada a supervisor`);
+            } catch (nErr) {
+              console.error(`⚠️ [KIOSK-SHIFT] Error enviando notificación:`, nErr.message);
+            }
+
+            requiresAuthorization = true;
+            authorizationData = {
+              token: authorizationToken,
+              lateMinutes,
+              shiftName: shiftData.shift_name,
+              shiftStartTime: shiftData.start_time
+            };
+
+            return res.json({
+              success: true,
+              registered: false,
+              requiresAuthorization: true,
+              message: `Llegada ${lateMinutes} min. fuera de tolerancia. Se envió solicitud de autorización a su supervisor.`,
+              employee: { name: `${user.firstName} ${user.lastName}`, legajo: user.legajo },
+              operationType: 'needs_authorization',
+              authorization: authorizationData
+            });
+          }
+        } else {
+          // DENTRO DE TOLERANCIA: clock_in normal
+          operationType = 'clock_in';
         }
-        operationType = 'clock_out';
-        attendanceId = todayAttendance.id;
-      } else {
-        operationType = 'clock_in'; // Re-ingreso
       }
 
-      // 3. Registrar asistencia
-      const now = new Date();
-      if (operationType === 'clock_in') {
-        const [insertResult] = await sequelize.query(`
-          INSERT INTO attendances ("UserId", "checkInTime", status, origin_type, "checkInMethod", company_id, work_date, created_at, updated_at)
-          VALUES (:userId, :now, 'present', 'kiosk', 'password', :companyId, :today, :now, :now)
-          RETURNING id
-        `, { replacements: { userId: user.user_id, now, companyId, today } });
-        attendanceId = insertResult[0]?.id;
-        registrationMessage = 'Entrada registrada';
-      } else {
-        // clock_out: calcular horas trabajadas
-        const checkInTime = new Date(todayAttendance.checkInTime);
-        const workedHours = ((now - checkInTime) / 3600000).toFixed(2);
+      // 4. Determinar operación si no fue resuelta por shift check
+      if (!wasRegistered) {
+        if (!todayAttendance) {
+          operationType = 'clock_in';
+        } else if (!todayAttendance.checkOutTime) {
+          // Verificar si es un BREAK o una salida definitiva
+          const checkInTime = new Date(todayAttendance.checkInTime);
+          const secondsSince = (now - checkInTime.getTime()) / 1000;
 
-        await sequelize.query(`
-          UPDATE attendances
-          SET "checkOutTime" = :now, "checkOutMethod" = 'password',
-              "workingHours" = :workedHours, updated_at = :now
-          WHERE id = :attendanceId
-        `, { replacements: { now, workedHours: parseFloat(workedHours), attendanceId } });
-        registrationMessage = `Salida registrada (${workedHours}h trabajadas)`;
+          // Mínimo entre entrada y salida (configurable, default 15 min)
+          const MIN_SECONDS = parseInt(process.env.MIN_SECONDS_ENTRY_EXIT || '900');
+          if (secondsSince < MIN_SECONDS) {
+            const minutesRemaining = Math.ceil((MIN_SECONDS - secondsSince) / 60);
+            return res.json({
+              success: true,
+              registered: false,
+              message: `Debe esperar ${minutesRemaining} minutos más para registrar la salida.`,
+              employee: { name: `${user.firstName} ${user.lastName}` },
+              operationType: 'cooldown',
+              minutesRemaining
+            });
+          }
+
+          // Detectar si es BREAK basado en horario del turno
+          if (shiftData && shiftData.break_start_time && shiftData.break_end_time) {
+            const currentTimeStr = now.toTimeString().slice(0, 5); // "HH:MM"
+            const breakStart = shiftData.break_start_time.slice(0, 5);
+            const breakEnd = shiftData.break_end_time.slice(0, 5);
+
+            if (currentTimeStr >= breakStart && currentTimeStr <= breakEnd) {
+              // Es hora de break: registrar como break_out
+              operationType = 'break_out';
+              attendanceId = todayAttendance.id;
+            } else {
+              operationType = 'clock_out';
+              attendanceId = todayAttendance.id;
+            }
+          } else {
+            operationType = 'clock_out';
+            attendanceId = todayAttendance.id;
+          }
+        } else {
+          // Ya tiene check_out: verificar si es retorno de break o re-ingreso
+          if (shiftData && shiftData.break_start_time && shiftData.break_end_time) {
+            const currentTimeStr = now.toTimeString().slice(0, 5);
+            const breakEnd = shiftData.break_end_time.slice(0, 5);
+            // Si está cerca del fin del break → es retorno de break
+            if (currentTimeStr >= shiftData.break_start_time.slice(0, 5) &&
+                currentTimeStr <= breakEnd) {
+              operationType = 'break_in';
+              attendanceId = todayAttendance.id;
+            } else {
+              operationType = 'clock_in'; // Re-ingreso (nuevo ciclo)
+            }
+          } else {
+            operationType = 'clock_in'; // Re-ingreso
+          }
+        }
+
+        // 5. Registrar asistencia según operationType
+        if (operationType === 'clock_in') {
+          const [insertResult] = await sequelize.query(`
+            INSERT INTO attendances ("UserId", "checkInTime", status, origin_type, "checkInMethod", company_id, work_date, created_at, updated_at)
+            VALUES (:userId, :now, 'present', 'kiosk', 'password', :companyId, :today, :now, :now)
+            RETURNING id
+          `, { replacements: { userId: user.user_id, now, companyId, today } });
+          attendanceId = insertResult[0]?.id;
+          registrationMessage = 'Entrada registrada';
+        } else if (operationType === 'clock_out') {
+          const checkInTime = new Date(todayAttendance.checkInTime);
+          const workedMs = now - checkInTime;
+          // Descontar break si tiene horario definido
+          let breakMs = 0;
+          if (shiftData && shiftData.break_start_time && shiftData.break_end_time) {
+            const breakStart = new Date(`${today}T${shiftData.break_start_time}`);
+            const breakEnd = new Date(`${today}T${shiftData.break_end_time}`);
+            breakMs = breakEnd - breakStart;
+          }
+          const effectiveMs = workedMs - breakMs;
+          const workedHours = Math.max(0, effectiveMs / 3600000).toFixed(2);
+
+          await sequelize.query(`
+            UPDATE attendances
+            SET "checkOutTime" = :now, "checkOutMethod" = 'password',
+                "workingHours" = :workedHours, updated_at = :now
+            WHERE id = :attendanceId
+          `, { replacements: { now, workedHours: parseFloat(workedHours), attendanceId } });
+          registrationMessage = `Salida registrada (${workedHours}h efectivas)`;
+        } else if (operationType === 'break_out') {
+          await sequelize.query(`
+            UPDATE attendances
+            SET "breakOutTime" = :now, updated_at = :now
+            WHERE id = :attendanceId
+          `, { replacements: { now, attendanceId } });
+          registrationMessage = 'Inicio de descanso registrado';
+        } else if (operationType === 'break_in') {
+          await sequelize.query(`
+            UPDATE attendances
+            SET "breakInTime" = :now, updated_at = :now
+            WHERE id = :attendanceId
+          `, { replacements: { now, attendanceId } });
+          registrationMessage = 'Fin de descanso registrado';
+        }
+
+        wasRegistered = true;
       }
 
-      wasRegistered = true;
       console.log(`📋 [KIOSKS] Asistencia registrada: ${operationType} para ${legajo} (ID: ${attendanceId})`);
     } catch (attError) {
       console.error(`⚠️ [KIOSKS] Error registrando asistencia (auth OK):`, attError.message);

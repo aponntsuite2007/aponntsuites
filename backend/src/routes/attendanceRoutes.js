@@ -1868,6 +1868,103 @@ router.get('/stats/year-comparison', auth, async (req, res) => {
 });
 
 // ========================================
+// 🚨 MODO EVACUACIÓN / HEADCOUNT EN TIEMPO REAL
+// ========================================
+
+/**
+ * GET /api/v1/attendance/headcount
+ * Retorna empleados que están DENTRO del edificio ahora
+ * (check_in hoy sin check_out = adentro)
+ * Útil para: evacuaciones, emergencias, control de aforo
+ */
+router.get('/headcount', auth, async (req, res) => {
+  try {
+    const { companyId, branchId, departmentId } = req.query;
+
+    if (!companyId) {
+      return res.status(400).json({ success: false, error: 'companyId requerido' });
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+
+    // Empleados con check_in hoy pero sin check_out = están adentro
+    const [insideEmployees] = await sequelize.query(`
+      SELECT
+        a.id as attendance_id,
+        a."checkInTime" as check_in_time,
+        a."breakOutTime" as break_out_time,
+        a."breakInTime" as break_in_time,
+        u.user_id,
+        u."firstName" as first_name,
+        u."lastName" as last_name,
+        u.legajo,
+        u.department_id,
+        d.name as department_name,
+        s.name as shift_name,
+        EXTRACT(EPOCH FROM (NOW() - a."checkInTime")) / 3600 as hours_inside
+      FROM attendances a
+      JOIN users u ON a."UserId" = u.user_id
+      LEFT JOIN departments d ON u.department_id = d.id
+      LEFT JOIN user_shift_assignments usa ON usa.user_id = u.user_id AND usa.is_active = true
+      LEFT JOIN shifts s ON usa.shift_id = s.id
+      WHERE a.company_id = :companyId
+        AND (DATE(a."checkInTime") = :today OR a.work_date = :today)
+        AND a."checkOutTime" IS NULL
+        AND a.status != 'pending_authorization'
+        ${branchId ? 'AND u.branch_id = :branchId' : ''}
+        ${departmentId ? 'AND u.department_id = :departmentId' : ''}
+      ORDER BY a."checkInTime" ASC
+    `, {
+      replacements: { companyId, today, ...(branchId && { branchId }), ...(departmentId && { departmentId }) }
+    });
+
+    // Empleados que salieron hoy (para el total del día)
+    const [outsideCount] = await sequelize.query(`
+      SELECT COUNT(*) as count FROM attendances
+      WHERE company_id = :companyId
+        AND (DATE("checkInTime") = :today OR work_date = :today)
+        AND "checkOutTime" IS NOT NULL
+    `, { replacements: { companyId, today } });
+
+    // Clasificar: adentro vs en break
+    const inside = insideEmployees.map(emp => ({
+      ...emp,
+      status: emp.break_out_time && !emp.break_in_time ? 'on_break' : 'inside',
+      hours_inside: parseFloat(emp.hours_inside || 0).toFixed(1)
+    }));
+
+    const insideCount = inside.filter(e => e.status === 'inside').length;
+    const onBreakCount = inside.filter(e => e.status === 'on_break').length;
+
+    // Agrupar por departamento
+    const byDepartment = {};
+    inside.forEach(emp => {
+      const dept = emp.department_name || 'Sin departamento';
+      if (!byDepartment[dept]) byDepartment[dept] = { count: 0, employees: [] };
+      byDepartment[dept].count++;
+      byDepartment[dept].employees.push(emp);
+    });
+
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      summary: {
+        totalInside: insideCount,
+        onBreak: onBreakCount,
+        totalPresent: insideCount + onBreakCount,
+        alreadyLeft: parseInt(outsideCount[0]?.count || 0)
+      },
+      employees: inside,
+      byDepartment
+    });
+
+  } catch (error) {
+    console.error('❌ [HEADCOUNT] Error:', error.message);
+    res.status(500).json({ success: false, error: 'Error obteniendo headcount' });
+  }
+});
+
+// ========================================
 // 📊 MOUNT ADVANCED STATS ROUTES
 // ========================================
 router.use('/stats', advancedStatsRouter);

@@ -24,6 +24,7 @@ import 'screens/kiosk_setup_screen.dart';
 import 'screens/biometric_selector_screen.dart';
 import 'screens/kiosk_screen.dart';
 import 'services/config_service.dart';
+import 'services/kiosk_lock_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -134,6 +135,9 @@ class _StartupScreenState extends State<StartupScreen> {
         }
         return;
       }
+
+      // Activar modo kiosk (immersive + lock si está configurado)
+      await KioskLockService.initializeIfNeeded();
 
       // Ya configurado: ir al selector biométrico (facial / huella / password)
       if (mounted) {

@@ -1440,27 +1440,51 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
       return { withinTolerance: true }; // Si no se encuentra, permitir ingreso
     }
 
-    // 2. Por ahora, permitir ingreso sin restricción de horario
-    // TODO: Implementar lógica de turnos cuando se agregue shift_id a users
-    console.log(`✅ [LATE-CHECK] Employee ${employeeData.first_name} ${employeeData.last_name} - allowing entry (shift check disabled)`);
-    return { withinTolerance: true };
+    // 2. Obtener turno asignado del empleado vía user_shift_assignments (SSOT)
+    const shiftData = await sequelize.query(`
+      SELECT
+        s.id as shift_id,
+        s.name as shift_name,
+        s."startTime" as start_time,
+        s."endTime" as end_time,
+        s."toleranceConfig" as tolerance_config,
+        s."breakStartTime" as break_start_time,
+        s."breakEndTime" as break_end_time
+      FROM user_shift_assignments usa
+      JOIN shifts s ON usa.shift_id = s.id
+      WHERE usa.user_id = :employeeId
+        AND usa.is_active = true
+        AND s.company_id = :companyId
+      ORDER BY usa.created_at DESC
+      LIMIT 1
+    `, {
+      replacements: { employeeId, companyId },
+      type: QueryTypes.SELECT,
+      plain: true
+    });
+
+    if (!shiftData || !shiftData.start_time) {
+      console.log(`✅ [LATE-CHECK] ${employeeData.first_name} ${employeeData.last_name} - sin turno asignado, permitiendo ingreso`);
+      return { withinTolerance: true };
+    }
 
     // 3. Calcular si está dentro de tolerancia
     const now = new Date();
-    const currentTime = now.toTimeString().slice(0, 8); // "HH:MM:SS"
 
     // Convertir shift startTime a Date de hoy para comparación
-    const todayStr = now.toISOString().split('T')[0]; // "YYYY-MM-DD"
-    const shiftStartTime = new Date(`${todayStr}T${employeeData.starttime}`);
+    const todayStr = now.toISOString().split('T')[0];
+    const shiftStartTime = new Date(`${todayStr}T${shiftData.start_time}`);
 
-    // Calcular límites de tolerancia
-    const toleranceMs = (employeeData.toleranceminutesentry || 10) * 60 * 1000;
-    const earliestAllowed = new Date(shiftStartTime.getTime() - toleranceMs);
+    // Calcular límites de tolerancia desde toleranceConfig del turno
+    const toleranceConfig = shiftData.tolerance_config || {};
+    const toleranceMinutesEntry = toleranceConfig.entryAfter || toleranceConfig.toleranceMinutesEntry || 10;
+    const toleranceMs = toleranceMinutesEntry * 60 * 1000;
+    const earliestAllowed = new Date(shiftStartTime.getTime() - (toleranceConfig.entryBefore || 30) * 60 * 1000);
     const latestAllowed = new Date(shiftStartTime.getTime() + toleranceMs);
 
     console.log(`⏰ [LATE-CHECK] ${employeeData.first_name} ${employeeData.last_name}:`);
-    console.log(`   Shift: ${employeeData.shift_name} (${employeeData.starttime})`);
-    console.log(`   Tolerance: ${employeeData.toleranceminutesentry} min`);
+    console.log(`   Shift: ${shiftData.shift_name} (${shiftData.start_time})`);
+    console.log(`   Tolerance: ${toleranceMinutesEntry} min after`);
     console.log(`   Window: ${earliestAllowed.toLocaleTimeString('es-AR')} - ${latestAllowed.toLocaleTimeString('es-AR')}`);
     console.log(`   Current: ${now.toLocaleTimeString('es-AR')}`);
 
@@ -1484,10 +1508,10 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
         authorized_at,
         authorized_by_user_id
       FROM attendances
-      WHERE user_id = :employeeId
-        AND DATE(check_in) = CURRENT_DATE
+      WHERE "UserId" = :employeeId
+        AND work_date = CURRENT_DATE
         AND authorization_status = 'approved'
-        AND check_in IS NULL
+        AND "checkInTime" IS NULL
         AND authorized_at >= :fiveMinutesAgo
       ORDER BY authorized_at DESC
       LIMIT 1
@@ -1507,9 +1531,9 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
       // Actualizar autorización completando el checkInTime (marcándola como usada)
       await sequelize.query(`
         UPDATE attendances
-        SET check_in = :checkInTime,
-            status = 'face',
+        SET "checkInTime" = :checkInTime,
             status = 'present',
+            authorization_status = 'used',
             updated_at = NOW()
         WHERE id = :authorizationId
       `, {
@@ -1535,39 +1559,41 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
     const authorizationToken = uuidv4();
 
     // Crear registro de solicitud de autorización (sin checkInTime)
+    const todayDate = now.toISOString().split('T')[0];
     const [authRequest] = await sequelize.query(`
       INSERT INTO attendances (
-        id,
-        date,
-        user_id,
-        check_in,
-        status,
+        "UserId",
+        "checkInTime",
         status,
         authorization_status,
         authorization_token,
         authorization_requested_at,
+        company_id,
+        work_date,
+        origin_type,
         created_at,
         updated_at
       )
       VALUES (
-        gen_random_uuid(),
-        :date,
         :userId,
         NULL,
-        'face',
-        'pending',
+        'pending_authorization',
         'pending',
         :authToken,
         NOW(),
+        :companyId,
+        :workDate,
+        'kiosk',
         NOW(),
         NOW()
       )
       RETURNING id, authorization_token
     `, {
       replacements: {
-        date: getArgentinaDate(),
         userId: employeeId,
-        authToken: authorizationToken
+        authToken: authorizationToken,
+        companyId,
+        workDate: todayDate
       },
       type: QueryTypes.INSERT
     });
@@ -1580,8 +1606,8 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
       attendanceId: authRequestId,
       authorizationToken: authorizationToken,
       shiftData: {
-        name: employeeData.shift_name,
-        startTime: employeeData.starttime
+        name: shiftData.shift_name,
+        startTime: shiftData.start_time
       },
       lateMinutes: lateMinutes,
       companyId: companyId
@@ -1594,8 +1620,8 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
       employeeData,
       lateMinutes,
       shiftData: {
-        name: employeeData.shift_name,
-        startTime: employeeData.starttime
+        name: shiftData.shift_name,
+        startTime: shiftData.start_time
       },
       authorizationToken
     });
@@ -1610,8 +1636,8 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
       attendanceId: authRequestId,
       lateMinutes: lateMinutes,
       employeeName: `${employeeData.first_name} ${employeeData.last_name}`,
-      shiftName: employeeData.shift_name,
-      shiftStartTime: employeeData.starttime
+      shiftName: shiftData.shift_name,
+      shiftStartTime: shiftData.start_time
     };
 
   } catch (error) {
