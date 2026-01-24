@@ -3,6 +3,100 @@ const router = express.Router();
 const { Kiosk } = require('../config/database');
 const { auth } = require('../middleware/auth');
 const { checkConsentStatus, CONSENT_ERROR_CODES } = require('../middleware/biometricConsentCheck');
+const rateLimit = require('express-rate-limit');
+const { body, query, param, validationResult } = require('express-validator');
+
+// ═══════════════════════════════════════════════════════════════
+// 🛡️ RATE LIMITERS - Protección contra brute force
+// ═══════════════════════════════════════════════════════════════
+const kioskAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10, // 10 intentos
+  message: { success: false, error: 'Demasiados intentos de autenticación. Intente en 15 minutos.', code: 'RATE_LIMIT' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.body?.deviceId || req.ip
+});
+
+const kioskActivateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 5, // 5 intentos
+  message: { success: false, error: 'Demasiados intentos de activación. Intente en 1 hora.', code: 'RATE_LIMIT' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip
+});
+
+const kioskGPSLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutos
+  max: 20, // 20 updates
+  message: { success: false, error: 'Demasiadas actualizaciones de GPS. Intente en 5 minutos.', code: 'RATE_LIMIT' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.body?.device_id || req.ip
+});
+
+const kioskConfigLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10, // 10 intentos
+  message: { success: false, error: 'Demasiadas solicitudes de configuración. Intente en 15 minutos.', code: 'RATE_LIMIT' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.body?.deviceId || req.query?.deviceId || req.ip
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 🛡️ INPUT VALIDATION HELPERS
+// ═══════════════════════════════════════════════════════════════
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      error: 'Datos de entrada inválidos',
+      details: errors.array().map(e => ({ field: e.path, message: e.msg }))
+    });
+  }
+  next();
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 🛡️ DEVICE TOKEN VALIDATION MIDDLEWARE
+// ═══════════════════════════════════════════════════════════════
+const validateDeviceToken = async (req, res, next) => {
+  try {
+    const deviceId = req.body?.deviceId || req.query?.deviceId;
+    const companyId = req.body?.companyId || req.query?.companyId;
+
+    if (!deviceId || !companyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'deviceId y companyId son requeridos para autenticación de dispositivo'
+      });
+    }
+
+    const { sequelize } = require('../config/database-postgresql');
+    const [kiosks] = await sequelize.query(`
+      SELECT id, name FROM kiosks
+      WHERE device_id = :deviceId AND company_id = :companyId AND is_active = true
+      LIMIT 1
+    `, { replacements: { deviceId, companyId: parseInt(companyId) } });
+
+    if (kiosks.length === 0) {
+      return res.status(403).json({
+        success: false,
+        error: 'Dispositivo no registrado o kiosko inactivo',
+        code: 'DEVICE_NOT_REGISTERED'
+      });
+    }
+
+    req.kiosk = kiosks[0];
+    next();
+  } catch (error) {
+    console.error('❌ [KIOSK-AUTH] Error validando dispositivo:', error.message);
+    return res.status(500).json({ success: false, error: 'Error validando dispositivo' });
+  }
+};
 
 // Helper: Transformar kiosko al formato del frontend
 function formatKiosk(kiosk) {
@@ -83,14 +177,17 @@ router.get('/available', async (req, res) => {
 
     console.log(`📟 [KIOSKS-AVAILABLE] Consultando kioscos disponibles para empresa ${company_id}`);
 
-    // Usar raw SQL para evitar problemas con columnas faltantes en Render
+    // Obtener kioscos que NO están habilitados en otro dispositivo
+    // Condiciones: misma empresa, no activos, y sin device_id asignado
     const { sequelize } = require('../config/database');
     const [kiosks] = await sequelize.query(`
       SELECT id, name, description, location, device_id,
              gps_lat, gps_lng, is_configured, is_active,
              created_at, updated_at, company_id
       FROM kiosks
-      WHERE company_id = :companyId AND is_active = false
+      WHERE company_id = :companyId
+        AND (is_active = false OR is_active IS NULL)
+        AND (device_id IS NULL OR device_id = '')
       ORDER BY name ASC
     `, {
       replacements: { companyId: parseInt(company_id) }
@@ -533,7 +630,7 @@ const upload = multer({
  * @route POST /api/v1/kiosks/configure-security
  * @desc Configurar opciones de seguridad del kiosko (lector externo, departamentos autorizados)
  */
-router.post('/configure-security', async (req, res) => {
+router.post('/configure-security', kioskConfigLimiter, validateDeviceToken, async (req, res) => {
   try {
     const {
       deviceId,
@@ -605,7 +702,7 @@ router.post('/configure-security', async (req, res) => {
  * @route GET /api/v1/kiosks/security-info
  * @desc Obtener configuración de seguridad del kiosko (sin auth para APK)
  */
-router.get('/security-info', async (req, res) => {
+router.get('/security-info', kioskConfigLimiter, validateDeviceToken, async (req, res) => {
   try {
     const { deviceId, companyId } = req.query;
 
@@ -802,7 +899,18 @@ router.post('/security-alerts/:id/review', auth, async (req, res) => {
  * @desc Autenticación por contraseña con foto de seguridad
  * Multipart form-data: legajo, password, companyId, deviceId, securityPhoto (file)
  */
-router.post('/password-auth', upload.single('securityPhoto'), async (req, res) => {
+router.post('/password-auth',
+  kioskAuthLimiter,
+  upload.single('securityPhoto'),
+  [
+    body('legajo').trim().isAlphanumeric().withMessage('Legajo debe ser alfanumérico').isLength({ min: 1, max: 50 }),
+    body('password').isLength({ min: 1, max: 128 }).withMessage('Password requerido'),
+    body('companyId').isInt({ min: 1 }).withMessage('companyId debe ser entero positivo'),
+    body('deviceId').trim().isLength({ min: 1, max: 255 }).withMessage('deviceId requerido')
+  ],
+  handleValidationErrors,
+  validateDeviceToken,
+  async (req, res) => {
   try {
     const { legajo, password, companyId, deviceId } = req.body;
     const securityPhotoBuffer = req.file ? req.file.buffer : null;
@@ -844,9 +952,9 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
       replacements: { legajo, companyId }
     });
 
-    // Buscar kiosk ID
+    // Buscar kiosk ID + departamentos autorizados
     const [kiosks] = await sequelize.query(`
-      SELECT id FROM kiosks
+      SELECT id, authorized_departments FROM kiosks
       WHERE device_id = :deviceId AND company_id = :companyId AND is_active = true
       LIMIT 1
     `, {
@@ -854,6 +962,7 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
     });
 
     const kioskId = kiosks.length > 0 ? kiosks[0].id : null;
+    const authorizedDepartments = kiosks.length > 0 ? (kiosks[0].authorized_departments || []) : [];
 
     if (users.length === 0) {
       // Registrar intento fallido
@@ -885,6 +994,33 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
     const user = users[0];
 
     // ═══════════════════════════════════════════════════════════════
+    // VALIDAR DEPARTAMENTO AUTORIZADO EN KIOSK (Multi-tenant)
+    // Si el kiosk tiene departamentos configurados, solo permite
+    // fichar a empleados de esos departamentos específicos.
+    // Array vacío = todos los departamentos permitidos.
+    // ═══════════════════════════════════════════════════════════════
+    if (authorizedDepartments.length > 0 && user.department_id) {
+      const deptIdStr = String(user.department_id);
+      const isAuthorized = authorizedDepartments.some(d => String(d) === deptIdStr);
+
+      if (!isAuthorized) {
+        console.log(`🚫 [KIOSK] Departamento ${user.department_id} (${user.department_name}) NO autorizado en kiosk ${kioskId}`);
+
+        // Descartar foto
+        if (req.file) {
+          req.file.buffer = null;
+        }
+
+        return res.status(403).json({
+          success: false,
+          code: 'DEPARTMENT_NOT_AUTHORIZED',
+          error: 'Su departamento no está autorizado para fichar en este kiosco.',
+          department: user.department_name || 'Sin departamento'
+        });
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // VERIFICAR CONSENTIMIENTO BIOMÉTRICO (Ley 25.326 / GDPR / BIPA)
     // Se requiere para captura de foto de seguridad
     // ═══════════════════════════════════════════════════════════════
@@ -892,6 +1028,11 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
 
     if (!consentResult.hasConsent) {
       console.log(`🔒 [KIOSK] Usuario ${user.user_id} sin consentimiento biométrico: ${consentResult.errorCode}`);
+
+      // 🛡️ Descartar buffer de foto inmediatamente si no hay consent
+      if (req.file) {
+        req.file.buffer = null;
+      }
 
       return res.status(403).json({
         success: false,
@@ -911,15 +1052,33 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
     const bcrypt = require('bcryptjs');
     const passwordValid = await bcrypt.compare(password, user.password);
 
-    // TODO: Integrar face-api.js para matching facial con securityPhoto
+    // 🧠 FACE MATCHING REAL contra biometric_templates (non-blocking)
     let facialSimilarity = null;
     let requiresHRReview = false;
 
-    if (user.has_facial_biometric) {
-      // Simulamos similaridad por ahora
-      facialSimilarity = passwordValid ? 0.85 : 0.45;
+    if (user.has_facial_biometric && securityPhotoBuffer) {
+      try {
+        const { faceAPIEngine } = require('../services/face-api-backend-engine');
+        const matchResult = await faceAPIEngine.matchFaceAgainstTemplate(
+          securityPhotoBuffer,
+          user.user_id,
+          parseInt(companyId)
+        );
 
-      if (passwordValid && facialSimilarity < 0.7) {
+        if (matchResult.success) {
+          facialSimilarity = matchResult.similarity;
+          console.log(`🧠 [KIOSK] Face match para ${user.legajo}: similarity=${facialSimilarity.toFixed(3)}`);
+        } else {
+          console.log(`⚠️ [KIOSK] Face match falló para ${user.legajo}: ${matchResult.error}`);
+          facialSimilarity = null; // No penalizar si face matching falla
+        }
+      } catch (faceError) {
+        console.error(`⚠️ [KIOSK] Error en face matching (non-blocking): ${faceError.message}`);
+        facialSimilarity = null;
+      }
+
+      // Solo requerir revisión si face matching funcionó pero dio baja similaridad
+      if (facialSimilarity !== null && passwordValid && facialSimilarity < 0.65) {
         requiresHRReview = true;
       }
     }
@@ -975,21 +1134,99 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
 
     console.log(`✅ [KIOSKS] Password auth exitoso para legajo ${legajo}`);
 
+    // 📋 REGISTRO AUTOMÁTICO DE ASISTENCIA (ENTRADA/SALIDA)
+    let operationType = 'clock_in';
+    let wasRegistered = false;
+    let attendanceId = null;
+    let registrationMessage = '';
+
+    try {
+      // 1. Buscar última asistencia del empleado HOY
+      const today = new Date().toISOString().split('T')[0];
+      const [todayRows] = await sequelize.query(`
+        SELECT id, "checkInTime", "checkOutTime", status
+        FROM attendances
+        WHERE "UserId" = :employeeId
+          AND DATE("checkInTime") = :today
+        ORDER BY "checkInTime" DESC
+        LIMIT 1
+      `, { replacements: { employeeId: user.user_id, today } });
+
+      const todayAttendance = todayRows.length > 0 ? todayRows[0] : null;
+
+      // 2. Determinar operación
+      if (!todayAttendance) {
+        operationType = 'clock_in';
+      } else if (!todayAttendance.checkOutTime) {
+        // Verificar mínimo entre entrada y salida (configurable, default 15 min)
+        const MIN_SECONDS = parseInt(process.env.MIN_SECONDS_ENTRY_EXIT || '900'); // 15 min
+        const checkInTime = new Date(todayAttendance.checkInTime);
+        const secondsSince = (Date.now() - checkInTime.getTime()) / 1000;
+
+        if (secondsSince < MIN_SECONDS) {
+          const minutesRemaining = Math.ceil((MIN_SECONDS - secondsSince) / 60);
+          return res.json({
+            success: true,
+            registered: false,
+            message: `Debe esperar ${minutesRemaining} minutos más para registrar la salida.`,
+            employee: { name: `${user.firstName} ${user.lastName}` },
+            operationType: 'cooldown',
+            minutesRemaining
+          });
+        }
+        operationType = 'clock_out';
+        attendanceId = todayAttendance.id;
+      } else {
+        operationType = 'clock_in'; // Re-ingreso
+      }
+
+      // 3. Registrar asistencia
+      const now = new Date();
+      if (operationType === 'clock_in') {
+        const [insertResult] = await sequelize.query(`
+          INSERT INTO attendances ("UserId", "checkInTime", status, origin_type, "checkInMethod", company_id, work_date, created_at, updated_at)
+          VALUES (:userId, :now, 'present', 'kiosk', 'password', :companyId, :today, :now, :now)
+          RETURNING id
+        `, { replacements: { userId: user.user_id, now, companyId, today } });
+        attendanceId = insertResult[0]?.id;
+        registrationMessage = 'Entrada registrada';
+      } else {
+        // clock_out: calcular horas trabajadas
+        const checkInTime = new Date(todayAttendance.checkInTime);
+        const workedHours = ((now - checkInTime) / 3600000).toFixed(2);
+
+        await sequelize.query(`
+          UPDATE attendances
+          SET "checkOutTime" = :now, "checkOutMethod" = 'password',
+              "workingHours" = :workedHours, updated_at = :now
+          WHERE id = :attendanceId
+        `, { replacements: { now, workedHours: parseFloat(workedHours), attendanceId } });
+        registrationMessage = `Salida registrada (${workedHours}h trabajadas)`;
+      }
+
+      wasRegistered = true;
+      console.log(`📋 [KIOSKS] Asistencia registrada: ${operationType} para ${legajo} (ID: ${attendanceId})`);
+    } catch (attError) {
+      console.error(`⚠️ [KIOSKS] Error registrando asistencia (auth OK):`, attError.message);
+      registrationMessage = 'Autenticación OK, error al registrar asistencia';
+    }
+
     res.json({
       success: true,
-      message: 'Autenticación exitosa',
-      user: {
+      message: registrationMessage || 'Autenticación exitosa',
+      registered: wasRegistered,
+      operationType,
+      employee: {
+        name: `${user.firstName} ${user.lastName}`,
         user_id: user.user_id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
         legajo: user.legajo,
         department_name: user.department_name
       },
+      attendanceId,
       password_valid: true,
       facial_similarity: facialSimilarity,
-      requires_hr_review: requiresHRReview,
-      warning: requiresHRReview ? 'Autenticación exitosa pero con baja similaridad facial. Enviado a revisión de RRHH.' : null,
+      requiresHrReview: requiresHRReview,
+      warning: requiresHRReview ? 'Baja similaridad facial. Enviado a revisión de RRHH.' : null,
       dms: dmsResult ? { documentId: dmsResult.document?.id } : null
     });
 
@@ -1007,7 +1244,7 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
  * @route POST /api/v1/kiosks/:id/activate
  * @desc Activar un kiosko desde la APK (registrar device_id, GPS, etc.) - SIN AUTH
  */
-router.post('/:id/activate', async (req, res) => {
+router.post('/:id/activate', kioskActivateLimiter, async (req, res) => {
   try {
     const { id } = req.params;
     const { device_id, company_id, gps_lat, gps_lng, activated_at } = req.body;
@@ -1110,10 +1347,168 @@ router.post('/:id/activate', async (req, res) => {
 });
 
 /**
+ * @route POST /api/v1/kiosks/:id/deactivate
+ * @desc Desactivar un kiosko desde la APK (liberar device_id, GPS) - SIN AUTH
+ */
+router.post('/:id/deactivate', kioskActivateLimiter, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { device_id, company_id } = req.body;
+
+    if (!company_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'company_id es requerido'
+      });
+    }
+
+    console.log(`📱 [KIOSKS] Desactivando kiosko ${id}`);
+
+    const { sequelize } = require('../config/database');
+
+    // Verificar que el kiosko existe y pertenece a la empresa
+    const [existingKiosks] = await sequelize.query(`
+      SELECT id, name, device_id
+      FROM kiosks
+      WHERE id = :id AND company_id = :companyId
+      LIMIT 1
+    `, {
+      replacements: { id: parseInt(id), companyId: parseInt(company_id) }
+    });
+
+    if (existingKiosks.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Kiosko no encontrado'
+      });
+    }
+
+    // Si se proporciona device_id, verificar que coincide con el registrado
+    const existingKiosk = existingKiosks[0];
+    if (device_id && existingKiosk.device_id && existingKiosk.device_id !== device_id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Este kiosko está asignado a otro dispositivo'
+      });
+    }
+
+    // Desactivar: limpiar device_id, is_active=false, is_configured=false
+    await sequelize.query(`
+      UPDATE kiosks
+      SET device_id = NULL,
+          is_active = false,
+          is_configured = false,
+          updated_at = NOW()
+      WHERE id = :id AND company_id = :companyId
+    `, {
+      replacements: {
+        id: parseInt(id),
+        companyId: parseInt(company_id)
+      }
+    });
+
+    console.log(`✅ [KIOSKS] Kiosko ${existingKiosk.name} desactivado exitosamente`);
+
+    res.json({
+      success: true,
+      message: 'Kiosko desactivado exitosamente',
+      kiosk: {
+        id: parseInt(id),
+        name: existingKiosk.name,
+        isActive: false,
+        isConfigured: false,
+        deviceId: null
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [KIOSKS] Error desactivando kiosko:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error desactivando kiosko',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * @route POST /api/v1/kiosks/:id/update-gps
+ * @desc Actualizar GPS de un kiosko desde la APK - SIN AUTH
+ */
+router.post('/:id/update-gps',
+  kioskGPSLimiter,
+  [
+    param('id').isInt({ min: 1 }).withMessage('ID de kiosko inválido'),
+    body('company_id').isInt({ min: 1 }).withMessage('company_id debe ser entero positivo'),
+    body('gps_lat').isFloat({ min: -90, max: 90 }).withMessage('gps_lat debe estar entre -90 y 90'),
+    body('gps_lng').isFloat({ min: -180, max: 180 }).withMessage('gps_lng debe estar entre -180 y 180')
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { company_id, gps_lat, gps_lng, device_id } = req.body;
+
+    console.log(`📍 [KIOSKS] Actualizando GPS del kiosko ${id}: ${gps_lat}, ${gps_lng}`);
+
+    const { sequelize } = require('../config/database');
+
+    // Verificar que el kiosko existe
+    const [existingKiosks] = await sequelize.query(`
+      SELECT id, name, device_id
+      FROM kiosks
+      WHERE id = :id AND company_id = :companyId
+      LIMIT 1
+    `, {
+      replacements: { id: parseInt(id), companyId: parseInt(company_id) }
+    });
+
+    if (existingKiosks.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Kiosko no encontrado'
+      });
+    }
+
+    // Actualizar GPS
+    await sequelize.query(`
+      UPDATE kiosks
+      SET gps_lat = :gpsLat,
+          gps_lng = :gpsLng,
+          updated_at = NOW()
+      WHERE id = :id AND company_id = :companyId
+    `, {
+      replacements: {
+        gpsLat: parseFloat(gps_lat),
+        gpsLng: parseFloat(gps_lng),
+        id: parseInt(id),
+        companyId: parseInt(company_id)
+      }
+    });
+
+    console.log(`✅ [KIOSKS] GPS actualizado para kiosko ${existingKiosks[0].name}`);
+
+    res.json({
+      success: true,
+      message: 'GPS actualizado exitosamente',
+      gps: { lat: parseFloat(gps_lat), lng: parseFloat(gps_lng) }
+    });
+
+  } catch (error) {
+    console.error('❌ [KIOSKS] Error actualizando GPS:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error actualizando GPS',
+      details: error.message
+    });
+  }
+});
+
+/**
  * @route POST /api/v1/kiosks/seed-demo
  * @desc Crear kioscos de prueba para DEMO company (SIN AUTH - Solo para testing)
  */
-router.post('/seed-demo', async (req, res) => {
+router.post('/seed-demo', kioskActivateLimiter, async (req, res) => {
   try {
     const { sequelize } = require('../config/database');
 

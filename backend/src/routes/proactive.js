@@ -14,10 +14,15 @@ const proactiveService = require('../services/proactiveNotificationService');
 
 // Middleware de autenticación con JWT
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'aponnt_2024_secret_key_ultra_secure';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const authenticate = (req, res, next) => {
     try {
+        if (!JWT_SECRET) {
+            console.error('❌ [PROACTIVE] JWT_SECRET no configurado');
+            return res.status(500).json({ success: false, error: 'Configuración de seguridad no disponible' });
+        }
+
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
             // Fallback a headers custom para compatibilidad

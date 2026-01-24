@@ -1,19 +1,30 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'ssl_pinning_service.dart';
 
 /// ConfigService - Servicio de Configuración del Kiosko
 ///
 /// URL DEL SERVIDOR HARDCODEADA - No se pide al usuario
 /// Solo se configura: Empresa, Kiosko, GPS
 class ConfigService {
+  // 🔐 Secure Storage para tokens sensibles (AES-256 en Android)
+  static const _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
+  static const String _secureTokenKey = 'kiosk_admin_token_secure';
+
   // =====================================================
   // 🔒 URL HARDCODEADA - DOMINIO PRINCIPAL
   // =====================================================
-  // www.aponnt.com apunta a aponntsuites.onrender.com
-  // Usamos el dominio propio para mayor profesionalismo
   static const String BACKEND_URL = 'https://www.aponnt.com';
   static const String API_BASE = '$BACKEND_URL/api/v1';
+
+  // Legacy constants (compatibilidad con config_screen.dart de otros flavors)
+  static const String DEFAULT_BASE_URL = 'www.aponnt.com';
+  static const String DEFAULT_PORT = '';
 
   // Claves de SharedPreferences
   static const String _companyIdKey = 'kiosk_company_id';
@@ -98,20 +109,36 @@ class ConfigService {
     };
   }
 
-  /// Guardar token de admin (para edición de configuración)
+  /// Guardar token de admin en Secure Storage (AES-256 encrypted)
   static Future<void> saveAdminToken(String token) async {
+    await _secureStorage.write(key: _secureTokenKey, value: token);
+    // Limpiar token inseguro de SharedPreferences si existe (migración)
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_adminTokenKey, token);
+    if (prefs.containsKey(_adminTokenKey)) {
+      await prefs.remove(_adminTokenKey);
+    }
   }
 
-  /// Obtener token de admin
+  /// Obtener token de admin desde Secure Storage
   static Future<String?> getAdminToken() async {
+    final secureToken = await _secureStorage.read(key: _secureTokenKey);
+    if (secureToken != null) return secureToken;
+
+    // Migración: si hay token en SharedPreferences, moverlo a Secure Storage
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_adminTokenKey);
+    final legacyToken = prefs.getString(_adminTokenKey);
+    if (legacyToken != null) {
+      await _secureStorage.write(key: _secureTokenKey, value: legacyToken);
+      await prefs.remove(_adminTokenKey);
+      return legacyToken;
+    }
+    return null;
   }
 
-  /// Limpiar token de admin
+  /// Limpiar token de admin de Secure Storage
   static Future<void> clearAdminToken() async {
+    await _secureStorage.delete(key: _secureTokenKey);
+    // También limpiar legacy por si acaso
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_adminTokenKey);
   }
@@ -130,6 +157,9 @@ class ConfigService {
     await prefs.remove(_isKioskConfiguredKey);
     await prefs.remove(_adminTokenKey);
 
+    // Limpiar Secure Storage
+    await _secureStorage.delete(key: _secureTokenKey);
+
     // Legacy
     await prefs.remove(_baseUrlKey);
     await prefs.remove(_portKey);
@@ -139,7 +169,14 @@ class ConfigService {
   }
 
   // =====================================================
-  // MÉTODOS DE API - HARDCODEADOS A RENDER
+  // 🔐 HTTP CLIENT CON SSL PINNING
+  // =====================================================
+
+  /// Obtener HTTP client con certificate pinning habilitado
+  static http.Client _getPinnedClient() => SSLPinningService.createPinnedClient();
+
+  // =====================================================
+  // MÉTODOS DE API - HARDCODEADOS A PRODUCCIÓN
   // =====================================================
 
   /// URL base del servidor (HARDCODEADA)
@@ -153,11 +190,12 @@ class ConfigService {
 
   /// Obtener lista de empresas disponibles
   static Future<List<Map<String, dynamic>>> getAvailableCompanies() async {
+    final client = _getPinnedClient();
     try {
       final url = '$API_BASE/companies/public-list';
       print('📡 [CONFIG] Obteniendo empresas desde: $url');
 
-      final response = await http.get(
+      final response = await client.get(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
       ).timeout(const Duration(seconds: 15));
@@ -174,16 +212,19 @@ class ConfigService {
     } catch (e) {
       print('❌ [CONFIG] Error obteniendo empresas: $e');
       return [];
+    } finally {
+      client.close();
     }
   }
 
   /// Obtener kioscos disponibles para una empresa
   static Future<List<Map<String, dynamic>>> getAvailableKiosks(String companyId) async {
+    final client = _getPinnedClient();
     try {
       final url = '$API_BASE/kiosks/available?company_id=$companyId';
       print('📡 [CONFIG] Obteniendo kioscos desde: $url');
 
-      final response = await http.get(
+      final response = await client.get(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
       ).timeout(const Duration(seconds: 15));
@@ -200,16 +241,19 @@ class ConfigService {
     } catch (e) {
       print('❌ [CONFIG] Error obteniendo kioscos: $e');
       return [];
+    } finally {
+      client.close();
     }
   }
 
   /// Probar conexión con el servidor
   static Future<bool> testConnection() async {
+    final client = _getPinnedClient();
     try {
       final url = '$API_BASE/health';
       print('🔍 [CONFIG] Probando conexión: $url');
 
-      final response = await http.get(
+      final response = await client.get(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
       ).timeout(const Duration(seconds: 10));
@@ -220,6 +264,8 @@ class ConfigService {
     } catch (e) {
       print('❌ [CONFIG] Error probando conexión: $e');
       return false;
+    } finally {
+      client.close();
     }
   }
 
@@ -229,11 +275,12 @@ class ConfigService {
     required String username,
     required String password,
   }) async {
+    final client = _getPinnedClient();
     try {
       final url = '$API_BASE/auth/login';
       print('🔐 [CONFIG] Validando admin para empresa $companyId');
 
-      final response = await http.post(
+      final response = await client.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
@@ -268,6 +315,8 @@ class ConfigService {
     } catch (e) {
       print('❌ [CONFIG] Error validando admin: $e');
       return {'success': false, 'error': 'Error de conexión'};
+    } finally {
+      client.close();
     }
   }
 
@@ -279,11 +328,12 @@ class ConfigService {
     double? gpsLat,
     double? gpsLng,
   }) async {
+    final client = _getPinnedClient();
     try {
       final url = '$API_BASE/kiosks/$kioskId/activate';
       print('📱 [CONFIG] Registrando activación del kiosko $kioskId');
 
-      final response = await http.post(
+      final response = await client.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
@@ -301,6 +351,84 @@ class ConfigService {
     } catch (e) {
       print('⚠️ [CONFIG] No se pudo registrar en backend (funcionará offline): $e');
       return false;
+    } finally {
+      client.close();
+    }
+  }
+
+  /// Desactivar kiosko (liberar device_id, desmarcar como activo)
+  static Future<bool> deactivateKiosk({
+    required String kioskId,
+    required String companyId,
+    String? deviceId,
+  }) async {
+    final client = _getPinnedClient();
+    try {
+      final url = '$API_BASE/kiosks/$kioskId/deactivate';
+      print('📱 [CONFIG] Desactivando kiosko $kioskId');
+
+      final response = await client.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'company_id': companyId,
+          'device_id': deviceId,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      final success = response.statusCode == 200;
+      if (success) {
+        // Limpiar configuración local
+        await resetKioskConfig();
+        print('✅ [CONFIG] Kiosko desactivado');
+      }
+      return success;
+    } catch (e) {
+      print('❌ [CONFIG] Error desactivando kiosko: $e');
+      return false;
+    } finally {
+      client.close();
+    }
+  }
+
+  /// Actualizar GPS del kiosko en el backend
+  static Future<bool> updateKioskGPS({
+    required String kioskId,
+    required String companyId,
+    required double gpsLat,
+    required double gpsLng,
+    String? deviceId,
+  }) async {
+    final client = _getPinnedClient();
+    try {
+      final url = '$API_BASE/kiosks/$kioskId/update-gps';
+      print('📍 [CONFIG] Actualizando GPS del kiosko $kioskId: $gpsLat, $gpsLng');
+
+      final response = await client.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'company_id': companyId,
+          'gps_lat': gpsLat,
+          'gps_lng': gpsLng,
+          'device_id': deviceId,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      final success = response.statusCode == 200;
+      if (success) {
+        // Guardar GPS localmente
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setDouble(_gpsLatKey, gpsLat);
+        await prefs.setDouble(_gpsLngKey, gpsLng);
+        print('✅ [CONFIG] GPS actualizado en backend');
+      }
+      return success;
+    } catch (e) {
+      print('❌ [CONFIG] Error actualizando GPS: $e');
+      return false;
+    } finally {
+      client.close();
     }
   }
 

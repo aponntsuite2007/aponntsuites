@@ -12,7 +12,10 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:image/image.dart' as img;
 import '../screens/config_screen.dart';
+import '../screens/kiosk_setup_screen.dart';
+import '../screens/fingerprint_kiosk_screen.dart';
 import '../screens/password_auth_screen.dart';
 import '../services/config_service.dart';
 import '../services/kiosk_audio_feedback_service.dart';
@@ -32,12 +35,58 @@ import '../services/face_liveness_service.dart';
 /// - Alerta naranja para llegadas tardías (requiere autorización)
 /// - Guarda registro de asistencia en BD
 
+/// 📸 CONVERTIR YUV420 A JPEG EN ISOLATE
+/// Funcion top-level requerida por compute() - no puede ser un metodo de clase
+Uint8List? convertYUV420toJPEG(Map<String, dynamic> params) {
+  try {
+    final planes = params['planes'] as List;
+    final width = params['width'] as int;
+    final height = params['height'] as int;
+
+    final yPlane = planes[0] as Map<String, dynamic>;
+    final uPlane = planes[1] as Map<String, dynamic>;
+    final vPlane = planes[2] as Map<String, dynamic>;
+
+    final yBytes = yPlane['bytes'] as Uint8List;
+    final uBytes = uPlane['bytes'] as Uint8List;
+    final vBytes = vPlane['bytes'] as Uint8List;
+    final yRowStride = yPlane['bytesPerRow'] as int;
+    final uvRowStride = uPlane['bytesPerRow'] as int;
+    final uvPixelStride = uPlane['bytesPerPixel'] as int? ?? 1;
+
+    final image = img.Image(width: width, height: height);
+
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final yIndex = y * yRowStride + x;
+        final uvIndex = (y ~/ 2) * uvRowStride + (x ~/ 2) * uvPixelStride;
+
+        if (yIndex >= yBytes.length || uvIndex >= uBytes.length || uvIndex >= vBytes.length) continue;
+
+        final yValue = yBytes[yIndex];
+        final uValue = uBytes[uvIndex];
+        final vValue = vBytes[uvIndex];
+
+        int r = (yValue + 1.370705 * (vValue - 128)).round().clamp(0, 255);
+        int g = (yValue - 0.337633 * (uValue - 128) - 0.698001 * (vValue - 128)).round().clamp(0, 255);
+        int b = (yValue + 1.732446 * (uValue - 128)).round().clamp(0, 255);
+
+        image.setPixelRgb(x, y, r, g, b);
+      }
+    }
+
+    return Uint8List.fromList(img.encodeJpg(image, quality: 80));
+  } catch (e) {
+    return null;
+  }
+}
+
 /// 🧠 SMART CAPTURE - Evaluador de calidad para captura en movimiento
 /// OPTIMIZADO: Intervalos más cortos para detección ultra-rápida
 class SmartCapture {
   DateTime? _lastCapture;
   final Duration _minInterval = Duration(milliseconds: 150); // ⚡ Reducido de 300ms
-  final double _qualityThreshold = 0.50; // ⚡ Reducido de 0.65 para captura más rápida
+  final double _qualityThreshold = 0.70; // 🛡️ Threshold mínimo de calidad para captura
   bool _isProcessing = false;
 
   bool shouldCapture() {
@@ -135,12 +184,28 @@ class _KioskScreenState extends State<KioskScreen> {
   final FaceLivenessService _livenessService = FaceLivenessService();
 
   // 🛡️ Configuración de liveness
-  // ⚡ DESACTIVADO por defecto para velocidad máxima
-  // Puede activarse desde configuración si se requiere anti-spoofing
-  bool _livenessEnabled = false;
+  // Activado por defecto para anti-spoofing. Override via SharedPreferences 'kiosk_liveness_enabled'
+  bool _livenessEnabled = true;
 
   // 📶 Estado de conexión
   bool _isOfflineMode = false;
+
+  // ⏱️ COOLDOWN - Evitar bucle agresivo de fichaje
+  DateTime? _cooldownUntil;
+  static const Duration _cooldownAfterNetworkError = Duration(seconds: 30);
+  static const Duration _cooldownAfterNotRecognized = Duration(seconds: 8);
+  static const Duration _cooldownAfterRecognized = Duration(seconds: 5);
+  static const Duration _cooldownAfterError = Duration(seconds: 15);
+
+  bool get _isInCooldown {
+    if (_cooldownUntil == null) return false;
+    return DateTime.now().isBefore(_cooldownUntil!);
+  }
+
+  void _setCooldown(Duration duration) {
+    _cooldownUntil = DateTime.now().add(duration);
+    print('⏱️ [COOLDOWN] Próxima captura en ${duration.inSeconds}s');
+  }
 
   @override
   void initState() {
@@ -188,7 +253,17 @@ class _KioskScreenState extends State<KioskScreen> {
 
       // Cargar company_id del login
       _companyId = prefs.getString('config_company_id');
+      // Token: intentar SharedPreferences legacy, luego Secure Storage
       _authToken = prefs.getString('auth_token');
+      if (_authToken == null) {
+        _authToken = await ConfigService.getAdminToken();
+      }
+
+      // 🛡️ Liveness override desde SharedPreferences (puede desactivarse para testing)
+      final livenessOverride = prefs.getBool('kiosk_liveness_enabled');
+      if (livenessOverride != null) {
+        _livenessEnabled = livenessOverride;
+      }
 
       // Construir URL del backend usando ConfigService
       final config = await ConfigService.getConfig();
@@ -197,7 +272,6 @@ class _KioskScreenState extends State<KioskScreen> {
       if (config['baseUrl']!.isEmpty) {
         print('❌ [KIOSK] No hay configuración de servidor');
         if (mounted) {
-          // Mostrar error y redirigir a configuración
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -222,13 +296,14 @@ class _KioskScreenState extends State<KioskScreen> {
 
       _serverUrl = await ConfigService.getServerUrl();
 
-      print('🌐 [KIOSK] Servidor: $_serverUrl | Company: $_companyId');
+      print('🌐 [KIOSK] Servidor: $_serverUrl | Company: $_companyId | Token: ${_authToken != null ? "present" : "null (kiosk mode)"}');
 
-      if (_companyId == null || _authToken == null) {
-        print('❌ [KIOSK] Falta configuración, volver a login');
+      if (_companyId == null) {
+        print('❌ [KIOSK] Falta company_id, volver a setup');
         if (mounted) {
-          // Volver a login si falta config
-          Navigator.of(context).pushReplacementNamed('/login');
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const KioskSetupScreen()),
+          );
         }
         return;
       }
@@ -298,6 +373,22 @@ class _KioskScreenState extends State<KioskScreen> {
         kioskId: kioskId,
       );
       print('✅ [KIOSK] Authorization polling service initialized');
+
+      // 💾 Cola offline con sync automático
+      await _offlineQueue.initialize(
+        serverUrl: _serverUrl!,
+        companyId: _companyId!,
+      );
+      // Escuchar eventos de sync para actualizar UI
+      _offlineQueue.syncEvents.listen((event) {
+        if (event.type == SyncEventType.networkRestored) {
+          setState(() => _isOfflineMode = false);
+          print('🌐 [KIOSK] Red restaurada - modo offline desactivado');
+        } else if (event.type == SyncEventType.syncCompleted) {
+          print('✅ [KIOSK] Sync offline: ${event.message}');
+        }
+      });
+      print('✅ [KIOSK] Offline queue service initialized');
 
     } catch (e) {
       print('⚠️ [KIOSK] Error initializing connected services: $e');
@@ -400,6 +491,7 @@ class _KioskScreenState extends State<KioskScreen> {
   }
 
   /// 🔍 PROCESAR FRAME DEL STREAM CON ML KIT
+  /// ⚡ OPTIMIZADO: El stream NUNCA se detiene - la camara siempre esta viva
   Future<void> _processStreamFrame(CameraImage cameraImage) async {
     try {
       // Convertir CameraImage a InputImage para ML Kit
@@ -410,12 +502,10 @@ class _KioskScreenState extends State<KioskScreen> {
       final faces = await _faceDetector!.processImage(inputImage);
 
       // Si no hay rostros, continuar
-      if (faces.isEmpty) {
-        return;
-      }
+      if (faces.isEmpty) return;
 
       // Obtener mejor rostro
-      final bestFace = faces.first; // ML Kit ya ordena por confianza
+      final bestFace = faces.first;
 
       // Calcular calidad del frame usando SmartCapture
       final imageSize = Size(
@@ -424,33 +514,43 @@ class _KioskScreenState extends State<KioskScreen> {
       );
       final quality = _smartCapture.calculateQuality(bestFace, imageSize);
 
-      // ⚡ Log reducido para no impactar performance (1 de cada 100 frames)
-      if (math.Random().nextDouble() < 0.01) {
-        print('📊 [ML-KIT] Q:${quality.toStringAsFixed(2)} F:${faces.length}');
-      }
-
-      // Si la calidad es buena, capturar imagen de alta calidad y procesar
+      // Si la calidad es buena, procesar sin detener stream
       if (_smartCapture.isQualityGood(quality)) {
-        print('✅ [SMART-CAPTURE] Calidad óptima (${quality.toStringAsFixed(2)}) - Capturando...');
+        // ⏱️ Verificar cooldown antes de procesar
+        if (_isInCooldown) return;
 
+        print('✅ [SMART-CAPTURE] Rostro detectado Q:${quality.toStringAsFixed(2)} - Procesando...');
+
+        // Bloquear re-capturas inmediatamente
         _smartCapture.setProcessing(true);
         _smartCapture.markCapture();
+        _setCooldown(_cooldownAfterRecognized); // Cooldown temporal, se ajusta con la respuesta
 
-        // Pausar stream temporalmente
-        await _cameraController!.stopImageStream();
-        _isStreamActive = false;
+        // ⚡ CONVERTIR FRAME A JPEG EN ISOLATE (no bloquea UI ni stream)
+        final planeData = cameraImage.planes.map((p) => <String, dynamic>{
+          'bytes': Uint8List.fromList(p.bytes),
+          'bytesPerRow': p.bytesPerRow,
+          'bytesPerPixel': p.bytesPerPixel,
+        }).toList();
 
-        // Capturar imagen de alta calidad
-        await _captureHighQualityAndProcess();
+        final jpegBytes = await compute(convertYUV420toJPEG, <String, dynamic>{
+          'planes': planeData,
+          'width': cameraImage.width,
+          'height': cameraImage.height,
+        });
 
-        // ⚡ Reiniciar stream INMEDIATAMENTE después de procesar
-        if (mounted && _cameraController != null) {
-          _startContinuousCapture();
+        if (jpegBytes != null && jpegBytes.isNotEmpty) {
+          // ⚡ ENVIAR AL BACKEND SIN BLOQUEAR EL STREAM
+          _sendToBackendAsync(jpegBytes);
+        } else {
+          print('⚠️ [CONVERT] Error convirtiendo frame a JPEG');
+          _smartCapture.setProcessing(false);
+          _setCooldown(const Duration(seconds: 2));
         }
-        _smartCapture.setProcessing(false);
       }
     } catch (e) {
       print('❌ [STREAM-FRAME] Error: $e');
+      _smartCapture.setProcessing(false);
     }
   }
 
@@ -504,51 +604,6 @@ class _KioskScreenState extends State<KioskScreen> {
     return allBytes.done().buffer.asUint8List();
   }
 
-  /// 📸 CAPTURAR IMAGEN DE ALTA CALIDAD Y PROCESAR
-  Future<void> _captureHighQualityAndProcess() async {
-    if (_isProcessing || _serverUrl == null || _companyId == null) return;
-
-    setState(() {
-      _isProcessing = true;
-    });
-
-    try {
-      // 🛡️ VERIFICACIÓN DE LIVENESS (Anti-Spoofing)
-      if (_livenessEnabled && _cameraController != null) {
-        print('🛡️ [KIOSK] Starting quick liveness check...');
-
-        final livenessResult = await _livenessService.performQuickLivenessCheck(
-          cameraController: _cameraController!,
-          framesToCapture: 15, // Menos frames para ser más rápido
-          captureInterval: const Duration(milliseconds: 80),
-        );
-
-        if (livenessResult != LivenessResult.success) {
-          print('❌ [KIOSK] Liveness check FAILED: $livenessResult');
-          await _handleLivenessFailure(livenessResult);
-          setState(() {
-            _isProcessing = false;
-          });
-          return;
-        }
-
-        print('✅ [KIOSK] Liveness check PASSED');
-      }
-
-      // Capturar imagen de alta calidad
-      final image = await _cameraController!.takePicture();
-      final imageBytes = await image.readAsBytes();
-
-      // Procesar igual que antes
-      await _sendToBackend(imageBytes);
-    } catch (e) {
-      print('❌ [CAPTURE-HQ] Error: $e');
-    } finally {
-      setState(() {
-        _isProcessing = false;
-      });
-    }
-  }
 
   /// 🛡️ MANEJAR FALLO DE LIVENESS
   Future<void> _handleLivenessFailure(LivenessResult result) async {
@@ -585,19 +640,35 @@ class _KioskScreenState extends State<KioskScreen> {
     }
   }
 
+  /// ⚡ ENVIAR AL BACKEND SIN BLOQUEAR EL STREAM
+  /// Fire-and-forget: el stream de camara sigue corriendo mientras se procesa
+  void _sendToBackendAsync(Uint8List imageBytes) {
+    _sendToBackend(imageBytes).then((_) {
+      _smartCapture.setProcessing(false);
+    }).catchError((e) {
+      print('❌ [BACKEND-ASYNC] Error: $e');
+      _smartCapture.setProcessing(false);
+      _setCooldown(_cooldownAfterError);
+    });
+  }
+
   /// 📡 ENVIAR AL BACKEND PARA VERIFICACIÓN
   Future<void> _sendToBackend(List<int> imageBytes) async {
     try {
-      // 🌍 VALIDAR GEOFENCE ANTES DE ENVIAR
-      final geofenceResult = await _geofenceService.validateCurrentLocation();
-      if (!geofenceResult.isValid) {
-        print('❌ [KIOSK] Geofence validation failed: ${geofenceResult.message}');
-        await _audioService.speakState(
-          KioskAudioState.error,
-          employeeName: null,
-        );
-        _showGeofenceError(geofenceResult);
-        return;
+      // 🌍 GEOFENCE: Kiosk fijo no requiere validación de ubicación en cada fichaje.
+      // La ubicación GPS ya fue registrada durante el setup.
+      // Solo log para auditoría, no bloquea el check-in.
+      try {
+        final geofenceResult = await _geofenceService.validateCurrentLocation()
+            .timeout(const Duration(seconds: 3), onTimeout: () {
+          print('⚠️ [KIOSK] Geofence timeout - kiosk fijo, continuando...');
+          return GeofenceValidationResult(isValid: true, message: 'timeout_skip', userMessage: '', distanceOverLimit: null);
+        });
+        if (!geofenceResult.isValid) {
+          print('⚠️ [KIOSK] Geofence no validado (${geofenceResult.message}) - kiosk fijo, continuando...');
+        }
+      } catch (e) {
+        print('⚠️ [KIOSK] Geofence error ($e) - kiosk fijo, continuando...');
       }
 
       // Enviar a endpoint de verificación biométrica
@@ -650,6 +721,9 @@ class _KioskScreenState extends State<KioskScreen> {
 
           print('✅ [KIOSK] Reconocido - $employeeName (Registro: $wasRegistered, Detección #$detectionCount)');
 
+          // ⏱️ Cooldown para no fichar la misma persona dos veces seguidas
+          _setCooldown(_cooldownAfterRecognized);
+
           // Audio feedback con nombre personalizado
           await _audioService.provideFeedback(
             KioskAudioState.recognized,
@@ -666,47 +740,55 @@ class _KioskScreenState extends State<KioskScreen> {
         } else {
           // 🔴 ROJO - No reconocido en BD
           print('❌ [KIOSK] No reconocido en BD');
+          // ⏱️ Cooldown para no spamear al mismo desconocido
+          _setCooldown(_cooldownAfterNotRecognized);
           await _audioService.provideFeedback(
             KioskAudioState.notRecognized,
           );
           _showTrafficLight(TrafficLightState.red);
-          await _registerFailedAttempt(imageBytes);
         }
       } else {
-        // Error de servidor
+        // Error de servidor - no alarmar al usuario, solo log y retry silencioso
         print('❌ [KIOSK] Server error: ${response.statusCode}');
-        await _audioService.speakState(KioskAudioState.error);
+        _setCooldown(_cooldownAfterError);
+        _showTrafficLight(TrafficLightState.yellow);
+        // No hablar "Error en el sistema" - es un kiosko público
       }
     } catch (e) {
       print('❌ [BACKEND] Error: $e');
 
-      // 📴 MODO OFFLINE: Guardar localmente si falla la conexión
+      // 📴 MODO OFFLINE: No hay red - guardar foto para sync posterior
       if (e.toString().contains('SocketException') ||
           e.toString().contains('TimeoutException') ||
-          e.toString().contains('ClientException')) {
+          e.toString().contains('ClientException') ||
+          e.toString().contains('host lookup')) {
+        // ⏱️ Cooldown largo cuando no hay red
+        _setCooldown(_cooldownAfterNetworkError);
+        setState(() => _isOfflineMode = true);
+        _showTrafficLight(TrafficLightState.yellow);
+        // Guardar en cola offline para reconocimiento diferido cuando vuelva la red
         await _saveAttendanceOffline(imageBytes);
-        await _audioService.speakState(KioskAudioState.offline);
-        _showOfflineSavedNotification();
       } else {
-        await _audioService.speakState(KioskAudioState.error);
+        _setCooldown(_cooldownAfterError);
+        _showTrafficLight(TrafficLightState.yellow);
       }
     }
   }
 
   /// 📴 Guardar asistencia en cola offline
+  /// La foto se enviará a /verify-real cuando la red vuelva (reconocimiento diferido)
   Future<void> _saveAttendanceOffline(List<int> imageBytes) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final kioskId = prefs.getString('kiosk_id');
+
       final item = AttendanceQueueItem(
-        userId: 0, // Se identificará por face cuando haya conexión
+        companyId: _companyId ?? 'unknown',
         type: 'check_in',
         timestamp: DateTime.now(),
-        gpsLat: null,
-        gpsLng: null,
         photo: base64Encode(imageBytes),
-        embedding: null,
-        confidence: null,
-        deviceInfo: 'kiosk_${_companyId ?? "unknown"}',
-        hardwareProfile: null,
+        deviceInfo: 'kiosk_flutter',
+        kioskId: kioskId,
         createdAt: DateTime.now(),
       );
 
@@ -804,28 +886,6 @@ class _KioskScreenState extends State<KioskScreen> {
   }
 
   /// 📝 REGISTRAR INTENTO FALLIDO DE ACCESO
-  Future<void> _registerFailedAttempt(List<int> imageBytes) async {
-    try {
-      // Guardar intento fallido en backend
-      final uri = Uri.parse('$_serverUrl/api/v2/biometric-attendance/failed-attempt');
-      await http.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Company-Id': _companyId!,
-        },
-        body: jsonEncode({
-          'timestamp': DateTime.now().toIso8601String(),
-          'companyId': _companyId,
-          'reason': 'no_match',
-        }),
-      ).timeout(Duration(seconds: 5));
-
-      print('📝 [KIOSK] Intento fallido registrado');
-    } catch (e) {
-      print('⚠️ [KIOSK] Error registrando intento fallido: $e');
-    }
-  }
 
   /// 🚨 LLEGADA TARDÍA - FLUJO NO BLOQUEANTE
   /// El kiosk se libera inmediatamente para otros empleados.
@@ -1022,7 +1082,9 @@ class _KioskScreenState extends State<KioskScreen> {
                 child: SizedBox(
                   width: _cameraController!.value.previewSize!.height,
                   height: _cameraController!.value.previewSize!.width,
-                  child: CameraPreview(_cameraController!),
+                  child: RepaintBoundary(
+                    child: CameraPreview(_cameraController!),
+                  ),
                 ),
               ),
             ),
@@ -1169,13 +1231,8 @@ class _KioskScreenState extends State<KioskScreen> {
             left: 20,
             child: GestureDetector(
               onTap: () {
-                // TODO: Implementar navegación a pantalla de huella externa
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('🚧 Función de lector de huella externo en desarrollo'),
-                    backgroundColor: Colors.orange,
-                    duration: Duration(seconds: 2),
-                  ),
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => FingerprintKioskScreen()),
                 );
               },
               child: Container(

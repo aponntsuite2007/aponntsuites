@@ -303,7 +303,7 @@ const multiTenantLogin = async (req, res) => {
     
     const token = jwt.sign(
       tokenPayload, 
-      process.env.JWT_SECRET || 'default_secret_key',
+      process.env.JWT_SECRET,
       { expiresIn: `${company.sessionTimeout}m` }
     );
     

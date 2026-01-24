@@ -3,11 +3,15 @@
  * ================================
  * Entry point para la APK del KIOSCO BIOMÉTRICO
  *
+ * APK PÚBLICA - Sin credenciales de inicio
+ * Solo configura: Empresa, Kiosko, GPS
+ * URL hardcodeada: https://www.aponnt.com
+ *
  * Compilar con:
  *   flutter build apk --flavor kiosk --target=lib/main_kiosk.dart
  *
- * Fecha: 2025-12-09
- * Versión: 2.0.0
+ * Fecha: 2026-01-22
+ * Versión: 3.0.0
  */
 
 import 'package:flutter/material.dart';
@@ -16,12 +20,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import 'screens/config_screen.dart';
-import 'screens/login_screen.dart';
+import 'screens/kiosk_setup_screen.dart';
 import 'screens/biometric_selector_screen.dart';
+import 'screens/kiosk_screen.dart';
 import 'services/config_service.dart';
-import 'services/hardware_profile_service.dart';
-import 'services/offline_queue_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,8 +57,7 @@ class KioskProvider with ChangeNotifier {
   final SharedPreferences _prefs;
   String? _companyId;
   String? _kioskId;
-  String? _serverUrl;
-  String? _authToken;
+  String? _kioskName;
 
   KioskProvider(this._prefs) {
     _loadKioskConfig();
@@ -64,42 +65,42 @@ class KioskProvider with ChangeNotifier {
 
   String? get companyId => _companyId;
   String? get kioskId => _kioskId;
-  String? get serverUrl => _serverUrl;
-  String? get authToken => _authToken;
+  String? get kioskName => _kioskName;
 
   void _loadKioskConfig() {
-    _companyId = _prefs.getString('config_company_id');
-    _authToken = _prefs.getString('auth_token');
+    _companyId = _prefs.getString('kiosk_company_id');
     _kioskId = _prefs.getString('kiosk_id');
-    _serverUrl = _prefs.getString('server_url');
+    _kioskName = _prefs.getString('kiosk_name');
     notifyListeners();
   }
 
   Future<void> setKioskConfig({
     required String companyId,
     required String kioskId,
-    required String serverUrl,
+    required String kioskName,
   }) async {
-    await _prefs.setString('config_company_id', companyId);
+    await _prefs.setString('kiosk_company_id', companyId);
     await _prefs.setString('kiosk_id', kioskId);
-    await _prefs.setString('config_baseUrl', serverUrl.split(':')[0].replaceAll('http://', ''));
-    await _prefs.setString('config_port', serverUrl.split(':').last);
+    await _prefs.setString('kiosk_name', kioskName);
 
     _companyId = companyId;
     _kioskId = kioskId;
-    _serverUrl = serverUrl;
+    _kioskName = kioskName;
 
     notifyListeners();
   }
 
+  /// Kiosko está configurado cuando tiene empresa y kiosko seleccionados
   bool get isConfigured {
-    final hasToken = _prefs.getString('auth_token') != null;
-    final hasCompany = _prefs.getString('config_company_id') != null;
-    return hasToken && hasCompany;
+    return _prefs.getBool('kiosk_is_configured') ?? false;
   }
 
-  bool get hasServerConfig {
-    return _prefs.getBool('config_is_configured') ?? false;
+  Future<void> resetConfig() async {
+    await ConfigService.resetKioskConfig();
+    _companyId = null;
+    _kioskId = null;
+    _kioskName = null;
+    notifyListeners();
   }
 }
 
@@ -120,57 +121,21 @@ class _StartupScreenState extends State<StartupScreen> {
     await Future.delayed(const Duration(milliseconds: 1500));
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-
-      final hasHardwareProfile = prefs.getString('hardware_profile_id') != null;
-
-      if (!hasHardwareProfile) {
-        print('🔍 [STARTUP] Detectando perfil de hardware del dispositivo...');
-        final hardwareService = HardwareProfileService();
-        final profileResult = await hardwareService.detectHardwareProfile();
-
-        if (profileResult.success && profileResult.profile != null) {
-          final profile = profileResult.profile!;
-
-          await prefs.setString('hardware_profile_id', profile.id);
-          await prefs.setString('hardware_profile_name', profile.name);
-          await prefs.setString('hardware_profile_brand', profile.brand);
-          await prefs.setInt('hardware_performance_score', profile.performanceScore);
-          await prefs.setString('hardware_profile_json', jsonEncode(profile.toJson()));
-
-          print('✅ [STARTUP] Hardware detectado: ${profile.name} (${profile.performanceScore}/100)');
-        }
-      }
-
-      final offlineQueue = OfflineQueueService();
-      final stats = await offlineQueue.getStats();
-      print('💾 [STARTUP] Cola offline: ${stats.pending} pendientes, ${stats.synced} sincronizados');
-
-      final isConfigured = await ConfigService.isConfigured();
+      // Verificar si el kiosko ya está configurado (empresa + kiosko + GPS)
+      final isConfigured = await ConfigService.isKioskConfigured();
 
       if (!isConfigured) {
+        // Primera vez: ir a pantalla de setup
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => ConfigScreen()),
+            MaterialPageRoute(builder: (_) => const KioskSetupScreen()),
           );
         }
         return;
       }
 
-      final authToken = prefs.getString('auth_token');
-      final companyId = prefs.getString('config_company_id');
-
-      if (authToken == null || companyId == null) {
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => NewLoginScreen()),
-          );
-        }
-        return;
-      }
-
+      // Ya configurado: ir al selector biométrico (facial / huella / password)
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -183,7 +148,7 @@ class _StartupScreenState extends State<StartupScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => ConfigScreen()),
+          MaterialPageRoute(builder: (_) => const KioskSetupScreen()),
         );
       }
     }

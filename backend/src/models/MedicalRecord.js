@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
             }
         },
         employee_id: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: false,
             references: {
                 model: 'users',
@@ -126,7 +126,7 @@ module.exports = (sequelize) => {
             comment: 'Datos incluidos en la firma'
         },
         signed_by: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: true,
             references: {
                 model: 'users',
@@ -149,7 +149,7 @@ module.exports = (sequelize) => {
             allowNull: true
         },
         locked_by: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: true,
             references: {
                 model: 'users',
@@ -168,7 +168,7 @@ module.exports = (sequelize) => {
             defaultValue: 0
         },
         last_edited_by: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: true,
             references: {
                 model: 'users',
@@ -190,7 +190,7 @@ module.exports = (sequelize) => {
             allowNull: true
         },
         deleted_by: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: true,
             references: {
                 model: 'users',
@@ -202,7 +202,7 @@ module.exports = (sequelize) => {
             allowNull: true
         },
         deletion_authorized_by: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: true,
             references: {
                 model: 'users',
@@ -216,7 +216,7 @@ module.exports = (sequelize) => {
 
         // Auditoria
         created_by: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: false,
             references: {
                 model: 'users',

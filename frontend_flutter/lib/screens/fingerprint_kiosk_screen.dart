@@ -9,6 +9,8 @@ import 'dart:async';
 import 'dart:io';
 import 'fingerprint_enrollment_screen.dart';
 import 'config_screen.dart';
+import 'biometric_selector_screen.dart';
+import '../services/config_service.dart';
 
 /// 🔐 KIOSK BIOMÉTRICO CON HUELLA DACTILAR
 /// ========================================
@@ -33,6 +35,7 @@ class _FingerprintKioskScreenState extends State<FingerprintKioskScreen> with Ti
   String? _employeeName;
   String? _employeeId;
   String? _deviceId;
+  String? _serverUrl;
   int? _companyId;
 
   late AnimationController _pulseController;
@@ -85,13 +88,15 @@ class _FingerprintKioskScreenState extends State<FingerprintKioskScreen> with Ti
 
   Future<void> _loadConfig() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      _serverUrl = await ConfigService.getServerUrl();
+      final kioskConfig = await ConfigService.getKioskConfig();
+      final companyIdStr = kioskConfig['companyId'] as String?;
       setState(() {
-        _companyId = prefs.getInt('company_id');
+        _companyId = companyIdStr != null ? int.tryParse(companyIdStr) : null;
       });
-      print('🔧 [CONFIG] Company ID cargado: $_companyId');
+      print('🔧 [FINGERPRINT] Server: $_serverUrl | Company: $_companyId');
     } catch (e) {
-      print('❌ [CONFIG] Error cargando configuración: $e');
+      print('❌ [FINGERPRINT] Error cargando configuración: $e');
     }
   }
 
@@ -235,31 +240,37 @@ class _FingerprintKioskScreenState extends State<FingerprintKioskScreen> with Ti
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final baseUrl = _serverUrl ?? 'https://www.aponnt.com';
+      // Token: intentar secure storage, luego SharedPreferences
+      String? token = await ConfigService.getAdminToken();
+      if (token == null) {
+        final prefs = await SharedPreferences.getInstance();
+        token = prefs.getString('auth_token');
+      }
 
       // 1. Buscar usuario por employeeId
       final userResponse = await http.get(
-        Uri.parse('http://10.0.2.2:9998/api/v1/users/by-employee-id/$employeeId?companyId=$_companyId'),
+        Uri.parse('$baseUrl/api/v1/users/by-employee-id/$employeeId?companyId=$_companyId'),
         headers: {
-          'Authorization': 'Bearer $token',
+          if (token != null) 'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (userResponse.statusCode != 200) {
-        throw Exception('Empleado no encontrado');
+        throw Exception('Empleado no encontrado (legajo: $employeeId)');
       }
 
-      final userData = json.decode(userResponse.body)['data'];
-      final userId = userData['user_id'];
-      final fullName = '${userData['firstName']} ${userData['lastName']}';
+      final userBody = json.decode(userResponse.body);
+      final userData = userBody['data'] ?? userBody['user'] ?? userBody;
+      final userId = userData['user_id'] ?? userData['id'];
+      final fullName = '${userData['firstName'] ?? userData['first_name'] ?? ''} ${userData['lastName'] ?? userData['last_name'] ?? ''}'.trim();
 
       // 2. Verificar huella en backend
       final verifyResponse = await http.post(
-        Uri.parse('http://10.0.2.2:9998/api/v1/biometric/fingerprint/verify'),
+        Uri.parse('$baseUrl/api/v1/biometric/fingerprint/verify'),
         headers: {
-          'Authorization': 'Bearer $token',
+          if (token != null) 'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: json.encode({
@@ -268,12 +279,11 @@ class _FingerprintKioskScreenState extends State<FingerprintKioskScreen> with Ti
           'device_id': _deviceId,
           'authenticated': true,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final verifyData = json.decode(verifyResponse.body);
 
       if (verifyResponse.statusCode == 404 && verifyData['action'] == 'enroll_required') {
-        // Usuario no tiene huellas registradas
         await _showEnrollmentPrompt(userId, employeeId);
         return;
       }
@@ -284,9 +294,9 @@ class _FingerprintKioskScreenState extends State<FingerprintKioskScreen> with Ti
 
       // 3. Marcar asistencia
       final attendanceResponse = await http.post(
-        Uri.parse('http://10.0.2.2:9998/api/v2/biometric-attendance/register'),
+        Uri.parse('$baseUrl/api/v2/biometric-attendance/register'),
         headers: {
-          'Authorization': 'Bearer $token',
+          if (token != null) 'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: json.encode({
@@ -296,7 +306,7 @@ class _FingerprintKioskScreenState extends State<FingerprintKioskScreen> with Ti
           'deviceId': _deviceId,
           'quality': 85.0,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (attendanceResponse.statusCode == 200 || attendanceResponse.statusCode == 201) {
         final attendanceData = json.decode(attendanceResponse.body);
@@ -430,6 +440,15 @@ class _FingerprintKioskScreenState extends State<FingerprintKioskScreen> with Ti
     return Scaffold(
       backgroundColor: _getBackgroundColor(),
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          tooltip: 'Volver al selector biométrico',
+          onPressed: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => BiometricSelectorScreen()),
+            );
+          },
+        ),
         title: Text('Kiosko - Huella Dactilar', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue[900],
         elevation: 0,

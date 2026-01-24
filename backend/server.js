@@ -5,6 +5,7 @@
 
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -100,11 +101,50 @@ function configureDynamicPorts() {
 
 configureDynamicPorts();
 
-// Configurar middlewares básicos
+// 🛡️ HELMET - Security headers (CSP, HSTS, X-Frame-Options, etc.)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      connectSrc: ["'self'", "ws:", "wss:", "https://aponntsuites.onrender.com", "https://www.aponnt.com"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// 🛡️ CORS RESTRICTIVO - Whitelist de orígenes permitidos
+const corsWhitelist = [
+  'https://www.aponnt.com',
+  'https://aponntsuites.onrender.com',
+  'http://localhost:9998',
+  'http://localhost:9999',
+  'http://localhost:3000'
+];
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || "*",
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (corsWhitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else if (process.env.NODE_ENV === 'production') {
+      console.warn(`🚫 [CORS] Origen bloqueado en producción: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    } else {
+      console.warn(`⚠️ [CORS] Origen no whitelisted (permitido en dev): ${origin}`);
+      callback(null, true);
+    }
+  },
   credentials: true
 }));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 

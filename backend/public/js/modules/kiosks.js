@@ -3205,6 +3205,54 @@ async function showAddKioskModal(kioskId = null) {
                                     </div>
                                 </div>
 
+                                <!-- Departamentos Autorizados -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">🏢 Departamentos Autorizados</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted small mb-3">
+                                            Seleccione los departamentos cuyos empleados pueden fichar en este kiosco.
+                                            Si no selecciona ninguno, todos los departamentos podrán fichar.
+                                        </p>
+                                        <div id="departments-container" class="row g-2">
+                                            <div class="col-12 text-center py-3">
+                                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                                <span class="ms-2 text-muted">Cargando departamentos...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ubicación GPS (Solo Lectura) -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">📍 Ubicación GPS <span class="badge bg-secondary ms-2">Solo lectura</span></h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Latitud</label>
+                                                <input type="text" class="form-control" id="kiosk-gps-lat"
+                                                       value="${kioskData?.gps_lat || ''}" readonly
+                                                       placeholder="Se captura desde la APK">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Longitud</label>
+                                                <input type="text" class="form-control" id="kiosk-gps-lng"
+                                                       value="${kioskData?.gps_lng || ''}" readonly
+                                                       placeholder="Se captura desde la APK">
+                                            </div>
+                                            <div class="col-12">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    La ubicación GPS se captura únicamente desde la APK del kiosco al momento de la activación.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Hardware de Reconocimiento Facial -->
                                 <div class="card mb-4">
                                     <div class="card-header bg-light">
@@ -3393,6 +3441,9 @@ async function showAddKioskModal(kioskId = null) {
             showHardwareDetails(kioskData.detection_method_fingerprint, 'fingerprint');
         }
 
+        // Cargar departamentos disponibles
+        loadDepartmentsForKiosk(kioskData?.authorized_departments || []);
+
     } catch (error) {
         console.error('❌ Error mostrando modal:', error);
         showToast('Error al abrir el modal', 'error');
@@ -3522,9 +3573,67 @@ function showHardwareDetails(hardwareId, type) {
 /**
  * Guarda el kiosk (crear o editar)
  */
+/**
+ * Carga departamentos de la empresa para el selector de kiosko
+ */
+async function loadDepartmentsForKiosk(selectedDepts = []) {
+    const container = document.getElementById('departments-container');
+    if (!container) return;
+
+    try {
+        const response = await fetch('/api/v1/departments', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Error cargando departamentos');
+        const data = await response.json();
+        const departments = data.departments || data.data || data || [];
+
+        if (departments.length === 0) {
+            container.innerHTML = `
+                <div class="col-12 text-center text-muted py-2">
+                    <i class="fas fa-info-circle"></i> No hay departamentos registrados
+                </div>`;
+            return;
+        }
+
+        // Normalizar selectedDepts (puede venir como array de IDs o de objetos)
+        const selectedIds = selectedDepts.map(d => typeof d === 'object' ? (d.id || d) : d).map(String);
+
+        container.innerHTML = departments.map(dept => {
+            const deptId = dept.id || dept.department_id;
+            const deptName = dept.name || dept.department_name || 'Sin nombre';
+            const isChecked = selectedIds.includes(String(deptId));
+            return `
+                <div class="col-md-4 col-sm-6">
+                    <div class="form-check">
+                        <input class="form-check-input dept-checkbox"
+                               type="checkbox" id="dept-${deptId}"
+                               value="${deptId}" ${isChecked ? 'checked' : ''}>
+                        <label class="form-check-label" for="dept-${deptId}">
+                            ${deptName}
+                        </label>
+                    </div>
+                </div>`;
+        }).join('');
+    } catch (error) {
+        console.error('❌ Error cargando departamentos:', error);
+        container.innerHTML = `
+            <div class="col-12 text-danger small">
+                <i class="fas fa-exclamation-triangle"></i> Error cargando departamentos
+            </div>`;
+    }
+}
+
 async function saveKiosk(kioskId = null) {
     try {
         const isEdit = kioskId !== null;
+
+        // Recopilar departamentos seleccionados
+        const selectedDepts = Array.from(document.querySelectorAll('.dept-checkbox:checked'))
+            .map(cb => parseInt(cb.value));
 
         // Recopilar datos del formulario
         const formData = {
@@ -3532,6 +3641,7 @@ async function saveKiosk(kioskId = null) {
             location: document.getElementById('kiosk-location').value.trim(),
             device_id: document.getElementById('kiosk-device-id').value.trim(),
             is_active: document.getElementById('kiosk-active').value === '1',
+            authorized_departments: selectedDepts,
 
             // Hardware Facial
             hardware_profile: document.getElementById('facial-hardware-select').value,
@@ -3739,6 +3849,7 @@ window.saveKiosk = saveKiosk;
 window.deleteKiosk = deleteKiosk;
 window.showKioskDetails = showKioskDetails;
 window.showEditKioskModal = showAddKioskModal; // Alias
+window.loadDepartmentsForKiosk = loadDepartmentsForKiosk;
 
 console.log('✅ [KIOSKS-PRO] Módulo completo cargado:', {
     facial: Object.keys(HARDWARE_FACIAL_PROFILES).length,

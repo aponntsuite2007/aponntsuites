@@ -11,8 +11,13 @@ const bcrypt = require('bcryptjs');
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 
-// Clave secreta para ejecutar el seed
-const SECRET_KEY = 'DEMO_SEED_2024_SECURE';
+// Clave secreta para ejecutar el seed (DEBE estar en .env, no hardcoded)
+const SECRET_KEY = process.env.SEED_DEMO_KEY;
+
+// Guard: Si no hay key configurada, los endpoints retornan 500
+if (!SECRET_KEY) {
+    console.warn('⚠️ [SEED-DEMO] SEED_DEMO_KEY no configurado - endpoints de seed deshabilitados');
+}
 
 // Módulos REALES de ISI (26 módulos exactos de company_modules + system_modules en BD local)
 const ISI_MODULES_REAL = [
@@ -47,8 +52,8 @@ const ISI_MODULES_REAL = [
 // GET /api/seed-demo/update-modules?key=SECRET - Asignar módulos de ISI a DEMO
 router.get('/update-modules', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     try {
@@ -81,8 +86,8 @@ router.get('/update-modules', async (req, res) => {
 // GET /api/seed-demo/fix-modules?key=SECRET - LIMPIAR y recargar módulos correctos de ISI
 router.get('/fix-modules', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     try {
@@ -142,8 +147,8 @@ router.get('/fix-modules', async (req, res) => {
 // GET /api/seed-demo/create-module-tables?key=SECRET - Crear tablas de módulos (legacy)
 router.get('/create-module-tables', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     try {
@@ -206,8 +211,8 @@ router.get('/check', async (req, res) => {
 // Usar después de cada deploy con cambios en modelos
 router.get('/sync-all', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     try {
@@ -255,8 +260,8 @@ router.get('/sync-all', async (req, res) => {
 // GET /api/seed-demo/sync-alter?key=SECRET - FORZAR sync con ALTER (agrega columnas faltantes)
 router.get('/sync-alter', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const logs = [];
@@ -321,8 +326,8 @@ router.get('/sync-alter', async (req, res) => {
 // GET /api/seed-demo/fix-columns?key=SECRET - Agregar columnas faltantes (paranoid)
 router.get('/fix-columns', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const fixes = [];
@@ -357,8 +362,8 @@ router.get('/fix-columns', async (req, res) => {
 // GET /api/seed-demo/fix-users-full?key=SECRET - Agregar TODAS las 110 columnas de users
 router.get('/fix-users-full', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const fixes = [];
@@ -515,8 +520,8 @@ router.get('/fix-users-full', async (req, res) => {
 // GET /api/seed-demo/fix-users?key=SECRET - Agregar columnas necesarias para login
 router.get('/fix-users', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const fixes = [];
@@ -568,8 +573,8 @@ router.get('/fix-users', async (req, res) => {
 // GET /api/seed-demo/fix-all-tables?key=SECRET - Agregar TODAS las columnas faltantes a TODAS las tablas clave
 router.get('/fix-all-tables', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const results = { tables: {}, errors: [] };
@@ -737,8 +742,8 @@ router.get('/fix-all-tables', async (req, res) => {
 // GET /api/seed-demo/create-missing-tables?key=SECRET - Crear tablas faltantes para módulos
 router.get('/create-missing-tables', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const results = [];
@@ -903,8 +908,8 @@ router.get('/create-missing-tables', async (req, res) => {
 // GET /api/seed-demo/fix-notification-types?key=SECRET - Cambiar INTEGER a VARCHAR para employeeId
 router.get('/fix-notification-types', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const results = [];
@@ -1005,8 +1010,8 @@ router.get('/fix-notification-types', async (req, res) => {
 // GET /api/seed-demo/fix-job-tables?key=SECRET - Agregar columnas faltantes a job_postings y job_applications
 router.get('/fix-job-tables', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const results = [];
@@ -1184,8 +1189,8 @@ router.get('/fix-job-tables', async (req, res) => {
 // GET /api/seed-demo/recreate-job-tables?key=SECRET - Recrear tablas con esquema correcto (INTEGER ids)
 router.get('/recreate-job-tables', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const results = [];
@@ -1352,8 +1357,8 @@ router.get('/recreate-job-tables', async (req, res) => {
 // GET /api/seed-demo/create-admin?key=SECRET - Crear usuario admin para DEMO
 router.get('/create-admin', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const bcrypt = require('bcryptjs');
@@ -1437,8 +1442,8 @@ router.get('/create-admin', async (req, res) => {
 // GET /api/seed-demo/fix-user-ids?key=SECRET - Sincronizar IDs de usuarios
 router.get('/fix-user-ids', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     try {
@@ -1488,8 +1493,8 @@ router.get('/fix-user-ids', async (req, res) => {
 // GET /api/seed-demo/create-schema?key=SECRET - Crear tablas básicas (método alternativo)
 router.get('/create-schema', async (req, res) => {
     const { key } = req.query;
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     try {
@@ -1696,8 +1701,8 @@ const ALL_MODULES = [
 router.get('/', async (req, res) => {
     const { key } = req.query;
 
-    if (key !== SECRET_KEY) {
-        return res.status(403).json({ error: 'Invalid key' });
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key or SEED_DEMO_KEY not configured' });
     }
 
     const t = await sequelize.transaction();

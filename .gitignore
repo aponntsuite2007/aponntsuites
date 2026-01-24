@@ -86,6 +86,11 @@ frontend_flutter/pubspec.lock
 # APK files
 *.apk
 
+# Android signing keys (SECURITY - never commit)
+**/key.properties
+*.jks
+*.keystore
+
 # Backup folders
 *backup*
 C:biobkp*

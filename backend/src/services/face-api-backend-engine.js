@@ -302,6 +302,134 @@ class FaceAPIBackendEngine {
   }
 
   /**
+   * 🧠 Compare two 128D face descriptors using Euclidean distance
+   * Returns similarity score 0-1 (1 = identical, 0 = completely different)
+   * Threshold per NIST SP 800-76: 0.65
+   */
+  compareFaceDescriptors(descriptor1, descriptor2) {
+    if (!descriptor1 || !descriptor2 || !Array.isArray(descriptor1) || !Array.isArray(descriptor2)) {
+      return { success: false, similarity: 0, error: 'Invalid descriptors' };
+    }
+
+    // Handle dimension mismatch: use the shorter length for comparison
+    // This supports both 128D (face-api.js) and 512D (FaceNet) templates
+    const compareLength = Math.min(descriptor1.length, descriptor2.length);
+    if (compareLength < 64) {
+      return { success: false, similarity: 0, error: 'Descriptor too short for comparison' };
+    }
+
+    // Euclidean distance between descriptor vectors
+    let sumSquared = 0;
+    for (let i = 0; i < compareLength; i++) {
+      sumSquared += Math.pow(descriptor1[i] - descriptor2[i], 2);
+    }
+    const distance = Math.sqrt(sumSquared);
+
+    // Convert distance to similarity (face-api.js typical range: 0-1.5)
+    // distance < 0.6 = same person, > 0.6 = different person
+    const similarity = Math.max(0, 1 - (distance / 1.5));
+
+    return {
+      success: true,
+      similarity: similarity,
+      distance: distance,
+      isMatch: similarity >= 0.65 // NIST SP 800-76 threshold
+    };
+  }
+
+  /**
+   * 🎯 Match a face photo buffer against a user's stored biometric template
+   * Non-blocking: returns graceful error if matching is unavailable
+   * Multi-tenant: uses company-specific encryption key
+   */
+  async matchFaceAgainstTemplate(photoBuffer, userId, companyId) {
+    try {
+      await this.initialize();
+
+      // 1. Process the input photo to get descriptor
+      const photoResult = await this.processFaceImage(photoBuffer);
+      if (!photoResult.success || !photoResult.embedding) {
+        return { success: false, error: 'No se pudo extraer descriptor facial de la foto', similarity: 0 };
+      }
+
+      // 2. Retrieve stored encrypted template from database
+      const { sequelize } = require('../config/database-postgresql');
+      const [templates] = await sequelize.query(`
+        SELECT embedding_encrypted, quality_score
+        FROM biometric_templates
+        WHERE employee_id = :userId AND company_id = :companyId AND is_active = true
+        ORDER BY created_at DESC
+        LIMIT 1
+      `, { replacements: { userId, companyId } });
+
+      if (templates.length === 0) {
+        return { success: false, error: 'No hay template biométrico registrado para este usuario', similarity: 0 };
+      }
+
+      // 3. Decrypt stored template (AES-256-CBC, company-specific key)
+      let storedDescriptor;
+      try {
+        storedDescriptor = this.decryptBiometricTemplate(templates[0].embedding_encrypted, companyId);
+      } catch (decryptError) {
+        console.error(`❌ [FACE-MATCH] Error desencriptando template:`, decryptError.message);
+        return { success: false, error: 'Error desencriptando template almacenado', similarity: 0 };
+      }
+
+      if (!storedDescriptor || !Array.isArray(storedDescriptor)) {
+        return { success: false, error: 'Template almacenado corrupto o formato inválido', similarity: 0 };
+      }
+
+      // 4. Compare descriptors (handles 128D face-api.js and 512D FaceNet)
+      const comparison = this.compareFaceDescriptors(photoResult.embedding, storedDescriptor);
+
+      console.log(`🧠 [FACE-MATCH] User ${userId}: distance=${comparison.distance?.toFixed(3)}, similarity=${comparison.similarity?.toFixed(3)}, match=${comparison.isMatch}`);
+
+      return {
+        success: true,
+        similarity: comparison.similarity,
+        distance: comparison.distance,
+        isMatch: comparison.isMatch,
+        photoQuality: photoResult.qualityScore,
+        templateQuality: parseFloat(templates[0].quality_score) || 0
+      };
+
+    } catch (error) {
+      console.error(`❌ [FACE-MATCH] Error matching user ${userId}:`, error.message);
+      return { success: false, error: error.message, similarity: 0 };
+    }
+  }
+
+  /**
+   * 🔓 Decrypt AES-256-CBC encrypted biometric template
+   * Format: IV_HEX:CIPHERTEXT_HEX
+   * Key: SHA256(BIOMETRIC_ENCRYPTION_KEY + companyId)
+   */
+  decryptBiometricTemplate(encryptedData, companyId) {
+    const crypto = require('crypto');
+
+    if (!encryptedData || !encryptedData.includes(':')) {
+      // Try parsing as plain JSON (unencrypted legacy data)
+      return JSON.parse(encryptedData);
+    }
+
+    const [ivHex, cipherHex] = encryptedData.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+
+    // Derive company-specific key (same as encryptBiometricTemplate)
+    const baseKey = process.env.BIOMETRIC_ENCRYPTION_KEY || 'default-biometric-key-change-in-production';
+    const companyKey = crypto.createHash('sha256')
+      .update(baseKey + companyId)
+      .digest();
+
+    // Decrypt
+    const decipher = crypto.createDecipheriv('aes-256-cbc', companyKey, iv);
+    let decrypted = decipher.update(cipherHex, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+
+    return JSON.parse(decrypted);
+  }
+
+  /**
    * 📏 Calculate landmark spread quality
    */
   calculateLandmarkSpread(landmarks) {

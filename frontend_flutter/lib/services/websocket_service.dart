@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,8 +28,11 @@ class WebSocketService {
   Timer? _reconnectTimer;
   Timer? _heartbeatTimer;
   int _reconnectAttempts = 0;
+  int _connectionErrorCount = 0;
   static const int _maxReconnectAttempts = 10;
-  static const Duration _reconnectDelay = Duration(seconds: 5);
+  static const int _reconnectBaseMs = 1000; // Base: 1 segundo
+  static const int _reconnectMaxMs = 60000; // Max: 60 segundos
+  static const double _reconnectFactor = 2.0; // Factor exponencial
   static const Duration _heartbeatInterval = Duration(seconds: 30);
 
   // Event streams for reactive UI updates
@@ -126,6 +130,7 @@ class WebSocketService {
       print('✅ [WEBSOCKET] Connected to server');
       _isConnected = true;
       _reconnectAttempts = 0;
+      _connectionErrorCount = 0;
       _connectionStateController.add(ConnectionState.connected);
 
       // Authenticate after connection
@@ -136,13 +141,20 @@ class WebSocketService {
     });
 
     _socket!.onConnectError((error) {
-      print('❌ [WEBSOCKET] Connection error: $error');
+      _connectionErrorCount++;
+      if (_connectionErrorCount <= 2) {
+        print('❌ [WEBSOCKET] Connection error: $error');
+      } else if (_connectionErrorCount == 3) {
+        print('ℹ️ [WEBSOCKET] Servidor no disponible - suprimiendo logs repetitivos');
+      }
       _isConnected = false;
       _connectionStateController.add(ConnectionState.error);
     });
 
     _socket!.onDisconnect((_) {
-      print('🔌 [WEBSOCKET] Disconnected from server');
+      if (_connectionErrorCount <= 2) {
+        print('🔌 [WEBSOCKET] Disconnected from server');
+      }
       _isConnected = false;
       _isAuthenticated = false;
       _connectionStateController.add(ConnectionState.disconnected);
@@ -151,7 +163,9 @@ class WebSocketService {
     });
 
     _socket!.onError((error) {
-      print('❌ [WEBSOCKET] Error: $error');
+      if (_connectionErrorCount <= 2) {
+        print('❌ [WEBSOCKET] Error: $error');
+      }
       _connectionStateController.add(ConnectionState.error);
     });
 
@@ -263,7 +277,7 @@ class WebSocketService {
     _heartbeatTimer = null;
   }
 
-  /// 🔄 Schedule reconnection attempt
+  /// 🔄 Schedule reconnection with exponential backoff + jitter
   void _scheduleReconnect() {
     if (_reconnectAttempts >= _maxReconnectAttempts) {
       print('❌ [WEBSOCKET] Max reconnection attempts reached');
@@ -274,10 +288,20 @@ class WebSocketService {
     _reconnectTimer?.cancel();
     _reconnectAttempts++;
 
-    final delay = Duration(
-        seconds: _reconnectDelay.inSeconds * _reconnectAttempts);
+    // Exponential backoff: base * 2^attempt, capped at max
+    final exponentialMs = (_reconnectBaseMs * pow(_reconnectFactor, _reconnectAttempts - 1)).toInt();
+    final cappedMs = min(exponentialMs, _reconnectMaxMs);
 
-    print('🔄 [WEBSOCKET] Reconnecting in ${delay.inSeconds}s (attempt $_reconnectAttempts/$_maxReconnectAttempts)');
+    // Add ±25% jitter to prevent thundering herd
+    final random = Random();
+    final jitterFactor = 0.75 + (random.nextDouble() * 0.5); // 0.75 - 1.25
+    final finalMs = (cappedMs * jitterFactor).toInt();
+
+    final delay = Duration(milliseconds: finalMs);
+
+    if (_reconnectAttempts <= 3) {
+      print('🔄 [WEBSOCKET] Reconnecting in ${delay.inSeconds}s (attempt $_reconnectAttempts/$_maxReconnectAttempts)');
+    }
 
     _reconnectTimer = Timer(delay, () {
       connect();

@@ -584,4 +584,73 @@ router.get('/reject/:token', async (req, res) => {
   return router.post('/reject/:token')(req, res);
 });
 
+/**
+ * GET /api/v1/authorization/pending
+ * Obtener autorizaciones pendientes para un kiosko (polling endpoint)
+ * Query params: kioskId (optional), companyId (optional)
+ */
+router.get('/pending', async (req, res) => {
+  try {
+    const { kioskId, companyId } = req.query;
+
+    // Buscar attendances con authorization_status = 'pending' del día actual
+    const today = new Date().toISOString().split('T')[0];
+
+    let whereClause = `WHERE a.authorization_status = 'pending' AND DATE(a."checkInTime") = $1`;
+    const bindings = [today];
+    let bindIndex = 2;
+
+    if (companyId) {
+      whereClause += ` AND u.company_id = $${bindIndex}`;
+      bindings.push(parseInt(companyId));
+      bindIndex++;
+    }
+
+    const pendingAuthorizations = await sequelize.query(
+      `SELECT
+        a.id,
+        a."UserId" as "employeeId",
+        a.authorization_token as token,
+        a.authorization_status as status,
+        a."checkInTime" as "requestedAt",
+        u.first_name || ' ' || u.last_name as "employeeName",
+        u.employee_id as legajo,
+        u.department_id,
+        EXTRACT(EPOCH FROM (a."checkInTime" - CURRENT_DATE)) / 60 as "lateMinutes"
+      FROM attendances a
+      JOIN users u ON a."UserId" = u.user_id
+      ${whereClause}
+      ORDER BY a."checkInTime" DESC
+      LIMIT 50`,
+      {
+        bind: bindings,
+        type: QueryTypes.SELECT
+      }
+    );
+
+    return res.json({
+      success: true,
+      authorizations: pendingAuthorizations.map(auth => ({
+        id: auth.id,
+        attendanceId: auth.id,
+        employeeId: auth.employeeId,
+        employeeName: auth.employeeName || 'Empleado',
+        legajo: auth.legajo,
+        lateMinutes: Math.max(0, Math.round(auth.lateMinutes || 0)),
+        requestedAt: auth.requestedAt,
+        status: auth.status,
+        token: auth.token
+      }))
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching pending authorizations:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      authorizations: []
+    });
+  }
+});
+
 module.exports = router;

@@ -52,7 +52,7 @@ const authenticate = (req, res, next) => {
         }
 
         const token = authHeader.substring(7);
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'aponnt_2024_secret_key_ultra_secure');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         req.user = {
             id: decoded.id || decoded.user_id,

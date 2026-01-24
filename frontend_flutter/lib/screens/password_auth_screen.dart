@@ -153,24 +153,31 @@ class _PasswordAuthScreenState extends State<PasswordAuthScreen> {
         final result = jsonDecode(response.body);
 
         if (result['success'] == true) {
-          // ✅ AUTENTICACIÓN EXITOSA
           final employeeName = result['employee']?['name'] ?? 'Empleado';
           final wasRegistered = result['registered'] ?? false;
+          final operationType = result['operationType'] ?? '';
+          final message = result['message'] ?? '';
 
-          if (result['requiresHrReview'] == true) {
-            // ⚠️ REQUIERE REVISIÓN DE RRHH (baja similaridad facial o contraseña inválida pero tolerancia)
+          if (operationType == 'cooldown') {
+            // ⏳ COOLDOWN: Demasiado pronto para salida
+            final minutesRemaining = result['minutesRemaining'] ?? 0;
+            _showWarningDialog(
+              '⏳ Espere para salir',
+              '$employeeName\n\n$message',
+            );
+          } else if (result['requiresHrReview'] == true) {
             _showWarningDialog(
               '⚠️ Autenticación con Revisión',
               'Su acceso será revisado por Recursos Humanos.\n\n'
                   'Empleado: $employeeName\n'
-                  'Registro: ${wasRegistered ? "Sí" : "No"}',
+                  'Operación: ${operationType == 'clock_in' ? 'ENTRADA' : 'SALIDA'}',
             );
           } else {
-            // ✅ TODO OK
+            // ✅ ENTRADA O SALIDA REGISTRADA
+            final opLabel = operationType == 'clock_out' ? 'SALIDA' : 'ENTRADA';
             _showSuccessDialog(
-              '✅ Autenticación Exitosa',
-              'Bienvenido, $employeeName\n\n'
-                  'Asistencia ${wasRegistered ? "registrada" : "detectada"} correctamente.',
+              wasRegistered ? '✅ $opLabel Registrada' : '✅ Autenticación Exitosa',
+              '$employeeName\n\n${wasRegistered ? message : 'Asistencia detectada.'}',
             );
           }
         } else {
@@ -179,10 +186,27 @@ class _PasswordAuthScreenState extends State<PasswordAuthScreen> {
           _showErrorDialog('❌ Autenticación Fallida', errorMessage);
         }
       } else if (response.statusCode == 403) {
-        // 🚫 DEPARTAMENTO NO AUTORIZADO
         final result = jsonDecode(response.body);
-        final errorMessage = result['message'] ?? 'No autorizado en este kiosko';
-        _showErrorDialog('🚫 Acceso Denegado', errorMessage);
+        final code = result['code'] ?? '';
+        final errorMessage = result['error'] ?? result['message'] ?? 'No autorizado en este kiosko';
+
+        if (code == 'DEPARTMENT_NOT_AUTHORIZED') {
+          // 🚫 DEPARTAMENTO NO AUTORIZADO EN ESTE KIOSK
+          _showErrorDialog('🚫 Departamento No Autorizado', errorMessage);
+        } else if (code == 'CONSENT_REQUIRED') {
+          // 🔒 SIN CONSENTIMIENTO BIOMÉTRICO
+          _showErrorDialog('🔒 Consentimiento Requerido',
+              'Debe autorizar el uso de datos biométricos desde el panel de la empresa.');
+        } else {
+          _showErrorDialog('🚫 Acceso Denegado', errorMessage);
+        }
+      } else if (response.statusCode == 401) {
+        // ❌ CREDENCIALES INVÁLIDAS
+        _showErrorDialog('❌ Credenciales Inválidas', 'Legajo o contraseña incorrectos.');
+      } else if (response.statusCode == 429) {
+        // ⏳ RATE LIMIT
+        _showErrorDialog('⏳ Demasiados Intentos',
+            'Ha superado el límite de intentos. Espere unos minutos antes de reintentar.');
       } else {
         _showErrorDialog('Error del servidor', 'Código: ${response.statusCode}');
       }

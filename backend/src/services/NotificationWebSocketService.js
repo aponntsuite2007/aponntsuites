@@ -86,7 +86,108 @@ class NotificationWebSocketService {
             socket.on('ping', () => {
                 socket.emit('pong', { timestamp: Date.now() });
             });
+
+            // 📱 KIOSK EVENTS: Autenticación y eventos de kiosko
+            socket.on('authenticate', async (data) => {
+                await this.handleKioskAuthenticate(socket, data);
+            });
+
+            socket.on('join_room', (data) => {
+                if (data && data.room) {
+                    socket.join(data.room);
+                    console.log(`📍 [WEBSOCKET] Socket ${socket.id} joined room: ${data.room}`);
+                }
+            });
+
+            socket.on('attendance_checkin', (data) => {
+                this.handleAttendanceEvent(socket, 'checkin', data);
+            });
+
+            socket.on('attendance_checkout', (data) => {
+                this.handleAttendanceEvent(socket, 'checkout', data);
+            });
+
+            socket.on('kiosk_status', (data) => {
+                if (socket.companyId) {
+                    this.io.to(`company_${socket.companyId}`).emit('kiosk_status_update', data);
+                }
+            });
+
+            socket.on('request_late_authorization', (data) => {
+                this.handleLateAuthorizationRequest(socket, data);
+            });
         });
+    }
+
+    /**
+     * Handle: Kiosk authenticate (compatible con Flutter websocket_service.dart)
+     */
+    async handleKioskAuthenticate(socket, data) {
+        try {
+            const { token, userId, kioskId, clientType } = data || {};
+
+            // Kiosk puede autenticarse sin token (modo público)
+            const companyId = data?.companyId || null;
+
+            // Si hay kioskId, unir a sala del kiosk
+            if (kioskId) {
+                socket.join(`kiosk_${kioskId}`);
+                socket.kioskId = kioskId;
+            }
+
+            // Si hay userId/companyId, hacer identify normal
+            if (userId && companyId) {
+                this.connectedUsers.set(userId, socket.id);
+                this.userCompanies.set(socket.id, companyId);
+                socket.join(`company_${companyId}`);
+                socket.userId = userId;
+                socket.companyId = companyId;
+            }
+
+            socket.clientType = clientType || 'unknown';
+
+            console.log(`✅ [WEBSOCKET] Kiosk autenticado: ${socket.id} (kiosk: ${kioskId || 'N/A'}, type: ${clientType})`);
+
+            socket.emit('authenticated', {
+                success: true,
+                kioskId,
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('❌ [WEBSOCKET] Error en kiosk authenticate:', error.message);
+            socket.emit('authentication_error', { message: error.message });
+        }
+    }
+
+    /**
+     * Handle: Attendance events (checkin/checkout) from kiosk
+     */
+    handleAttendanceEvent(socket, type, data) {
+        const companyId = socket.companyId || data?.companyId;
+        if (companyId) {
+            // Broadcast a todos los clientes de la empresa (admin panels, etc.)
+            this.io.to(`company_${companyId}`).emit(type === 'checkin' ? 'new_checkin' : 'new_checkout', {
+                ...data,
+                kioskId: socket.kioskId,
+                timestamp: Date.now()
+            });
+        }
+    }
+
+    /**
+     * Handle: Late arrival authorization request from kiosk
+     */
+    handleLateAuthorizationRequest(socket, data) {
+        const companyId = socket.companyId || data?.companyId;
+        if (companyId) {
+            // Enviar a supervisores/admins de la empresa
+            this.io.to(`company_${companyId}`).emit('authorization_request', {
+                ...data,
+                kioskId: socket.kioskId,
+                requestedAt: Date.now()
+            });
+            console.log(`🔔 [WEBSOCKET] Late authorization request from kiosk ${socket.kioskId} → company ${companyId}`);
+        }
     }
 
     /**

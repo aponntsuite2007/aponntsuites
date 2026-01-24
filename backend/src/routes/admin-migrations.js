@@ -9,14 +9,21 @@ const fs = require('fs');
 const path = require('path');
 const database = require('../config/database');
 
-// Middleware de autenticación simple por token
+// Middleware de autenticación por token (requiere MIGRATION_TOKEN en .env)
 const authenticateMigrationToken = (req, res, next) => {
+    const validToken = process.env.MIGRATION_TOKEN;
+
+    if (!validToken) {
+        console.error('❌ [MIGRATIONS] MIGRATION_TOKEN no configurado en variables de entorno');
+        return res.status(500).json({
+            success: false,
+            message: 'MIGRATION_TOKEN no configurado en el servidor'
+        });
+    }
+
     const token = req.headers['x-migration-token'] || req.query.token;
 
-    // El token debe coincidir con una variable de entorno
-    const validToken = process.env.MIGRATION_TOKEN || 'rnd_xJHFJ9muRsenVO6Y1z19rvi1fcWq';
-
-    if (token !== validToken) {
+    if (!token || token !== validToken) {
         return res.status(403).json({
             success: false,
             message: 'Token de migración inválido'

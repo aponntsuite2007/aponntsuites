@@ -31,6 +31,8 @@ class AuthorizationPollingService {
   // State
   final List<PendingAuthorization> _pendingAuthorizations = [];
   final Map<String, AuthorizationResponse> _authorizationResponses = {};
+  int _consecutive404Count = 0;
+  static const int _max404BeforeDisable = 3;
 
   // Stream controllers for reactive updates
   final StreamController<List<PendingAuthorization>> _pendingController =
@@ -100,9 +102,10 @@ class AuthorizationPollingService {
         print('🔄 [AUTH-POLLING] WebSocket connected - reduced polling');
       } else if (state == ConnectionState.disconnected ||
           state == ConnectionState.error) {
-        // WebSocket down - increase polling frequency
-        _adjustPollingInterval(const Duration(seconds: 5));
-        print('🔄 [AUTH-POLLING] WebSocket down - increased polling');
+        // WebSocket down - no aumentar polling si endpoint no existe
+        if (_consecutive404Count < _max404BeforeDisable) {
+          _adjustPollingInterval(const Duration(seconds: 15));
+        }
       }
     });
   }
@@ -158,6 +161,7 @@ class AuthorizationPollingService {
       ).timeout(_httpTimeout);
 
       if (response.statusCode == 200) {
+        _consecutive404Count = 0; // Reset counter on success
         final data = json.decode(response.body);
         final List<dynamic> authorizationsJson = data['authorizations'] ?? [];
 
@@ -173,6 +177,16 @@ class AuthorizationPollingService {
         }
 
         return _pendingAuthorizations;
+      } else if (response.statusCode == 404) {
+        _consecutive404Count++;
+        if (_consecutive404Count <= 1) {
+          print('⚠️ [AUTH-POLLING] Endpoint no disponible (404) - feature no implementada');
+        }
+        if (_consecutive404Count >= _max404BeforeDisable) {
+          _stopPolling();
+          print('ℹ️ [AUTH-POLLING] Deshabilitado: endpoint no existe tras $_consecutive404Count intentos');
+        }
+        return [];
       } else {
         print('❌ [AUTH-POLLING] HTTP error: ${response.statusCode}');
         return [];

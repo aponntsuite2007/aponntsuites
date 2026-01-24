@@ -79,11 +79,17 @@ class _BiometricSelectorScreenState extends State<BiometricSelectorScreen> with 
   Future<void> _checkBiometricCapabilities() async {
     try {
       final canCheckBiometrics = await _localAuth.canCheckBiometrics;
+      final isDeviceSupported = await _localAuth.isDeviceSupported();
       final availableBiometrics = await _localAuth.getAvailableBiometrics();
 
+      print('🔍 [SELECTOR] canCheck: $canCheckBiometrics, deviceSupported: $isDeviceSupported, available: $availableBiometrics');
+
       setState(() {
-        _hasFingerprintSensor = canCheckBiometrics &&
-            availableBiometrics.contains(BiometricType.fingerprint);
+        // Android moderno reporta BiometricType.strong/weak en lugar de .fingerprint
+        _hasFingerprintSensor = (canCheckBiometrics || isDeviceSupported) &&
+            (availableBiometrics.contains(BiometricType.fingerprint) ||
+             availableBiometrics.contains(BiometricType.strong) ||
+             availableBiometrics.contains(BiometricType.weak));
         _isCheckingCapabilities = false;
       });
 

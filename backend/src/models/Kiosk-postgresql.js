@@ -67,9 +67,14 @@ module.exports = (sequelize) => {
         key: 'id'
       }
     },
-    // NOTE: The following fields are OPTIONAL and may not exist in all database instances
-    // They will be created by migration 20251216_add_kiosk_security_columns.sql
-    // Sequelize will not fail if they don't exist due to the model settings below
+    // Departamentos autorizados para fichar en este kiosko (JSONB array de IDs)
+    // Migration: 20251009_kiosk_department_authorization.sql
+    authorized_departments: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+      comment: 'Array de department_id autorizados. Si vacío, permite todos los departamentos de la empresa.'
+    },
   }, {
     tableName: 'kiosks',
     timestamps: true,
