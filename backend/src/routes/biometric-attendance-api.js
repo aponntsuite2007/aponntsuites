@@ -1069,8 +1069,11 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
       let timestamp;
       let wasRegistered = false;
 
+      // Transaction para prevenir race conditions entre kioscos concurrentes
+      const transaction = await sequelize.transaction();
+
       try {
-        // 1. Buscar última asistencia del empleado HOY usando SQL directo
+        // 1. Buscar última asistencia del empleado HOY usando SQL directo con FOR UPDATE
         const today = getArgentinaDate();
 
         const [rows] = await sequelize.query(`
@@ -1080,9 +1083,11 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
             AND DATE(check_in) = :today
           ORDER BY check_in DESC
           LIMIT 1
+          FOR UPDATE
         `, {
           replacements: { employeeId: bestMatch.employeeId, today },
-          type: QueryTypes.SELECT
+          type: QueryTypes.SELECT,
+          transaction
         });
 
         const todayAttendance = rows || null;
@@ -1100,6 +1105,7 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
             if (!authCheck.withinTolerance && authCheck.needsAuthorization) {
               // FUERA de tolerancia y sin autorización → solicitar autorización
               console.log(`⚠️ [AUTO] Empleado fuera de turno - autorización requerida`);
+              await transaction.rollback();
 
               return res.json({
                 success: true,
@@ -1135,7 +1141,7 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
             } else {
               // DENTRO de tolerancia o sin shift → INSERT normal
               const [insertResult] = await sequelize.query(`
-                INSERT INTO attendances (id, date, user_id, check_in, status, status, created_at, updated_at)
+                INSERT INTO attendances (id, date, user_id, check_in, "checkInMethod", status, created_at, updated_at)
                 VALUES (gen_random_uuid(), :date, :userId, :checkInTime, :checkInMethod, :status, NOW(), NOW())
                 RETURNING id, check_in
               `, {
@@ -1146,7 +1152,8 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
                   checkInMethod: 'face',
                   status: 'present'
                 },
-                type: QueryTypes.INSERT
+                type: QueryTypes.INSERT,
+                transaction
               });
 
               attendanceId = insertResult[0].id;
@@ -1172,6 +1179,7 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
 
             if (secondsSinceCheckIn < MIN_SECONDS_BETWEEN_OPERATIONS) {
               console.log(`⏱️ [COOLDOWN] Operación denegada - Solo han pasado ${Math.round(secondsSinceCheckIn)}s desde el ingreso (mínimo: ${MIN_SECONDS_BETWEEN_OPERATIONS}s)`);
+              await transaction.rollback();
               return res.status(200).json({
                 success: false,
                 message: 'Operación muy rápida - espere al menos 30 segundos entre ingreso y salida',
@@ -1185,7 +1193,7 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
             await sequelize.query(`
               UPDATE attendances
               SET check_out = :checkOutTime,
-                  status = :checkOutMethod,
+                  "checkOutMethod" = :checkOutMethod,
                   updated_at = NOW()
               WHERE id = :attendanceId
             `, {
@@ -1194,7 +1202,8 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
                 checkOutMethod: 'face',
                 attendanceId: attendanceId
               },
-              type: QueryTypes.UPDATE
+              type: QueryTypes.UPDATE,
+              transaction
             });
             wasRegistered = true;
           } else {
@@ -1210,7 +1219,7 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
           if (shouldRegister) {
             // INSERT usando SQL directo con columnas camelCase (re-ingreso)
             const [reInsertResult] = await sequelize.query(`
-              INSERT INTO attendances (id, date, user_id, check_in, status, status, created_at, updated_at)
+              INSERT INTO attendances (id, date, user_id, check_in, "checkInMethod", status, created_at, updated_at)
               VALUES (gen_random_uuid(), :date, :userId, :checkInTime, :checkInMethod, :status, NOW(), NOW())
               RETURNING id, check_in
             `, {
@@ -1221,7 +1230,8 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
                 checkInMethod: 'face',
                 status: 'present'
               },
-              type: QueryTypes.INSERT
+              type: QueryTypes.INSERT,
+              transaction
             });
 
             attendanceId = reInsertResult[0].id;
@@ -1260,7 +1270,8 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
             skipReason: wasRegistered ? null : 'recent_detection',
             processingTime: Date.now() - startTime
           },
-          type: QueryTypes.INSERT
+          type: QueryTypes.INSERT,
+          transaction
         });
 
         // Contar detecciones totales hoy
@@ -1275,7 +1286,8 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
             employeeId: bestMatch.employeeId,
             companyId: companyId
           },
-          type: QueryTypes.SELECT
+          type: QueryTypes.SELECT,
+          transaction
         });
 
         // ✅ Registrar en DMS (SSOT) - Solo si se registró asistencia
@@ -1287,6 +1299,9 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
             attendanceId: attendanceId
           });
         }
+
+        // Commit transaction exitosa
+        await transaction.commit();
 
         // Respuesta para semáforo
         return res.json({
@@ -1313,6 +1328,8 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
         });
 
       } catch (attendanceError) {
+        // Rollback transaction en caso de error
+        await transaction.rollback();
         console.error('❌ [ATTENDANCE] Error registrando asistencia:', attendanceError);
 
         // ⚠️ FALSO POSITIVO: Rostro reconocido pero NO se guardó

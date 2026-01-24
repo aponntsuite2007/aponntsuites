@@ -22,7 +22,7 @@ module.exports = (sequelize) => {
       field: 'endTime'
     },
     toleranceMinutes: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       defaultValue: 10,
       field: 'toleranceMinutes'
     },
@@ -41,13 +41,13 @@ module.exports = (sequelize) => {
       comment: 'Array de días: [0=Dom, 1=Lun, ..., 6=Sab]'
     },
     toleranceMinutesEntry: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       defaultValue: 10,
       field: 'toleranceMinutesEntry',
       comment: 'LEGACY: Minutos tolerancia ingreso (tardío) - usar toleranceConfig'
     },
     toleranceMinutesExit: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       defaultValue: 15,
       field: 'toleranceMinutesExit',
       comment: 'LEGACY: Minutos tolerancia egreso (quedarse) - usar toleranceConfig'
@@ -124,13 +124,13 @@ module.exports = (sequelize) => {
       comment: 'Fases del turno rotativo con detalles: [{ name, duration, startTime, endTime, groupName }]'
     },
     workDays: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: true,
       field: 'workDays',
       comment: 'Días trabajados en ciclo rotativo'
     },
     restDays: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: true,
       field: 'restDays',
       comment: 'Días descanso en ciclo rotativo'
