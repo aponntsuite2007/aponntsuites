@@ -37,7 +37,7 @@ module.exports = (sequelize) => {
         supplier_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: { model: 'procurement_suppliers', key: 'id' }
+            references: { model: 'wms_suppliers', key: 'id' }
         },
         order_date: {
             type: DataTypes.DATEONLY,
@@ -160,6 +160,11 @@ module.exports = (sequelize) => {
         audit_trail: {
             type: DataTypes.JSONB,
             defaultValue: []
+        },
+        branch_id: {
+            type: DataTypes.INTEGER,
+            references: { model: 'branches', key: 'id' },
+            comment: 'Sucursal que emite la OC. Determina país/provincia para compliance fiscal.'
         },
         created_by: {
             type: DataTypes.UUID

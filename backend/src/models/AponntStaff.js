@@ -71,6 +71,43 @@ module.exports = (sequelize) => {
       comment: 'Email único del staff (para login y comunicación)'
     },
 
+    username: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      unique: true,
+      comment: 'Username opcional para login (alternativo a email)'
+    },
+
+    password: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'Contraseña hasheada con bcrypt'
+    },
+
+    dni: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: 'DNI del staff'
+    },
+
+    last_login_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Último login'
+    },
+
+    first_login: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      comment: 'Si es el primer login (para cambio de contraseña obligatorio)'
+    },
+
+    biometric_enabled: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: 'Si tiene habilitado login biométrico'
+    },
+
     phone: {
       type: DataTypes.STRING(50),
       allowNull: true,

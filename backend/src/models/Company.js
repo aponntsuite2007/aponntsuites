@@ -310,7 +310,69 @@ module.exports = (sequelize) => {
       field: 'subscription_expires_at',
       comment: 'Subscription expiration date'
     },
-    
+
+    // ═══════════════════════════════════════════════════════════════
+    // OFFBOARDING (Baja de Empresa)
+    // ═══════════════════════════════════════════════════════════════
+    offboardingStatus: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      field: 'offboarding_status',
+      validate: {
+        isIn: [[null, 'warning_sent', 'grace_period', 'export_pending', 'export_ready', 'pending_confirmation', 'purging', 'completed']]
+      },
+      comment: 'Estado del proceso de baja'
+    },
+    offboardingInitiatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'offboarding_initiated_at'
+    },
+    offboardingWarningSentAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'offboarding_warning_sent_at'
+    },
+    offboardingGraceDeadline: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      field: 'offboarding_grace_deadline',
+      comment: 'Fecha límite del grace period (7 días hábiles)'
+    },
+    offboardingConfirmedBy: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'offboarding_confirmed_by',
+      comment: 'Staff ID que confirmó la baja'
+    },
+    offboardingConfirmedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'offboarding_confirmed_at'
+    },
+    dataExportUrl: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'data_export_url',
+      comment: 'URL del Drive con el export de datos'
+    },
+    dataExportGeneratedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'data_export_generated_at'
+    },
+    cancellationReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'cancellation_reason'
+    },
+    cancellationInvoiceId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'cancellation_invoice_id',
+      comment: 'Factura que originó el proceso de baja'
+    },
+
     // Features & Modules
     activeModules: {
       type: DataTypes.JSONB,

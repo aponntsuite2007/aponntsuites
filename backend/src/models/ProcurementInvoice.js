@@ -25,7 +25,7 @@ module.exports = (sequelize) => {
         supplier_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: { model: 'procurement_suppliers', key: 'id' }
+            references: { model: 'wms_suppliers', key: 'id' }
         },
         order_ids: {
             type: DataTypes.JSONB,
@@ -158,6 +158,11 @@ module.exports = (sequelize) => {
         },
         paid_amount: {
             type: DataTypes.DECIMAL(15, 2)
+        },
+        branch_id: {
+            type: DataTypes.INTEGER,
+            references: { model: 'branches', key: 'id' },
+            comment: 'Sucursal receptora. Determina régimen fiscal aplicable.'
         },
         audit_trail: {
             type: DataTypes.JSONB,

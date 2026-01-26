@@ -102,7 +102,7 @@ module.exports = (sequelize) => {
         // Beneficiario (proveedor)
         supplier_id: {
             type: DataTypes.INTEGER,
-            references: { model: 'procurement_suppliers', key: 'id' }
+            references: { model: 'wms_suppliers', key: 'id' }
         },
         supplier_name: {
             type: DataTypes.STRING(200),

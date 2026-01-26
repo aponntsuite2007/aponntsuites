@@ -119,7 +119,7 @@ module.exports = (sequelize) => {
                 rs.auto_score as supplier_rfq_score
             FROM procurement_rfq_items ri
             CROSS JOIN procurement_rfq_suppliers rs
-            INNER JOIN procurement_suppliers s ON s.id = rs.supplier_id
+            INNER JOIN wms_suppliers s ON s.id = rs.supplier_id
             LEFT JOIN procurement_rfq_quotes q ON q.rfq_item_id = ri.id AND q.rfq_supplier_id = rs.id
             WHERE ri.rfq_id = :rfqId AND rs.rfq_id = :rfqId
             ORDER BY ri.line_number, q.unit_price ASC NULLS LAST

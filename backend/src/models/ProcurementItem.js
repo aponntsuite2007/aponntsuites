@@ -64,7 +64,7 @@ module.exports = (sequelize) => {
         },
         preferred_supplier_id: {
             type: DataTypes.INTEGER,
-            references: { model: 'procurement_suppliers', key: 'id' }
+            references: { model: 'wms_suppliers', key: 'id' }
         },
         specifications: {
             type: DataTypes.JSONB,

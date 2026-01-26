@@ -74,6 +74,12 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER
         },
 
+        country_code: {
+            type: DataTypes.STRING(3),
+            defaultValue: 'AR',
+            comment: 'ISO alpha-2 del país. Permite cuentas contables diferenciadas por país.'
+        },
+
         is_active: {
             type: DataTypes.BOOLEAN,
             defaultValue: true

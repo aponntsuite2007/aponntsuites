@@ -6,8 +6,8 @@
  */
 
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database').sequelize;
 
+module.exports = (sequelize) => {
 const Invoice = sequelize.define('Invoice', {
   id: {
     type: DataTypes.BIGINT,
@@ -120,4 +120,5 @@ const Invoice = sequelize.define('Invoice', {
   underscored: true
 });
 
-module.exports = Invoice;
+return Invoice;
+};

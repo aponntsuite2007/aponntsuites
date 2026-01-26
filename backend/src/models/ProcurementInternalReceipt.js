@@ -56,7 +56,7 @@ module.exports = (sequelize) => {
         // Proveedor
         supplier_id: {
             type: DataTypes.INTEGER,
-            references: { model: 'procurement_suppliers', key: 'id' }
+            references: { model: 'wms_suppliers', key: 'id' }
         },
 
         // Destino

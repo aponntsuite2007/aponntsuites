@@ -3,9 +3,9 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
   const Attendance = sequelize.define('Attendance', {
     id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.UUID,
       primaryKey: true,
-      autoIncrement: true
+      defaultValue: DataTypes.UUIDV4
     },
     user_id: {
       type: DataTypes.UUID,
@@ -39,7 +39,7 @@ module.exports = (sequelize) => {
       comment: 'Denormalized employee ID for faster queries'
     },
     branch_id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.UUID,
       allowNull: true,
       field: 'BranchId',
       references: {

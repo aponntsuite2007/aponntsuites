@@ -61,11 +61,11 @@ module.exports = (sequelize) => {
         },
         best_quote_supplier_id: {
             type: DataTypes.INTEGER,
-            references: { model: 'procurement_suppliers', key: 'id' }
+            references: { model: 'wms_suppliers', key: 'id' }
         },
         awarded_supplier_id: {
             type: DataTypes.INTEGER,
-            references: { model: 'procurement_suppliers', key: 'id' }
+            references: { model: 'wms_suppliers', key: 'id' }
         },
         awarded_price: {
             type: DataTypes.DECIMAL(15, 4)
@@ -125,7 +125,7 @@ module.exports = (sequelize) => {
                 END as vs_reference_percent
             FROM procurement_rfq_quotes q
             INNER JOIN procurement_rfq_suppliers rs ON rs.id = q.rfq_supplier_id
-            INNER JOIN procurement_suppliers s ON s.id = rs.supplier_id
+            INNER JOIN wms_suppliers s ON s.id = rs.supplier_id
             WHERE q.rfq_item_id = :itemId
             ORDER BY q.unit_price ASC
         `;
