@@ -2872,5 +2872,7 @@ window.Modules = window.Modules || {};
 window.Modules['organizational-structure'] = {
     init: () => OrgEngine.init('mainContent')
 };
+window.Modules['departments'] = window.Modules['organizational-structure']; // Alias
+window.Modules['organizational'] = window.Modules['organizational-structure']; // Alias
 
 console.log('[OrgEngine] Módulo cargado. Usar OrgEngine.init("container-id") para inicializar.');

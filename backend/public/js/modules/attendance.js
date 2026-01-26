@@ -3324,6 +3324,7 @@ const AttendanceEngine = {
 
 // Exponer AttendanceEngine al scope global para onclick handlers
 window.AttendanceEngine = AttendanceEngine;
+window.showAttendanceContent = showAttendanceContent;
 
 // ============================================================================
 // STYLES INJECTION

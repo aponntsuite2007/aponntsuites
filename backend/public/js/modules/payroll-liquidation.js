@@ -6073,6 +6073,7 @@ if (typeof window !== 'undefined') {
 
     window.Modules = window.Modules || {};
     window.Modules['payroll-liquidation'] = { init: showPayrollLiquidationContent };
+    window.Modules['payroll'] = { init: showPayrollLiquidationContent }; // Alias para compatibilidad
 }
 
 console.log('%c PAYROLL ENGINE READY ', 'background: var(--accent-green, #00e676); color: #000; padding: 4px 8px; border-radius: 4px;');

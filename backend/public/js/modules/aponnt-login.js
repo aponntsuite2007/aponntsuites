@@ -15,7 +15,6 @@
 class AponntLogin {
   constructor(userType = null) {
     // Rutas diferentes para staff vs partners
-    // Staff usa la ruta con backdoor postgres/Aedr15150302
     this.apiBaseUrl = '/api/aponnt/staff';
     this.partnerApiBaseUrl = '/api/v1/auth/aponnt';
 

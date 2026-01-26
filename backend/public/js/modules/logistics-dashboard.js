@@ -9650,4 +9650,53 @@
         showInfo(`Ver detalles de breach #${breachId} - Próximamente`);
     };
 
+    // ============================================
+    // WRAPPER PARA PANEL-EMPRESA.HTML
+    // ============================================
+    window.showLogisticsDashboardContent = function() {
+        console.log('🚚 [LOGISTICS] showLogisticsDashboardContent() llamado');
+        const content = document.getElementById('mainContent');
+        if (!content) {
+            console.error('❌ [LOGISTICS] mainContent no encontrado');
+            return;
+        }
+
+        // Crear contenedor
+        content.innerHTML = `
+            <div id="logistics-dashboard-container" style="padding: 20px; min-height: calc(100vh - 150px);">
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🚚</div>
+                    <h2 style="color: #1e293b; margin-bottom: 10px;">Cargando Dashboard de Logística...</h2>
+                    <p style="color: #64748b;">Inicializando módulos de almacén, transporte y rutas</p>
+                </div>
+            </div>
+        `;
+
+        // Inicializar el dashboard
+        if (window.LogisticsDashboard && typeof window.LogisticsDashboard.init === 'function') {
+            setTimeout(() => {
+                try {
+                    window.LogisticsDashboard.init('logistics-dashboard-container');
+                } catch (e) {
+                    console.error('❌ [LOGISTICS] Error en init:', e);
+                    content.innerHTML = `
+                        <div style="padding: 40px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                            <h2 style="color: #dc2626;">Error cargando Logística</h2>
+                            <p style="color: #64748b;">${e.message}</p>
+                        </div>
+                    `;
+                }
+            }, 100);
+        } else {
+            console.warn('⚠️ [LOGISTICS] LogisticsDashboard.init no disponible');
+        }
+    };
+
+    // Registrar en window.Modules para compatibilidad
+    window.Modules = window.Modules || {};
+    window.Modules['logistics-dashboard'] = {
+        init: window.showLogisticsDashboardContent
+    };
+
 })();

@@ -6050,3 +6050,55 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
 // Exportar para uso global
 window.EngineeringDashboard = EngineeringDashboard;
+
+// ============================================
+// WRAPPER PARA PANEL-EMPRESA.HTML
+// ============================================
+window.showEngineeringDashboardContent = function() {
+    console.log('🏗️ [ENGINEERING] showEngineeringDashboardContent() llamado');
+    const content = document.getElementById('mainContent');
+    if (!content) {
+        console.error('❌ [ENGINEERING] mainContent no encontrado');
+        return;
+    }
+
+    // Crear contenedor
+    content.innerHTML = `
+        <div id="engineering-dashboard-container" style="padding: 20px; min-height: calc(100vh - 150px);">
+            <div style="text-align: center; padding: 40px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">🏗️</div>
+                <h2 style="color: #1e293b; margin-bottom: 10px;">Cargando Engineering Dashboard...</h2>
+                <p style="color: #64748b;">Analizando metadata del sistema, roadmap y estadísticas</p>
+            </div>
+        </div>
+    `;
+
+    // Inicializar el dashboard
+    if (window.EngineeringDashboard && typeof window.EngineeringDashboard.init === 'function') {
+        setTimeout(() => {
+            try {
+                window.EngineeringDashboard.init();
+            } catch (e) {
+                console.error('❌ [ENGINEERING] Error en init:', e);
+                content.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                        <h2 style="color: #dc2626;">Error cargando Engineering Dashboard</h2>
+                        <p style="color: #64748b;">${e.message}</p>
+                    </div>
+                `;
+            }
+        }, 100);
+    } else {
+        console.warn('⚠️ [ENGINEERING] EngineeringDashboard.init no disponible');
+    }
+};
+
+// Registrar en window.Modules para compatibilidad
+window.Modules = window.Modules || {};
+window.Modules['engineering-dashboard'] = {
+    init: window.showEngineeringDashboardContent
+};
+window.Modules['auditor-dashboard'] = {
+    init: window.showEngineeringDashboardContent
+};

@@ -180,6 +180,22 @@ window.FinanceDashboard = (function() {
                     <div id="kpi-ccc" class="kpi-card"></div>
                 </div>
 
+                <!-- KPIs Row 3 - Fiscal/Retenciones -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: ${THEME.text}; font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        🏛️ Métricas Fiscales & Retenciones
+                        <span style="font-size: 11px; background: rgba(0, 217, 255, 0.15); color: ${THEME.success}; padding: 2px 8px; border-radius: 8px;">
+                            MULTI-PAÍS
+                        </span>
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                        <div id="kpi-retentions-total" class="kpi-card"></div>
+                        <div id="kpi-retentions-pending" class="kpi-card"></div>
+                        <div id="kpi-retentions-efficiency" class="kpi-card"></div>
+                        <div id="kpi-retentions-country" class="kpi-card"></div>
+                    </div>
+                </div>
+
                 <!-- Bottom Section -->
                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
                     <!-- Budget Gauge & Execution -->
@@ -290,18 +306,20 @@ window.FinanceDashboard = (function() {
             if (period) params.append('fiscal_period', period);
 
             // Cargar todos los datos en paralelo
-            const [dashboard, alerts, integrations] = await Promise.all([
+            const [dashboard, alerts, integrations, fiscalMetrics] = await Promise.all([
                 fetchAPI(`${API_BASE}/dashboard?${params}`),
                 fetchAPI(`${API_BASE}/dashboard/alerts`),
-                fetchAPI(`${API_BASE}/integrations`)
+                fetchAPI(`${API_BASE}/integrations`),
+                fetchFiscalMetrics(year, period)
             ]);
 
-            currentData = { dashboard, alerts, integrations };
+            currentData = { dashboard, alerts, integrations, fiscalMetrics };
 
             // Renderizar componentes
             renderAlerts(alerts);
             renderFinanceModulesCards(); // Grid de 8 módulos profesionales
             renderKPIs(dashboard);
+            renderFiscalKPIs(fiscalMetrics); // Métricas fiscales multi-país
             renderCharts(dashboard);
             renderBudgetExecution(dashboard);
             renderTopExpenses();
@@ -328,6 +346,95 @@ window.FinanceDashboard = (function() {
 
         const result = await response.json();
         return result.data;
+    }
+
+    /**
+     * Obtiene métricas fiscales agregadas desde órdenes de pago
+     * Consume payment-orders API y agrega retenciones
+     */
+    async function fetchFiscalMetrics(year, period) {
+        try {
+            const token = localStorage.getItem('authToken');
+            const params = new URLSearchParams();
+            if (year) params.append('year', year);
+            if (period) params.append('month', period);
+
+            // Obtener órdenes de pago con retenciones
+            const response = await fetch(`/api/procurement/payment-orders?${params}&limit=1000`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                console.warn('No se pudieron cargar métricas fiscales');
+                return getDefaultFiscalMetrics();
+            }
+
+            const result = await response.json();
+            const orders = result.data || [];
+
+            // Agregar métricas
+            let totalRetentions = 0;
+            let pendingRetentions = 0;
+            let paidRetentions = 0;
+            let countryBreakdown = {};
+
+            orders.forEach(order => {
+                const ret = parseFloat(order.total_retentions) || 0;
+                totalRetentions += ret;
+
+                if (['draft', 'pending_approval', 'approved', 'scheduled'].includes(order.status)) {
+                    pendingRetentions += ret;
+                } else if (['paid', 'completed'].includes(order.status)) {
+                    paidRetentions += ret;
+                }
+
+                // Agregar por país (branch -> country, fallback AR)
+                const country = order.country_code || 'AR';
+                if (!countryBreakdown[country]) {
+                    countryBreakdown[country] = { total: 0, count: 0 };
+                }
+                countryBreakdown[country].total += ret;
+                countryBreakdown[country].count++;
+            });
+
+            // Calcular eficiencia (pagadas vs total)
+            const efficiency = totalRetentions > 0
+                ? (paidRetentions / totalRetentions * 100)
+                : 100;
+
+            // País principal
+            const mainCountry = Object.entries(countryBreakdown)
+                .sort((a, b) => b[1].total - a[1].total)[0];
+
+            return {
+                totalRetentions,
+                pendingRetentions,
+                paidRetentions,
+                efficiency,
+                countryBreakdown,
+                mainCountry: mainCountry ? { code: mainCountry[0], ...mainCountry[1] } : null,
+                orderCount: orders.length
+            };
+
+        } catch (error) {
+            console.error('Error cargando métricas fiscales:', error);
+            return getDefaultFiscalMetrics();
+        }
+    }
+
+    function getDefaultFiscalMetrics() {
+        return {
+            totalRetentions: 0,
+            pendingRetentions: 0,
+            paidRetentions: 0,
+            efficiency: 100,
+            countryBreakdown: {},
+            mainCountry: null,
+            orderCount: 0
+        };
     }
 
     // =============================================
@@ -422,6 +529,67 @@ window.FinanceDashboard = (function() {
             value: `${data?.operational?.cash_conversion_cycle?.value || 0} días`,
             status: (data?.operational?.cash_conversion_cycle?.value || 0) < 0 ? 'success' : 'warning',
             subtitle: data?.operational?.cash_conversion_cycle?.description || ''
+        });
+    }
+
+    /**
+     * Renderiza KPIs de métricas fiscales y retenciones
+     */
+    function renderFiscalKPIs(data) {
+        if (!data) data = getDefaultFiscalMetrics();
+
+        const countryNames = {
+            AR: '🇦🇷 Argentina',
+            CL: '🇨🇱 Chile',
+            BR: '🇧🇷 Brasil',
+            MX: '🇲🇽 México',
+            UY: '🇺🇾 Uruguay',
+            CO: '🇨🇴 Colombia'
+        };
+
+        // Total retenciones del período
+        renderKPICard('kpi-retentions-total', {
+            icon: '🏛️',
+            title: 'Retenciones del Período',
+            value: formatCurrency(data.totalRetentions),
+            status: data.totalRetentions > 0 ? 'success' : 'unknown',
+            subtitle: `${data.orderCount} órdenes de pago`
+        });
+
+        // Retenciones pendientes de pago
+        renderKPICard('kpi-retentions-pending', {
+            icon: '⏳',
+            title: 'Retenciones Pendientes',
+            value: formatCurrency(data.pendingRetentions),
+            status: data.pendingRetentions > data.totalRetentions * 0.5 ? 'warning' : 'success',
+            subtitle: data.pendingRetentions > 0 ? 'Por liquidar a AFIP/SII/etc.' : 'Todo al día'
+        });
+
+        // Eficiencia fiscal (pagadas vs calculadas)
+        renderKPICard('kpi-retentions-efficiency', {
+            icon: '📊',
+            title: 'Eficiencia Fiscal',
+            value: `${data.efficiency.toFixed(1)}%`,
+            status: data.efficiency >= 80 ? 'success' : data.efficiency >= 50 ? 'warning' : 'danger',
+            subtitle: `${formatCurrency(data.paidRetentions)} liquidado`
+        });
+
+        // País principal
+        const mainCountryName = data.mainCountry
+            ? countryNames[data.mainCountry.code] || data.mainCountry.code
+            : 'N/A';
+        const countryCount = Object.keys(data.countryBreakdown).length;
+
+        renderKPICard('kpi-retentions-country', {
+            icon: '🌎',
+            title: 'Distribución por País',
+            value: mainCountryName,
+            status: countryCount > 1 ? 'success' : 'unknown',
+            subtitle: countryCount > 1
+                ? `${countryCount} países activos`
+                : data.mainCountry
+                    ? `${formatCurrency(data.mainCountry.total)} (${data.mainCountry.count} ops)`
+                    : 'Sin operaciones'
         });
     }
 
@@ -736,6 +904,12 @@ window.FinanceDashboard = (function() {
                 icon: '📊',
                 name: 'Dashboard Ejecutivo',
                 description: 'KPIs ejecutivos y análisis avanzado'
+            },
+            {
+                key: 'fiscal-retentions',
+                icon: '🏛️',
+                name: 'Fiscal & Retenciones',
+                description: 'Configuración fiscal multi-país y retenciones'
             }
         ];
 
@@ -788,6 +962,24 @@ window.FinanceDashboard = (function() {
     }
 
     function goToModule(moduleName) {
+        // Caso especial: Fiscal & Retenciones va a Procurement > Config > Fiscal
+        if (moduleName === 'fiscal-retentions') {
+            if (window.showModuleContent) {
+                window.showModuleContent('procurement-management', 'Compras (P2P)');
+                // Después de cargar, navegar al tab Config > Fiscal
+                setTimeout(() => {
+                    if (window.ProcurementManagement) {
+                        window.ProcurementManagement.switchTab('config');
+                        setTimeout(() => {
+                            const fiscalTab = document.querySelector('.config-tab[data-config="fiscal"]');
+                            if (fiscalTab) fiscalTab.click();
+                        }, 300);
+                    }
+                }, 500);
+            }
+            return;
+        }
+
         // Navegar a módulo específico usando showModuleContent
         if (window.showModuleContent) {
             window.showModuleContent(`finance-${moduleName}`, moduleName);

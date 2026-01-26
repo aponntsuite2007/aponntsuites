@@ -1076,13 +1076,19 @@ const PaymentOrdersDashboard = {
                     </tr>
                 </thead>
                 <tbody>
-                    ${cubeData.data.map(row => `
+                    ${cubeData.data.map(row => {
+                        const retPercent = row.gross_amount > 0 ? ((row.total_retentions / row.gross_amount) * 100).toFixed(1) : 0;
+                        const retColor = retPercent > 5 ? '#e74c3c' : retPercent > 2 ? '#f39c12' : '#27ae60';
+                        return `
                         <tr>
                             <td><strong>${row.label || 'N/A'}</strong></td>
                             <td>${row.order_count || 0}</td>
                             <td>${row.invoice_count || 0}</td>
                             <td>${this.formatCurrency(row.gross_amount)}</td>
-                            <td>${this.formatCurrency(row.total_retentions)}</td>
+                            <td title="Retención: ${retPercent}% del bruto" style="cursor:help">
+                                <span style="color:${retColor}">${this.formatCurrency(row.total_retentions)}</span>
+                                <small style="color:#888;margin-left:4px">(${retPercent}%)</small>
+                            </td>
                             <td><strong>${this.formatCurrency(row.net_amount)}</strong></td>
                             <td>
                                 <button class="drilldown-btn" onclick="PaymentOrdersDashboard.drillDown('${cubeData.groupBy}', '${row.label}')">
@@ -1090,7 +1096,7 @@ const PaymentOrdersDashboard = {
                                 </button>
                             </td>
                         </tr>
-                    `).join('')}
+                    `}).join('')}
                 </tbody>
             </table>
         `;
@@ -1163,19 +1169,28 @@ const PaymentOrdersDashboard = {
                                 <th>Nro. Orden</th>
                                 <th>Fecha</th>
                                 <th>Proveedor</th>
-                                <th>Monto Neto</th>
-                                <th>Fecha Pago</th>
+                                <th>Bruto</th>
+                                <th>Ret.</th>
+                                <th>Neto</th>
+                                <th>F. Pago</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${orders.data.map(order => `
+                            ${orders.data.map(order => {
+                                const retTooltip = this.getRetentionTooltip(order.retentions_detail, order.total_retentions);
+                                const hasRet = (order.total_retentions || 0) > 0;
+                                return `
                                 <tr>
                                     <td><strong>${order.order_number}</strong></td>
                                     <td>${this.formatDate(order.order_date)}</td>
                                     <td>${order.supplier?.name || order.supplier_name || 'N/A'}</td>
-                                    <td><strong>${this.formatCurrency(order.net_payment_amount)}</strong></td>
+                                    <td>${this.formatCurrency(order.gross_amount || order.total_amount)}</td>
+                                    <td title="${retTooltip}" style="cursor:${hasRet ? 'help' : 'default'}">
+                                        ${hasRet ? `<span style="color:#e67e22">${this.formatCurrency(order.total_retentions)}</span>` : '-'}
+                                    </td>
+                                    <td><strong style="color:var(--accent)">${this.formatCurrency(order.net_payment_amount)}</strong></td>
                                     <td>${order.scheduled_payment_date ? this.formatDate(order.scheduled_payment_date) : '-'}</td>
                                     <td><span class="status-badge status-${order.status}">${this.getStatusLabel(order.status)}</span></td>
                                     <td>
@@ -1194,7 +1209,7 @@ const PaymentOrdersDashboard = {
                                         ` : ''}
                                     </td>
                                 </tr>
-                            `).join('')}
+                            `; }).join('')}
                         </tbody>
                     </table>
                 ` : `
@@ -1730,8 +1745,14 @@ const PaymentOrdersDashboard = {
                             <div class="form-group">
                                 <label>Moneda</label>
                                 <select class="form-control" name="currency">
-                                    <option value="ARS">ARS - Pesos</option>
-                                    <option value="USD">USD - Dólares</option>
+                                    <option value="ARS">ARS - Peso Argentino</option>
+                                    <option value="USD">USD - Dólar</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                    <option value="BRL">BRL - Real</option>
+                                    <option value="CLP">CLP - Peso Chileno</option>
+                                    <option value="MXN">MXN - Peso Mexicano</option>
+                                    <option value="UYU">UYU - Peso Uruguayo</option>
+                                    <option value="COP">COP - Peso Colombiano</option>
                                 </select>
                             </div>
                         </div>
@@ -1804,8 +1825,112 @@ const PaymentOrdersDashboard = {
         return result.data || [];
     },
 
-    async fetchOrders() {
-        return this.apiCall(`/api/payment-orders?company_id=${this.companyId}`);
+    async fetchOrders(statusFilter = '') {
+        let url = `/api/payment-orders?company_id=${this.companyId}`;
+        if (statusFilter) {
+            url += `&status=${statusFilter}`;
+        }
+        return this.apiCall(url);
+    },
+
+    async loadOrders(statusFilter = '') {
+        const container = document.getElementById('payment-orders-content');
+        if (!container) return;
+
+        container.innerHTML = '<div class="loading-spinner"></div>';
+
+        try {
+            const orders = await this.fetchOrders(statusFilter);
+
+            // Renderizar banner de ayuda contextual
+            const helpBanner = typeof ModuleHelpSystem !== 'undefined'
+                ? ModuleHelpSystem.renderBanner('orders')
+                : '';
+
+            container.innerHTML = `
+                ${helpBanner}
+                <div class="orders-header" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <div class="orders-filters">
+                        <select id="orders-status-filter" onchange="PaymentOrdersDashboard.filterOrders()">
+                            <option value="" ${!statusFilter ? 'selected' : ''}>Todos los estados</option>
+                            <option value="draft" ${statusFilter === 'draft' ? 'selected' : ''}>Borrador</option>
+                            <option value="pending_approval" ${statusFilter === 'pending_approval' ? 'selected' : ''}>Pendiente Aprobación</option>
+                            <option value="approved" ${statusFilter === 'approved' ? 'selected' : ''}>Aprobada</option>
+                            <option value="scheduled" ${statusFilter === 'scheduled' ? 'selected' : ''}>Programada</option>
+                            <option value="executed" ${statusFilter === 'executed' ? 'selected' : ''}>Ejecutada</option>
+                            <option value="cancelled" ${statusFilter === 'cancelled' ? 'selected' : ''}>Cancelada</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="PaymentOrdersDashboard.showCreateOrderModal()">
+                        <i class="fas fa-plus"></i> Nueva Orden
+                    </button>
+                </div>
+
+                ${orders.data && orders.data.length > 0 ? `
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Nro. Orden</th>
+                                <th>Fecha</th>
+                                <th>Proveedor</th>
+                                <th>Bruto</th>
+                                <th>Ret.</th>
+                                <th>Neto</th>
+                                <th>F. Pago</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orders.data.map(order => {
+                                const retTooltip = this.getRetentionTooltip(order.retentions_detail, order.total_retentions);
+                                const hasRet = (order.total_retentions || 0) > 0;
+                                return `
+                                <tr>
+                                    <td><strong>${order.order_number}</strong></td>
+                                    <td>${this.formatDate(order.order_date)}</td>
+                                    <td>${order.supplier?.name || order.supplier_name || 'N/A'}</td>
+                                    <td>${this.formatCurrency(order.gross_amount || order.total_amount)}</td>
+                                    <td title="${retTooltip}" style="cursor:${hasRet ? 'help' : 'default'}">
+                                        ${hasRet ? `<span style="color:#e67e22">${this.formatCurrency(order.total_retentions)}</span>` : '-'}
+                                    </td>
+                                    <td><strong style="color:var(--accent)">${this.formatCurrency(order.net_payment_amount)}</strong></td>
+                                    <td>${order.scheduled_payment_date ? this.formatDate(order.scheduled_payment_date) : '-'}</td>
+                                    <td><span class="status-badge status-${order.status}">${this.getStatusLabel(order.status)}</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary" onclick="PaymentOrdersDashboard.viewOrder(${order.id})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        ${order.status === 'draft' ? `
+                                            <button class="btn btn-sm btn-primary" onclick="PaymentOrdersDashboard.submitOrder(${order.id})">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        ` : ''}
+                                        ${order.status === 'pending_approval' ? `
+                                            <button class="btn btn-sm btn-success" onclick="PaymentOrdersDashboard.approveOrder(${order.id})">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        ` : ''}
+                                    </td>
+                                </tr>
+                            `; }).join('')}
+                        </tbody>
+                    </table>
+                ` : `
+                    <div class="empty-state">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <h4>Sin órdenes de pago</h4>
+                        <p>${statusFilter ? 'No hay órdenes con el estado seleccionado' : 'No hay órdenes de pago registradas'}</p>
+                        <button class="btn btn-primary" onclick="PaymentOrdersDashboard.showCreateOrderModal()">
+                            <i class="fas fa-plus"></i> Crear primera orden
+                        </button>
+                    </div>
+                `}
+            `;
+        } catch (error) {
+            console.error('Error cargando órdenes:', error);
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h4>Error: ${error.message}</h4></div>`;
+        }
     },
 
     async fetchPendingApproval() {
@@ -1857,7 +1982,14 @@ const PaymentOrdersDashboard = {
         const data = Object.fromEntries(formData);
         data.company_id = this.companyId;
 
-        // TODO: Add invoice items from selection
+        // Collect selected invoices from checkboxes
+        const invoiceCheckboxes = document.querySelectorAll('.invoice-checkbox:checked');
+        if (invoiceCheckboxes.length > 0) {
+            data.items = Array.from(invoiceCheckboxes).map(cb => ({
+                invoice_id: parseInt(cb.dataset.invoiceId),
+                amount: parseFloat(cb.dataset.amount) || 0
+            }));
+        }
 
         try {
             await this.apiCall('/api/payment-orders', 'POST', data);
@@ -1912,21 +2044,294 @@ const PaymentOrdersDashboard = {
     },
 
     async viewOrder(id) {
-        // TODO: Implement order detail modal
-        console.log('View order:', id);
+        try {
+            const order = await this.apiCall(`/api/payment-orders/${id}?company_id=${this.companyId}`);
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-file-invoice-dollar"></i> Orden de Pago #${order.order_number || id}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nro. Orden</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${order.order_number || '-'}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Estado</label>
+                                <div><span class="status-badge status-${order.status}">${this.getStatusLabel(order.status)}</span></div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Proveedor</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${order.supplier?.name || order.supplier_name || '-'}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Método de Pago</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${order.payment_method || '-'}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Monto Bruto</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${this.formatCurrency(order.gross_amount)}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Retenciones <span style="font-size:11px;color:#888">(Total: ${this.formatCurrency(order.total_retentions)})</span></label>
+                                ${this.renderRetentionsBreakdown(order.retentions_detail, order.total_retentions)}
+                            </div>
+                            <div class="form-group">
+                                <label>Monto Neto</label>
+                                <div class="form-control" style="background: var(--bg-primary); color: var(--accent); font-weight: 700;">${this.formatCurrency(order.net_payment_amount)}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Fecha de Orden</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${this.formatDate(order.order_date)}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Fecha de Pago Programada</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${this.formatDate(order.scheduled_payment_date)}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Fecha de Ejecución</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${this.formatDate(order.execution_date)}</div>
+                            </div>
+                        </div>
+
+                        ${order.notes ? `
+                            <div class="form-group">
+                                <label>Notas</label>
+                                <div class="form-control" style="background: var(--bg-primary); white-space: pre-wrap;">${order.notes}</div>
+                            </div>
+                        ` : ''}
+
+                        ${order.items && order.items.length > 0 ? `
+                            <div class="form-group">
+                                <label>Facturas Vinculadas</label>
+                                <table class="orders-table" style="margin-top: 8px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Factura</th>
+                                            <th>Monto</th>
+                                            <th>Retención</th>
+                                            <th>Neto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${order.items.map(item => `
+                                            <tr>
+                                                <td>${item.invoice_number || item.invoice_id || '-'}</td>
+                                                <td>${this.formatCurrency(item.amount || item.gross_amount)}</td>
+                                                <td>${this.formatCurrency(item.retention_amount || 0)}</td>
+                                                <td><strong>${this.formatCurrency(item.net_amount || item.amount || 0)}</strong></td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cerrar</button>
+                        ${order.status === 'draft' ? `
+                            <button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove(); PaymentOrdersDashboard.submitOrder(${order.id})">
+                                <i class="fas fa-paper-plane"></i> Enviar a Aprobación
+                            </button>
+                        ` : ''}
+                        ${order.status === 'pending_approval' ? `
+                            <button class="btn btn-success" onclick="this.closest('.modal-overlay').remove(); PaymentOrdersDashboard.approveOrder(${order.id})">
+                                <i class="fas fa-check"></i> Aprobar
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        } catch (error) {
+            this.showToast('Error cargando detalle de orden: ' + error.message, 'error');
+        }
     },
 
     async viewCheckbook(id) {
-        // TODO: Implement checkbook detail modal
-        console.log('View checkbook:', id);
+        try {
+            const checkbook = await this.apiCall(`/api/payment-orders/checkbooks/${id}?company_id=${this.companyId}`);
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-book"></i> Chequera #${checkbook.checkbook_number || id}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Número de Chequera</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${checkbook.checkbook_number || '-'}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Estado</label>
+                                <div><span class="status-badge status-${checkbook.status === 'active' ? 'approved' : 'cancelled'}">${checkbook.status || '-'}</span></div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Banco</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${checkbook.bank_name || '-'}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Número de Cuenta</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${checkbook.account_number || '-'}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Primer Cheque</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${checkbook.first_check_number || '-'}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Último Cheque</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${checkbook.last_check_number || '-'}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Cheque Actual</label>
+                                <div class="form-control" style="background: var(--bg-primary); color: var(--accent); font-weight: 700;">${checkbook.current_check_number || checkbook.first_check_number || '-'}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Cheques Disponibles</label>
+                                <div class="form-control" style="background: var(--bg-primary);">
+                                    ${checkbook.checks_available || 0} / ${checkbook.checks_total || 0}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Moneda</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${checkbook.currency || 'ARS'}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Fecha Recepción</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${this.formatDate(checkbook.received_date)}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Fecha Vencimiento</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${this.formatDate(checkbook.expiry_date)}</div>
+                            </div>
+                        </div>
+
+                        ${checkbook.location ? `
+                            <div class="form-group">
+                                <label>Ubicación Física</label>
+                                <div class="form-control" style="background: var(--bg-primary);">${checkbook.location}</div>
+                            </div>
+                        ` : ''}
+
+                        ${checkbook.checks_available !== undefined && checkbook.checks_total ? `
+                            <div class="form-group">
+                                <label>Uso de Chequera</label>
+                                <div style="height: 8px; background: var(--bg-card); border-radius: 4px; margin-top: 8px;">
+                                    <div style="height: 100%; width: ${(checkbook.checks_available / checkbook.checks_total) * 100}%; background: var(--accent); border-radius: 4px;"></div>
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">
+                                    ${checkbook.checks_total - checkbook.checks_available} usados de ${checkbook.checks_total}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cerrar</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        } catch (error) {
+            this.showToast('Error cargando detalle de chequera: ' + error.message, 'error');
+        }
     },
 
     async loadSuppliersForModal() {
-        // TODO: Load suppliers from procurement module
+        try {
+            const result = await this.apiCall(`/api/procurement/suppliers?company_id=${this.companyId}`);
+            const suppliers = result.data || result || [];
+
+            const select = document.querySelector('#create-order-form select[name="supplier_id"]');
+            if (!select) return;
+
+            select.innerHTML = '<option value="">Seleccione proveedor</option>';
+            suppliers.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier.id;
+                option.textContent = supplier.name || supplier.business_name || `Proveedor #${supplier.id}`;
+                select.appendChild(option);
+            });
+
+            // When supplier changes, load their pending invoices
+            select.addEventListener('change', async (e) => {
+                const supplierId = e.target.value;
+                const invoicesContainer = document.getElementById('invoices-container');
+                if (!invoicesContainer) return;
+
+                if (!supplierId) {
+                    invoicesContainer.innerHTML = '<p style="color: var(--text-muted)">Seleccione un proveedor para ver facturas pendientes</p>';
+                    return;
+                }
+
+                invoicesContainer.innerHTML = '<div class="loading-spinner" style="padding: 10px;"></div>';
+
+                try {
+                    const invoices = await this.apiCall(`/api/payment-orders/pending-invoices?company_id=${this.companyId}&supplier_id=${supplierId}`);
+                    const invoiceList = invoices.data || invoices || [];
+
+                    if (invoiceList.length === 0) {
+                        invoicesContainer.innerHTML = '<p style="color: var(--text-muted)">No hay facturas pendientes para este proveedor</p>';
+                        return;
+                    }
+
+                    invoicesContainer.innerHTML = invoiceList.map(inv => `
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid var(--border); cursor: pointer;">
+                            <input type="checkbox" class="invoice-checkbox" data-invoice-id="${inv.id}" data-amount="${inv.pending_amount || inv.total_amount || 0}">
+                            <span style="flex: 1;">
+                                <strong>${inv.invoice_number || inv.number || '-'}</strong>
+                                <span style="color: var(--text-muted); font-size: 0.85rem;"> - ${this.formatDate(inv.due_date || inv.date)}</span>
+                            </span>
+                            <span style="font-weight: 600; color: var(--accent);">${this.formatCurrency(inv.pending_amount || inv.total_amount || 0)}</span>
+                        </label>
+                    `).join('');
+                } catch (err) {
+                    invoicesContainer.innerHTML = `<p style="color: var(--danger)">Error cargando facturas: ${err.message}</p>`;
+                }
+            });
+        } catch (error) {
+            console.error('Error cargando proveedores:', error);
+            const select = document.querySelector('#create-order-form select[name="supplier_id"]');
+            if (select) {
+                select.innerHTML = '<option value="">Error cargando proveedores</option>';
+            }
+        }
     },
 
     async filterOrders() {
-        // TODO: Implement filter functionality
+        const statusFilter = document.getElementById('orders-status-filter')?.value || '';
+        await this.loadOrders(statusFilter);
     },
 
     // ==========================================
@@ -1980,6 +2385,130 @@ const PaymentOrdersDashboard = {
         toast.textContent = message;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
+    },
+
+    /**
+     * Renderiza el breakdown de retenciones como una lista/tabla visual
+     * @param {Array|Object|string} retentionsDetail - Detalle de retenciones (JSONB de BD)
+     * @param {number} totalRetentions - Total de retenciones como fallback
+     * @returns {string} HTML del breakdown
+     */
+    renderRetentionsBreakdown(retentionsDetail, totalRetentions = 0) {
+        // Parsear si viene como string JSON
+        let breakdown = retentionsDetail;
+        if (typeof breakdown === 'string') {
+            try { breakdown = JSON.parse(breakdown); } catch { breakdown = null; }
+        }
+
+        // Si no hay breakdown o es vacío, mostrar solo el total
+        if (!breakdown || (Array.isArray(breakdown) && breakdown.length === 0)) {
+            if (totalRetentions > 0) {
+                return `<div class="form-control" style="background: var(--bg-primary);">
+                    <span style="color:#888">Sin desglose disponible</span>
+                </div>`;
+            }
+            return `<div class="form-control" style="background: var(--bg-primary); color: #666;">Sin retenciones</div>`;
+        }
+
+        // Mapeo de tipos a nombres legibles
+        const typeLabels = {
+            ganancias: 'Ret. Ganancias',
+            iva: 'Ret. IVA',
+            iibb: 'Ret. IIBB',
+            suss: 'Ret. SUSS',
+            retefuente: 'ReteFuente',
+            reteiva: 'ReteIVA',
+            reteica: 'ReteICA',
+            irrf: 'IRRF',
+            pis: 'PIS',
+            cofins: 'COFINS',
+            csll: 'CSLL',
+            iss: 'ISS',
+            isr: 'ISR',
+            iva_retenido: 'IVA Retenido',
+            irpf: 'IRPF',
+            irae: 'IRAE',
+            boleta_honorarios: 'Boleta Honorarios',
+            ppm: 'PPM'
+        };
+
+        // Colores por tipo
+        const typeColors = {
+            ganancias: '#3498db',
+            iva: '#2ecc71',
+            iibb: '#9b59b6',
+            suss: '#e67e22',
+            retefuente: '#1abc9c',
+            reteiva: '#27ae60',
+            reteica: '#8e44ad'
+        };
+
+        // Generar filas
+        const rows = breakdown.filter(r => r.amount > 0).map(r => {
+            const label = r.name || typeLabels[r.type] || r.type?.toUpperCase() || 'Retención';
+            const color = typeColors[r.type] || '#7f8c8d';
+            const percent = r.percent ? `${r.percent}%` : '';
+            return `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                    <span>
+                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:8px"></span>
+                        ${label} ${percent ? `<small style="color:#888">(${percent})</small>` : ''}
+                    </span>
+                    <strong style="color:${color}">${this.formatCurrency(r.amount)}</strong>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="form-control" style="background: var(--bg-primary); padding: 8px 12px;">
+                ${rows || '<span style="color:#666">Sin retenciones</span>'}
+            </div>
+        `;
+    },
+
+    /**
+     * Genera tooltip de texto plano para retenciones (usado en tablas OLAP)
+     * @param {Array|Object|string} retentionsDetail - Detalle de retenciones
+     * @param {number} totalRetentions - Total como fallback
+     * @returns {string} Texto para title attribute
+     */
+    getRetentionTooltip(retentionsDetail, totalRetentions = 0) {
+        // Parsear si viene como string
+        let breakdown = retentionsDetail;
+        if (typeof breakdown === 'string') {
+            try { breakdown = JSON.parse(breakdown); } catch { breakdown = null; }
+        }
+
+        // Sin retenciones
+        if (!totalRetentions && (!breakdown || !breakdown.length)) {
+            return 'Sin retenciones';
+        }
+
+        // Sin desglose pero con total
+        if (!breakdown || !Array.isArray(breakdown) || breakdown.length === 0) {
+            return `Total retenciones: ${this.formatCurrency(totalRetentions)}`;
+        }
+
+        // Mapeo de tipos
+        const typeLabels = {
+            ganancias: 'Ganancias', iva: 'IVA', iibb: 'IIBB', suss: 'SUSS',
+            retefuente: 'ReteFuente', reteiva: 'ReteIVA', reteica: 'ReteICA',
+            irrf: 'IRRF', pis: 'PIS', cofins: 'COFINS', csll: 'CSLL', iss: 'ISS',
+            isr: 'ISR', iva_retenido: 'IVA Ret.', irpf: 'IRPF', irae: 'IRAE'
+        };
+
+        // Generar líneas
+        const lines = breakdown
+            .filter(r => r.amount > 0)
+            .map(r => {
+                const label = typeLabels[r.type] || r.type?.toUpperCase() || 'Ret';
+                const pct = r.percent ? ` (${r.percent}%)` : '';
+                return `${label}${pct}: ${this.formatCurrency(r.amount)}`;
+            });
+
+        if (lines.length === 0) return 'Sin retenciones aplicadas';
+
+        return lines.join(' | ') + ` | TOTAL: ${this.formatCurrency(totalRetentions)}`;
     }
 };
 

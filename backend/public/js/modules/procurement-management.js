@@ -401,7 +401,7 @@ window.ProcurementManagement = window.ProcurementManagement || {
 
         try {
             // Cargar en paralelo con fallbacks
-            const [suppliers, categories, sectors, warehouses, costCenters] = await Promise.all([
+            const [suppliers, categories, sectors, warehouses, costCenters, branches, fiscalCountries] = await Promise.all([
                 safeLoad('/api/procurement/suppliers?limit=500'),
                 safeLoad('/api/procurement/categories'),
                 safeLoad('/api/procurement/sectors'),
@@ -412,7 +412,11 @@ window.ProcurementManagement = window.ProcurementManagement || {
                 // Cost Centers: depende del módulo finance
                 this.integrations?.finance
                     ? safeLoad('/api/finance/cost-centers')
-                    : Promise.resolve([])
+                    : Promise.resolve([]),
+                // Branches: para compliance fiscal multi-país
+                safeLoad('/api/branches'),
+                // Fiscal countries soportados
+                safeLoad('/api/procurement/fiscal/countries')
             ]);
 
             this.cache.suppliers = suppliers;
@@ -420,12 +424,15 @@ window.ProcurementManagement = window.ProcurementManagement || {
             this.cache.sectors = sectors;
             this.cache.warehouses = warehouses;
             this.cache.costCenters = costCenters;
+            this.cache.branches = branches;
+            this.cache.fiscalCountries = fiscalCountries;
 
             console.log('📦 [PROCUREMENT] Datos base cargados:', {
                 suppliers: this.cache.suppliers.length,
                 categories: this.cache.categories.length,
                 warehouses: this.cache.warehouses.length,
-                costCenters: this.cache.costCenters.length
+                costCenters: this.cache.costCenters.length,
+                branches: this.cache.branches.length
             });
         } catch (error) {
             console.error('❌ Error cargando datos base:', error);
@@ -977,7 +984,7 @@ window.ProcurementManagement = window.ProcurementManagement || {
         this.loadTab(tab);
     },
 
-    async loadTab(tab) {
+    async loadTab(tab, filters = {}) {
         const content = document.getElementById('procurement-tab-content');
         content.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
 
@@ -986,19 +993,19 @@ window.ProcurementManagement = window.ProcurementManagement || {
                 await this.renderDashboard(content);
                 break;
             case 'requisitions':
-                await this.renderRequisitions(content);
+                await this.renderRequisitions(content, filters);
                 break;
             case 'orders':
-                await this.renderOrders(content);
+                await this.renderOrders(content, filters);
                 break;
             case 'receipts':
-                await this.renderReceipts(content);
+                await this.renderReceipts(content, filters);
                 break;
             case 'invoices':
-                await this.renderInvoices(content);
+                await this.renderInvoices(content, filters);
                 break;
             case 'suppliers':
-                await this.renderSuppliers(content);
+                await this.renderSuppliers(content, filters);
                 break;
             case 'mappings':
                 await this.renderMappings(content);
@@ -1159,9 +1166,22 @@ window.ProcurementManagement = window.ProcurementManagement || {
     // REQUISICIONES
     // ========================================
 
-    async renderRequisitions(content) {
+    buildQueryString(filters = {}) {
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                params.append(key, value);
+            }
+        });
+        const qs = params.toString();
+        return qs ? `?${qs}` : '';
+    },
+
+    async renderRequisitions(content, filters = {}) {
+        content.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
         try {
-            const response = await this.fetchAPI('/api/procurement/requisitions');
+            const queryString = this.buildQueryString(filters);
+            const response = await this.fetchAPI(`/api/procurement/requisitions${queryString}`);
             const requisitions = response?.data || [];
 
             // Renderizar banner de ayuda contextual
@@ -1257,9 +1277,11 @@ window.ProcurementManagement = window.ProcurementManagement || {
     // ÓRDENES DE COMPRA
     // ========================================
 
-    async renderOrders(content) {
+    async renderOrders(content, filters = {}) {
+        content.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
         try {
-            const response = await this.fetchAPI('/api/procurement/orders');
+            const queryString = this.buildQueryString(filters);
+            const response = await this.fetchAPI(`/api/procurement/orders${queryString}`);
             const orders = response?.data || [];
 
             // Renderizar banner de ayuda contextual
@@ -1349,9 +1371,11 @@ window.ProcurementManagement = window.ProcurementManagement || {
     // RECEPCIONES
     // ========================================
 
-    async renderReceipts(content) {
+    async renderReceipts(content, filters = {}) {
+        content.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
         try {
-            const response = await this.fetchAPI('/api/procurement/receipts');
+            const queryString = this.buildQueryString(filters);
+            const response = await this.fetchAPI(`/api/procurement/receipts${queryString}`);
             const receipts = response?.data || [];
 
             // Renderizar banner de ayuda contextual
@@ -1429,9 +1453,11 @@ window.ProcurementManagement = window.ProcurementManagement || {
     // FACTURAS
     // ========================================
 
-    async renderInvoices(content) {
+    async renderInvoices(content, filters = {}) {
+        content.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
         try {
-            const response = await this.fetchAPI('/api/procurement/invoices');
+            const queryString = this.buildQueryString(filters);
+            const response = await this.fetchAPI(`/api/procurement/invoices${queryString}`);
             const invoices = response?.data || [];
 
             // Renderizar banner de ayuda contextual
@@ -1513,9 +1539,11 @@ window.ProcurementManagement = window.ProcurementManagement || {
     // PROVEEDORES
     // ========================================
 
-    async renderSuppliers(content) {
+    async renderSuppliers(content, filters = {}) {
+        content.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
         try {
-            const response = await this.fetchAPI('/api/procurement/suppliers');
+            const queryString = this.buildQueryString(filters);
+            const response = await this.fetchAPI(`/api/procurement/suppliers${queryString}`);
             const suppliers = response?.data || [];
 
             // Renderizar banner de ayuda contextual
@@ -1770,6 +1798,7 @@ window.ProcurementManagement = window.ProcurementManagement || {
                     <div class="config-tabs">
                         <button class="config-tab active" data-config="approvals">Aprobaciones</button>
                         <button class="config-tab" data-config="accounting">Contabilidad</button>
+                        <button class="config-tab" data-config="fiscal">Fiscal</button>
                         <button class="config-tab" data-config="general">General</button>
                     </div>
 
@@ -1847,6 +1876,15 @@ window.ProcurementManagement = window.ProcurementManagement || {
                         </button>
                     </div>
 
+                    <div class="config-content hidden" id="fiscal-config">
+                        <h3><i class="fas fa-file-invoice-dollar"></i> Configuración Fiscal</h3>
+                        <p class="config-description">Configure los overrides de tasas/retenciones específicos para esta empresa. Estos valores sobreescriben los del template SSOT.</p>
+
+                        <div id="fiscal-config-content">
+                            <div class="loading"><i class="fas fa-spinner fa-spin"></i> Cargando configuración fiscal...</div>
+                        </div>
+                    </div>
+
                     <div class="config-content hidden" id="general-config">
                         <h3><i class="fas fa-cog"></i> Configuración General</h3>
                         <div class="form-group">
@@ -1870,16 +1908,180 @@ window.ProcurementManagement = window.ProcurementManagement || {
 
             // Config tabs
             content.querySelectorAll('.config-tab').forEach(tab => {
-                tab.addEventListener('click', (e) => {
+                tab.addEventListener('click', async (e) => {
                     const config = e.target.dataset.config;
                     content.querySelectorAll('.config-tab').forEach(t => t.classList.remove('active'));
                     content.querySelectorAll('.config-content').forEach(c => c.classList.add('hidden'));
                     e.target.classList.add('active');
                     document.getElementById(`${config}-config`).classList.remove('hidden');
+
+                    // Cargar config fiscal cuando se selecciona el tab
+                    if (config === 'fiscal') {
+                        await this.loadFiscalConfig();
+                    }
                 });
             });
         } catch (error) {
             content.innerHTML = `<div class="error-message">Error cargando configuración: ${error.message}</div>`;
+        }
+    },
+
+    async loadFiscalConfig() {
+        const container = document.getElementById('fiscal-config-content');
+        if (!container) return;
+
+        try {
+            const result = await this.fetchAPI('/api/procurement/company-tax-config');
+            const { config, concepts } = result.data || {};
+
+            const overrides = config?.conceptOverrides || {};
+
+            container.innerHTML = `
+                <div class="fiscal-info" style="background:rgba(59,130,246,0.1);padding:12px;border-radius:8px;margin-bottom:20px">
+                    <p><strong>Template:</strong> ${config?.templateName || 'No configurado'} (${config?.countryCode || '-'})</p>
+                    <p><strong>Condición Fiscal:</strong> ${config?.customConditionCode || 'Por defecto (RI)'}</p>
+                    <p><strong>Punto de Venta:</strong> ${config?.puntoVenta || 1}</p>
+                </div>
+
+                <h4 style="margin-bottom:10px"><i class="fas fa-percentage"></i> Overrides de Retenciones</h4>
+                <p style="font-size:12px;color:#888;margin-bottom:15px">
+                    Estos porcentajes reemplazan los del template SSOT para esta empresa específicamente.
+                </p>
+
+                <table class="config-table">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Tasa SSOT</th>
+                            <th>Override (%)</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${concepts.map(c => {
+                            const hasOverride = c.code in overrides;
+                            const overrideValue = overrides[c.code];
+                            return `
+                                <tr data-concept="${c.code}">
+                                    <td><strong>${c.code}</strong><br><small>${c.name}</small></td>
+                                    <td><span class="badge">Template</span></td>
+                                    <td>
+                                        <input type="number" class="override-input" data-concept="${c.code}"
+                                            value="${hasOverride ? overrideValue : ''}"
+                                            placeholder="Sin override"
+                                            step="0.01" min="0" max="100"
+                                            style="width:80px">
+                                        ${hasOverride ? '<span class="badge badge-warning" style="margin-left:5px">✓</span>' : ''}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="ProcurementManagement.saveOverride('${c.code}')">
+                                            <i class="fas fa-save"></i>
+                                        </button>
+                                        ${hasOverride ? `
+                                            <button class="btn btn-sm btn-danger" onclick="ProcurementManagement.deleteOverride('${c.code}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        ` : ''}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+
+                <div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.1)">
+                    <h4 style="margin-bottom:10px"><i class="fas fa-building"></i> Datos Fiscales Empresa</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Condición Fiscal</label>
+                            <select id="fiscal-condition" style="width:200px">
+                                <option value="" ${!config?.customConditionCode ? 'selected' : ''}>Por defecto (RI)</option>
+                                <option value="RI" ${config?.customConditionCode === 'RI' ? 'selected' : ''}>Responsable Inscripto</option>
+                                <option value="MONO" ${config?.customConditionCode === 'MONO' ? 'selected' : ''}>Monotributista</option>
+                                <option value="EX" ${config?.customConditionCode === 'EX' ? 'selected' : ''}>Exento</option>
+                                <option value="CF" ${config?.customConditionCode === 'CF' ? 'selected' : ''}>Consumidor Final</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Punto de Venta</label>
+                            <input type="number" id="fiscal-punto-venta" value="${config?.puntoVenta || 1}" min="1" max="9999" style="width:100px">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Descuento Máximo (%)</label>
+                            <input type="number" id="fiscal-descuento-max" value="${config?.descuentoMaximo || 0}" min="0" max="100" step="0.01" style="width:100px">
+                        </div>
+                        <div class="form-group">
+                            <label>Recargo Máximo (%)</label>
+                            <input type="number" id="fiscal-recargo-max" value="${config?.recargoMaximo || 0}" min="0" max="100" step="0.01" style="width:100px">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="ProcurementManagement.saveFiscalGeneralConfig()">
+                        <i class="fas fa-save"></i> Guardar Configuración
+                    </button>
+                </div>
+            `;
+        } catch (error) {
+            container.innerHTML = `<div class="error-message">Error cargando configuración fiscal: ${error.message}</div>`;
+        }
+    },
+
+    async saveOverride(conceptCode) {
+        const input = document.querySelector(`input.override-input[data-concept="${conceptCode}"]`);
+        if (!input) return;
+
+        const percentage = input.value;
+        if (!percentage || percentage === '') {
+            this.showNotification('Ingrese un porcentaje', 'warning');
+            return;
+        }
+
+        try {
+            await this.fetchAPI('/api/procurement/company-tax-config/override', {
+                method: 'POST',
+                body: JSON.stringify({ conceptCode, percentage: parseFloat(percentage) })
+            });
+            this.showNotification(`Override para ${conceptCode} guardado: ${percentage}%`, 'success');
+            await this.loadFiscalConfig(); // Recargar
+        } catch (error) {
+            this.showNotification(`Error: ${error.message}`, 'error');
+        }
+    },
+
+    async deleteOverride(conceptCode) {
+        if (!confirm(`¿Eliminar override para ${conceptCode}? Se usará la tasa del template SSOT.`)) return;
+
+        try {
+            await this.fetchAPI(`/api/procurement/company-tax-config/override/${conceptCode}`, {
+                method: 'DELETE'
+            });
+            this.showNotification(`Override para ${conceptCode} eliminado`, 'success');
+            await this.loadFiscalConfig(); // Recargar
+        } catch (error) {
+            this.showNotification(`Error: ${error.message}`, 'error');
+        }
+    },
+
+    async saveFiscalGeneralConfig() {
+        const customConditionCode = document.getElementById('fiscal-condition')?.value || null;
+        const puntoVenta = parseInt(document.getElementById('fiscal-punto-venta')?.value) || 1;
+        const descuentoMaximo = parseFloat(document.getElementById('fiscal-descuento-max')?.value) || 0;
+        const recargoMaximo = parseFloat(document.getElementById('fiscal-recargo-max')?.value) || 0;
+
+        try {
+            await this.fetchAPI('/api/procurement/company-tax-config', {
+                method: 'PUT',
+                body: JSON.stringify({
+                    customConditionCode: customConditionCode || null,
+                    puntoVenta,
+                    descuentoMaximo,
+                    recargoMaximo
+                })
+            });
+            this.showNotification('Configuración fiscal guardada', 'success');
+        } catch (error) {
+            this.showNotification(`Error: ${error.message}`, 'error');
         }
     },
 
@@ -1933,6 +2135,13 @@ window.ProcurementManagement = window.ProcurementManagement || {
                         <select name="delivery_warehouse_id">
                             <option value="">-- Seleccionar --</option>
                             ${this.cache.warehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Sucursal</label>
+                        <select name="branch_id" onchange="ProcurementManagement.onBranchChange(this.value)">
+                            <option value="">-- Principal --</option>
+                            ${(this.cache.branches || []).map(b => `<option value="${b.id}">${b.name}${b.country ? ' (' + b.country + ')' : ''}</option>`).join('')}
                         </select>
                     </div>
                 </div>
@@ -2007,6 +2216,7 @@ window.ProcurementManagement = window.ProcurementManagement || {
             sector_id: formData.get('sector_id') || null,
             finance_cost_center_id: formData.get('finance_cost_center_id') || null,
             delivery_warehouse_id: formData.get('delivery_warehouse_id') || null,
+            branch_id: formData.get('branch_id') || null,
             justification: formData.get('justification'),
             observations: formData.get('observations'),
             items
@@ -2151,7 +2361,11 @@ window.ProcurementManagement = window.ProcurementManagement || {
             if (response.success) {
                 this.showNotification('Proveedor creado exitosamente', 'success');
                 this.closeModal();
-                this.cache.suppliers.push(response.data);
+                if (this.cache.suppliers) {
+                    this.cache.suppliers.push(response.data);
+                } else {
+                    this.cache.suppliers = [response.data];
+                }
                 this.loadTab('suppliers');
             } else {
                 throw new Error(response.error);
@@ -2258,6 +2472,10 @@ window.ProcurementManagement = window.ProcurementManagement || {
                 ...options.headers
             }
         });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
         return response.json();
     },
 
@@ -2463,10 +2681,13 @@ window.ProcurementManagement = window.ProcurementManagement || {
         setTimeout(() => notification.remove(), 3000);
     },
 
-    formatCurrency(amount) {
-        return new Intl.NumberFormat('es-AR', {
+    formatCurrency(amount, currencyCode) {
+        const currency = currencyCode || this._activeCurrency || 'ARS';
+        const localeMap = { ARS: 'es-AR', CLP: 'es-CL', BRL: 'pt-BR', MXN: 'es-MX', UYU: 'es-UY', COP: 'es-CO', USD: 'en-US', EUR: 'de-DE' };
+        return new Intl.NumberFormat(localeMap[currency] || 'es-AR', {
             style: 'currency',
-            currency: 'ARS'
+            currency,
+            maximumFractionDigits: ['CLP', 'COP'].includes(currency) ? 0 : 2
         }).format(amount || 0);
     },
 
@@ -2745,14 +2966,36 @@ window.ProcurementManagement = window.ProcurementManagement || {
                             `).join('')}
                         </tbody>
                     </table>
-                    <div class="form-group">
-                        <label>Condiciones de Pago</label>
-                        <select name="paymentTerms">
-                            <option value="contado">Contado</option>
-                            <option value="30_dias">30 días</option>
-                            <option value="60_dias">60 días</option>
-                            <option value="anticipo">Con anticipo</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Condiciones de Pago</label>
+                            <select name="paymentTerms">
+                                <option value="contado">Contado</option>
+                                <option value="30_dias">30 días</option>
+                                <option value="60_dias">60 días</option>
+                                <option value="anticipo">Con anticipo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sucursal</label>
+                            <select name="branch_id" onchange="ProcurementManagement.onBranchChange(this.value)">
+                                <option value="">-- Principal --</option>
+                                ${(this.cache.branches || []).map(b => `<option value="${b.id}">${b.name}${b.country ? ' (' + b.country + ')' : ''}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Moneda</label>
+                            <select name="currency" id="order-currency-select">
+                                <option value="ARS">ARS - Peso Argentino</option>
+                                <option value="USD">USD - Dólar</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="fiscal-country-info" style="display:none">
+                            <label>País Fiscal</label>
+                            <input type="text" id="fiscal-country-display" readonly style="background:#f0f0f0">
+                        </div>
                     </div>
                 </form>
             `, [
@@ -2788,6 +3031,8 @@ window.ProcurementManagement = window.ProcurementManagement || {
                     supplierId: formData.get('supplierId'),
                     expectedDeliveryDate: formData.get('expectedDeliveryDate'),
                     paymentTerms: formData.get('paymentTerms'),
+                    branch_id: formData.get('branch_id') || null,
+                    currency: formData.get('currency') || 'ARS',
                     items
                 })
             });
@@ -2870,8 +3115,20 @@ window.ProcurementManagement = window.ProcurementManagement || {
 
     async printOrder(id) {
         try {
-            const response = await this.fetchAPI(`/api/procurement/orders/${id}`);
-            const order = response.data;
+            // Obtener datos de la orden y de la empresa en paralelo
+            const [orderResponse, companyResponse] = await Promise.all([
+                this.fetchAPI(`/api/procurement/orders/${id}`),
+                this.fetchAPI('/api/company-panel/company-info').catch(() => ({ data: null }))
+            ]);
+
+            const order = orderResponse.data;
+            const company = companyResponse?.company || companyResponse?.data || {};
+
+            // Formatear CUIT de la empresa
+            const formatCuit = (cuit) => {
+                if (!cuit) return 'No registrado';
+                return cuit.replace(/(\d{2})(\d{8})(\d{1})/, '$1-$2-$3');
+            };
 
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
@@ -2879,40 +3136,105 @@ window.ProcurementManagement = window.ProcurementManagement || {
                 <head>
                     <title>Orden de Compra ${order.order_number}</title>
                     <style>
-                        body { font-family: Arial, sans-serif; margin: 40px; }
-                        h1 { border-bottom: 2px solid #333; padding-bottom: 10px; }
-                        .header-info { display: flex; justify-content: space-between; margin: 20px 0; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background: #f5f5f5; }
-                        .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 20px; }
-                        @media print { button { display: none; } }
+                        body { font-family: Arial, sans-serif; margin: 30px; color: #333; }
+                        .document-header { border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+                        .company-info { font-size: 12px; color: #555; line-height: 1.5; }
+                        .company-name { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 5px; }
+                        .doc-type { text-align: right; }
+                        .doc-type-title { font-size: 16px; font-weight: bold; background: #f0f0f0; padding: 8px 15px; border-radius: 4px; }
+                        .doc-number { font-size: 18px; font-weight: bold; color: #0066cc; margin-top: 8px; }
+                        .doc-date { font-size: 12px; color: #666; margin-top: 5px; }
+                        .recipient-box { background: #f9f9f9; padding: 12px; border-radius: 4px; margin: 15px 0; }
+                        .recipient-title { font-weight: bold; margin-bottom: 8px; color: #555; }
+                        .section-title { font-size: 14px; font-weight: bold; margin: 20px 0 10px 0; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+                        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                        th, td { border: 1px solid #ddd; padding: 10px 8px; text-align: left; }
+                        th { background: #333; color: white; font-weight: 600; }
+                        .amount { text-align: right; }
+                        .total-row { font-size: 16px; font-weight: bold; background: #f0f0f0; }
+                        .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 10px; color: #888; text-align: center; }
+                        @media print {
+                            .no-print { display: none !important; }
+                            body { margin: 20px; }
+                        }
                     </style>
                 </head>
                 <body>
-                    <h1>ORDEN DE COMPRA</h1>
-                    <div class="header-info">
-                        <div><strong>N°:</strong> ${order.order_number}</div>
-                        <div><strong>Fecha:</strong> ${this.formatDate(order.order_date)}</div>
+                    <!-- ENCABEZADO CON DATOS DE EMPRESA -->
+                    <div class="document-header">
+                        <div class="company-section">
+                            <div class="company-name">${company.legal_name || company.name || 'Empresa'}</div>
+                            <div class="company-info">
+                                <div><strong>CUIT:</strong> ${formatCuit(company.tax_id)}</div>
+                                <div>${company.address || ''}</div>
+                                <div>${[company.city, company.province].filter(Boolean).join(', ')}</div>
+                                ${company.contact_phone ? `<div>Tel: ${company.contact_phone}</div>` : ''}
+                                ${company.contact_email ? `<div>Email: ${company.contact_email}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="doc-type">
+                            <div class="doc-type-title">ORDEN DE COMPRA</div>
+                            <div class="doc-number">N° ${order.order_number}</div>
+                            <div class="doc-date">Fecha: ${this.formatDate(order.order_date)}</div>
+                        </div>
                     </div>
-                    <div><strong>Proveedor:</strong> ${order.supplier?.trade_name || order.supplier?.legal_name}</div>
-                    <div><strong>CUIT:</strong> ${order.supplier?.tax_id || '-'}</div>
-                    <div><strong>Entrega estimada:</strong> ${this.formatDate(order.expected_delivery_date)}</div>
+
+                    <!-- DATOS DEL PROVEEDOR -->
+                    <div class="recipient-box">
+                        <div class="recipient-title">Proveedor:</div>
+                        <div><strong>${order.supplier?.trade_name || order.supplier?.legal_name || 'N/A'}</strong></div>
+                        <div>CUIT: ${order.supplier?.tax_id || '-'}</div>
+                        ${order.supplier?.address ? `<div>${order.supplier.address}</div>` : ''}
+                        ${order.supplier?.phone ? `<div>Tel: ${order.supplier.phone}</div>` : ''}
+                    </div>
+
+                    <!-- INFO ADICIONAL -->
+                    <div style="display: flex; gap: 30px; margin: 15px 0;">
+                        <div><strong>Entrega estimada:</strong> ${this.formatDate(order.expected_delivery_date)}</div>
+                        <div><strong>Estado:</strong> ${order.status}</div>
+                        ${order.payment_terms ? `<div><strong>Condición de pago:</strong> ${order.payment_terms}</div>` : ''}
+                    </div>
+
+                    <!-- DETALLE DE ITEMS -->
+                    <div class="section-title">Detalle de la Orden</div>
                     <table>
-                        <thead><tr><th>Descripción</th><th>Cantidad</th><th>P. Unitario</th><th>Subtotal</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th style="width: 50%">Descripción</th>
+                                <th class="amount">Cantidad</th>
+                                <th class="amount">P. Unitario</th>
+                                <th class="amount">Subtotal</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             ${(order.items || []).map(item => `
                                 <tr>
                                     <td>${item.description}</td>
-                                    <td>${item.quantity}</td>
-                                    <td>$ ${(item.unit_price || 0).toFixed(2)}</td>
-                                    <td>$ ${(item.total_price || 0).toFixed(2)}</td>
+                                    <td class="amount">${item.quantity}</td>
+                                    <td class="amount">${this.formatCurrency(item.unit_price)}</td>
+                                    <td class="amount">${this.formatCurrency(item.total_price)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="3" class="amount">TOTAL</td>
+                                <td class="amount">${this.formatCurrency(order.total_amount)}</td>
+                            </tr>
+                        </tfoot>
                     </table>
-                    <div class="total">TOTAL: ${this.formatCurrency(order.total_amount)}</div>
-                    <button onclick="window.print()">Imprimir</button>
+
+                    ${order.notes ? `<div class="section-title">Observaciones</div><p>${order.notes}</p>` : ''}
+
+                    <!-- PIE DE PÁGINA -->
+                    <div class="footer">
+                        <div>${company.legal_name || company.name || ''} | CUIT: ${formatCuit(company.tax_id)} | ${company.contact_phone || ''}</div>
+                        <div>Documento generado electrónicamente - ${new Date().toLocaleString('es-AR')}</div>
+                    </div>
+
+                    <button class="no-print" onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">
+                        🖨️ Imprimir
+                    </button>
                 </body>
                 </html>
             `);
@@ -3226,8 +3548,27 @@ window.ProcurementManagement = window.ProcurementManagement || {
                         </select>
                     </div>
                     <div class="form-group">
+                        <label>Tipo Comprobante *</label>
+                        <select name="invoiceType" required>
+                            <option value="A">Factura A</option>
+                            <option value="B">Factura B</option>
+                            <option value="C">Factura C</option>
+                            <option value="M">Factura M</option>
+                            <option value="E">Factura E (Exportación)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
                         <label>N° Factura *</label>
-                        <input type="text" name="invoiceNumber" required placeholder="A-00001-00000001">
+                        <input type="text" name="invoiceNumber" required placeholder="00001-00000001">
+                    </div>
+                    <div class="form-group">
+                        <label>Sucursal</label>
+                        <select name="branch_id" onchange="ProcurementManagement.onInvoiceBranchChange(this.value)">
+                            <option value="">-- Principal --</option>
+                            ${(this.cache.branches || []).map(b => `<option value="${b.id}">${b.name}${b.country ? ' (' + b.country + ')' : ''}</option>`).join('')}
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
@@ -3238,6 +3579,16 @@ window.ProcurementManagement = window.ProcurementManagement || {
                     <div class="form-group">
                         <label>Fecha Vencimiento</label>
                         <input type="date" name="dueDate">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>CAE</label>
+                        <input type="text" name="cae" placeholder="Código Autorización Electrónica">
+                    </div>
+                    <div class="form-group">
+                        <label>Vto. CAE</label>
+                        <input type="date" name="caeExpiry">
                     </div>
                 </div>
                 <div class="form-group">
@@ -3252,17 +3603,44 @@ window.ProcurementManagement = window.ProcurementManagement || {
                         <input type="number" name="subtotal" step="0.01" required onchange="ProcurementManagement.calculateInvoiceTotal()">
                     </div>
                     <div class="form-group">
-                        <label>IVA</label>
+                        <label>IVA <small id="iva-rate-label">(21%)</small></label>
                         <input type="number" name="taxAmount" step="0.01" value="0" onchange="ProcurementManagement.calculateInvoiceTotal()">
+                        <button type="button" class="btn btn-sm btn-link" onclick="ProcurementManagement.autoCalculateIVA()" title="Calcular IVA automáticamente según régimen fiscal">
+                            Auto-calcular
+                        </button>
                     </div>
                     <div class="form-group">
-                        <label>Total</label>
-                        <input type="number" name="totalAmount" step="0.01" readonly>
+                        <label>Otros Imp.</label>
+                        <input type="number" name="otherTaxes" step="0.01" value="0" onchange="ProcurementManagement.calculateInvoiceTotal()">
                     </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Total</label>
+                        <input type="number" name="totalAmount" step="0.01" readonly style="font-weight:bold;font-size:1.1em">
+                    </div>
+                    <div class="form-group">
+                        <label>Moneda</label>
+                        <select name="currency">
+                            <option value="ARS">ARS</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="BRL">BRL</option>
+                            <option value="CLP">CLP</option>
+                            <option value="MXN">MXN</option>
+                            <option value="UYU">UYU</option>
+                            <option value="COP">COP</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="invoice-retentions-preview" style="display:none; margin-top:10px; padding:10px; background:#f8f9fa; border-radius:4px;">
+                    <h5 style="margin:0 0 8px 0">Retenciones Estimadas</h5>
+                    <div id="retentions-breakdown"></div>
                 </div>
             </form>
         `, [
             { label: 'Cancelar', class: 'btn-secondary', action: 'closeModal()' },
+            { label: 'Calcular Retenciones', class: 'btn-secondary', action: 'previewRetentions()' },
             { label: 'Registrar', class: 'btn-primary', action: 'submitNewInvoice()' }
         ]);
     },
@@ -3284,17 +3662,150 @@ window.ProcurementManagement = window.ProcurementManagement || {
     calculateInvoiceTotal() {
         const subtotal = parseFloat(document.querySelector('[name="subtotal"]')?.value) || 0;
         const tax = parseFloat(document.querySelector('[name="taxAmount"]')?.value) || 0;
-        document.querySelector('[name="totalAmount"]').value = (subtotal + tax).toFixed(2);
+        const otherTaxes = parseFloat(document.querySelector('[name="otherTaxes"]')?.value) || 0;
+        document.querySelector('[name="totalAmount"]').value = (subtotal + tax + otherTaxes).toFixed(2);
+    },
+
+    async autoCalculateIVA() {
+        const subtotal = parseFloat(document.querySelector('[name="subtotal"]')?.value) || 0;
+        if (subtotal <= 0) { this.showNotification('Ingrese subtotal primero', 'warning'); return; }
+
+        const branchId = document.querySelector('[name="branch_id"]')?.value || '';
+        const supplierId = document.querySelector('[name="supplierId"]')?.value || '';
+        try {
+            const response = await this.fetchAPI('/api/procurement/fiscal/calculate-tax', {
+                method: 'POST',
+                body: JSON.stringify({ subtotal, branchId: branchId || null, supplierId: supplierId || null })
+            });
+            if (response.data) {
+                document.querySelector('[name="taxAmount"]').value = response.data.taxAmount.toFixed(2);
+                const label = document.getElementById('iva-rate-label');
+                if (label) label.textContent = `(${response.data.taxPercent}%)`;
+                this.calculateInvoiceTotal();
+            }
+        } catch (error) {
+            // Fallback: IVA 21% hardcoded
+            document.querySelector('[name="taxAmount"]').value = (subtotal * 0.21).toFixed(2);
+            this.calculateInvoiceTotal();
+        }
+    },
+
+    async previewRetentions() {
+        const subtotal = parseFloat(document.querySelector('[name="subtotal"]')?.value) || 0;
+        const taxAmount = parseFloat(document.querySelector('[name="taxAmount"]')?.value) || 0;
+        const supplierId = document.querySelector('[name="supplierId"]')?.value || '';
+        const branchId = document.querySelector('[name="branch_id"]')?.value || '';
+
+        if (subtotal <= 0 || !supplierId) {
+            this.showNotification('Seleccione proveedor e ingrese subtotal', 'warning');
+            return;
+        }
+
+        try {
+            const response = await this.fetchAPI('/api/procurement/fiscal/calculate-retentions', {
+                method: 'POST',
+                body: JSON.stringify({
+                    amount: subtotal + taxAmount,
+                    taxAmount,
+                    supplierId,
+                    branchId: branchId || null,
+                    purchaseType: 'goods'
+                })
+            });
+
+            const container = document.getElementById('invoice-retentions-preview');
+            const breakdown = document.getElementById('retentions-breakdown');
+
+            if (response.data && response.data.breakdown && response.data.breakdown.length > 0) {
+                const rows = response.data.breakdown.map(r =>
+                    `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #eee">
+                        <span>${r.name} (${r.percent}%)</span>
+                        <span style="font-weight:bold">-${this.formatCurrency(r.amount)}</span>
+                    </div>`
+                ).join('');
+                breakdown.innerHTML = rows + `
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;margin-top:4px;border-top:2px solid #333;font-weight:bold">
+                        <span>Total Retenciones</span>
+                        <span>-${this.formatCurrency(response.data.totalRetentions)}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:3px 0;color:#28a745">
+                        <span>Neto a Pagar</span>
+                        <span>${this.formatCurrency(response.data.netAmount)}</span>
+                    </div>
+                    ${response.data.isStub ? '<small style="color:#856404">⚠️ País pendiente de implementación completa</small>' : ''}
+                `;
+                container.style.display = 'block';
+            } else {
+                breakdown.innerHTML = '<em>Sin retenciones aplicables</em>';
+                container.style.display = 'block';
+            }
+        } catch (error) {
+            this.showNotification('No se pudo calcular retenciones: ' + error.message, 'warning');
+        }
+    },
+
+    onBranchChange(branchId) {
+        if (!branchId) return;
+        const branch = (this.cache.branches || []).find(b => String(b.id) === String(branchId));
+        if (branch && branch.country) {
+            // Actualizar moneda según país
+            const currencyMap = { AR: 'ARS', CL: 'CLP', BR: 'BRL', MX: 'MXN', UY: 'UYU', CO: 'COP' };
+            const currencySelect = document.getElementById('order-currency-select');
+            if (currencySelect && currencyMap[branch.country]) {
+                currencySelect.value = currencyMap[branch.country];
+            }
+            const countryDisplay = document.getElementById('fiscal-country-display');
+            const countryInfo = document.getElementById('fiscal-country-info');
+            if (countryDisplay && countryInfo) {
+                const nameMap = { AR: 'Argentina', CL: 'Chile', BR: 'Brasil', MX: 'México', UY: 'Uruguay', CO: 'Colombia' };
+                countryDisplay.value = nameMap[branch.country] || branch.country;
+                countryInfo.style.display = 'block';
+            }
+        }
+    },
+
+    onInvoiceBranchChange(branchId) {
+        if (!branchId) return;
+        const branch = (this.cache.branches || []).find(b => String(b.id) === String(branchId));
+        if (branch && branch.country) {
+            const currencySelect = document.querySelector('#new-invoice-form [name="currency"]');
+            const currencyMap = { AR: 'ARS', CL: 'CLP', BR: 'BRL', MX: 'MXN', UY: 'UYU', CO: 'COP' };
+            if (currencySelect && currencyMap[branch.country]) {
+                currencySelect.value = currencyMap[branch.country];
+            }
+            // Actualizar tipos de comprobante según país
+            const invoiceTypeSelect = document.querySelector('#new-invoice-form [name="invoiceType"]');
+            if (invoiceTypeSelect && branch.country !== 'AR') {
+                const typeMap = {
+                    CL: [['DTE', 'Documento Tributario Electrónico']],
+                    BR: [['NFe', 'Nota Fiscal Eletrônica'], ['NFSe', 'NF de Serviço']],
+                    MX: [['CFDI', 'CFDI 4.0']],
+                    UY: [['CFE', 'Comprobante Fiscal Electrónico']],
+                    CO: [['FE', 'Factura Electrónica']]
+                };
+                const types = typeMap[branch.country] || [['INV', 'Factura']];
+                invoiceTypeSelect.innerHTML = types.map(([val, label]) =>
+                    `<option value="${val}">${label}</option>`
+                ).join('');
+            }
+        }
     },
 
     async submitNewInvoice() {
         const form = document.getElementById('new-invoice-form');
         const formData = new FormData(form);
 
+        const data = Object.fromEntries(formData.entries());
+        // Mapear campos al formato esperado por el backend
+        data.invoice_type = data.invoiceType;
+        data.branch_id = data.branch_id || null;
+        data.cae_expiry = data.caeExpiry || null;
+        data.other_taxes = data.otherTaxes || 0;
+
         try {
             await this.fetchAPI('/api/procurement/invoices', {
                 method: 'POST',
-                body: JSON.stringify(Object.fromEntries(formData.entries()))
+                body: JSON.stringify(data)
             });
             this.showNotification('Factura registrada', 'success');
             this.closeModal();
@@ -3320,13 +3831,17 @@ window.ProcurementManagement = window.ProcurementManagement || {
                     </div>
                     <div class="detail-grid">
                         <div class="info-row"><label>Proveedor:</label><span>${invoice.supplier?.trade_name || invoice.supplier?.legal_name}</span></div>
+                        <div class="info-row"><label>Tipo:</label><span>${invoice.invoice_type ? 'Factura ' + invoice.invoice_type : '-'}</span></div>
                         <div class="info-row"><label>Fecha:</label><span>${this.formatDate(invoice.invoice_date)}</span></div>
                         <div class="info-row"><label>Vencimiento:</label><span>${this.formatDate(invoice.due_date)}</span></div>
                         <div class="info-row"><label>OC:</label><span>${invoice.order?.order_number || '-'}</span></div>
+                        <div class="info-row"><label>CAE:</label><span>${invoice.cae || '-'}</span></div>
+                        ${invoice.branch_id ? `<div class="info-row"><label>Sucursal:</label><span>ID ${invoice.branch_id}</span></div>` : ''}
                     </div>
                     <div class="amounts-summary">
                         <div class="amount-row"><label>Subtotal:</label><span>${this.formatCurrency(invoice.subtotal)}</span></div>
                         <div class="amount-row"><label>IVA:</label><span>${this.formatCurrency(invoice.tax_amount)}</span></div>
+                        ${invoice.other_taxes ? `<div class="amount-row"><label>Otros Imp.:</label><span>${this.formatCurrency(invoice.other_taxes)}</span></div>` : ''}
                         <div class="amount-row total"><label>Total:</label><span>${this.formatCurrency(invoice.total_amount)}</span></div>
                         <div class="amount-row"><label>Pagado:</label><span>${this.formatCurrency(invoice.paid_amount || 0)}</span></div>
                         <div class="amount-row balance"><label>Saldo:</label><span>${this.formatCurrency(invoice.balance_due)}</span></div>
@@ -3892,16 +4407,29 @@ window.ProcurementManagement = window.ProcurementManagement || {
     showNewAccountingConfigModal() {
         this.createModal('Nueva Configuración Contable', `
             <form id="new-accounting-form">
-                <div class="form-group">
-                    <label>Tipo de Compra</label>
-                    <select name="purchaseType" required>
-                        <option value="goods">Bienes</option>
-                        <option value="services">Servicios</option>
-                        <option value="assets">Activos Fijos</option>
-                        <option value="consumables">Consumibles</option>
-                        <option value="raw_materials">Materias Primas</option>
-                        <option value="utilities">Servicios Públicos</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo de Compra</label>
+                        <select name="purchaseType" required>
+                            <option value="goods">Bienes</option>
+                            <option value="services">Servicios</option>
+                            <option value="assets">Activos Fijos</option>
+                            <option value="consumables">Consumibles</option>
+                            <option value="raw_materials">Materias Primas</option>
+                            <option value="utilities">Servicios Públicos</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>País Fiscal</label>
+                        <select name="countryCode">
+                            <option value="AR">Argentina</option>
+                            <option value="CL">Chile</option>
+                            <option value="BR">Brasil</option>
+                            <option value="MX">México</option>
+                            <option value="UY">Uruguay</option>
+                            <option value="CO">Colombia</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Cuenta de Gasto</label>
@@ -4066,23 +4594,32 @@ window.ProcurementManagement = window.ProcurementManagement || {
     // ========================================
 
     filterRequisitions() {
-        this.loadTab('requisitions');
+        const status = document.querySelector('#req-status-filter')?.value || '';
+        const myOnly = document.querySelector('#req-my-only')?.checked || false;
+        this.loadTab('requisitions', { status, my_only: myOnly ? '1' : '' });
     },
 
     filterOrders() {
-        this.loadTab('orders');
+        const status = document.querySelector('#order-status-filter')?.value || '';
+        const supplier_id = document.querySelector('#order-supplier-filter')?.value || '';
+        this.loadTab('orders', { status, supplier_id });
     },
 
     filterReceipts() {
-        this.loadTab('receipts');
+        const status = document.querySelector('#receipt-status-filter')?.value || '';
+        this.loadTab('receipts', { status });
     },
 
     filterInvoices() {
-        this.loadTab('invoices');
+        const status = document.querySelector('#invoice-status-filter')?.value || '';
+        const payment_status = document.querySelector('#invoice-payment-filter')?.value || '';
+        this.loadTab('invoices', { status, payment_status });
     },
 
     filterSuppliers() {
-        this.loadTab('suppliers');
+        const status = document.querySelector('#supplier-status-filter')?.value || '';
+        const search = document.querySelector('#supplier-search')?.value || '';
+        this.loadTab('suppliers', { status, search });
     },
 
     searchSuppliers(query) {

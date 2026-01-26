@@ -235,10 +235,11 @@ const AdminFinanceDashboard = {
             paidCommissions: 0
         };
 
-        const formatCurrency = (value) => {
-            return new Intl.NumberFormat('es-AR', {
+        const formatCurrency = (value, currencyCode = 'ARS') => {
+            const localeMap = { ARS: 'es-AR', CLP: 'es-CL', BRL: 'pt-BR', MXN: 'es-MX', UYU: 'es-UY', COP: 'es-CO', USD: 'en-US', EUR: 'de-DE' };
+            return new Intl.NumberFormat(localeMap[currencyCode] || 'es-AR', {
                 style: 'currency',
-                currency: 'ARS',
+                currency: currencyCode,
                 maximumFractionDigits: 0
             }).format(value);
         };
@@ -633,43 +634,47 @@ const AdminFinanceDashboard = {
     },
 
     // ============================
-    // ACTIONS (stubs)
+    // ACTIONS
     // ============================
 
+    _showComingSoon(feature) {
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#334155;color:#f1f5f9;padding:12px 20px;border-radius:8px;z-index:99999;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.3s;';
+        toast.textContent = `${feature} - Disponible en la proxima actualizacion`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    },
+
     generateInvoice() {
-        alert('Generar factura - Modal por implementar');
+        this._showComingSoon('Generacion de facturas');
     },
 
     viewInvoice(id) {
-        alert(`Ver factura #${id} - Modal por implementar`);
+        this._showComingSoon('Vista detallada de factura');
     },
 
     downloadInvoice(id) {
-        alert(`Descargar factura #${id} - Por implementar`);
+        this._showComingSoon('Descarga de facturas');
     },
 
     markPaid(id) {
-        if (confirm(`¿Marcar factura #${id} como pagada?`)) {
-            alert(`Factura #${id} marcada como pagada - Por implementar`);
-        }
+        this._showComingSoon('Marcado de pagos');
     },
 
     exportInvoices() {
-        alert('Exportar facturas - Por implementar');
+        this._showComingSoon('Exportacion de facturas');
     },
 
     exportCommissions() {
-        alert('Exportar comisiones - Por implementar');
+        this._showComingSoon('Exportacion de comisiones');
     },
 
     viewVendorDetail(vendorId) {
-        alert(`Ver detalle del vendedor #${vendorId} - Modal por implementar`);
+        this._showComingSoon('Detalle de vendedor');
     },
 
     processPayment(vendorId) {
-        if (confirm(`¿Procesar pago de comisiones para el vendedor?`)) {
-            alert(`Pago procesado para vendedor #${vendorId} - Por implementar`);
-        }
+        this._showComingSoon('Procesamiento de pagos');
     },
 
     filterInvoices(event) {
@@ -700,10 +705,11 @@ const AdminFinanceDashboard = {
     // HELPERS
     // ============================
 
-    _formatCurrency(value) {
-        return new Intl.NumberFormat('es-AR', {
+    _formatCurrency(value, currencyCode = 'ARS') {
+        const localeMap = { ARS: 'es-AR', CLP: 'es-CL', BRL: 'pt-BR', MXN: 'es-MX', UYU: 'es-UY', COP: 'es-CO', USD: 'en-US', EUR: 'de-DE' };
+        return new Intl.NumberFormat(localeMap[currencyCode] || 'es-AR', {
             style: 'currency',
-            currency: 'ARS',
+            currency: currencyCode,
             maximumFractionDigits: 0
         }).format(value || 0);
     },

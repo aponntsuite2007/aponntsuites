@@ -197,7 +197,8 @@
             { id: 'datos', icon: '🏢', label: 'Datos' },
             { id: 'modulos', icon: '📦', label: 'Módulos' },
             { id: 'sucursales', icon: '🏪', label: 'Sucursales' },
-            { id: 'usuarios', icon: '👤', label: 'Usuarios' }
+            { id: 'usuarios', icon: '👤', label: 'Usuarios' },
+            { id: 'baja', icon: '🔴', label: 'Baja' }
         ];
 
         return `
@@ -674,6 +675,299 @@
         `;
     }
 
+    // ========== TAB 5: BAJA DE EMPRESA ==========
+    function renderTabBaja(company = null) {
+        const isActive = workflowState.activeTab === 'baja' ? 'active' : '';
+
+        if (!company || !workflowState.isEditing) {
+            return `
+                <div class="wf-tab-content ${isActive}" id="wf-tab-baja">
+                    <div class="wf-section" style="text-align: center; padding: 40px;">
+                        <span style="font-size: 48px;">🏢</span>
+                        <p style="color: #999; margin-top: 12px;">El proceso de baja solo aplica a empresas existentes.</p>
+                    </div>
+                </div>`;
+        }
+
+        const companyId = company.company_id || company.id;
+        const offStatus = company.offboarding_status || null;
+
+        return `
+            <div class="wf-tab-content ${isActive}" id="wf-tab-baja">
+                <div class="wf-section">
+                    <h4 style="margin-bottom: 16px; color: #ff6b6b;">Proceso de Baja de Empresa</h4>
+
+                    <!-- Status Badge -->
+                    <div class="baja-status-container" style="margin-bottom: 20px;">
+                        ${renderBajaStatusBadge(offStatus)}
+                    </div>
+
+                    <!-- Stepper Visual -->
+                    <div class="baja-stepper" style="display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap;">
+                        ${renderBajaStepper(offStatus)}
+                    </div>
+
+                    <!-- Info Panel -->
+                    <div id="baja-info-panel" style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                        ${renderBajaInfoPanel(company, offStatus)}
+                    </div>
+
+                    <!-- Timeline de eventos -->
+                    <div id="baja-timeline-container" style="margin-bottom: 20px;">
+                        <h5 style="margin-bottom: 12px; color: #aaa;">Timeline de Eventos</h5>
+                        <div id="baja-timeline" style="max-height: 200px; overflow-y: auto; padding-left: 20px; border-left: 2px solid rgba(255,255,255,0.1);">
+                            <p style="color: #666; font-size: 12px;">Cargando eventos...</p>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Accion -->
+                    <div class="baja-actions" style="display: flex; gap: 10px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        ${renderBajaActions(companyId, offStatus)}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function renderBajaStatusBadge(status) {
+        const statusConfig = {
+            null: { label: 'Sin proceso activo', color: '#666', bg: 'rgba(100,100,100,0.2)' },
+            'warning_sent': { label: 'Aviso enviado', color: '#ffc107', bg: 'rgba(255,193,7,0.15)' },
+            'grace_period': { label: 'Periodo de gracia', color: '#ff9800', bg: 'rgba(255,152,0,0.15)' },
+            'export_pending': { label: 'Exportando datos...', color: '#2196f3', bg: 'rgba(33,150,243,0.15)' },
+            'export_ready': { label: 'Export listo', color: '#4caf50', bg: 'rgba(76,175,80,0.15)' },
+            'pending_confirmation': { label: 'Pendiente confirmacion', color: '#ff5722', bg: 'rgba(255,87,34,0.15)' },
+            'purging': { label: 'Purgando datos...', color: '#f44336', bg: 'rgba(244,67,54,0.15)' },
+            'completed': { label: 'Baja completada', color: '#9e9e9e', bg: 'rgba(158,158,158,0.15)' }
+        };
+        const cfg = statusConfig[status] || statusConfig[null];
+        return `<span style="display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; color: ${cfg.color}; background: ${cfg.bg}; border: 1px solid ${cfg.color}40;">${cfg.label}</span>`;
+    }
+
+    function renderBajaStepper(currentStatus) {
+        const steps = [
+            { key: 'warning_sent', label: 'Aviso', icon: '⚠️' },
+            { key: 'grace_period', label: 'Gracia', icon: '⏳' },
+            { key: 'export_pending', label: 'Export', icon: '📦' },
+            { key: 'pending_confirmation', label: 'Confirmar', icon: '✋' },
+            { key: 'purging', label: 'Purga', icon: '🗑️' },
+            { key: 'completed', label: 'Baja', icon: '✅' }
+        ];
+
+        const statusOrder = ['warning_sent', 'grace_period', 'export_pending', 'export_ready', 'pending_confirmation', 'purging', 'completed'];
+        const currentIdx = statusOrder.indexOf(currentStatus);
+
+        return steps.map((step, idx) => {
+            let stepStatus = 'pending';
+            if (currentIdx >= 0) {
+                if (idx < currentIdx || (idx === currentIdx && currentStatus === 'completed')) stepStatus = 'done';
+                else if (idx === currentIdx || (step.key === 'export_pending' && currentStatus === 'export_ready')) stepStatus = 'active';
+            }
+
+            const colors = { pending: '#555', active: '#2196f3', done: '#4caf50' };
+            const bgColors = { pending: 'rgba(85,85,85,0.2)', active: 'rgba(33,150,243,0.2)', done: 'rgba(76,175,80,0.2)' };
+
+            return `<div style="flex: 1; min-width: 60px; text-align: center; padding: 8px 4px; border-radius: 6px; background: ${bgColors[stepStatus]}; border: 1px solid ${colors[stepStatus]}40;">
+                <div style="font-size: 16px;">${step.icon}</div>
+                <div style="font-size: 10px; color: ${colors[stepStatus]}; margin-top: 2px;">${step.label}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderBajaInfoPanel(company, status) {
+        if (!status) {
+            return `<p style="color: #999; font-size: 13px; margin: 0;">No hay un proceso de baja activo para esta empresa. Para iniciar el proceso, la empresa debe tener una factura vencida por mas de 30 dias, o puede iniciarse manualmente con el boton "Iniciar Baja".</p>`;
+        }
+
+        let info = '';
+        if (company.offboarding_grace_deadline) {
+            info += `<div style="margin-bottom: 8px;"><strong style="color: #ff9800;">Deadline grace period:</strong> <span style="color: #eee;">${company.offboarding_grace_deadline}</span></div>`;
+        }
+        if (company.data_export_url) {
+            info += `<div style="margin-bottom: 8px;"><strong style="color: #4caf50;">Export URL:</strong> <a href="${company.data_export_url}" target="_blank" style="color: #64b5f6;">${company.data_export_url}</a></div>`;
+        }
+        if (company.cancellation_reason) {
+            info += `<div style="margin-bottom: 8px;"><strong style="color: #f44336;">Razon:</strong> <span style="color: #eee;">${company.cancellation_reason}</span></div>`;
+        }
+        if (company.offboarding_confirmed_at) {
+            info += `<div><strong style="color: #9e9e9e;">Confirmada:</strong> <span style="color: #eee;">${new Date(company.offboarding_confirmed_at).toLocaleString('es-AR')}</span></div>`;
+        }
+        return info || `<p style="color: #999; margin: 0;">Proceso en curso...</p>`;
+    }
+
+    function renderBajaActions(companyId, status) {
+        let buttons = '';
+
+        if (!status) {
+            buttons += `<button class="wf-btn wf-btn-danger" onclick="CompanyWorkflow.initiateBaja(${companyId})" style="background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">🔴 Iniciar Baja</button>`;
+        }
+
+        if (status === 'warning_sent' || status === 'grace_period') {
+            buttons += `<button class="wf-btn" onclick="CompanyWorkflow.forceExport(${companyId})" style="background: linear-gradient(135deg, #2196f3, #1976d2); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">📦 Forzar Export</button>`;
+        }
+
+        if (status === 'pending_confirmation' || status === 'export_ready') {
+            buttons += `<button class="wf-btn wf-btn-danger" onclick="CompanyWorkflow.confirmBaja(${companyId})" style="background: linear-gradient(135deg, #f44336, #c62828); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">✋ Confirmar Baja Definitiva</button>`;
+        }
+
+        if (status && status !== 'completed' && status !== 'purging') {
+            buttons += `<button class="wf-btn" onclick="CompanyWorkflow.cancelBaja(${companyId})" style="background: rgba(255,255,255,0.1); color: #aaa; border: 1px solid rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 6px; cursor: pointer;">Cancelar Proceso</button>`;
+        }
+
+        if (status === 'completed') {
+            buttons = `<p style="color: #9e9e9e; margin: 0;">La baja fue completada. Los datos operacionales han sido eliminados.</p>`;
+        }
+
+        return buttons;
+    }
+
+    // ========== BAJA: API CALLS ==========
+    async function initiateBaja(companyId) {
+        const invoiceId = prompt('Ingrese el ID de la factura vencida que origina la baja:');
+        if (!invoiceId) return;
+
+        if (!confirm('Esta accion enviara un aviso al cliente sobre la baja. Confirma?')) return;
+
+        try {
+            const res = await fetch(`/api/offboarding/${companyId}/initiate`, {
+                method: 'POST',
+                headers: WorkflowAPI.getHeaders(),
+                body: JSON.stringify({ invoiceId: parseInt(invoiceId), reason: 'Factura impaga > 30 dias' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Aviso de baja enviado al cliente. Grace period: ' + data.graceDeadline);
+                loadBajaTimeline(companyId);
+            } else {
+                alert('Error: ' + (data.error || 'Error desconocido'));
+            }
+        } catch (err) {
+            alert('Error de conexion: ' + err.message);
+        }
+    }
+
+    async function forceExport(companyId) {
+        if (!confirm('Forzar la exportacion de datos sin esperar el grace period?')) return;
+
+        try {
+            const res = await fetch(`/api/offboarding/${companyId}/export`, {
+                method: 'POST',
+                headers: WorkflowAPI.getHeaders()
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Export completado: ${data.export.totalRecords} registros (${data.export.sizeMB} MB)\nDrive: ${data.drive?.driveUrl || 'Local'}`);
+                loadBajaTimeline(companyId);
+            } else {
+                alert('Error: ' + (data.error || 'Error desconocido'));
+            }
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    }
+
+    async function confirmBaja(companyId) {
+        const reason = prompt('Razon de la baja definitiva:');
+        if (!reason) return;
+
+        const code = prompt('Ingrese los ultimos 4 digitos del CUIT de la empresa para confirmar:');
+        if (!code || code.length !== 4) {
+            alert('Codigo de confirmacion invalido. Debe ser exactamente 4 digitos.');
+            return;
+        }
+
+        if (!confirm('ATENCION: Esta accion es IRREVERSIBLE. Se borraran TODOS los datos operacionales de la empresa. Confirma la baja definitiva?')) return;
+
+        try {
+            const res = await fetch(`/api/offboarding/${companyId}/confirm`, {
+                method: 'POST',
+                headers: WorkflowAPI.getHeaders(),
+                body: JSON.stringify({ reason, confirmationCode: code })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Baja completada. ${data.purge.totalDeleted} registros eliminados.`);
+                loadBajaTimeline(companyId);
+            } else {
+                alert('Error: ' + (data.error || 'Error desconocido'));
+            }
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    }
+
+    async function cancelBaja(companyId) {
+        const reason = prompt('Razon de cancelacion (ej: cliente pago):');
+        if (!reason) return;
+
+        try {
+            const res = await fetch(`/api/offboarding/${companyId}/cancel`, {
+                method: 'POST',
+                headers: WorkflowAPI.getHeaders(),
+                body: JSON.stringify({ reason })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Proceso de baja cancelado.');
+                loadBajaTimeline(companyId);
+            } else {
+                alert('Error: ' + (data.error || 'Error desconocido'));
+            }
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    }
+
+    async function loadBajaTimeline(companyId) {
+        const container = document.getElementById('baja-timeline');
+        if (!container) return;
+
+        try {
+            const res = await fetch(`/api/offboarding/events/${companyId}`, {
+                headers: WorkflowAPI.getHeaders()
+            });
+            const data = await res.json();
+
+            if (data.success && data.events && data.events.length > 0) {
+                container.innerHTML = data.events.map(ev => `
+                    <div style="margin-bottom: 12px; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 12px; font-weight: 600; color: #ddd;">${formatEventType(ev.event_type)}</span>
+                            <span style="font-size: 11px; color: #777;">${new Date(ev.created_at).toLocaleString('es-AR')}</span>
+                        </div>
+                        ${ev.error_message ? `<div style="font-size: 11px; color: #f44336; margin-top: 4px;">${ev.error_message}</div>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p style="color: #666; font-size: 12px;">Sin eventos registrados.</p>';
+            }
+        } catch (err) {
+            container.innerHTML = '<p style="color: #f44336; font-size: 12px;">Error cargando timeline.</p>';
+        }
+    }
+
+    function formatEventType(type) {
+        const labels = {
+            'overdue_detected': '🔍 Factura vencida detectada',
+            'warning_sent': '⚠️ Aviso enviado al cliente',
+            'grace_period_started': '⏳ Grace period iniciado',
+            'grace_reminder_sent': '🔔 Recordatorio enviado',
+            'export_started': '📦 Exportacion iniciada',
+            'export_completed': '✅ Exportacion completada',
+            'export_failed': '❌ Error en exportacion',
+            'drive_uploaded': '☁️ Subido a Google Drive',
+            'drive_upload_failed': '❌ Error subiendo a Drive',
+            'client_notified_export': '📧 Cliente notificado',
+            'baja_confirmed': '✋ Baja confirmada',
+            'purge_started': '🗑️ Purga iniciada',
+            'purge_phase_completed': '✅ Fase de purga completada',
+            'purge_completed': '🔴 Purga completada',
+            'purge_failed': '❌ Error en purga',
+            'offboarding_cancelled': '↩️ Proceso cancelado',
+            'payment_received': '💰 Pago recibido'
+        };
+        return labels[type] || type;
+    }
+
     // ========== MODAL PRINCIPAL ==========
     function renderModalContent(company = null) {
         return `
@@ -683,6 +977,7 @@
                 ${renderTabModulos()}
                 ${renderTabSucursales()}
                 ${renderTabUsuarios()}
+                ${renderTabBaja(company)}
             </div>
         `;
     }
@@ -908,7 +1203,19 @@
             document.querySelectorAll('.wf-tab-content').forEach(tab => {
                 tab.classList.toggle('active', tab.id === `wf-tab-${tabId}`);
             });
+
+            // Cargar timeline si es tab baja
+            if (tabId === 'baja' && workflowState.currentCompany) {
+                const cid = workflowState.currentCompany.company_id || workflowState.currentCompany.id;
+                loadBajaTimeline(cid);
+            }
         },
+
+        // Baja de Empresa - Public API
+        initiateBaja(companyId) { return initiateBaja(companyId); },
+        forceExport(companyId) { return forceExport(companyId); },
+        confirmBaja(companyId) { return confirmBaja(companyId); },
+        cancelBaja(companyId) { return cancelBaja(companyId); },
 
         toggleModule(moduleKey) {
             const module = workflowState.availableModules.find(m => m.key === moduleKey);

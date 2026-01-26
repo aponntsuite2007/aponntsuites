@@ -386,11 +386,11 @@ const VacationEngine = window.VacationEngine = {
                             ` : requests.map(r => `
                                 <tr>
                                     <td><code>#${r.id}</code></td>
-                                    <td>${r.user?.firstName || ''} ${r.user?.lastName || ''}</td>
-                                    <td>${this.getRequestTypeBadge(r.request_type)}</td>
-                                    <td>${this.formatDate(r.start_date)} - ${this.formatDate(r.end_date)}</td>
-                                    <td><strong>${r.days_requested || '-'}</strong></td>
-                                    <td>${this.getSourceBadge(r.source)}</td>
+                                    <td>${r.user?.firstName || r.employee?.firstName || ''} ${r.user?.lastName || r.employee?.lastName || ''}</td>
+                                    <td>${this.getRequestTypeBadge(r.request_type || r.requestType || r.type)}</td>
+                                    <td>${this.formatDate(r.start_date || r.startDate)} - ${this.formatDate(r.end_date || r.endDate)}</td>
+                                    <td><strong>${r.days_requested || r.totalDays || r.daysRequested || '-'}</strong></td>
+                                    <td>${this.getSourceBadge(r.source || 'web')}</td>
                                     <td>${this.getStatusBadge(r.status)}</td>
                                     <td>
                                         <div class="ve-actions">
@@ -775,11 +775,12 @@ const VacationEngine = window.VacationEngine = {
         const types = {
             'vacation': { label: 'Vacaciones', class: 'success' },
             'personal_leave': { label: 'Personal', class: 'info' },
-            'sick_leave': { label: 'Medica', class: 'warning' },
+            'sick_leave': { label: 'Médica', class: 'warning' },
             'maternity': { label: 'Maternidad', class: 'info' },
-            'study_leave': { label: 'Estudio', class: 'info' }
+            'study_leave': { label: 'Estudio', class: 'info' },
+            'leave': { label: 'Licencia', class: 'info' }
         };
-        const t = types[type] || { label: type, class: 'info' };
+        const t = types[type] || { label: type || 'Sin tipo', class: 'secondary' };
         return `<span class="ve-badge ve-badge-${t.class}">${t.label}</span>`;
     },
 

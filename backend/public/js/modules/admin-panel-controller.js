@@ -1594,15 +1594,26 @@ const AdminPanelController = {
     },
 
     showNuevoVendedorModal() {
-        alert('Modal de nuevo vendedor - Por implementar');
+        this._showComingSoonToast('Alta de vendedor');
     },
 
     editVendedor(id) {
-        alert(`Editar vendedor ${id} - Por implementar`);
+        this._showComingSoonToast('Edicion de vendedor');
     },
 
     viewVendedorDetail(id) {
-        alert(`Detalle vendedor ${id} - Por implementar`);
+        this._showComingSoonToast('Detalle de vendedor');
+    },
+
+    _showComingSoonToast(feature) {
+        const existing = document.querySelector('.coming-soon-toast');
+        if (existing) existing.remove();
+        const toast = document.createElement('div');
+        toast.className = 'coming-soon-toast';
+        toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#334155;color:#f1f5f9;padding:12px 20px;border-radius:8px;z-index:99999;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.3s;';
+        toast.textContent = `${feature} - Disponible en la proxima actualizacion`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
     },
 
     // ==================== STAFF APONNT ====================

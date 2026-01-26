@@ -754,7 +754,9 @@ async function loadUsers() {
                       user.role === 'medical' ? 'Médico' : 'Empleado',
                 legajo: user.employeeId || user.user_id || 'N/A',
                 dni: user.dni || user.employeeId || 'N/A',
-                department: user.department || 'Sin asignar',
+                department: (typeof user.department === 'object' && user.department !== null)
+                    ? (user.department.name || 'Sin nombre')
+                    : (user.departmentName || user.department || 'Sin asignar'),
                 convenioColectivo: user.convenioColectivo || 'No especificado',
                 status: user.isActive !== false ? 'Activo' : 'Inactivo',
                 allowOutsideRadius: user.allowOutsideRadius || false,
@@ -929,14 +931,8 @@ function displayUsersTable(users) {
                 </td>
                 <td>
                     <div class="users-action-btns" style="display: flex; gap: 8px; justify-content: center;">
-                        <button class="users-action-btn view" onclick="viewUser('${user.id}')" title="Ver Empleado" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 38px; height: 38px; font-size: 1.1em; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                        <button class="users-action-btn view" onclick="viewUser('${user.id}')" title="Ver Empleado Completo" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 42px; height: 42px; font-size: 1.2em; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center;">
                             <i class="fas fa-eye" style="color: white;"></i>
-                        </button>
-                        <button class="users-action-btn edit" onclick="editUser('${user.id}')" title="Editar Empleado" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; width: 38px; height: 38px; font-size: 1.1em; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-edit" style="color: white;"></i>
-                        </button>
-                        <button class="users-action-btn delete" onclick="deleteUser('${user.id}')" title="Eliminar Empleado" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; width: 38px; height: 38px; font-size: 1.1em; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-trash" style="color: white;"></i>
                         </button>
                     </div>
                 </td>
@@ -5568,6 +5564,39 @@ async function loadEmployeeFileData(userId) {
 
     // Cargar condiciones adicionales del empleado
     await loadEmployeeConditions(userId);
+
+    // Cargar notificaciones del empleado
+    await loadEmployeeNotifications(userId);
+
+    // Cargar historial de asistencia
+    if (typeof loadAttendanceHistory === 'function') {
+        loadAttendanceHistory(userId);
+    }
+
+    // Cargar historial laboral
+    if (typeof loadWorkHistory === 'function') {
+        loadWorkHistory(userId);
+    }
+
+    // Cargar calendario del usuario (userId ya está en window.currentViewUserId desde viewUser)
+    if (typeof loadUserCalendar === 'function') {
+        loadUserCalendar();
+    }
+
+    // Cargar historial de liquidaciones (payroll)
+    if (typeof loadUserPayrollHistory === 'function') {
+        loadUserPayrollHistory(userId);
+    }
+
+    // Cargar banco de horas
+    if (typeof loadUserHourBank === 'function') {
+        loadUserHourBank(userId);
+    }
+
+    // Cargar métricas de horas trabajadas (tab asistencia)
+    if (typeof loadEmployeeHoursMetrics === 'function') {
+        loadEmployeeHoursMetrics(userId);
+    }
 }
 
 // Cargar estado de consentimiento biométrico para un usuario
@@ -5592,8 +5621,16 @@ async function loadBiometricConsentStatus(userId) {
 
         const consentStatusDiv = document.getElementById('consent-status');
         const consentDetailsDiv = document.getElementById('consent-details');
+        const biometricStatusContainer = document.getElementById('biometric-status-container');
 
-        if (!consentStatusDiv || !consentDetailsDiv) {
+        // Función helper para actualizar biometric-status-container
+        const updateBiometricStatusContainer = (statusHtml) => {
+            if (biometricStatusContainer) {
+                biometricStatusContainer.innerHTML = statusHtml;
+            }
+        };
+
+        if (!consentStatusDiv && !consentDetailsDiv && !biometricStatusContainer) {
             console.warn('⚠️ [CONSENT] Elementos DOM no encontrados');
             return;
         }
@@ -5613,8 +5650,8 @@ async function loadBiometricConsentStatus(userId) {
                 const isExpired = consent.expires_at && new Date(consent.expires_at) < new Date();
 
                 if (isExpired) {
-                    consentStatusDiv.innerHTML = '<span class="status-badge secondary">⏰ Expirado</span>';
-                    consentDetailsDiv.innerHTML = `
+                    if (consentStatusDiv) consentStatusDiv.innerHTML = '<span class="status-badge secondary">⏰ Expirado</span>';
+                    if (consentDetailsDiv) consentDetailsDiv.innerHTML = `
                         <div style="color: #dc3545;">
                             <strong>Consentimiento expirado</strong><br>
                             Otorgado: ${consentDate}<br>
@@ -5622,9 +5659,28 @@ async function loadBiometricConsentStatus(userId) {
                             Método: ${validationMethod}
                         </div>
                     `;
+                    updateBiometricStatusContainer(`
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center;">
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+                                <div style="font-size: 24px;">⏰</div>
+                                <strong>Consentimiento</strong><br>
+                                <span style="color: #856404;">Expirado</span>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                                <div style="font-size: 24px;">📅</div>
+                                <strong>Otorgado</strong><br>
+                                ${consentDate}
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                                <div style="font-size: 24px;">${validationMethod.split(' ')[0]}</div>
+                                <strong>Método</strong><br>
+                                ${validationMethod.split(' ')[1] || validationMethod}
+                            </div>
+                        </div>
+                    `);
                 } else {
-                    consentStatusDiv.innerHTML = '<span class="status-badge success">✅ Activo</span>';
-                    consentDetailsDiv.innerHTML = `
+                    if (consentStatusDiv) consentStatusDiv.innerHTML = '<span class="status-badge success">✅ Activo</span>';
+                    if (consentDetailsDiv) consentDetailsDiv.innerHTML = `
                         <div style="color: #28a745;">
                             <strong>Consentimiento otorgado</strong><br>
                             Fecha: ${consentDate}<br>
@@ -5633,29 +5689,76 @@ async function loadBiometricConsentStatus(userId) {
                             IP: ${consent.ip_address || 'No disponible'}
                         </div>
                     `;
+                    updateBiometricStatusContainer(`
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center;">
+                            <div style="background: #d4edda; padding: 15px; border-radius: 8px;">
+                                <div style="font-size: 24px;">✅</div>
+                                <strong>Consentimiento</strong><br>
+                                <span style="color: #155724;">Activo</span>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                                <div style="font-size: 24px;">📅</div>
+                                <strong>Fecha</strong><br>
+                                ${consentDate}
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                                <div style="font-size: 24px;">${validationMethod.split(' ')[0]}</div>
+                                <strong>Método</strong><br>
+                                ${validationMethod.split(' ')[1] || validationMethod}
+                            </div>
+                        </div>
+                    `);
                 }
             } else {
-                consentStatusDiv.innerHTML = '<span class="status-badge warning">⏳ Pendiente</span>';
-                consentDetailsDiv.innerHTML = `
+                if (consentStatusDiv) consentStatusDiv.innerHTML = '<span class="status-badge warning">⏳ Pendiente</span>';
+                if (consentDetailsDiv) consentDetailsDiv.innerHTML = `
                     <div style="color: #ffc107;">
                         <strong>Sin consentimiento</strong><br>
                         El empleado aún no ha otorgado su consentimiento para el análisis emocional biométrico.<br>
                         <em>Debe otorgarlo mediante validación biométrica (facial o huella).</em>
                     </div>
                 `;
+                updateBiometricStatusContainer(`
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+                            <div style="font-size: 24px;">⏳</div>
+                            <strong>Consentimiento</strong><br>
+                            <span style="color: #856404;">Pendiente</span>
+                        </div>
+                        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                            <div style="font-size: 24px;">📷</div>
+                            <strong>Registro</strong><br>
+                            Use el botón de captura
+                        </div>
+                    </div>
+                `);
             }
 
             console.log('✅ [CONSENT] Estado de consentimiento cargado exitosamente');
         } else if (response.status === 404 || response.status === 400) {
             // No hay consentimiento
-            consentStatusDiv.innerHTML = '<span class="status-badge warning">⏳ Pendiente</span>';
-            consentDetailsDiv.innerHTML = `
+            if (consentStatusDiv) consentStatusDiv.innerHTML = '<span class="status-badge warning">⏳ Pendiente</span>';
+            if (consentDetailsDiv) consentDetailsDiv.innerHTML = `
                 <div style="color: #ffc107;">
                     <strong>Sin consentimiento</strong><br>
                     El empleado aún no ha otorgado su consentimiento para el análisis emocional biométrico.<br>
                     <em>Debe otorgarlo mediante validación biométrica (facial o huella).</em>
                 </div>
             `;
+            updateBiometricStatusContainer(`
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 24px;">⏳</div>
+                        <strong>Consentimiento</strong><br>
+                        <span style="color: #856404;">Pendiente</span>
+                    </div>
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 24px;">📷</div>
+                        <strong>Registro</strong><br>
+                        Use el botón de captura
+                    </div>
+                </div>
+            `);
         } else {
             throw new Error('Error obteniendo consentimiento');
         }
@@ -5664,13 +5767,25 @@ async function loadBiometricConsentStatus(userId) {
         console.error('❌ [CONSENT] Error cargando consentimiento:', error);
         const consentStatusDiv = document.getElementById('consent-status');
         const consentDetailsDiv = document.getElementById('consent-details');
+        const biometricStatusContainer = document.getElementById('biometric-status-container');
 
-        if (consentStatusDiv && consentDetailsDiv) {
+        if (consentStatusDiv) {
             consentStatusDiv.innerHTML = '<span class="status-badge secondary">❌ Error</span>';
+        }
+        if (consentDetailsDiv) {
             consentDetailsDiv.innerHTML = `
                 <div style="color: #dc3545;">
                     <strong>Error al cargar</strong><br>
                     No se pudo obtener el estado del consentimiento.
+                </div>
+            `;
+        }
+        if (biometricStatusContainer) {
+            biometricStatusContainer.innerHTML = `
+                <div style="text-align: center; padding: 15px; color: #666;">
+                    <div style="font-size: 24px;">⏳</div>
+                    <p>Estado biométrico pendiente de configurar</p>
+                    <small>Use el botón "Capturar Foto Biométrica" para iniciar el registro</small>
                 </div>
             `;
         }
@@ -6037,63 +6152,69 @@ async function loadAttendanceHistory(userId) {
     container.innerHTML = '<p style="text-align: center; color: #666;"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</p>';
 
     try {
-        const response = await fetch(`/api/medical-cases/employee/${userId}`, {
+        // Usar endpoint de analytics para historial de scoring
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const response = await fetch(`/api/attendance-analytics/employee/${userId}/history?limit=10`, {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                'Authorization': `Bearer ${token}`
             }
         });
 
         if (!response.ok) {
-            throw new Error('Error al cargar historial de ausencias');
-        }
-
-        const data = await response.json();
-        const cases = data.cases || [];
-
-        if (cases.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">No hay ausencias registradas</p>';
+            // Mostrar mensaje de "sin datos" en vez de error
+            container.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #666;">
+                    <i class="fas fa-calendar-check" style="font-size: 32px; opacity: 0.5;"></i>
+                    <p style="margin-top: 10px;">Sin historial de asistencias registrado</p>
+                    <small>Los registros aparecerán cuando el empleado marque entrada/salida</small>
+                </div>
+            `;
             return;
         }
 
-        // Generate table
+        const data = await response.json();
+        const history = data.history || [];
+
+        if (history.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #666;">
+                    <i class="fas fa-chart-line" style="font-size: 32px; opacity: 0.5;"></i>
+                    <p style="margin-top: 10px;">Sin historial de scoring registrado</p>
+                    <small>El scoring se calcula automáticamente con los registros de asistencia</small>
+                </div>
+            `;
+            return;
+        }
+
+        // Generate scoring history table
         let html = `
             <table class="table table-hover" style="font-size: 13px;">
                 <thead style="background: #f8f9fa;">
                     <tr>
-                        <th style="width: 15%;">Fecha Inicio</th>
-                        <th style="width: 15%;">Tipo de Ausencia</th>
-                        <th style="width: 10%;">Días</th>
-                        <th style="width: 20%;">Estado</th>
-                        <th style="width: 20%;">Médico Asignado</th>
-                        <th style="width: 10%;">Mensajes</th>
-                        <th style="width: 10%;">Acciones</th>
+                        <th>Fecha</th>
+                        <th>Score Total</th>
+                        <th>Puntualidad</th>
+                        <th>Ausencias</th>
+                        <th>Cambio</th>
+                        <th>Tendencia</th>
                     </tr>
                 </thead>
                 <tbody>
         `;
 
-        cases.forEach(c => {
-            const statusBadge = getAbsenceCaseStatusBadge(c.case_status);
-            const typeBadge = getAbsenceTypeBadge(c.absence_type);
-            const doctorName = c.doctor_name || 'Sin asignar';
-            const unreadCount = c.unread_messages || 0;
-            const messagesBadge = unreadCount > 0
-                ? `<span class="badge badge-danger">${unreadCount} nuevos</span>`
-                : `<span class="badge badge-secondary">${c.total_messages || 0}</span>`;
+        history.forEach(h => {
+            const scoreColor = h.scoring_total >= 80 ? '#28a745' : h.scoring_total >= 60 ? '#ffc107' : '#dc3545';
+            const changeIcon = h.change > 0 ? '📈' : h.change < 0 ? '📉' : '➡️';
+            const changeColor = h.change > 0 ? '#28a745' : h.change < 0 ? '#dc3545' : '#6c757d';
 
             html += `
                 <tr>
-                    <td>${formatDateShort(c.start_date)}</td>
-                    <td>${typeBadge}</td>
-                    <td>${c.requested_days} días</td>
-                    <td>${statusBadge}</td>
-                    <td style="font-size: 12px;">${doctorName}</td>
-                    <td>${messagesBadge}</td>
-                    <td>
-                        <button class="btn btn-sm btn-info" onclick="viewAbsenceCase('${c.id}')" title="Ver detalles">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </td>
+                    <td>${new Date(h.date).toLocaleDateString('es-AR')}</td>
+                    <td><strong style="color: ${scoreColor}">${h.scoring_total.toFixed(1)}</strong></td>
+                    <td>${h.scoring_punctuality.toFixed(1)}</td>
+                    <td>${h.scoring_absence.toFixed(1)}</td>
+                    <td style="color: ${changeColor}">${changeIcon} ${h.change > 0 ? '+' : ''}${h.change.toFixed(1)}</td>
+                    <td>${h.trend || '-'}</td>
                 </tr>
             `;
         });
@@ -6890,6 +7011,8 @@ window.loadEducation = loadEducation;
 async function loadWorkHistory(userId) {
     console.log('💼 [WORK] Cargando historial laboral para usuario:', userId);
 
+    const workList = document.getElementById('work-history-list');
+
     try {
         const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         const response = await fetch(`/api/v1/users/${userId}/work-history`, {
@@ -6897,35 +7020,55 @@ async function loadWorkHistory(userId) {
         });
 
         if (!response.ok) {
-            console.error('❌ Error al cargar historial laboral:', response.status);
+            console.log('💼 [WORK] Endpoint no disponible o sin datos:', response.status);
+            if (workList) {
+                workList.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <i class="fas fa-briefcase" style="font-size: 32px; opacity: 0.5;"></i>
+                        <p style="margin-top: 10px;">Sin historial de empleos anteriores</p>
+                        <small>Los empleos previos se registran desde este panel</small>
+                    </div>
+                `;
+            }
             return;
         }
 
         const workRecords = await response.json();
-        console.log('💼 Registros de trabajo:', workRecords);
+        const records = workRecords.records || workRecords || [];
+        console.log('💼 Registros de trabajo:', records);
 
-        const workList = document.getElementById('work-history-list');
-        if (workList && workRecords.length > 0) {
-            const recordsHtml = workRecords.map(record => `
-                <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #007bff;">
-                    <strong>${record.company_name || 'Empresa'}</strong> - ${record.position || 'Cargo'}
-                    <br><small>Desde: ${record.start_date || 'N/A'} ${record.end_date ? '- Hasta: ' + record.end_date : '(Actual)'}</small>
+        if (!workList) return;
+
+        if (records.length === 0) {
+            workList.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #666;">
+                    <i class="fas fa-briefcase" style="font-size: 32px; opacity: 0.5;"></i>
+                    <p style="margin-top: 10px;">Sin historial de empleos anteriores</p>
+                    <small>Los empleos previos se pueden registrar aquí</small>
                 </div>
-            `).join('');
-
-            const existingRecords = workList.querySelector('.work-records');
-            if (existingRecords) {
-                existingRecords.innerHTML = recordsHtml;
-            } else {
-                const recordsDiv = document.createElement('div');
-                recordsDiv.className = 'work-records';
-                recordsDiv.innerHTML = recordsHtml;
-                workList.appendChild(recordsDiv);
-            }
+            `;
+            return;
         }
+
+        const recordsHtml = records.map(record => `
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #007bff;">
+                <strong>${record.company_name || 'Empresa'}</strong> - ${record.position || 'Cargo'}
+                <br><small>Desde: ${record.start_date || 'N/A'} ${record.end_date ? '- Hasta: ' + record.end_date : '(Actual)'}</small>
+            </div>
+        `).join('');
+
+        workList.innerHTML = `<div class="work-records">${recordsHtml}</div>`;
         console.log('✅ Historial laboral cargado');
     } catch (error) {
         console.error('❌ Error al cargar historial laboral:', error);
+        if (workList) {
+            workList.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #666;">
+                    <i class="fas fa-briefcase" style="font-size: 32px; opacity: 0.5;"></i>
+                    <p style="margin-top: 10px;">Sin historial de empleos anteriores</p>
+                </div>
+            `;
+        }
     }
 }
 
