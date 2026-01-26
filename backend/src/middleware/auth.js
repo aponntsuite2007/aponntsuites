@@ -1,5 +1,41 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { User } = require('../config/database');
+
+// =====================================================================
+// TOKEN BLACKLIST - In-memory revocation list
+// =====================================================================
+const tokenBlacklist = new Map(); // hash -> expiryTimestamp
+
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex').substring(0, 16);
+}
+
+function blacklistToken(token, expiresInMs = 24 * 60 * 60 * 1000) {
+  const hash = hashToken(token);
+  tokenBlacklist.set(hash, Date.now() + expiresInMs);
+  console.log(`🚫 [BLACKLIST] Token revocado (${tokenBlacklist.size} tokens en blacklist)`);
+}
+
+function isTokenBlacklisted(token) {
+  const hash = hashToken(token);
+  return tokenBlacklist.has(hash);
+}
+
+// Cleanup expired entries every 30 minutes
+setInterval(() => {
+  const now = Date.now();
+  let cleaned = 0;
+  for (const [hash, expiry] of tokenBlacklist.entries()) {
+    if (expiry < now) {
+      tokenBlacklist.delete(hash);
+      cleaned++;
+    }
+  }
+  if (cleaned > 0) {
+    console.log(`🧹 [BLACKLIST] Limpiados ${cleaned} tokens expirados (quedan ${tokenBlacklist.size})`);
+  }
+}, 30 * 60 * 1000);
 
 /**
  * Middleware de autenticación JWT
@@ -28,6 +64,13 @@ const auth = async (req, res, next) => {
     }
 
     const token = authHeader.substring(7); // Remover 'Bearer '
+
+    // Verificar si el token fue revocado (logout)
+    if (isTokenBlacklisted(token)) {
+      return res.status(401).json({
+        error: 'Sesion cerrada. Inicie sesion nuevamente.'
+      });
+    }
 
     // Verificar token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -379,6 +422,7 @@ module.exports = {
   supervisorOrAdmin,
   authorizeModule,
   canViewEmployee,
+  blacklistToken,
   // Aliases para compatibilidad
   authenticateJWT: auth,
   requireRole: authorize

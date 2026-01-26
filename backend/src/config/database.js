@@ -207,6 +207,9 @@ const AuditLog = require('../models/AuditLog')(sequelize);
 const AssistantKnowledgeBase = require('../models/AssistantKnowledgeBase')(sequelize);
 const AssistantConversation = require('../models/AssistantConversation')(sequelize);
 
+// ✅ MODELO - Sistema de Offboarding (Baja de Empresas)
+const CompanyOffboardingEvent = require('../models/CompanyOffboardingEvent')(sequelize);
+
 // ✅ MODELO - Process Chain Analytics (Tracking y métricas)
 const ProcessChainAnalytics = require('../models/ProcessChainAnalytics')(sequelize);
 
@@ -264,6 +267,7 @@ const PartnerCommissionLog = require('../models/PartnerCommissionLog')(sequelize
 const Quote = require('../models/Quote')(sequelize);
 const ModuleTrial = require('../models/ModuleTrial')(sequelize);
 const Contract = require('../models/Contract')(sequelize);
+const Invoice = require('../models/Invoice')(sequelize);
 
 // ✅ MODELOS - Sistema de TABs 2-9 Modal Ver Usuario (Persistencia Completa)
 const UserDriverLicense = require('../models/UserDriverLicense')(sequelize);
@@ -388,6 +392,127 @@ const RfqItem = require('../models/RfqItem')(sequelize);
 const RfqAttachment = require('../models/RfqAttachment')(sequelize);
 const SupplierInvoice = require('../models/SupplierInvoice')(sequelize);
 const SupplierInvoiceItem = require('../models/SupplierInvoiceItem')(sequelize);
+
+// ✅ MODELOS - Sistema Procurement P2P Completo (24 modelos)
+const ProcurementSupplier = require('../models/ProcurementSupplier')(sequelize);
+const ProcurementCategory = require('../models/ProcurementCategory')(sequelize);
+const ProcurementSector = require('../models/ProcurementSector')(sequelize);
+const ProcurementItem = require('../models/ProcurementItem')(sequelize);
+const ProcurementContract = require('../models/ProcurementContract')(sequelize);
+const ProcurementContractItem = require('../models/ProcurementContractItem')(sequelize);
+const ProcurementApprovalConfig = require('../models/ProcurementApprovalConfig')(sequelize);
+const ProcurementAccountingConfig = require('../models/ProcurementAccountingConfig')(sequelize);
+const ProcurementExchangeRate = require('../models/ProcurementExchangeRate')(sequelize);
+const ProcurementSupplierItemMapping = require('../models/ProcurementSupplierItemMapping')(sequelize);
+const ProcurementRequisition = require('../models/ProcurementRequisition')(sequelize);
+const ProcurementRequisitionItem = require('../models/ProcurementRequisitionItem')(sequelize);
+const ProcurementRfq = require('../models/ProcurementRfq')(sequelize);
+const ProcurementRfqItem = require('../models/ProcurementRfqItem')(sequelize);
+const ProcurementRfqSupplier = require('../models/ProcurementRfqSupplier')(sequelize);
+const ProcurementRfqQuote = require('../models/ProcurementRfqQuote')(sequelize);
+const ProcurementOrder = require('../models/ProcurementOrder')(sequelize);
+const ProcurementOrderItem = require('../models/ProcurementOrderItem')(sequelize);
+const ProcurementReceipt = require('../models/ProcurementReceipt')(sequelize);
+const ProcurementReceiptItem = require('../models/ProcurementReceiptItem')(sequelize);
+const ProcurementInternalReceipt = require('../models/ProcurementInternalReceipt')(sequelize);
+const ProcurementInternalReceiptItem = require('../models/ProcurementInternalReceiptItem')(sequelize);
+const ProcurementInvoice = require('../models/ProcurementInvoice')(sequelize);
+const ProcurementPayment = require('../models/ProcurementPayment')(sequelize);
+
+// ✅ MODELOS - Comunicaciones de Proveedores
+const SupplierCommunication = require('../models/SupplierCommunication')(sequelize);
+const SupplierCommunicationAttachment = require('../models/SupplierCommunicationAttachment')(sequelize);
+
+// =========================================================================
+// ✅ ASOCIACIONES - Sistema Procurement P2P Completo
+// =========================================================================
+
+// --- Supplier associations ---
+Company.hasMany(ProcurementSupplier, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'procurementSuppliers' });
+ProcurementSupplier.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// --- Category hierarchy ---
+ProcurementCategory.belongsTo(ProcurementCategory, { foreignKey: 'parent_id', as: 'parent' });
+ProcurementCategory.hasMany(ProcurementCategory, { foreignKey: 'parent_id', as: 'children' });
+
+// --- Supplier Item Mapping ---
+ProcurementSupplierItemMapping.belongsTo(ProcurementSupplier, { foreignKey: 'supplier_id', as: 'supplier' });
+ProcurementSupplier.hasMany(ProcurementSupplierItemMapping, { foreignKey: 'supplier_id', as: 'itemMappings' });
+
+// --- Contract associations ---
+ProcurementContract.belongsTo(ProcurementSupplier, { foreignKey: 'supplier_id', as: 'supplier' });
+ProcurementSupplier.hasMany(ProcurementContract, { foreignKey: 'supplier_id', as: 'contracts' });
+ProcurementContract.hasMany(ProcurementContractItem, { foreignKey: 'contract_id', as: 'items' });
+ProcurementContractItem.belongsTo(ProcurementContract, { foreignKey: 'contract_id', as: 'contract' });
+
+// --- Requisition chain ---
+Company.hasMany(ProcurementRequisition, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'requisitions' });
+ProcurementRequisition.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+ProcurementRequisition.hasMany(ProcurementRequisitionItem, { foreignKey: 'requisition_id', as: 'items' });
+ProcurementRequisitionItem.belongsTo(ProcurementRequisition, { foreignKey: 'requisition_id', as: 'requisition' });
+
+// --- RFQ chain ---
+ProcurementRfq.belongsTo(ProcurementRequisition, { foreignKey: 'requisition_id', as: 'requisition' });
+ProcurementRequisition.hasMany(ProcurementRfq, { foreignKey: 'requisition_id', as: 'rfqs' });
+ProcurementRfq.hasMany(ProcurementRfqItem, { foreignKey: 'rfq_id', as: 'items' });
+ProcurementRfqItem.belongsTo(ProcurementRfq, { foreignKey: 'rfq_id', as: 'rfq' });
+ProcurementRfq.hasMany(ProcurementRfqSupplier, { foreignKey: 'rfq_id', as: 'invitedSuppliers' });
+ProcurementRfqSupplier.belongsTo(ProcurementRfq, { foreignKey: 'rfq_id', as: 'rfq' });
+ProcurementRfqSupplier.belongsTo(ProcurementSupplier, { foreignKey: 'supplier_id', as: 'supplier' });
+ProcurementSupplier.hasMany(ProcurementRfqSupplier, { foreignKey: 'supplier_id', as: 'rfqInvitations' });
+ProcurementRfqQuote.belongsTo(ProcurementRfqSupplier, { foreignKey: 'rfq_supplier_id', as: 'rfqSupplier' });
+ProcurementRfqSupplier.hasMany(ProcurementRfqQuote, { foreignKey: 'rfq_supplier_id', as: 'quotes' });
+ProcurementRfqQuote.belongsTo(ProcurementRfqItem, { foreignKey: 'rfq_item_id', as: 'rfqItem' });
+ProcurementRfqItem.hasMany(ProcurementRfqQuote, { foreignKey: 'rfq_item_id', as: 'quotes' });
+
+// --- Purchase Order chain ---
+ProcurementOrder.belongsTo(ProcurementSupplier, { foreignKey: 'supplier_id', as: 'supplier' });
+ProcurementSupplier.hasMany(ProcurementOrder, { foreignKey: 'supplier_id', as: 'orders' });
+ProcurementOrder.belongsTo(ProcurementRequisition, { foreignKey: 'requisition_id', as: 'requisition' });
+ProcurementOrder.belongsTo(ProcurementRfq, { foreignKey: 'rfq_id', as: 'rfq' });
+ProcurementOrder.belongsTo(ProcurementContract, { foreignKey: 'contract_id', as: 'contract' });
+ProcurementOrder.hasMany(ProcurementOrderItem, { foreignKey: 'order_id', as: 'items', onDelete: 'CASCADE' });
+ProcurementOrderItem.belongsTo(ProcurementOrder, { foreignKey: 'order_id', as: 'order' });
+
+// --- Receipt/Remito chain ---
+ProcurementReceipt.belongsTo(ProcurementOrder, { foreignKey: 'order_id', as: 'order' });
+ProcurementOrder.hasMany(ProcurementReceipt, { foreignKey: 'order_id', as: 'receipts' });
+ProcurementReceipt.hasMany(ProcurementReceiptItem, { foreignKey: 'receipt_id', as: 'items', onDelete: 'CASCADE' });
+ProcurementReceiptItem.belongsTo(ProcurementReceipt, { foreignKey: 'receipt_id', as: 'receipt' });
+ProcurementReceiptItem.belongsTo(ProcurementOrderItem, { foreignKey: 'order_item_id', as: 'orderItem' });
+
+// --- Internal Receipt ---
+ProcurementInternalReceipt.hasMany(ProcurementInternalReceiptItem, { foreignKey: 'internal_receipt_id', as: 'items', onDelete: 'CASCADE' });
+ProcurementInternalReceiptItem.belongsTo(ProcurementInternalReceipt, { foreignKey: 'internal_receipt_id', as: 'internalReceipt' });
+
+// --- Invoice chain ---
+ProcurementInvoice.belongsTo(ProcurementSupplier, { foreignKey: 'supplier_id', as: 'supplier' });
+ProcurementSupplier.hasMany(ProcurementInvoice, { foreignKey: 'supplier_id', as: 'invoices' });
+
+// --- Payment chain ---
+ProcurementPayment.belongsTo(ProcurementSupplier, { foreignKey: 'supplier_id', as: 'supplier' });
+ProcurementSupplier.hasMany(ProcurementPayment, { foreignKey: 'supplier_id', as: 'payments' });
+
+// --- Supplier Communication ---
+SupplierCommunication.belongsTo(ProcurementSupplier, { foreignKey: 'supplier_id', as: 'supplier' });
+ProcurementSupplier.hasMany(SupplierCommunication, { foreignKey: 'supplier_id', as: 'communications' });
+SupplierCommunication.hasMany(SupplierCommunicationAttachment, { foreignKey: 'communication_id', as: 'attachments', onDelete: 'CASCADE' });
+SupplierCommunicationAttachment.belongsTo(SupplierCommunication, { foreignKey: 'communication_id', as: 'communication' });
+
+// --- Finance Payment Order associations (previously missing .associate() calls) ---
+FinancePaymentOrder.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+FinancePaymentOrder.belongsTo(ProcurementSupplier, { foreignKey: 'supplier_id', as: 'supplier' });
+FinancePaymentOrder.belongsTo(FinanceCostCenter, { foreignKey: 'cost_center_id', as: 'costCenter' });
+FinancePaymentOrder.belongsTo(FinanceCashRegister, { foreignKey: 'cash_register_id', as: 'cashRegister' });
+FinancePaymentOrder.belongsTo(FinanceCashMovement, { foreignKey: 'cash_movement_id', as: 'cashMovement' });
+FinancePaymentOrder.belongsTo(FinanceJournalEntry, { foreignKey: 'journal_entry_id', as: 'journalEntry' });
+FinancePaymentOrder.hasMany(FinancePaymentOrderItem, { foreignKey: 'payment_order_id', as: 'items', onDelete: 'CASCADE' });
+FinancePaymentOrderItem.belongsTo(FinancePaymentOrder, { foreignKey: 'payment_order_id', as: 'paymentOrder' });
+FinancePaymentOrderItem.belongsTo(ProcurementInvoice, { foreignKey: 'invoice_id', as: 'invoice' });
+FinancePaymentOrder.hasMany(FinanceIssuedCheck, { foreignKey: 'payment_order_id', as: 'issuedChecks' });
+FinanceIssuedCheck.belongsTo(FinancePaymentOrder, { foreignKey: 'payment_order_id', as: 'paymentOrder' });
+FinanceIssuedCheck.belongsTo(FinanceCheckBook, { foreignKey: 'checkbook_id', as: 'checkbook' });
+FinanceIssuedCheck.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
 
 // Definir asociaciones
 // IMPORTANTE: User tiene 'user_id' como PK, NO 'id' - siempre especificar sourceKey
@@ -1854,6 +1979,8 @@ module.exports = {
   AssistantConversation,
   // ✅ EXPORT - Process Chain Analytics
   ProcessChainAnalytics,
+  // ✅ EXPORT - Sistema de Offboarding (Baja de Empresas)
+  CompanyOffboardingEvent,
   // ✅ EXPORTS - Workflow Alta de Empresa (FASE 1-5)
   // TEMP: Budget,
   // TEMP: ContractOnboarding,
@@ -1891,6 +2018,7 @@ module.exports = {
   Quote,
   ModuleTrial,
   Contract,
+  Invoice,
 
   // ✅ EXPORTS - TABs 2-9 Modal Ver Usuario (Persistencia Completa)
   UserDriverLicense,
@@ -2001,6 +2129,34 @@ module.exports = {
   RfqAttachment,
   SupplierInvoice,
   SupplierInvoiceItem,
+
+  // ✅ EXPORTS - Sistema Procurement P2P Completo (24 modelos)
+  ProcurementSupplier,
+  ProcurementCategory,
+  ProcurementSector,
+  ProcurementItem,
+  ProcurementContract,
+  ProcurementContractItem,
+  ProcurementApprovalConfig,
+  ProcurementAccountingConfig,
+  ProcurementExchangeRate,
+  ProcurementSupplierItemMapping,
+  ProcurementRequisition,
+  ProcurementRequisitionItem,
+  ProcurementRfq,
+  ProcurementRfqItem,
+  ProcurementRfqSupplier,
+  ProcurementRfqQuote,
+  ProcurementOrder,
+  ProcurementOrderItem,
+  ProcurementReceipt,
+  ProcurementReceiptItem,
+  ProcurementInternalReceipt,
+  ProcurementInternalReceiptItem,
+  ProcurementInvoice,
+  ProcurementPayment,
+  SupplierCommunication,
+  SupplierCommunicationAttachment,
 
   // ✅ EXPORTS - Finance Enterprise System (39 modelos)
   FinanceChartOfAccounts,

@@ -101,21 +101,11 @@ function configureDynamicPorts() {
 
 configureDynamicPorts();
 
-// 🛡️ HELMET - Security headers (CSP, HSTS, X-Frame-Options, etc.)
+// 🛡️ HELMET - Security headers (CSP deshabilitado en desarrollo para evitar problemas con CDN)
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'", "ws:", "wss:", "https://aponntsuites.onrender.com", "https://www.aponnt.com"],
-      frameSrc: ["'none'"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
-    }
-  },
+  // CSP DESHABILITADO en desarrollo - Los CDN (Bootstrap, FontAwesome, etc.) causan conflictos
+  // En producción, habilitar con whitelist completa
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
@@ -2314,47 +2304,8 @@ app.post(`${API_PREFIX}/shifts`, (req, res) => {
 });
 */
 
-// Endpoint para obtener turno por ID
-app.get(`${API_PREFIX}/shifts/:id`, (req, res) => {
-  const { id } = req.params;
-
-  // Buscar en turnos de ejemplo
-  const exampleShifts = [
-    {
-      id: 'example-1',
-      name: 'Turno Mañana Estándar',
-      type: 'standard',
-      startTime: '08:00',
-      endTime: '17:00',
-      breakStartTime: '12:00',
-      breakEndTime: '13:00',
-      days: [1,2,3,4,5],
-      isActive: true,
-      employees: 12,
-      hourlyRates: { normal: 1.0, overtime: 1.5, weekend: 1.5, holiday: 2.0 }
-    },
-    {
-      id: 'example-2',
-      name: 'Turno Tarde',
-      type: 'standard',
-      startTime: '14:00',
-      endTime: '22:00',
-      days: [1,2,3,4,5],
-      isActive: true,
-      employees: 8,
-      hourlyRates: { normal: 1.0, overtime: 1.5, weekend: 1.5, holiday: 2.0 }
-    }
-  ];
-
-  const allShifts = [...exampleShifts, ...createdShifts];
-  const shift = allShifts.find(s => s.id === id);
-
-  if (!shift) {
-    return res.status(404).json({ error: 'Turno no encontrado' });
-  }
-
-  res.json({ shift });
-});
+// REMOVIDO: Handler mock GET /shifts/:id interceptaba antes que shiftRoutes.js
+// Ahora /api/v1/shifts/:id se maneja por shiftRoutes.js con persistencia real en BD
 
 // COMENTADO: Handlers mock removidos - shiftRoutes.js maneja PUT y DELETE con persistencia real
 // Los handlers estaban interceptando antes de que shiftRoutes.js pudiera procesarlos
@@ -2736,6 +2687,7 @@ app.use('/api/vendor-automation-advanced', vendorAutomationRoutes);
 app.use('/api/vendors', vendorCommissionsRoutes); // Sistema de Roles y Comisiones (Enero 2025)
 app.use('/api/partners/commissions', partnerCommissionRoutes); // 💰 Comisiones Partner-Aponnt (Dic 2025)
 app.use('/api/partners', partnerRoutes); // 🤝 Partners Marketplace (Dic 2025)
+app.use('/api/offboarding', require('./src/routes/offboardingRoutes')); // 🔴 Baja de Empresas (Ene 2026)
 app.use('/api', pricingRoutes);
 
 // 💼 CIRCUITO COMERCIAL COMPLETO - 6 FASES (Enero 2025)
@@ -4243,6 +4195,20 @@ async function startServer() {
     } catch (billingCronError) {
       console.warn('⚠️  [BILLING-CRON] Error iniciando cron jobs de facturación:', billingCronError.message);
       console.warn('⚠️  [BILLING-CRON] El servidor continuará sin facturación automática.\n');
+    }
+
+    // ✅ INICIALIZAR CRON JOBS DE OFFBOARDING (Baja de Empresas)
+    console.log('⏰ [OFFBOARDING-CRON] Inicializando cron jobs de baja de empresas...');
+    try {
+      const { initOffboardingCronJobs } = require('./src/cron/offboardingCronJobs');
+      initOffboardingCronJobs();
+      console.log('✅ [OFFBOARDING-CRON] Cron jobs de offboarding iniciados correctamente');
+      console.log('   • Job 1: Detección facturas vencidas > 30 días - Diario 8:00 AM');
+      console.log('   • Job 2: Grace period check - Diario 8:30 AM');
+      console.log('   • Job 3: Cleanup exports - Domingos 3:00 AM\n');
+    } catch (offboardingCronError) {
+      console.warn('⚠️  [OFFBOARDING-CRON] Error iniciando cron jobs de offboarding:', offboardingCronError.message);
+      console.warn('⚠️  [OFFBOARDING-CRON] El servidor continuará sin offboarding automático.\n');
     }
 
     // ✅ INICIALIZAR CRON JOBS DE NOTIFICACIONES
