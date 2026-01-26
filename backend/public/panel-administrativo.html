@@ -20,6 +20,25 @@
     <!-- Configuración dinámica de puertos -->
     <script src="js/port-config.js"></script>
 
+    <!-- Sanitizador HTML Global - XSS Prevention -->
+    <script>
+        window.escapeHTML = function(str) {
+            if (str == null) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+        };
+        window.sanitizeForDisplay = function(obj) {
+            if (typeof obj === 'string') return window.escapeHTML(obj);
+            if (obj == null || typeof obj !== 'object') return obj;
+            const clean = Array.isArray(obj) ? [] : {};
+            for (const key of Object.keys(obj)) {
+                if (typeof obj[key] === 'string') clean[key] = window.escapeHTML(obj[key]);
+                else if (typeof obj[key] === 'object' && obj[key] !== null) clean[key] = window.sanitizeForDisplay(obj[key]);
+                else clean[key] = obj[key];
+            }
+            return clean;
+        };
+    </script>
+
     <!-- Dark Theme CSS -->
     <link rel="stylesheet" href="css/admin-panel-dark.css">
 
