@@ -77,7 +77,7 @@ class SupplierPortalService {
                 role: user.role,
                 type: 'supplier_portal'
             },
-            process.env.JWT_SECRET || 'supplier_portal_secret_key',
+            process.env.JWT_SECRET,
             { expiresIn: '8h' }
         );
 
@@ -190,9 +190,7 @@ class SupplierPortalService {
             success: true,
             message: `Código de verificación enviado a ${user.email}`,
             tokenId: tokenData.tokenId,
-            expiresAt: tokenData.expiresAt,
-            // SOLO PARA TESTING - ELIMINAR EN PRODUCCIÓN
-            _devToken: tokenData.token
+            expiresAt: tokenData.expiresAt
         };
     }
 
@@ -1434,7 +1432,7 @@ class SupplierPortalService {
             WHERE s.supplier_id = $1 AND spu.id = $2
         `;
 
-        const result = await pool.query(query, [supplierId, portalUserId]);
+        const result = await this.pool.query(query, [supplierId, portalUserId]);
 
         if (result.rows.length === 0) {
             throw new Error('Perfil no encontrado');
@@ -1444,7 +1442,7 @@ class SupplierPortalService {
     }
 
     /**
-     * Update supplier profile
+     * Update supplier profile (contact info only - no banking)
      */
     async updateSupplierProfile(supplierId, portalUserId, data) {
         const {
@@ -1470,7 +1468,7 @@ class SupplierPortalService {
             RETURNING *
         `;
 
-        const result = await pool.query(query, [
+        const result = await this.pool.query(query, [
             contact_phone,
             address,
             city,
@@ -1484,14 +1482,12 @@ class SupplierPortalService {
     }
 
     /**
-     * Change password
+     * Change password (portal user) - uses password_hash column
      */
-    async changePassword(portalUserId, currentPassword, newPassword) {
-        const bcrypt = require('bcrypt');
-
+    async changePortalPassword(portalUserId, currentPassword, newPassword) {
         // Get current password hash
-        const userQuery = await pool.query(
-            'SELECT password FROM supplier_portal_users WHERE id = $1',
+        const userQuery = await this.pool.query(
+            'SELECT password_hash FROM supplier_portal_users WHERE id = $1',
             [portalUserId]
         );
 
@@ -1502,9 +1498,14 @@ class SupplierPortalService {
         const user = userQuery.rows[0];
 
         // Verify current password
-        const isValid = await bcrypt.compare(currentPassword, user.password);
+        const isValid = await bcrypt.compare(currentPassword, user.password_hash);
         if (!isValid) {
             throw new Error('Contraseña actual incorrecta');
+        }
+
+        // Validate new password strength
+        if (!newPassword || newPassword.length < 8) {
+            throw new Error('La nueva contraseña debe tener al menos 8 caracteres');
         }
 
         // Hash new password
@@ -1514,7 +1515,7 @@ class SupplierPortalService {
         const updateQuery = `
             UPDATE supplier_portal_users
             SET
-                password = $1,
+                password_hash = $1,
                 must_change_password = false,
                 last_password_change = CURRENT_TIMESTAMP,
                 updated_at = CURRENT_TIMESTAMP
@@ -1522,43 +1523,7 @@ class SupplierPortalService {
             RETURNING id, email, must_change_password, last_password_change
         `;
 
-        const result = await pool.query(updateQuery, [hashedPassword, portalUserId]);
-
-        return result.rows[0];
-    }
-
-    /**
-     * Update banking information
-     */
-    async updateBankingInfo(supplierId, data) {
-        const { bank_name, bank_account, bank_cbu_cvu } = data;
-
-        if (!bank_name || !bank_account || !bank_cbu_cvu) {
-            throw new Error('Información bancaria incompleta');
-        }
-
-        // Validate CBU/CVU format (22 digits)
-        if (!/^\d{22}$/.test(bank_cbu_cvu)) {
-            throw new Error('CBU/CVU debe tener 22 dígitos');
-        }
-
-        const query = `
-            UPDATE wms_suppliers
-            SET
-                bank_name = $1,
-                bank_account = $2,
-                bank_cbu_cvu = $3,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE supplier_id = $4
-            RETURNING supplier_id, bank_name, bank_account, bank_cbu_cvu
-        `;
-
-        const result = await pool.query(query, [
-            bank_name,
-            bank_account,
-            bank_cbu_cvu,
-            supplierId
-        ]);
+        const result = await this.pool.query(updateQuery, [hashedPassword, portalUserId]);
 
         return result.rows[0];
     }

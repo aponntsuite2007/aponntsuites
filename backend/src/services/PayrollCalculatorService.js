@@ -612,16 +612,19 @@ class PayrollCalculatorService {
     async getAttendanceData(userId, companyId, startDate, endDate) {
         const query = `
             SELECT
-                id, check_in, check_out, break_out, break_in,
-                DATE(check_in) as work_date,
-                EXTRACT(EPOCH FROM (COALESCE(check_out, check_in) - check_in)) / 3600 as raw_hours,
+                id,
+                "checkInTime" as check_in,
+                "checkOutTime" as check_out,
+                break_out, break_in,
+                DATE("checkInTime") as work_date,
+                EXTRACT(EPOCH FROM (COALESCE("checkOutTime", "checkInTime") - "checkInTime")) / 3600 as raw_hours,
                 EXTRACT(EPOCH FROM (COALESCE(break_in, break_out) - break_out)) / 3600 as break_hours,
                 origin_type, status
             FROM attendances
-            WHERE user_id = $1
+            WHERE "UserId" = $1
             AND company_id = $2
-            AND check_in BETWEEN $3 AND $4
-            ORDER BY check_in
+            AND "checkInTime" BETWEEN $3 AND $4
+            ORDER BY "checkInTime"
         `;
 
         try {

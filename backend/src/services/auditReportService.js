@@ -31,6 +31,7 @@ const crypto = require('crypto');
 const fs = require('fs').promises;
 const path = require('path');
 const database = require('../config/database');
+const DocumentHeaderService = require('./DocumentHeaderService');
 
 class AuditReportService {
     constructor() {
@@ -434,20 +435,21 @@ class AuditReportService {
      * Generar PDF según plantilla
      */
     async generatePDF(companyId, reportType, reportData, params) {
+        const doc = new PDFDocument({
+            size: 'LETTER',
+            margins: { top: 50, bottom: 50, left: 50, right: 50 }
+        });
+
+        const chunks = [];
+        doc.on('data', chunk => chunks.push(chunk));
+
+        // Header con datos de empresa
+        await this.addPDFHeader(doc, companyId, reportType);
+
         return new Promise((resolve, reject) => {
             try {
-                const doc = new PDFDocument({
-                    size: 'LETTER',
-                    margins: { top: 50, bottom: 50, left: 50, right: 50 }
-                });
-
-                const chunks = [];
-                doc.on('data', chunk => chunks.push(chunk));
                 doc.on('end', () => resolve(Buffer.concat(chunks)));
                 doc.on('error', reject);
-
-                // Header
-                this.addPDFHeader(doc, companyId, reportType);
 
                 // Contenido según tipo de reporte
                 switch (reportType) {
@@ -483,32 +485,33 @@ class AuditReportService {
     }
 
     /**
-     * Agregar header al PDF
+     * Agregar header al PDF usando DocumentHeaderService centralizado
      */
-    addPDFHeader(doc, companyId, reportType) {
+    async addPDFHeader(doc, companyId, reportType) {
         const reportTitles = {
-            'compliance_audit': 'Auditoría de Cumplimiento Legal',
-            'sla_performance': 'Reporte de Rendimiento SLA',
-            'resource_utilization': 'Utilización de Recursos',
-            'attendance_summary': 'Resumen de Asistencias',
-            'employee_performance': 'Desempeño de Empleado',
-            'violation_report': 'Reporte de Violaciones'
+            'compliance_audit': 'AUDITORÍA DE CUMPLIMIENTO LEGAL',
+            'sla_performance': 'REPORTE DE RENDIMIENTO SLA',
+            'resource_utilization': 'UTILIZACIÓN DE RECURSOS',
+            'attendance_summary': 'RESUMEN DE ASISTENCIAS',
+            'employee_performance': 'DESEMPEÑO DE EMPLEADO',
+            'violation_report': 'REPORTE DE VIOLACIONES'
         };
 
-        doc.fontSize(20)
-           .font('Helvetica-Bold')
-           .text(reportTitles[reportType] || 'Reporte de Auditoría', { align: 'center' });
+        const documentTitle = reportTitles[reportType] || 'REPORTE DE AUDITORÍA';
+        const reportNumber = `AUD-${Date.now().toString(36).toUpperCase()}`;
 
+        // Usar DocumentHeaderService para encabezado profesional con datos de empresa
+        const currentY = await DocumentHeaderService.addPDFHeader(doc, {
+            companyId: companyId,
+            documentType: documentTitle,
+            documentNumber: reportNumber,
+            documentDate: new Date(),
+            recipient: null // Los reportes de auditoría no tienen destinatario
+        });
+
+        doc.y = currentY;
         doc.moveDown(0.5);
-
-        doc.fontSize(10)
-           .font('Helvetica')
-           .text(`Empresa ID: ${companyId}`, { align: 'center' })
-           .text(`Fecha de Generación: ${new Date().toLocaleString('es-ES')}`, { align: 'center' });
-
-        doc.moveDown(1);
-        doc.moveTo(50, doc.y).lineTo(562, doc.y).stroke();
-        doc.moveDown(1);
+        return currentY;
     }
 
     /**

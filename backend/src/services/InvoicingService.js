@@ -33,7 +33,11 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
-const { Invoice, Contract, Company, sequelize } = require('../config/database');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
+const { Invoice, Contract, Company, InvoiceItem, sequelize } = require('../config/database');
+const DocumentHeaderService = require('./DocumentHeaderService');
 
 class InvoicingService {
 
@@ -595,25 +599,198 @@ Ciclo de facturación: ${contract.billing_cycle}
    * ============================================
    * GENERATE PDF - Generar PDF de factura
    * ============================================
-   * FUTURO: Implementar con PDFKit
+   * Genera PDF profesional con encabezado de empresa
    */
-  async generatePDF(invoiceId) {
+  async generatePDF(invoiceId, options = {}) {
     try {
-      const invoice = await this.findById(invoiceId);
+      // 1. Obtener factura con items y empresa
+      const invoice = await Invoice.findByPk(invoiceId, {
+        include: [
+          { model: Company, as: 'company' }
+        ]
+      });
 
-      // TODO: Implementar generación de PDF
-      console.log(`📄 [INVOICE] PDF pendiente de implementar para: ${invoice.invoice_number}`);
+      if (!invoice) {
+        throw new Error(`Invoice ID ${invoiceId} no encontrada`);
+      }
+
+      // Obtener items de la factura
+      const items = await InvoiceItem.findAll({
+        where: { invoice_id: invoiceId },
+        order: [['id', 'ASC']]
+      });
+
+      // 2. Configurar directorio de salida
+      const outputDir = path.join(__dirname, '../../storage/invoices');
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+      }
+
+      const filename = `${invoice.invoice_number.replace(/\//g, '-')}.pdf`;
+      const filepath = path.join(outputDir, filename);
+
+      // 3. Crear documento PDF
+      const doc = new PDFDocument({
+        size: 'A4',
+        margin: 50,
+        info: {
+          Title: `Factura ${invoice.invoice_number}`,
+          Author: invoice.company?.name || 'Sistema',
+          Subject: `Factura período ${invoice.billing_period_month}/${invoice.billing_period_year}`
+        }
+      });
+
+      const stream = fs.createWriteStream(filepath);
+      doc.pipe(stream);
+
+      // 4. Agregar encabezado con datos de empresa
+      let currentY = await DocumentHeaderService.addPDFHeader(doc, {
+        companyId: invoice.company_id,
+        documentType: 'FACTURA',
+        documentNumber: invoice.invoice_number,
+        documentDate: invoice.issue_date,
+        recipient: invoice.company ? {
+          name: invoice.company.legal_name || invoice.company.name,
+          taxId: invoice.company.tax_id,
+          address: invoice.company.address
+        } : null
+      });
+
+      // 5. Información del período
+      currentY += 10;
+      doc.fontSize(11).font('Helvetica-Bold').fillColor('#333');
+      doc.text('Período de Facturación:', 50, currentY);
+      doc.font('Helvetica').text(
+        `${this.getMonthName(invoice.billing_period_month)} ${invoice.billing_period_year}`,
+        200, currentY
+      );
+
+      currentY += 20;
+      doc.text('Fecha de Vencimiento:', 50, currentY);
+      doc.text(DocumentHeaderService.formatDateShort(invoice.due_date), 200, currentY);
+
+      // 6. Tabla de items
+      currentY += 40;
+      doc.fontSize(12).font('Helvetica-Bold');
+      doc.text('Detalle de Servicios', 50, currentY);
+
+      currentY += 20;
+
+      // Header de tabla
+      doc.fontSize(9).font('Helvetica-Bold').fillColor('#fff');
+      doc.rect(50, currentY, 510, 20).fill('#333');
+      doc.text('Descripción', 55, currentY + 6);
+      doc.text('Cant.', 320, currentY + 6, { width: 50, align: 'center' });
+      doc.text('Precio Unit.', 370, currentY + 6, { width: 80, align: 'right' });
+      doc.text('Subtotal', 460, currentY + 6, { width: 95, align: 'right' });
+
+      currentY += 20;
+
+      // Filas de items
+      doc.font('Helvetica').fillColor('#333');
+      if (items && items.length > 0) {
+        items.forEach((item, idx) => {
+          const bgColor = idx % 2 === 0 ? '#f9f9f9' : '#fff';
+          doc.rect(50, currentY, 510, 20).fill(bgColor);
+          doc.fillColor('#333');
+          doc.text(item.description, 55, currentY + 6, { width: 260 });
+          doc.text(item.quantity.toString(), 320, currentY + 6, { width: 50, align: 'center' });
+          doc.text(this.formatCurrency(item.unit_price, invoice.currency), 370, currentY + 6, { width: 80, align: 'right' });
+          doc.text(this.formatCurrency(item.subtotal, invoice.currency), 460, currentY + 6, { width: 95, align: 'right' });
+          currentY += 20;
+        });
+      } else {
+        // Si no hay items, mostrar el total como un solo concepto
+        doc.rect(50, currentY, 510, 20).fill('#f9f9f9');
+        doc.fillColor('#333');
+        doc.text('Servicios del período', 55, currentY + 6, { width: 260 });
+        doc.text('1', 320, currentY + 6, { width: 50, align: 'center' });
+        doc.text(this.formatCurrency(invoice.subtotal, invoice.currency), 370, currentY + 6, { width: 80, align: 'right' });
+        doc.text(this.formatCurrency(invoice.subtotal, invoice.currency), 460, currentY + 6, { width: 95, align: 'right' });
+        currentY += 20;
+      }
+
+      // 7. Totales
+      currentY += 10;
+      doc.strokeColor('#333').lineWidth(0.5);
+      doc.moveTo(350, currentY).lineTo(560, currentY).stroke();
+
+      currentY += 10;
+      doc.fontSize(10).font('Helvetica');
+      doc.text('Subtotal:', 350, currentY);
+      doc.text(this.formatCurrency(invoice.subtotal, invoice.currency), 460, currentY, { width: 95, align: 'right' });
+
+      if (parseFloat(invoice.tax_amount) > 0) {
+        currentY += 18;
+        doc.text(`IVA (${invoice.tax_rate || 21}%):`, 350, currentY);
+        doc.text(this.formatCurrency(invoice.tax_amount, invoice.currency), 460, currentY, { width: 95, align: 'right' });
+      }
+
+      currentY += 25;
+      doc.fontSize(14).font('Helvetica-Bold');
+      doc.rect(340, currentY - 5, 220, 30).fill('#f0f0f0');
+      doc.fillColor('#333');
+      doc.text('TOTAL:', 350, currentY + 3);
+      doc.fillColor('#0066cc');
+      doc.text(this.formatCurrency(invoice.total_amount, invoice.currency), 460, currentY + 3, { width: 95, align: 'right' });
+
+      // 8. Notas
+      if (invoice.notes) {
+        currentY += 50;
+        doc.fontSize(10).font('Helvetica-Bold').fillColor('#333');
+        doc.text('Notas:', 50, currentY);
+        currentY += 15;
+        doc.font('Helvetica').fontSize(9);
+        doc.text(invoice.notes, 50, currentY, { width: 510 });
+      }
+
+      // 9. Pie de página
+      await DocumentHeaderService.addPDFFooter(doc, {
+        companyId: invoice.company_id
+      });
+
+      // 10. Finalizar documento
+      doc.end();
+
+      // Esperar a que termine de escribir
+      await new Promise((resolve, reject) => {
+        stream.on('finish', resolve);
+        stream.on('error', reject);
+      });
+
+      console.log(`📄 [INVOICE] PDF generado: ${filepath}`);
 
       return {
-        success: false,
-        message: 'Generación de PDF pendiente de implementar',
-        invoice_number: invoice.invoice_number
+        success: true,
+        message: 'PDF generado correctamente',
+        invoice_number: invoice.invoice_number,
+        filepath: filepath,
+        filename: filename
       };
 
     } catch (error) {
       console.error('❌ [INVOICE] Error al generar PDF:', error);
       throw error;
     }
+  }
+
+  /**
+   * Formatea moneda
+   */
+  formatCurrency(amount, currency = 'USD') {
+    const num = parseFloat(amount) || 0;
+    const symbols = { USD: '$', ARS: '$', EUR: '€', CLP: '$', BRL: 'R$', MXN: '$' };
+    const symbol = symbols[currency] || '$';
+    return `${symbol} ${num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  /**
+   * Obtiene nombre del mes
+   */
+  getMonthName(month) {
+    const months = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return months[month] || '';
   }
 
 }

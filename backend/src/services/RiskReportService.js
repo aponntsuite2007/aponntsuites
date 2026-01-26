@@ -13,6 +13,7 @@
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 const RiskIntelligenceService = require('./RiskIntelligenceService');
+const DocumentHeaderService = require('./DocumentHeaderService');
 
 class RiskReportService {
 
@@ -47,27 +48,28 @@ class RiskReportService {
     // GENERACIÓN DE PDF - DASHBOARD EJECUTIVO
     // =========================================================================
     static async generateDashboardPDF(companyId, period = 30, companyName = 'Empresa') {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const dashboard = await RiskIntelligenceService.getDashboard(companyId, period);
-                const doc = new PDFDocument({
-                    size: 'A4',
-                    margin: 50,
-                    info: {
-                        Title: `Reporte de Riesgos - ${companyName}`,
-                        Author: 'Risk Intelligence Dashboard',
-                        Subject: 'Análisis de Riesgos Laborales',
-                        CreationDate: new Date()
-                    }
-                });
+        const dashboard = await RiskIntelligenceService.getDashboard(companyId, period);
+        const doc = new PDFDocument({
+            size: 'A4',
+            margin: 50,
+            info: {
+                Title: `Reporte de Riesgos - ${companyName}`,
+                Author: 'Risk Intelligence Dashboard',
+                Subject: 'Análisis de Riesgos Laborales',
+                CreationDate: new Date()
+            }
+        });
 
-                const chunks = [];
-                doc.on('data', chunk => chunks.push(chunk));
+        const chunks = [];
+        doc.on('data', chunk => chunks.push(chunk));
+
+        // === HEADER con datos de empresa ===
+        await this.addPDFHeader(doc, companyId, 'REPORTE EJECUTIVO DE RIESGOS');
+
+        return new Promise((resolve, reject) => {
+            try {
                 doc.on('end', () => resolve(Buffer.concat(chunks)));
                 doc.on('error', reject);
-
-                // === HEADER ===
-                this.addPDFHeader(doc, companyName, 'REPORTE EJECUTIVO DE RIESGOS');
 
                 // === RESUMEN EJECUTIVO ===
                 doc.moveDown(1);
@@ -564,8 +566,29 @@ class RiskReportService {
     // =========================================================================
     // HELPERS PDF
     // =========================================================================
-    static addPDFHeader(doc, companyName, title) {
-        doc.fontSize(18).fillColor('#1a1a2e').text(companyName, { align: 'center' });
+    /**
+     * Agregar header al PDF usando DocumentHeaderService centralizado
+     * @param {PDFDocument} doc - Documento PDF
+     * @param {string|number} companyIdOrName - ID de empresa o nombre (backward compatible)
+     * @param {string} title - Título del documento
+     */
+    static async addPDFHeader(doc, companyIdOrName, title) {
+        // Si es un número, usar DocumentHeaderService completo
+        if (typeof companyIdOrName === 'number') {
+            const reportNumber = `RISK-${Date.now().toString(36).toUpperCase()}`;
+            const currentY = await DocumentHeaderService.addPDFHeader(doc, {
+                companyId: companyIdOrName,
+                documentType: title,
+                documentNumber: reportNumber,
+                documentDate: new Date(),
+                recipient: null
+            });
+            doc.y = currentY;
+            return;
+        }
+
+        // Backward compatible: si es string (nombre), usar formato simple
+        doc.fontSize(18).fillColor('#1a1a2e').text(companyIdOrName, { align: 'center' });
         doc.fontSize(14).fillColor('#e94560').text(title, { align: 'center' });
         doc.moveDown(0.5);
         doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#e94560');

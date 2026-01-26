@@ -828,7 +828,8 @@ El sistema ha registrado este incumplimiento y se están tomando las acciones co
                         // Primera vez: Generar cadena completa
                         console.log(`[SLA-ESCALATION-UNIFIED] 🔗 Generando cadena para notificación ${notification.id}`);
 
-                        const notificationService = new NotificationUnifiedService();
+                        // NotificationUnifiedService exporta una instancia, no la clase
+                        const notificationService = NotificationUnifiedService;
                         const chain = await notificationService.getCompleteEscalationChain(
                             notification.origin_id,
                             notification.company_id,

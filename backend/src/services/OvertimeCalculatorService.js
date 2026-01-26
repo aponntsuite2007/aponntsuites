@@ -553,13 +553,15 @@ class OvertimeCalculatorService {
             }
 
             // Procesar hora extra a través del banco de horas
-            const hourBankResult = await hourBankSvc.processOvertimeHour(
-                companyId,
+            const hourBankResult = await hourBankSvc.processOvertimeHour({
                 userId,
-                date,
-                breakdown.overtimeHours,
+                companyId,
+                branchId: attendance.branch_id || attendance.kiosk_id || null,
+                attendanceId: attendance.id,
+                overtimeDate: date,
+                overtimeHours: breakdown.overtimeHours,
                 overtimeType
-            );
+            });
 
             return {
                 hourBankAvailable: true,

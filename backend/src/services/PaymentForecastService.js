@@ -245,7 +245,7 @@ class PaymentForecastService {
                         WHERE payment_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '7 days'
                     ) as due_this_week,
                     SUM(net_amount) FILTER (
-                        WHERE payment_date BETWEEN CURRENT_DATE AND DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month - 1 day'
+                        WHERE payment_date BETWEEN CURRENT_DATE AND DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day'
                     ) as due_this_month,
                     COUNT(DISTINCT CASE WHEN payment_date < CURRENT_DATE THEN supplier_id END) as overdue_count
                 FROM mv_payment_forecast_cube
