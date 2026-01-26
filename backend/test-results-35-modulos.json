@@ -1,0 +1,1771 @@
+[
+  {
+    "id": "users",
+    "name": "Gestión de Usuarios",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "Agregar Usuario",
+        "hasOnclick": true,
+        "classes": "btn-add-user"
+      },
+      {
+        "text": "1",
+        "hasOnclick": true,
+        "classes": "active"
+      }
+    ],
+    "modals": [
+      "userModal"
+    ],
+    "errors": []
+  },
+  {
+    "id": "attendance",
+    "name": "Asistencia",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "Dashboard",
+        "hasOnclick": true,
+        "classes": "att-nav-item active"
+      },
+      {
+        "text": "Registros",
+        "hasOnclick": true,
+        "classes": "att-nav-item"
+      },
+      {
+        "text": "Analytics",
+        "hasOnclick": true,
+        "classes": "att-nav-item"
+      },
+      {
+        "text": "Alertas",
+        "hasOnclick": true,
+        "classes": "att-nav-item"
+      },
+      {
+        "text": "Insights",
+        "hasOnclick": true,
+        "classes": "att-nav-item"
+      },
+      {
+        "text": "Panel Ejecutivo",
+        "hasOnclick": true,
+        "classes": "att-nav-item"
+      },
+      {
+        "text": "Nuevo Registro",
+        "hasOnclick": true,
+        "classes": "att-action-btn"
+      },
+      {
+        "text": "Ver Registros",
+        "hasOnclick": true,
+        "classes": "att-action-btn"
+      },
+      {
+        "text": "Exportar CSV",
+        "hasOnclick": true,
+        "classes": "att-action-btn"
+      },
+      {
+        "text": "Ver Alertas",
+        "hasOnclick": true,
+        "classes": "att-action-btn"
+      },
+      {
+        "text": "Ver todos →",
+        "hasOnclick": true,
+        "classes": "att-link-btn"
+      }
+    ],
+    "modals": [
+      "userModal"
+    ],
+    "errors": []
+  },
+  {
+    "id": "dashboard",
+    "name": "Dashboard",
+    "loaded": true,
+    "hasContent": false,
+    "buttons": [],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "vacation-management",
+    "name": "Vacaciones",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "Nueva Solicitud",
+        "hasOnclick": true,
+        "classes": "ve-btn ve-btn-primary"
+      },
+      {
+        "text": "Solicitudes",
+        "hasOnclick": true,
+        "classes": "ve-nav-item active"
+      },
+      {
+        "text": "Calendario",
+        "hasOnclick": true,
+        "classes": "ve-nav-item"
+      },
+      {
+        "text": "Politicas LCT",
+        "hasOnclick": true,
+        "classes": "ve-nav-item"
+      },
+      {
+        "text": "Balance",
+        "hasOnclick": true,
+        "classes": "ve-nav-item"
+      },
+      {
+        "text": "Analytics",
+        "hasOnclick": true,
+        "classes": "ve-nav-item"
+      },
+      {
+        "text": "Config",
+        "hasOnclick": true,
+        "classes": "ve-nav-item"
+      }
+    ],
+    "modals": [
+      "userModal"
+    ],
+    "errors": []
+  },
+  {
+    "id": "training-management",
+    "name": "Capacitación",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "📊 Dashboard",
+        "hasOnclick": true,
+        "classes": "training-nav-btn active"
+      },
+      {
+        "text": "📚 Capacitaciones",
+        "hasOnclick": true,
+        "classes": "training-nav-btn"
+      },
+      {
+        "text": "📋 Evaluaciones (Capacitacione",
+        "hasOnclick": true,
+        "classes": "training-nav-btn"
+      },
+      {
+        "text": "🎯 Evaluaciones Independientes",
+        "hasOnclick": true,
+        "classes": "training-nav-btn"
+      },
+      {
+        "text": "👥 Seguimiento Empleados",
+        "hasOnclick": true,
+        "classes": "training-nav-btn"
+      },
+      {
+        "text": "📈 Reportes",
+        "hasOnclick": true,
+        "classes": "training-nav-btn"
+      },
+      {
+        "text": "📅 Calendario",
+        "hasOnclick": true,
+        "classes": "training-nav-btn"
+      },
+      {
+        "text": "➕ Nueva Capacitación",
+        "hasOnclick": true,
+        "classes": "btn btn-primary"
+      },
+      {
+        "text": "📋 Nueva Evaluación",
+        "hasOnclick": true,
+        "classes": "btn btn-info"
+      },
+      {
+        "text": "📢 Enviar Recordatorios",
+        "hasOnclick": true,
+        "classes": "btn btn-warning"
+      },
+      {
+        "text": "📊 Reporte Cumplimiento",
+        "hasOnclick": true,
+        "classes": "btn btn-success"
+      },
+      {
+        "text": "💾 Guardar Datos",
+        "hasOnclick": true,
+        "classes": "btn btn-primary"
+      },
+      {
+        "text": "📤 Exportar Datos",
+        "hasOnclick": true,
+        "classes": "btn btn-info"
+      },
+      {
+        "text": "📥 Importar Datos",
+        "hasOnclick": false,
+        "classes": "btn btn-success"
+      },
+      {
+        "text": "🗑️ Limpiar Todo",
+        "hasOnclick": true,
+        "classes": "btn btn-danger"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "close-btn"
+      },
+      {
+        "text": "Cancelar",
+        "hasOnclick": true,
+        "classes": "btn btn-secondary"
+      },
+      {
+        "text": "Guardar como Borrador",
+        "hasOnclick": true,
+        "classes": "btn btn-warning"
+      },
+      {
+        "text": "Crear y Activar",
+        "hasOnclick": false,
+        "classes": "btn btn-primary"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "close-btn"
+      }
+    ],
+    "modals": [
+      "userModal"
+    ],
+    "errors": []
+  },
+  {
+    "id": "sanctions-management",
+    "name": "Sanciones",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "➕ Nueva Solicitud",
+        "hasOnclick": true,
+        "classes": "btn-new-sanction"
+      },
+      {
+        "text": "📥 Mis Pendientes",
+        "hasOnclick": true,
+        "classes": "sanctions-tab active"
+      },
+      {
+        "text": "📋 Todas",
+        "hasOnclick": true,
+        "classes": "sanctions-tab "
+      },
+      {
+        "text": "🚨 Activas",
+        "hasOnclick": true,
+        "classes": "sanctions-tab "
+      },
+      {
+        "text": "⛔ Suspensiones",
+        "hasOnclick": true,
+        "classes": "sanctions-tab "
+      },
+      {
+        "text": "📜 Historial",
+        "hasOnclick": true,
+        "classes": "sanctions-tab "
+      },
+      {
+        "text": "📂 Catálogo",
+        "hasOnclick": true,
+        "classes": "sanctions-tab "
+      }
+    ],
+    "modals": [
+      "userModal"
+    ],
+    "errors": []
+  },
+  {
+    "id": "job-postings",
+    "name": "Reclutamiento",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "❓ Ayuda",
+        "hasOnclick": true,
+        "classes": "talent-btn talent-btn-secondary"
+      },
+      {
+        "text": "➕ Nueva Oferta Laboral",
+        "hasOnclick": true,
+        "classes": "talent-btn talent-btn-primary"
+      },
+      {
+        "text": "📊 Dashboard\n                 ",
+        "hasOnclick": true,
+        "classes": "talent-tab active"
+      },
+      {
+        "text": "?",
+        "hasOnclick": true,
+        "classes": "talent-help-icon"
+      },
+      {
+        "text": "📋 Ofertas Laborales\n         ",
+        "hasOnclick": true,
+        "classes": "talent-tab "
+      },
+      {
+        "text": "?",
+        "hasOnclick": true,
+        "classes": "talent-help-icon"
+      },
+      {
+        "text": "👥 Postulaciones\n             ",
+        "hasOnclick": true,
+        "classes": "talent-tab "
+      },
+      {
+        "text": "?",
+        "hasOnclick": true,
+        "classes": "talent-help-icon"
+      },
+      {
+        "text": "🔄 Pipeline\n                  ",
+        "hasOnclick": true,
+        "classes": "talent-tab "
+      },
+      {
+        "text": "?",
+        "hasOnclick": true,
+        "classes": "talent-help-icon"
+      },
+      {
+        "text": "🗣️ Entrevistas\n              ",
+        "hasOnclick": true,
+        "classes": "talent-tab "
+      },
+      {
+        "text": "?",
+        "hasOnclick": true,
+        "classes": "talent-help-icon"
+      },
+      {
+        "text": "Ver Todas",
+        "hasOnclick": true,
+        "classes": "talent-btn talent-btn-secondary"
+      }
+    ],
+    "modals": [
+      "userModal"
+    ],
+    "errors": []
+  },
+  {
+    "id": "organizational-structure",
+    "name": "Estructura Org",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "🏢\n                        Dep",
+        "hasOnclick": true,
+        "classes": "org-tab active"
+      },
+      {
+        "text": "🏬\n                        Sec",
+        "hasOnclick": true,
+        "classes": "org-tab"
+      },
+      {
+        "text": "📜\n                        Con",
+        "hasOnclick": true,
+        "classes": "org-tab"
+      },
+      {
+        "text": "💼\n                        Cat",
+        "hasOnclick": true,
+        "classes": "org-tab"
+      },
+      {
+        "text": "⏰\n                        Turn",
+        "hasOnclick": true,
+        "classes": "org-tab"
+      },
+      {
+        "text": "🏷️\n                        Ro",
+        "hasOnclick": true,
+        "classes": "org-tab"
+      },
+      {
+        "text": "📊\n                        Org",
+        "hasOnclick": true,
+        "classes": "org-tab"
+      },
+      {
+        "text": "👔\n                        Pos",
+        "hasOnclick": true,
+        "classes": "org-tab"
+      },
+      {
+        "text": "+ Nuevo Departamento",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-primary"
+      },
+      {
+        "text": "✏️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-secondary org-btn-sm"
+      },
+      {
+        "text": "🗑️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-danger org-btn-sm"
+      },
+      {
+        "text": "✏️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-secondary org-btn-sm"
+      },
+      {
+        "text": "🗑️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-danger org-btn-sm"
+      },
+      {
+        "text": "✏️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-secondary org-btn-sm"
+      },
+      {
+        "text": "🗑️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-danger org-btn-sm"
+      },
+      {
+        "text": "✏️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-secondary org-btn-sm"
+      },
+      {
+        "text": "🗑️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-danger org-btn-sm"
+      },
+      {
+        "text": "✏️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-secondary org-btn-sm"
+      },
+      {
+        "text": "🗑️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-danger org-btn-sm"
+      },
+      {
+        "text": "✏️",
+        "hasOnclick": true,
+        "classes": "org-btn org-btn-secondary org-btn-sm"
+      }
+    ],
+    "modals": [
+      "userModal"
+    ],
+    "errors": []
+  },
+  {
+    "id": "kiosks-professional",
+    "name": "Kiosks",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "🔄 Recargar Página",
+        "hasOnclick": true,
+        "classes": ""
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "biometric-consent",
+    "name": "Consentimiento Bio",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "📊 Exportar",
+        "hasOnclick": true,
+        "classes": "bc-btn bc-btn-secondary"
+      },
+      {
+        "text": "📧 Solicitar Pendientes",
+        "hasOnclick": true,
+        "classes": "bc-btn bc-btn-primary"
+      },
+      {
+        "text": "👥 Empleados y Consentimientos",
+        "hasOnclick": true,
+        "classes": "bc-tab active"
+      },
+      {
+        "text": "📄 Documento Legal",
+        "hasOnclick": true,
+        "classes": "bc-tab "
+      },
+      {
+        "text": "🌐 Regulaciones Multi-Pais",
+        "hasOnclick": true,
+        "classes": "bc-tab "
+      },
+      {
+        "text": "📊 Reportes PDF",
+        "hasOnclick": true,
+        "classes": "bc-tab "
+      },
+      {
+        "text": "👥 Todos",
+        "hasOnclick": true,
+        "classes": "bc-filter-btn active"
+      },
+      {
+        "text": "✅ Activos",
+        "hasOnclick": true,
+        "classes": "bc-filter-btn "
+      },
+      {
+        "text": "⏳ Pendientes",
+        "hasOnclick": true,
+        "classes": "bc-filter-btn "
+      },
+      {
+        "text": "🚫 Revocados",
+        "hasOnclick": true,
+        "classes": "bc-filter-btn "
+      },
+      {
+        "text": "📧",
+        "hasOnclick": true,
+        "classes": "bc-btn-icon"
+      },
+      {
+        "text": "📧",
+        "hasOnclick": true,
+        "classes": "bc-btn-icon"
+      },
+      {
+        "text": "📧",
+        "hasOnclick": true,
+        "classes": "bc-btn-icon"
+      },
+      {
+        "text": "📧",
+        "hasOnclick": true,
+        "classes": "bc-btn-icon"
+      },
+      {
+        "text": "📧",
+        "hasOnclick": true,
+        "classes": "bc-btn-icon"
+      },
+      {
+        "text": "📧",
+        "hasOnclick": true,
+        "classes": "bc-btn-icon"
+      },
+      {
+        "text": "📧",
+        "hasOnclick": true,
+        "classes": "bc-btn-icon"
+      },
+      {
+        "text": "📧",
+        "hasOnclick": true,
+        "classes": "bc-btn-icon"
+      },
+      {
+        "text": "📧",
+        "hasOnclick": true,
+        "classes": "bc-btn-icon"
+      },
+      {
+        "text": "📧",
+        "hasOnclick": true,
+        "classes": "bc-btn-icon"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "payroll-liquidation",
+    "name": "Liquidación",
+    "loaded": true,
+    "hasContent": false,
+    "buttons": [
+      {
+        "text": "Dashboard",
+        "hasOnclick": true,
+        "classes": "pe-nav-item active"
+      },
+      {
+        "text": "Proceso",
+        "hasOnclick": true,
+        "classes": "pe-nav-item"
+      },
+      {
+        "text": "Empleados",
+        "hasOnclick": true,
+        "classes": "pe-nav-item"
+      },
+      {
+        "text": "Plantillas",
+        "hasOnclick": true,
+        "classes": "pe-nav-item"
+      },
+      {
+        "text": "Entidades",
+        "hasOnclick": true,
+        "classes": "pe-nav-item"
+      },
+      {
+        "text": "Reportes",
+        "hasOnclick": true,
+        "classes": "pe-nav-item"
+      },
+      {
+        "text": "Recibos",
+        "hasOnclick": true,
+        "classes": "pe-nav-item"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "ph-close"
+      },
+      {
+        "text": "Iniciar Liquidacion",
+        "hasOnclick": true,
+        "classes": "pe-action-btn"
+      },
+      {
+        "text": "Ver Empleados",
+        "hasOnclick": true,
+        "classes": "pe-action-btn"
+      },
+      {
+        "text": "Plantillas RRHH",
+        "hasOnclick": true,
+        "classes": "pe-action-btn"
+      },
+      {
+        "text": "Exportar Reporte",
+        "hasOnclick": true,
+        "classes": "pe-action-btn"
+      },
+      {
+        "text": "Auditar Configuracion",
+        "hasOnclick": true,
+        "classes": "pe-action-btn"
+      }
+    ],
+    "modals": [],
+    "errors": [
+      "Texto \"Error\" detectado"
+    ]
+  },
+  {
+    "id": "finance-dashboard",
+    "name": "Dashboard Finanzas",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "🔄 Actualizar",
+        "hasOnclick": true,
+        "classes": "finance-btn"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "mhs-close"
+      },
+      {
+        "text": "📊\n                Plan de Cue",
+        "hasOnclick": true,
+        "classes": "finance-module-card"
+      },
+      {
+        "text": "📋\n                Presupuesto",
+        "hasOnclick": true,
+        "classes": "finance-module-card"
+      },
+      {
+        "text": "💰\n                Flujo de Ca",
+        "hasOnclick": true,
+        "classes": "finance-module-card"
+      },
+      {
+        "text": "🏢\n                Centros de ",
+        "hasOnclick": true,
+        "classes": "finance-module-card"
+      },
+      {
+        "text": "📝\n                Asientos Co",
+        "hasOnclick": true,
+        "classes": "finance-module-card"
+      },
+      {
+        "text": "🏦\n                Tesorería\n ",
+        "hasOnclick": true,
+        "classes": "finance-module-card"
+      },
+      {
+        "text": "📈\n                Reportes Fi",
+        "hasOnclick": true,
+        "classes": "finance-module-card"
+      },
+      {
+        "text": "📊\n                Dashboard E",
+        "hasOnclick": true,
+        "classes": "finance-module-card"
+      },
+      {
+        "text": "🏛️\n                Fiscal & R",
+        "hasOnclick": true,
+        "classes": "finance-module-card"
+      },
+      {
+        "text": "Generar Proyección",
+        "hasOnclick": true,
+        "classes": "finance-btn"
+      },
+      {
+        "text": "Crear Presupuesto",
+        "hasOnclick": true,
+        "classes": "finance-btn"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "finance-budget",
+    "name": "Presupuesto",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "← Volver a Finance",
+        "hasOnclick": true,
+        "classes": "finance-back-btn"
+      },
+      {
+        "text": "🪄 Generar desde Histórico",
+        "hasOnclick": true,
+        "classes": "btn-secondary"
+      },
+      {
+        "text": "+ Nuevo Presupuesto",
+        "hasOnclick": true,
+        "classes": "btn-primary"
+      },
+      {
+        "text": "← Volver",
+        "hasOnclick": true,
+        "classes": "btn-link"
+      },
+      {
+        "text": "+ Agregar Línea",
+        "hasOnclick": true,
+        "classes": "btn-secondary"
+      },
+      {
+        "text": "+ Inversión",
+        "hasOnclick": true,
+        "classes": "btn-secondary"
+      },
+      {
+        "text": "📊 Ver Ejecución",
+        "hasOnclick": true,
+        "classes": "btn-primary"
+      },
+      {
+        "text": "📋 Líneas",
+        "hasOnclick": true,
+        "classes": "tab-btn active"
+      },
+      {
+        "text": "💰 Inversiones",
+        "hasOnclick": true,
+        "classes": "tab-btn"
+      },
+      {
+        "text": "📊 Ejecución",
+        "hasOnclick": true,
+        "classes": "tab-btn"
+      },
+      {
+        "text": "🔮 Proyección",
+        "hasOnclick": true,
+        "classes": "tab-btn"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "btn-close"
+      },
+      {
+        "text": "Cancelar",
+        "hasOnclick": true,
+        "classes": "btn-secondary"
+      },
+      {
+        "text": "Crear Presupuesto",
+        "hasOnclick": false,
+        "classes": "btn-primary"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "btn-close"
+      },
+      {
+        "text": "Cancelar",
+        "hasOnclick": true,
+        "classes": "btn-secondary"
+      },
+      {
+        "text": "🪄 Generar Presupuesto",
+        "hasOnclick": false,
+        "classes": "btn-primary"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "btn-close"
+      },
+      {
+        "text": "Cancelar",
+        "hasOnclick": true,
+        "classes": "btn-secondary"
+      },
+      {
+        "text": "Guardar Línea",
+        "hasOnclick": false,
+        "classes": "btn-primary"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "finance-treasury",
+    "name": "Tesorería",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "← Volver a Finance",
+        "hasOnclick": true,
+        "classes": "finance-back-btn"
+      },
+      {
+        "text": "+ Nueva Cuenta Bancaria",
+        "hasOnclick": true,
+        "classes": "btn-primary"
+      },
+      {
+        "text": "🏦 Cuentas",
+        "hasOnclick": true,
+        "classes": "tab-btn"
+      },
+      {
+        "text": "💳 Transacciones",
+        "hasOnclick": true,
+        "classes": "tab-btn"
+      },
+      {
+        "text": "🔗 Conciliación",
+        "hasOnclick": true,
+        "classes": "tab-btn"
+      },
+      {
+        "text": "📈 Flujo de Caja",
+        "hasOnclick": true,
+        "classes": "tab-btn"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "mhs-close"
+      },
+      {
+        "text": "+ Agregar Cuenta",
+        "hasOnclick": true,
+        "classes": "btn-primary"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "btn-close"
+      },
+      {
+        "text": "Cancelar",
+        "hasOnclick": true,
+        "classes": "btn-secondary"
+      },
+      {
+        "text": "Guardar",
+        "hasOnclick": false,
+        "classes": "btn-primary"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "btn-close"
+      },
+      {
+        "text": "Cancelar",
+        "hasOnclick": true,
+        "classes": "btn-secondary"
+      },
+      {
+        "text": "Guardar",
+        "hasOnclick": false,
+        "classes": "btn-primary"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "finance-reports",
+    "name": "Reportes Fin",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "← Volver a Finance",
+        "hasOnclick": true,
+        "classes": "finance-back-btn"
+      },
+      {
+        "text": "📄 PDF",
+        "hasOnclick": true,
+        "classes": "btn-secondary"
+      },
+      {
+        "text": "📗 Excel",
+        "hasOnclick": true,
+        "classes": "btn-secondary"
+      },
+      {
+        "text": "📋\n                           ",
+        "hasOnclick": true,
+        "classes": "report-card"
+      },
+      {
+        "text": "📈\n                           ",
+        "hasOnclick": true,
+        "classes": "report-card"
+      },
+      {
+        "text": "💰\n                           ",
+        "hasOnclick": true,
+        "classes": "report-card"
+      },
+      {
+        "text": "⚖️\n                           ",
+        "hasOnclick": true,
+        "classes": "report-card"
+      },
+      {
+        "text": "📒\n                           ",
+        "hasOnclick": true,
+        "classes": "report-card"
+      },
+      {
+        "text": "🏢\n                           ",
+        "hasOnclick": true,
+        "classes": "report-card"
+      },
+      {
+        "text": "📊\n                           ",
+        "hasOnclick": true,
+        "classes": "report-card"
+      },
+      {
+        "text": "🎯\n                           ",
+        "hasOnclick": true,
+        "classes": "report-card"
+      },
+      {
+        "text": "← Volver",
+        "hasOnclick": true,
+        "classes": "btn-back"
+      },
+      {
+        "text": "🖨️",
+        "hasOnclick": true,
+        "classes": "btn-icon"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "btn-close"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "hour-bank",
+    "name": "Banco de Horas",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "Dashboard",
+        "hasOnclick": true,
+        "classes": "hb-nav-item active"
+      },
+      {
+        "text": "Fichajes",
+        "hasOnclick": true,
+        "classes": "hb-nav-item "
+      },
+      {
+        "text": "Empleados",
+        "hasOnclick": true,
+        "classes": "hb-nav-item "
+      },
+      {
+        "text": "Plantillas",
+        "hasOnclick": true,
+        "classes": "hb-nav-item "
+      },
+      {
+        "text": "Reportes",
+        "hasOnclick": true,
+        "classes": "hb-nav-item "
+      },
+      {
+        "text": "Ver todos",
+        "hasOnclick": true,
+        "classes": "hb-btn hb-btn-secondary"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "hour-bank-dashboard",
+    "name": "Dashboard Horas",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "Dashboard",
+        "hasOnclick": true,
+        "classes": "hb-nav-item "
+      },
+      {
+        "text": "Fichajes",
+        "hasOnclick": true,
+        "classes": "hb-nav-item "
+      },
+      {
+        "text": "Empleados",
+        "hasOnclick": true,
+        "classes": "hb-nav-item active"
+      },
+      {
+        "text": "Plantillas",
+        "hasOnclick": true,
+        "classes": "hb-nav-item "
+      },
+      {
+        "text": "Reportes",
+        "hasOnclick": true,
+        "classes": "hb-nav-item "
+      },
+      {
+        "text": "Ver todos",
+        "hasOnclick": true,
+        "classes": "hb-btn hb-btn-secondary"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "dms-dashboard",
+    "name": "Documentos",
+    "loaded": true,
+    "hasContent": false,
+    "buttons": [],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "procedures-manual",
+    "name": "Manual Proced",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "Nuevo",
+        "hasOnclick": true,
+        "classes": "pm-btn pm-btn-primary"
+      },
+      {
+        "text": "Dashboard",
+        "hasOnclick": true,
+        "classes": "pm-nav-item active"
+      },
+      {
+        "text": "Procedimientos",
+        "hasOnclick": true,
+        "classes": "pm-nav-item"
+      },
+      {
+        "text": "Pendientes",
+        "hasOnclick": true,
+        "classes": "pm-nav-item"
+      },
+      {
+        "text": "Publicados",
+        "hasOnclick": true,
+        "classes": "pm-nav-item"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "mhs-close"
+      },
+      {
+        "text": "Ver Árbol Completo →",
+        "hasOnclick": true,
+        "classes": "pm-hierarchy-guide-btn"
+      },
+      {
+        "text": "Nuevo Documento",
+        "hasOnclick": true,
+        "classes": "pm-action-card"
+      },
+      {
+        "text": "Ver Árbol Jerárquico",
+        "hasOnclick": true,
+        "classes": "pm-action-card"
+      },
+      {
+        "text": "Ver Pendientes",
+        "hasOnclick": true,
+        "classes": "pm-action-card"
+      },
+      {
+        "text": "Ver Todos",
+        "hasOnclick": true,
+        "classes": "pm-action-card"
+      }
+    ],
+    "modals": [
+      "procedureModal"
+    ],
+    "errors": []
+  },
+  {
+    "id": "legal-dashboard",
+    "name": "Legal",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "Dashboard",
+        "hasOnclick": true,
+        "classes": "le-nav-item active"
+      },
+      {
+        "text": "⚖️ Casos",
+        "hasOnclick": true,
+        "classes": "le-nav-item"
+      },
+      {
+        "text": "Comunicaciones",
+        "hasOnclick": true,
+        "classes": "le-nav-item"
+      },
+      {
+        "text": "⏰ Vencimientos",
+        "hasOnclick": true,
+        "classes": "le-nav-item"
+      },
+      {
+        "text": "Tipos",
+        "hasOnclick": true,
+        "classes": "le-nav-item"
+      },
+      {
+        "text": "Nueva",
+        "hasOnclick": true,
+        "classes": "le-nav-item"
+      },
+      {
+        "text": "❓ Ayuda",
+        "hasOnclick": true,
+        "classes": "le-nav-item le-nav-help"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "le-help-bar-close"
+      },
+      {
+        "text": "Nueva Comunicación",
+        "hasOnclick": true,
+        "classes": "le-action-btn"
+      },
+      {
+        "text": "Ver Comunicaciones",
+        "hasOnclick": true,
+        "classes": "le-action-btn"
+      },
+      {
+        "text": "Tipos de Comunicación",
+        "hasOnclick": true,
+        "classes": "le-action-btn"
+      },
+      {
+        "text": "Exportar Reporte",
+        "hasOnclick": true,
+        "classes": "le-action-btn"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "compliance-dashboard",
+    "name": "Compliance",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "🔍 Analizar Todo",
+        "hasOnclick": true,
+        "classes": "ri-btn ri-btn-primary"
+      },
+      {
+        "text": "🔄 Actualizar",
+        "hasOnclick": true,
+        "classes": "ri-btn ri-btn-secondary"
+      },
+      {
+        "text": "⚙️ Configurar",
+        "hasOnclick": true,
+        "classes": "ri-btn ri-btn-secondary"
+      },
+      {
+        "text": "📥 Exportar ▾",
+        "hasOnclick": true,
+        "classes": "ri-btn ri-btn-export"
+      },
+      {
+        "text": "📄 Descargar PDF",
+        "hasOnclick": true,
+        "classes": ""
+      },
+      {
+        "text": "📊 Descargar Excel",
+        "hasOnclick": true,
+        "classes": ""
+      },
+      {
+        "text": "📄 Violaciones PDF",
+        "hasOnclick": true,
+        "classes": ""
+      },
+      {
+        "text": "📊 Violaciones Excel",
+        "hasOnclick": true,
+        "classes": ""
+      },
+      {
+        "text": "😴\n                        Índ",
+        "hasOnclick": true,
+        "classes": "ri-index-card ri-tooltip"
+      },
+      {
+        "text": "⚠️\n                        Rie",
+        "hasOnclick": true,
+        "classes": "ri-index-card ri-tooltip"
+      },
+      {
+        "text": "⚖️\n                        Rie",
+        "hasOnclick": true,
+        "classes": "ri-index-card ri-tooltip"
+      },
+      {
+        "text": "📉\n                        Rie",
+        "hasOnclick": true,
+        "classes": "ri-index-card ri-tooltip"
+      },
+      {
+        "text": "🚪\n                        Rie",
+        "hasOnclick": true,
+        "classes": "ri-index-card ri-tooltip"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "art-management",
+    "name": "ART",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "🏢 Aseguradoras",
+        "hasOnclick": true,
+        "classes": "art-tab-btn active"
+      },
+      {
+        "text": "🩺 Exámenes Médicos",
+        "hasOnclick": true,
+        "classes": "art-tab-btn"
+      },
+      {
+        "text": "🚨 Accidentes Laborales",
+        "hasOnclick": true,
+        "classes": "art-tab-btn"
+      },
+      {
+        "text": "📞 Comunicación ART",
+        "hasOnclick": true,
+        "classes": "art-tab-btn"
+      },
+      {
+        "text": "📜 Legislación Vigente",
+        "hasOnclick": true,
+        "classes": "art-tab-btn"
+      },
+      {
+        "text": "📊 Reportes",
+        "hasOnclick": true,
+        "classes": "art-tab-btn"
+      },
+      {
+        "text": "➕ Nueva ART",
+        "hasOnclick": true,
+        "classes": "btn btn-primary"
+      },
+      {
+        "text": "🔄 Sincronizar con SRT",
+        "hasOnclick": true,
+        "classes": "btn btn-info"
+      },
+      {
+        "text": "✅ Validar Cumplimiento",
+        "hasOnclick": true,
+        "classes": "btn btn-warning"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "medical-dashboard-professional",
+    "name": "Médico",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "🔄 Recargar Página",
+        "hasOnclick": true,
+        "classes": ""
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "logistics-dashboard",
+    "name": "Logística",
+    "loaded": true,
+    "hasContent": false,
+    "buttons": [
+      {
+        "text": "🔄 Actualizar",
+        "hasOnclick": true,
+        "classes": "btn-refresh"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "mhs-close"
+      },
+      {
+        "text": "📊 Resumen",
+        "hasOnclick": true,
+        "classes": "logistics-tab active"
+      },
+      {
+        "text": "🧠 Analytics IA",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "📝 Solicitudes",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "🏭 Almacenes",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "📦 Inventario",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "🔄 Transferencias",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "🌊 Picking",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "📋 Packing",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "🚛 Transportistas",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "📍 Zonas",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "🗺️ Rutas",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "📬 Envíos",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "⏱️ SLA",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "💰 Costos",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      },
+      {
+        "text": "⚙️ Configuración",
+        "hasOnclick": true,
+        "classes": "logistics-tab "
+      }
+    ],
+    "modals": [],
+    "errors": [
+      "Texto \"Cargando\" detectado"
+    ]
+  },
+  {
+    "id": "visitors",
+    "name": "Visitantes",
+    "loaded": true,
+    "hasContent": false,
+    "buttons": [
+      {
+        "text": "➕ Nueva Visita",
+        "hasOnclick": true,
+        "classes": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "×",
+        "hasOnclick": true,
+        "classes": "close"
+      }
+    ],
+    "modals": [
+      "visitorModalBackdrop"
+    ],
+    "errors": [
+      "Texto \"Error\" detectado"
+    ]
+  },
+  {
+    "id": "inbox",
+    "name": "Bandeja Entrada",
+    "loaded": true,
+    "hasContent": false,
+    "buttons": [
+      {
+        "text": "Reintentar",
+        "hasOnclick": true,
+        "classes": ""
+      }
+    ],
+    "modals": [],
+    "errors": [
+      "Texto \"Error\" detectado"
+    ]
+  },
+  {
+    "id": "notifications-enterprise",
+    "name": "Notificaciones",
+    "loaded": true,
+    "hasContent": false,
+    "buttons": [
+      {
+        "text": "0\n                \n\n          ",
+        "hasOnclick": true,
+        "classes": "ai-indicator-container"
+      },
+      {
+        "text": "Ver Lista",
+        "hasOnclick": true,
+        "classes": "ne-btn ne-btn-secondary"
+      },
+      {
+        "text": "Actualizar",
+        "hasOnclick": true,
+        "classes": "ne-btn ne-btn-primary"
+      }
+    ],
+    "modals": [],
+    "errors": [
+      "Texto \"Cargando\" detectado"
+    ]
+  },
+  {
+    "id": "shift-calendar-view",
+    "name": "Turnos",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "🔄 Recargar Página",
+        "hasOnclick": true,
+        "classes": ""
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "roles-permissions",
+    "name": "Roles y Permisos",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "🔄 Recargar Página",
+        "hasOnclick": true,
+        "classes": ""
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "user-support-dashboard",
+    "name": "Soporte",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "🔄 Recargar Página",
+        "hasOnclick": true,
+        "classes": ""
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "predictive-workforce-dashboard",
+    "name": "Predictivo",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "🔄 Recargar Página",
+        "hasOnclick": true,
+        "classes": ""
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "engineering-dashboard",
+    "name": "Ingeniería",
+    "loaded": true,
+    "hasContent": false,
+    "buttons": [],
+    "modals": [],
+    "errors": [
+      "Texto \"Cargando\" detectado"
+    ]
+  },
+  {
+    "id": "employee-map",
+    "name": "Mapa Empleados",
+    "loaded": true,
+    "hasContent": false,
+    "buttons": [
+      {
+        "text": "Geofence",
+        "hasOnclick": true,
+        "classes": "em-btn em-btn-sm em-btn-active"
+      },
+      {
+        "text": "Heatmap",
+        "hasOnclick": true,
+        "classes": "em-btn em-btn-sm"
+      },
+      {
+        "text": "Multi-Sucursal",
+        "hasOnclick": true,
+        "classes": "em-btn em-btn-sm"
+      },
+      {
+        "text": "Cluster",
+        "hasOnclick": true,
+        "classes": "em-btn em-btn-sm em-btn-active"
+      },
+      {
+        "text": "Visitantes",
+        "hasOnclick": true,
+        "classes": "em-btn em-btn-sm em-btn-active"
+      },
+      {
+        "text": "Reintentar",
+        "hasOnclick": true,
+        "classes": "em-btn em-btn-primary"
+      }
+    ],
+    "modals": [],
+    "errors": [
+      "Texto \"Error\" detectado"
+    ]
+  },
+  {
+    "id": "employee-360",
+    "name": "Perfil 360",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "Generar Expediente",
+        "hasOnclick": false,
+        "classes": "btn btn-primary"
+      },
+      {
+        "text": "Comparar (0)",
+        "hasOnclick": false,
+        "classes": "btn btn-secondary"
+      },
+      {
+        "text": "Exportar PDF",
+        "hasOnclick": false,
+        "classes": "btn btn-success"
+      },
+      {
+        "text": "Limpiar selección",
+        "hasOnclick": false,
+        "classes": "btn btn-sm btn-outline-danger"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  },
+  {
+    "id": "facturacion",
+    "name": "Facturación",
+    "loaded": true,
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "← Volver a Módulos",
+        "hasOnclick": true,
+        "classes": ""
+      },
+      {
+        "text": "🧾\n                        Fac",
+        "hasOnclick": true,
+        "classes": "tab-btn active-tab"
+      },
+      {
+        "text": "📜\n                        Fac",
+        "hasOnclick": true,
+        "classes": "tab-btn"
+      },
+      {
+        "text": "⚙️\n                        Con",
+        "hasOnclick": true,
+        "classes": "tab-btn"
+      },
+      {
+        "text": "📝\n                MODO MANUAL",
+        "hasOnclick": true,
+        "classes": "mode-btn active-mode"
+      },
+      {
+        "text": "📋\n                MODO OCASIO",
+        "hasOnclick": true,
+        "classes": "mode-btn"
+      },
+      {
+        "text": "🔄\n                MODO RECURR",
+        "hasOnclick": true,
+        "classes": "mode-btn"
+      },
+      {
+        "text": "📝 Nueva Factura Manual",
+        "hasOnclick": true,
+        "classes": "action-btn"
+      }
+    ],
+    "modals": [],
+    "errors": []
+  }
+]
