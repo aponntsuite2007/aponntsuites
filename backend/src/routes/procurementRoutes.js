@@ -11,21 +11,27 @@ const router = express.Router();
 const { auth } = require('../middleware/auth');
 const ProcurementService = require('../services/ProcurementService');
 const SupplierItemMappingService = require('../services/SupplierItemMappingService');
+const P2PIntegrationService = require('../services/P2PIntegrationService');
+const db = require('../config/database');
 
-// Inicializar servicios (se hace con el sequelize instance en cada request)
+// Inicializar servicios usando el módulo database que exporta todos los modelos
 let procurementService = null;
 let itemMappingService = null;
+let p2pIntegrationService = null;
 
 const initServices = (req, res, next) => {
-    const sequelize = req.app.get('sequelize');
     if (!procurementService) {
-        procurementService = new ProcurementService(sequelize);
+        procurementService = new ProcurementService(db);
     }
     if (!itemMappingService) {
-        itemMappingService = new SupplierItemMappingService(sequelize);
+        itemMappingService = new SupplierItemMappingService(db.sequelize);
+    }
+    if (!p2pIntegrationService) {
+        p2pIntegrationService = new P2PIntegrationService(db);
     }
     req.procurementService = procurementService;
     req.itemMappingService = itemMappingService;
+    req.p2pService = p2pIntegrationService;
     next();
 };
 
@@ -1206,8 +1212,7 @@ router.get('/receipts/:id', async (req, res) => {
  */
 router.post('/receipts/:id/confirm', async (req, res) => {
     try {
-        const sequelize = req.app.get('sequelize');
-        const receipt = await sequelize.models.ProcurementReceipt.findOne({
+        const receipt = await db.ProcurementReceipt.findOne({
             where: { id: req.params.id, company_id: req.user.company_id }
         });
 
@@ -1215,8 +1220,30 @@ router.post('/receipts/:id/confirm', async (req, res) => {
             return res.status(404).json({ success: false, error: 'Recepción no encontrada' });
         }
 
-        await receipt.confirm(req.user.user_id, req.body.isComplete);
-        res.json({ success: true, data: receipt });
+        await receipt.confirm(req.user.user_id || req.user.id, req.body.isComplete);
+
+        // P2P Integration: Actualizar stock en WMS
+        let stockResult = null;
+        try {
+            stockResult = await req.p2pService.processReceiptToStock(receipt.id, req.user.user_id || req.user.id);
+        } catch (stockError) {
+            console.error('[P2P] Error actualizando stock (recepción confirmada igualmente):', stockError.message);
+        }
+
+        // P2P Integration: Generar asiento contable de recepción
+        let journalEntry = null;
+        try {
+            journalEntry = await req.p2pService.generateReceiptJournalEntry(receipt.id, req.user.user_id || req.user.id);
+        } catch (accountingError) {
+            console.error('[P2P] Error generando asiento contable:', accountingError.message);
+        }
+
+        res.json({
+            success: true,
+            data: receipt,
+            stockUpdate: stockResult,
+            journalEntry: journalEntry ? { id: journalEntry.id, number: journalEntry.entry_number } : null
+        });
     } catch (error) {
         console.error('❌ [Procurement] Error confirmando recepción:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -1370,6 +1397,31 @@ router.get('/invoices', async (req, res) => {
 });
 
 /**
+ * GET /api/procurement/invoices/pending-payment
+ * Facturas pendientes de pago
+ */
+router.get('/invoices/pending-payment', async (req, res) => {
+    try {
+        const sequelize = req.app.get('sequelize');
+
+        const invoices = await sequelize.models.ProcurementInvoice.findAll({
+            where: {
+                company_id: req.user.company_id,
+                status: 'verified',
+                payment_status: { [sequelize.Sequelize.Op.in]: ['pending', 'partial'] }
+            },
+            include: [{ model: sequelize.models.ProcurementSupplier, as: 'supplier', attributes: ['id', 'name', 'legal_name'] }],
+            order: [['due_date', 'ASC']]
+        });
+
+        res.json({ success: true, data: invoices });
+    } catch (error) {
+        console.error('❌ [Procurement] Error listando facturas pendientes:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * GET /api/procurement/invoices/:id
  * Obtener detalle de factura
  */
@@ -1402,129 +1454,109 @@ router.get('/invoices/:id', async (req, res) => {
  */
 router.get('/invoices/:id/three-way-match', async (req, res) => {
     try {
-        const sequelize = req.app.get('sequelize');
-        const companyId = req.user.company_id;
-        const invoiceId = req.params.id;
-
-        // Obtener factura con orden y recepción
-        const invoice = await sequelize.models.ProcurementInvoice.findOne({
-            where: { id: invoiceId, company_id: companyId },
-            include: [
-                { model: sequelize.models.ProcurementOrder, as: 'order' },
-                { model: sequelize.models.ProcurementReceipt, as: 'receipt' }
-            ]
+        const invoice = await db.ProcurementInvoice.findOne({
+            where: { id: req.params.id, company_id: req.user.company_id }
         });
 
         if (!invoice) {
             return res.status(404).json({ success: false, error: 'Factura no encontrada' });
         }
 
-        // Tolerancia del 2% por defecto (configurable)
-        const tolerance = 0.02;
+        const tolerance = parseFloat(req.query.tolerance) || 2.0;
+        const result = await req.p2pService.performThreeWayMatch(invoice.id, tolerance);
 
-        // Resultado del Three-Way Match
-        const match = {
-            order_match: false,
-            order_details: '',
-            receipt_match: false,
-            receipt_details: '',
-            price_match: false,
-            price_difference: '0%',
-            tolerance: `${tolerance * 100}%`,
-            overall_status: 'pending'
-        };
-
-        // 1. MATCH CON ORDEN DE COMPRA
-        if (invoice.order_id && invoice.order) {
-            const order = invoice.order;
-
-            // Verificar proveedor
-            if (order.supplier_id === invoice.supplier_id) {
-                // Verificar monto (con tolerancia)
-                const orderAmount = parseFloat(order.total_amount) || 0;
-                const invoiceAmount = parseFloat(invoice.total_amount) || 0;
-                const orderDiff = Math.abs(orderAmount - invoiceAmount) / orderAmount;
-
-                if (orderDiff <= tolerance) {
-                    match.order_match = true;
-                    match.order_details = `OC ${order.order_number} - Monto: ${orderAmount.toFixed(2)} (Dif: ${(orderDiff * 100).toFixed(1)}%)`;
-                } else {
-                    match.order_details = `Diferencia de monto excede tolerancia: OC ${orderAmount.toFixed(2)} vs Fact ${invoiceAmount.toFixed(2)} (${(orderDiff * 100).toFixed(1)}%)`;
-                }
-            } else {
-                match.order_details = 'Proveedor de la factura no coincide con la OC';
-            }
-        } else {
-            match.order_details = 'Factura sin orden de compra asociada';
-            match.order_match = true; // Si no hay OC, se considera OK
-        }
-
-        // 2. MATCH CON RECEPCIÓN
-        if (invoice.order_id) {
-            // Buscar recepciones de la orden
-            const receipts = await sequelize.models.ProcurementReceipt.findAll({
-                where: { order_id: invoice.order_id, status: { [sequelize.Sequelize.Op.ne]: 'cancelled' } }
-            });
-
-            if (receipts.length > 0) {
-                // Verificar que la recepción está confirmada
-                const confirmedReceipts = receipts.filter(r => ['confirmed', 'quality_approved'].includes(r.status));
-
-                if (confirmedReceipts.length > 0) {
-                    match.receipt_match = true;
-                    match.receipt_details = `${confirmedReceipts.length} recepción(es) confirmada(s)`;
-
-                    // Si hay items, verificar cantidades
-                    if (invoice.order) {
-                        const [receiptTotals] = await sequelize.query(`
-                            SELECT SUM(ri.quantity_received) as total_received
-                            FROM procurement_receipt_items ri
-                            JOIN procurement_receipts r ON r.id = ri.receipt_id
-                            WHERE r.order_id = :orderId AND r.status NOT IN ('cancelled')
-                        `, {
-                            replacements: { orderId: invoice.order_id },
-                            type: sequelize.QueryTypes.SELECT
-                        });
-
-                        if (receiptTotals?.total_received) {
-                            match.receipt_details += ` - Total recibido: ${receiptTotals.total_received} unidades`;
-                        }
-                    }
-                } else {
-                    match.receipt_details = 'Recepciones pendientes de confirmación';
-                }
-            } else {
-                match.receipt_details = 'Sin recepciones registradas para esta orden';
-            }
-        } else {
-            match.receipt_match = true;
-            match.receipt_details = 'Factura directa (sin OC) - Recepción no aplicable';
-        }
-
-        // 3. MATCH DE PRECIOS (si hay orden)
-        if (invoice.order_id && invoice.order) {
-            const orderAmount = parseFloat(invoice.order.total_amount) || 0;
-            const invoiceAmount = parseFloat(invoice.total_amount) || 0;
-
-            if (orderAmount > 0) {
-                const priceDiff = Math.abs(orderAmount - invoiceAmount) / orderAmount;
-                match.price_difference = `${(priceDiff * 100).toFixed(2)}%`;
-                match.price_match = priceDiff <= tolerance;
-            } else {
-                match.price_match = true;
-                match.price_difference = 'N/A';
-            }
-        } else {
-            match.price_match = true;
-            match.price_difference = 'N/A (sin OC)';
-        }
-
-        // Status general
-        match.overall_status = (match.order_match && match.receipt_match && match.price_match) ? 'passed' : 'failed';
-
-        res.json({ success: true, data: match });
+        res.json({ success: true, data: result });
     } catch (error) {
         console.error('❌ [Procurement] Error en Three-Way Match:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/orders/:id/circuit-status
+ * Estado completo del circuito P2P de una OC
+ */
+router.get('/orders/:id/circuit-status', async (req, res) => {
+    try {
+        const result = await req.p2pService.getOrderCircuitStatus(req.params.id);
+        if (!result) {
+            return res.status(404).json({ success: false, error: 'Orden no encontrada' });
+        }
+        res.json({ success: true, data: result });
+    } catch (error) {
+        console.error('❌ [Procurement] Error obteniendo circuit status:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/orders/:id/close-circuit
+ * Intentar cerrar el circuito P2P de una OC
+ */
+router.post('/orders/:id/close-circuit', async (req, res) => {
+    try {
+        const result = await req.p2pService.checkAndCloseOrderCircuit(req.params.id);
+        res.json({ success: true, data: result });
+    } catch (error) {
+        console.error('❌ [Procurement] Error cerrando circuito:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/invoices/:id/execute-match
+ * Ejecutar three-way matching y actualizar estado de la factura
+ */
+router.post('/invoices/:id/execute-match', async (req, res) => {
+    try {
+        const invoice = await db.ProcurementInvoice.findOne({
+            where: { id: req.params.id, company_id: req.user.company_id }
+        });
+        if (!invoice) {
+            return res.status(404).json({ success: false, error: 'Factura no encontrada' });
+        }
+
+        const tolerance = parseFloat(req.body.tolerance) || 2.0;
+        const matchResult = await req.p2pService.performThreeWayMatch(invoice.id, tolerance);
+
+        // Si el matching fue exitoso, generar asiento contable
+        if (matchResult.status === 'matched') {
+            try {
+                await req.p2pService.generateInvoiceJournalEntry(invoice.id, req.user.user_id || req.user.id);
+            } catch (err) {
+                console.error('[P2P] Error generando asiento de factura:', err.message);
+            }
+        }
+
+        res.json({ success: true, data: matchResult });
+    } catch (error) {
+        console.error('❌ [Procurement] Error ejecutando matching:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/payment-orders/from-invoices
+ * Crear orden de pago desde facturas aprobadas (bridge P2P → Finance)
+ */
+router.post('/payment-orders/from-invoices', async (req, res) => {
+    try {
+        const { invoice_ids, payment_date, payment_method, retentions_detail, notes, cost_center_id } = req.body;
+
+        if (!invoice_ids || !Array.isArray(invoice_ids) || invoice_ids.length === 0) {
+            return res.status(400).json({ success: false, error: 'Se requiere al menos una factura' });
+        }
+
+        const result = await req.p2pService.createPaymentOrderFromInvoices(
+            req.user.company_id,
+            invoice_ids,
+            { payment_date, payment_method, retentions_detail, notes, cost_center_id },
+            req.user.user_id || req.user.id
+        );
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [Procurement] Error creando orden de pago:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -1535,8 +1567,7 @@ router.get('/invoices/:id/three-way-match', async (req, res) => {
  */
 router.post('/invoices/:id/verify', async (req, res) => {
     try {
-        const sequelize = req.app.get('sequelize');
-        const invoice = await sequelize.models.ProcurementInvoice.findOne({
+        const invoice = await db.ProcurementInvoice.findOne({
             where: { id: req.params.id, company_id: req.user.company_id }
         });
 
@@ -1586,31 +1617,6 @@ router.post('/invoices/:id/dispute', async (req, res) => {
         res.json({ success: true, data: invoice });
     } catch (error) {
         console.error('❌ [Procurement] Error marcando disputa:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * GET /api/procurement/invoices/pending-payment
- * Facturas pendientes de pago
- */
-router.get('/invoices/pending-payment', async (req, res) => {
-    try {
-        const sequelize = req.app.get('sequelize');
-
-        const invoices = await sequelize.models.ProcurementInvoice.findAll({
-            where: {
-                company_id: req.user.company_id,
-                status: 'verified',
-                payment_status: { [sequelize.Sequelize.Op.in]: ['pending', 'partial'] }
-            },
-            include: [{ model: sequelize.models.ProcurementSupplier, as: 'supplier', attributes: ['id', 'name', 'legal_name'] }],
-            order: [['due_date', 'ASC']]
-        });
-
-        res.json({ success: true, data: invoices });
-    } catch (error) {
-        console.error('❌ [Procurement] Error listando facturas pendientes:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -1675,6 +1681,26 @@ router.get('/suppliers', async (req, res) => {
         });
     } catch (error) {
         console.error('❌ [Procurement] Error listando proveedores:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/suppliers/suggested
+ * Proveedores sugeridos para una compra
+ */
+router.get('/suppliers/suggested', async (req, res) => {
+    try {
+        const { categoryId, productIds, minAmount } = req.query;
+        const suggestions = await req.procurementService.getSuggestedSuppliers(
+            req.user.company_id,
+            categoryId,
+            productIds ? productIds.split(',').map(Number) : [],
+            parseFloat(minAmount) || 0
+        );
+        res.json({ success: true, data: suggestions });
+    } catch (error) {
+        console.error('❌ [Procurement] Error obteniendo sugerencias:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -2081,26 +2107,6 @@ router.get('/suppliers/:id/history', async (req, res) => {
         });
     } catch (error) {
         console.error('❌ [Procurement] Error obteniendo historial:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * GET /api/procurement/suppliers/suggested
- * Proveedores sugeridos para una compra
- */
-router.get('/suppliers/suggested', async (req, res) => {
-    try {
-        const { categoryId, productIds, minAmount } = req.query;
-        const suggestions = await req.procurementService.getSuggestedSuppliers(
-            req.user.company_id,
-            categoryId,
-            productIds ? productIds.split(',').map(Number) : [],
-            parseFloat(minAmount) || 0
-        );
-        res.json({ success: true, data: suggestions });
-    } catch (error) {
-        console.error('❌ [Procurement] Error obteniendo sugerencias:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -2644,6 +2650,321 @@ router.get('/reports/pending-deliveries', async (req, res) => {
         res.json({ success: true, data: orders });
     } catch (error) {
         console.error('❌ [Procurement] Error en reporte:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// FISCAL STRATEGY API
+// ============================================
+
+/**
+ * GET /api/procurement/fiscal/countries
+ * Obtener países fiscales soportados con su estado
+ */
+router.get('/fiscal/countries', async (req, res) => {
+    try {
+        const countries = req.p2pService.fiscalFactory.getSupportedCountries();
+        res.json({ success: true, data: countries });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/fiscal/calculate-tax
+ * Calcular impuesto de compra (IVA/tax) según sucursal
+ */
+router.post('/fiscal/calculate-tax', async (req, res) => {
+    try {
+        const { subtotal, branchId, countryCode, taxConditionBuyer, taxConditionSeller, purchaseType } = req.body;
+        // Resolver strategy: countryCode directo o via branchId
+        let strategy;
+        if (countryCode) {
+            strategy = await req.p2pService.fiscalFactory.getStrategyForCountry(countryCode);
+        } else {
+            strategy = await req.p2pService.getFiscalStrategy(branchId || null);
+        }
+        const result = strategy.calculatePurchaseTax({
+            subtotal: parseFloat(subtotal) || 0,
+            taxConditionBuyer: taxConditionBuyer || 'RI',
+            taxConditionSeller: taxConditionSeller || 'RI',
+            purchaseType: purchaseType || 'goods'
+        });
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/fiscal/calculate-retentions
+ * Calcular retenciones según régimen fiscal del proveedor y sucursal
+ */
+router.post('/fiscal/calculate-retentions', async (req, res) => {
+    try {
+        const { amount, taxAmount, branchId, countryCode, purchaseType,
+                supplierTaxCondition, buyerTaxCondition, province } = req.body;
+        // Resolver strategy: countryCode directo o via branchId
+        let strategy;
+        if (countryCode) {
+            strategy = await req.p2pService.fiscalFactory.getStrategyForCountry(countryCode);
+        } else {
+            strategy = await req.p2pService.getFiscalStrategy(branchId || null);
+        }
+        const result = strategy.calculateRetentions({
+            amount: parseFloat(amount) || 0,
+            taxAmount: parseFloat(taxAmount) || 0,
+            purchaseType: purchaseType || 'goods',
+            supplierTaxCondition: supplierTaxCondition || 'RI',
+            buyerTaxCondition: buyerTaxCondition || 'RI',
+            province: province || null
+        });
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/fiscal/determine-invoice-type
+ * Determinar tipo de factura según condiciones fiscales
+ */
+router.post('/fiscal/determine-invoice-type', async (req, res) => {
+    try {
+        const { branchId, countryCode, buyerCondition, sellerCondition, amount } = req.body;
+        let strategy;
+        if (countryCode) {
+            strategy = await req.p2pService.fiscalFactory.getStrategyForCountry(countryCode);
+        } else {
+            strategy = await req.p2pService.getFiscalStrategy(branchId || null);
+        }
+        const result = strategy.determineInvoiceType({
+            buyerCondition: buyerCondition || 'RI',
+            sellerCondition: sellerCondition || 'RI',
+            amount: parseFloat(amount) || 0
+        });
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/fiscal/validate-tax-id
+ * Validar identificación tributaria del proveedor (CUIT/RUT/CNPJ/RFC/NIT)
+ */
+router.post('/fiscal/validate-tax-id', async (req, res) => {
+    try {
+        const { taxId, branchId, countryCode } = req.body;
+        let strategy;
+        if (countryCode) {
+            strategy = await req.p2pService.fiscalFactory.getStrategyForCountry(countryCode);
+        } else {
+            strategy = await req.p2pService.getFiscalStrategy(branchId || null);
+        }
+        const result = strategy.validateTaxId(taxId);
+        result.taxIdFieldName = strategy.getTaxIdFieldName();
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// COMPANY TAX CONFIG (Overrides fiscales por empresa)
+// ============================================
+
+const { CompanyTaxConfig, TaxTemplate, TaxConcept } = require('../models/siac/TaxTemplate');
+
+/**
+ * GET /api/procurement/company-tax-config
+ * Obtener configuración fiscal de la empresa actual
+ */
+router.get('/company-tax-config', async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+
+        // Intentar obtener config existente
+        let config = await CompanyTaxConfig.findOne({
+            where: { companyId, isActive: true },
+            include: [{
+                model: TaxTemplate,
+                as: 'template',
+                attributes: ['id', 'country_code', 'template_name', 'default_currency']
+            }]
+        });
+
+        // Si no existe, crear una por defecto con template AR
+        if (!config) {
+            const arTemplate = await TaxTemplate.findOne({ where: { countryCode: 'AR', isActive: true } });
+            if (arTemplate) {
+                config = await CompanyTaxConfig.create({
+                    companyId,
+                    taxTemplateId: arTemplate.id,
+                    conceptOverrides: {},
+                    isActive: true
+                });
+                config = await CompanyTaxConfig.findByPk(config.id, {
+                    include: [{ model: TaxTemplate, as: 'template' }]
+                });
+            }
+        }
+
+        // Obtener conceptos del template para mostrar opciones de override
+        const concepts = config?.taxTemplateId
+            ? await TaxConcept.findAll({
+                where: { taxTemplateId: config.taxTemplateId, isActive: true },
+                attributes: ['id', 'concept_code', 'concept_name'],
+                order: [['calculation_order', 'ASC']]
+            })
+            : [];
+
+        res.json({
+            success: true,
+            data: {
+                config: config ? {
+                    id: config.id,
+                    companyId: config.companyId,
+                    taxTemplateId: config.taxTemplateId,
+                    templateName: config.template?.templateName || config.template?.template_name,
+                    countryCode: config.template?.countryCode || config.template?.country_code,
+                    customTaxId: config.customTaxId,
+                    customConditionCode: config.customConditionCode,
+                    conceptOverrides: config.conceptOverrides || {},
+                    puntoVenta: config.puntoVenta,
+                    descuentoMaximo: config.descuentoMaximo,
+                    recargoMaximo: config.recargoMaximo
+                } : null,
+                concepts: concepts.map(c => ({
+                    id: c.id,
+                    code: c.concept_code,
+                    name: c.concept_name
+                }))
+            }
+        });
+    } catch (error) {
+        console.error('[CompanyTaxConfig] Error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * PUT /api/procurement/company-tax-config
+ * Actualizar configuración fiscal de la empresa
+ */
+router.put('/company-tax-config', async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const { customTaxId, customConditionCode, conceptOverrides, puntoVenta, descuentoMaximo, recargoMaximo } = req.body;
+
+        let config = await CompanyTaxConfig.findOne({ where: { companyId, isActive: true } });
+
+        if (!config) {
+            // Crear nueva config
+            const arTemplate = await TaxTemplate.findOne({ where: { countryCode: 'AR', isActive: true } });
+            config = await CompanyTaxConfig.create({
+                companyId,
+                taxTemplateId: arTemplate?.id || 1,
+                customTaxId,
+                customConditionCode,
+                conceptOverrides: conceptOverrides || {},
+                puntoVenta: puntoVenta || 1,
+                descuentoMaximo: descuentoMaximo || 0,
+                recargoMaximo: recargoMaximo || 0,
+                isActive: true
+            });
+        } else {
+            // Actualizar existente
+            await config.update({
+                customTaxId: customTaxId !== undefined ? customTaxId : config.customTaxId,
+                customConditionCode: customConditionCode !== undefined ? customConditionCode : config.customConditionCode,
+                conceptOverrides: conceptOverrides !== undefined ? conceptOverrides : config.conceptOverrides,
+                puntoVenta: puntoVenta !== undefined ? puntoVenta : config.puntoVenta,
+                descuentoMaximo: descuentoMaximo !== undefined ? descuentoMaximo : config.descuentoMaximo,
+                recargoMaximo: recargoMaximo !== undefined ? recargoMaximo : config.recargoMaximo
+            });
+        }
+
+        res.json({ success: true, data: config, message: 'Configuración fiscal actualizada' });
+    } catch (error) {
+        console.error('[CompanyTaxConfig] Error updating:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/procurement/company-tax-config/override
+ * Agregar/actualizar un override de concepto específico
+ */
+router.post('/company-tax-config/override', async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const { conceptCode, percentage } = req.body;
+
+        if (!conceptCode || percentage === undefined) {
+            return res.status(400).json({ success: false, error: 'conceptCode y percentage son requeridos' });
+        }
+
+        let config = await CompanyTaxConfig.findOne({ where: { companyId, isActive: true } });
+
+        if (!config) {
+            const arTemplate = await TaxTemplate.findOne({ where: { countryCode: 'AR', isActive: true } });
+            config = await CompanyTaxConfig.create({
+                companyId,
+                taxTemplateId: arTemplate?.id || 1,
+                conceptOverrides: { [conceptCode]: parseFloat(percentage) },
+                isActive: true
+            });
+        } else {
+            // Copiar objeto para forzar que Sequelize detecte el cambio (JSONB requiere nuevo objeto)
+            const overrides = { ...(config.conceptOverrides || {}) };
+            overrides[conceptCode] = parseFloat(percentage);
+            config.conceptOverrides = overrides;
+            config.changed('conceptOverrides', true); // Forzar cambio para JSONB
+            await config.save();
+        }
+
+        res.json({
+            success: true,
+            data: { conceptCode, percentage: parseFloat(percentage) },
+            message: `Override para ${conceptCode} guardado: ${percentage}%`
+        });
+    } catch (error) {
+        console.error('[CompanyTaxConfig] Error adding override:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * DELETE /api/procurement/company-tax-config/override/:conceptCode
+ * Eliminar un override de concepto
+ */
+router.delete('/company-tax-config/override/:conceptCode', async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const { conceptCode } = req.params;
+
+        const config = await CompanyTaxConfig.findOne({ where: { companyId, isActive: true } });
+
+        if (!config) {
+            return res.status(404).json({ success: false, error: 'No hay configuración fiscal para esta empresa' });
+        }
+
+        const overrides = { ...(config.conceptOverrides || {}) };
+        if (conceptCode in overrides) {
+            delete overrides[conceptCode];
+            config.conceptOverrides = overrides;
+            config.changed('conceptOverrides', true);
+            await config.save();
+        }
+
+        res.json({
+            success: true,
+            message: `Override para ${conceptCode} eliminado`
+        });
+    } catch (error) {
+        console.error('[CompanyTaxConfig] Error deleting override:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

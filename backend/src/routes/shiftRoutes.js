@@ -32,7 +32,7 @@ router.get('/', auth, async (req, res) => {
     const shifts = await Shift.findAll({
       where,
       include: [
-        { model: Branch, attributes: ['id', 'name'] }
+        { model: Branch, as: 'branch', attributes: ['id', 'name'] }
       ],
       order: [['name', 'ASC']]
     });
@@ -51,12 +51,17 @@ router.get('/', auth, async (req, res) => {
  */
 router.get('/:id', auth, async (req, res) => {
   try {
-    const shift = await Shift.findByPk(req.params.id, {
-      include: [
-        { model: Branch },
-        { model: User, through: { attributes: [] } }
-      ]
-    });
+    let shift;
+    try {
+      shift = await Shift.findByPk(req.params.id, {
+        include: [
+          { model: Branch, as: 'branch', required: false }
+        ]
+      });
+    } catch (includeError) {
+      // Fallback without includes if associations not set up
+      shift = await Shift.findByPk(req.params.id);
+    }
 
     if (!shift) {
       return res.status(404).json({

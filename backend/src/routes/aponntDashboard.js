@@ -1080,6 +1080,7 @@ router.put('/companies/:id', async (req, res) => {
       contactEmail,
       contactPhone,
       address,
+      phone,
       licenseType,
       maxEmployees,
       contractedEmployees,
@@ -1088,10 +1089,38 @@ router.put('/companies/:id', async (req, res) => {
       pricing
     } = req.body;
 
+    // Si es una actualización parcial simple (sin módulos ni name), usar update directo
+    if (!name && !modules && !modulesPricing) {
+      const updateFields = [];
+      const replacements = { id };
+
+      if (legalName !== undefined) { updateFields.push('legal_name = :legalName'); replacements.legalName = legalName; }
+      if (taxId !== undefined) { updateFields.push('tax_id = :taxId'); replacements.taxId = taxId; }
+      if (contactEmail !== undefined) { updateFields.push('email = :contactEmail'); replacements.contactEmail = contactEmail; }
+      if (contactPhone !== undefined) { updateFields.push('contact_phone = :contactPhone'); replacements.contactPhone = contactPhone; }
+      if (phone !== undefined) { updateFields.push('phone = :phone'); replacements.phone = phone; }
+      if (address !== undefined) { updateFields.push('address = :address'); replacements.address = address; }
+      if (licenseType !== undefined) { updateFields.push('license_type = :licenseType'); replacements.licenseType = licenseType; }
+      if (maxEmployees !== undefined) { updateFields.push('max_employees = :maxEmployees'); replacements.maxEmployees = maxEmployees; }
+
+      if (updateFields.length === 0) {
+        return res.status(400).json({ success: false, error: 'No se proporcionaron campos para actualizar' });
+      }
+
+      updateFields.push('updated_at = NOW()');
+
+      await sequelize.query(
+        `UPDATE companies SET ${updateFields.join(', ')} WHERE company_id = :id`,
+        { replacements, type: sequelize.QueryTypes.UPDATE }
+      );
+
+      return res.json({ success: true, message: 'Empresa actualizada exitosamente' });
+    }
+
     // sequelize is already imported at the top
 
-    // Crear slug a partir del nombre actualizado
-    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+    // Crear slug a partir del nombre actualizado (solo si se envió nombre)
+    const slug = name ? name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-') : undefined;
 
     // 🧮 CALCULAR precios reales antes de actualizar
     let totalModulesPrice = 0;

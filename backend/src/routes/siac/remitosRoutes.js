@@ -20,7 +20,11 @@
 
 const express = require('express');
 const router = express.Router();
+const { auth } = require('../../middleware/auth');
 const RemitosService = require('../../services/siac/RemitosService');
+
+// Apply auth middleware to ALL routes
+router.use(auth);
 
 /**
  * GET /api/siac/remitos
@@ -135,6 +139,10 @@ router.get('/:id', async (req, res) => {
             });
         }
 
+        if (remito.company_id !== req.user.company_id) {
+            return res.status(403).json({ error: 'Acceso denegado' });
+        }
+
         res.json({
             success: true,
             data: remito
@@ -157,7 +165,7 @@ router.post('/', async (req, res) => {
     try {
         const data = {
             ...req.body,
-            usuario_id: req.body.usuario_id || req.user?.id || 1
+            usuario_id: req.user.id || req.user.user_id
         };
 
         // Validaciones básicas
@@ -205,7 +213,7 @@ router.post('/from-presupuesto/:id', async (req, res) => {
         const presupuestoId = req.params.id;
         const data = {
             ...req.body,
-            usuario_id: req.body.usuario_id || req.user?.id || 1
+            usuario_id: req.user.id || req.user.user_id
         };
 
         const remito = await RemitosService.createFromPresupuesto(presupuestoId, data);
@@ -231,11 +239,24 @@ router.post('/from-presupuesto/:id', async (req, res) => {
  */
 router.put('/:id/entregar', async (req, res) => {
     try {
-        const remito = await RemitosService.marcarEntregado(req.params.id, req.body);
+        const remito = await RemitosService.getById(req.params.id);
+
+        if (!remito) {
+            return res.status(404).json({
+                success: false,
+                error: 'Remito no encontrado'
+            });
+        }
+
+        if (remito.company_id !== req.user.company_id) {
+            return res.status(403).json({ error: 'Acceso denegado' });
+        }
+
+        const result = await RemitosService.marcarEntregado(req.params.id, req.body);
 
         res.json({
             success: true,
-            data: remito,
+            data: result,
             message: 'Remito marcado como entregado'
         });
 
@@ -276,6 +297,19 @@ router.get('/:id/datos-factura', async (req, res) => {
  */
 router.post('/:id/facturar', async (req, res) => {
     try {
+        const remito = await RemitosService.getById(req.params.id);
+
+        if (!remito) {
+            return res.status(404).json({
+                success: false,
+                error: 'Remito no encontrado'
+            });
+        }
+
+        if (remito.company_id !== req.user.company_id) {
+            return res.status(403).json({ error: 'Acceso denegado' });
+        }
+
         const result = await RemitosService.facturar(req.params.id, req.body);
 
         res.json({
@@ -299,16 +333,29 @@ router.post('/:id/facturar', async (req, res) => {
  */
 router.delete('/:id', async (req, res) => {
     try {
+        const remito = await RemitosService.getById(req.params.id);
+
+        if (!remito) {
+            return res.status(404).json({
+                success: false,
+                error: 'Remito no encontrado'
+            });
+        }
+
+        if (remito.company_id !== req.user.company_id) {
+            return res.status(403).json({ error: 'Acceso denegado' });
+        }
+
         const data = {
-            usuario_id: req.body.usuario_id || req.user?.id || 1,
+            usuario_id: req.user.id || req.user.user_id,
             motivo: req.body.motivo || 'Anulado por usuario'
         };
 
-        const remito = await RemitosService.anular(req.params.id, data);
+        const result = await RemitosService.anular(req.params.id, data);
 
         res.json({
             success: true,
-            data: remito,
+            data: result,
             message: 'Remito anulado exitosamente'
         });
 

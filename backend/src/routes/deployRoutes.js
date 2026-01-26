@@ -19,8 +19,11 @@ const path = require('path');
 // CONSTANTES DE SEGURIDAD (HARDCODED)
 // ============================================================================
 
-const DEPLOY_USERNAME = 'APONNT';
-const DEPLOY_PASSWORD = 'Aedr15150302';
+const DEPLOY_USERNAME = process.env.DEPLOY_USERNAME || 'APONNT';
+const DEPLOY_PASSWORD = process.env.DEPLOY_PASSWORD;
+if (!DEPLOY_PASSWORD) {
+  console.error('⚠️ [DEPLOY] DEPLOY_PASSWORD no configurada en variables de entorno');
+}
 const MIN_SUCCESSFUL_TESTS = 50; // Threshold mínimo de tests exitosos
 
 // ============================================================================

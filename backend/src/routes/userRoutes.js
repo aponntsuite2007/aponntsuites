@@ -266,6 +266,41 @@ router.get('/', auth, supervisorOrAdmin, async (req, res) => {
   }
 });
 
+// =====================================================
+// 🔐 ROLES - Lista de roles disponibles (ANTES de /:id para evitar conflicto)
+// =====================================================
+/**
+ * @route GET /api/v1/users/roles
+ * @desc Obtener lista de roles disponibles
+ * @access Private
+ */
+router.get('/roles', auth, async (req, res) => {
+  try {
+    // Roles estándar del sistema
+    const roles = [
+      { id: 'admin', name: 'Administrador', description: 'Acceso completo al sistema', level: 100 },
+      { id: 'supervisor', name: 'Supervisor', description: 'Gestión de equipos y aprobaciones', level: 80 },
+      { id: 'manager', name: 'Gerente', description: 'Gestión de departamento', level: 70 },
+      { id: 'rrhh', name: 'RRHH', description: 'Recursos humanos', level: 60 },
+      { id: 'operator', name: 'Operador', description: 'Operaciones básicas', level: 40 },
+      { id: 'employee', name: 'Empleado', description: 'Usuario estándar', level: 10 },
+      { id: 'visitor', name: 'Visitante', description: 'Acceso limitado', level: 5 }
+    ];
+
+    res.json({
+      success: true,
+      roles,
+      count: roles.length
+    });
+  } catch (error) {
+    console.error('❌ [ROLES] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener roles'
+    });
+  }
+});
+
 /**
  * @route GET /api/v1/users/:id
  * @desc Obtener usuario por ID (multi-tenant)

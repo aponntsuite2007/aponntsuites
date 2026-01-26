@@ -68,30 +68,6 @@ router.post('/generate-monthly', authenticateJWT, requireRole(['admin']), async 
 });
 
 /**
- * GET /api/invoices/:id
- * Obtener factura por ID
- */
-router.get('/:id', authenticateJWT, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const invoice = await InvoicingService.findById(id);
-
-    return res.status(200).json({
-      success: true,
-      invoice
-    });
-
-  } catch (error) {
-    console.error('❌ [INVOICE API] Error en GET /:id:', error);
-    return res.status(404).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-/**
  * GET /api/invoices/company/:company_id
  * Listar facturas de una empresa
  *
@@ -114,6 +90,60 @@ router.get('/company/:company_id', authenticateJWT, async (req, res) => {
   } catch (error) {
     console.error('❌ [INVOICE API] Error en GET /company/:company_id:', error);
     return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/invoices/stats/overview
+ * Estadísticas de facturación
+ *
+ * Query: ?company_id=X&status=Y&billing_period_year=YYYY
+ */
+router.get('/stats/overview', authenticateJWT, async (req, res) => {
+  try {
+    const filters = {
+      company_id: req.query.company_id,
+      status: req.query.status,
+      billing_period_year: req.query.billing_period_year
+    };
+
+    const stats = await InvoicingService.getStats(filters);
+
+    return res.status(200).json({
+      success: true,
+      stats
+    });
+
+  } catch (error) {
+    console.error('❌ [INVOICE API] Error en GET /stats/overview:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/invoices/:id
+ * Obtener factura por ID (MUST be after all static GET routes)
+ */
+router.get('/:id', authenticateJWT, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const invoice = await InvoicingService.findById(id);
+
+    return res.status(200).json({
+      success: true,
+      invoice
+    });
+
+  } catch (error) {
+    console.error('❌ [INVOICE API] Error en GET /:id:', error);
+    return res.status(404).json({
       success: false,
       error: error.message
     });
@@ -243,36 +273,6 @@ router.post('/check-overdue', authenticateJWT, requireRole(['admin']), async (re
 
   } catch (error) {
     console.error('❌ [INVOICE API] Error en POST /check-overdue:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-/**
- * GET /api/invoices/stats/overview
- * Estadísticas de facturación
- *
- * Query: ?company_id=X&status=Y&billing_period_year=YYYY
- */
-router.get('/stats/overview', authenticateJWT, async (req, res) => {
-  try {
-    const filters = {
-      company_id: req.query.company_id,
-      status: req.query.status,
-      billing_period_year: req.query.billing_period_year
-    };
-
-    const stats = await InvoicingService.getStats(filters);
-
-    return res.status(200).json({
-      success: true,
-      stats
-    });
-
-  } catch (error) {
-    console.error('❌ [INVOICE API] Error en GET /stats/overview:', error);
     return res.status(500).json({
       success: false,
       error: error.message

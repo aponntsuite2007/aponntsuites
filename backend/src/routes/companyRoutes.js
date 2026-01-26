@@ -100,41 +100,61 @@ router.get('/', auth, requireRole(['super_admin']), async (req, res) => {
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    const company = await multiTenantDB.getCompanyBySlug(slug);
-    
+    let company = null;
+
+    // Intentar con multiTenantDB si está disponible
+    if (multiTenantDB && typeof multiTenantDB.getCompanyBySlug === 'function') {
+      company = await multiTenantDB.getCompanyBySlug(slug);
+    } else {
+      // Fallback: buscar directamente en la base de datos
+      const { sequelize } = require('../config/database');
+      const results = await sequelize.query(
+        `SELECT company_id, name, slug, logo, is_active as "isActive",
+                contact_email, phone, address, city, province, country,
+                timezone, locale, currency, features, primary_color, secondary_color,
+                modules_data, license_type as "licenseType"
+         FROM companies WHERE slug = $1 AND is_active = true LIMIT 1`,
+        { bind: [slug], type: sequelize.QueryTypes.SELECT }
+      );
+      company = Array.isArray(results) && results.length > 0 ? results[0] : null;
+    }
+
     if (!company) {
       return res.status(404).json({
         success: false,
         error: 'Empresa no encontrada'
       });
     }
-    
+
     // Remove sensitive information for public access
     const publicInfo = {
-      id: company.company_id,
+      id: company.company_id || company.id,
       name: company.name,
       slug: company.slug,
-      displayName: company.displayName,
+      displayName: company.displayName || company.name,
       logo: company.logo,
-      primaryColor: company.primaryColor,
-      secondaryColor: company.secondaryColor,
-      timezone: company.timezone,
-      locale: company.locale,
-      currency: company.currency,
+      primaryColor: company.primaryColor || '#1976d2',
+      secondaryColor: company.secondaryColor || '#424242',
+      timezone: company.timezone || 'America/Argentina/Buenos_Aires',
+      locale: company.locale || 'es-AR',
+      currency: company.currency || 'ARS',
       features: company.features,
       isActive: company.isActive
     };
-    
+
     res.json({
       success: true,
       company: publicInfo
     });
-    
+
   } catch (error) {
-    console.error('Error getting company:', error);
+    console.error('Error getting company by slug:', slug);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      error: 'Error interno del servidor'
+      error: 'Error interno del servidor',
+      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

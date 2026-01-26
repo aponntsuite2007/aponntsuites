@@ -126,32 +126,48 @@ router.post('/checkin', auth, async (req, res) => {
       });
     }
 
+    // Map method to valid enum: fingerprint, face, pin, manual, mobile
+    const checkMethod = method === 'mobile_app' ? 'mobile' : (method === 'test' ? 'manual' : (method || 'manual'));
+
     // Si no existe registro, crear uno nuevo
     let attendance;
     if (!existingRecord) {
       attendance = await Attendance.create({
         user_id: req.user.user_id,
+        company_id: req.user.company_id,
         date: today,
         check_in: now,
-        checkInMethod: method,
+        checkInMethod: checkMethod,
         checkInLocation: location,
+        origin_type: method === 'manual' || method === 'test' ? 'web' : 'mobile_app',
+        status: 'present',
         kiosk_id: branchId,
-        notes,
-        isManualEntry: method === 'manual'
+        notes
       });
     } else {
       // Actualizar registro existente
       attendance = await existingRecord.update({
         check_in: now,
-        checkInMethod: method,
+        checkInMethod: checkMethod,
         checkInLocation: location,
         kiosk_id: branchId || existingRecord.kiosk_id,
-        notes: existingRecord.notes ? `${existingRecord.notes}\n${notes}` : notes,
-        isManualEntry: method === 'manual'
+        notes: existingRecord.notes ? `${existingRecord.notes}\n${notes}` : notes
       });
     }
 
-    // Calcular estadísticas
+    // Determinar turno asignado y setear shift_id
+    try {
+      const ShiftCalculatorService = require('../services/ShiftCalculatorService');
+      const shiftInfo = await ShiftCalculatorService.calculateUserShiftForDate(req.user.user_id, today);
+      if (shiftInfo.hasAssignment && shiftInfo.shift) {
+        await attendance.update({ shift_id: shiftInfo.shift.id });
+        console.log(`📋 [ATTENDANCE] Shift assigned: ${shiftInfo.shift.name} (shouldWork: ${shiftInfo.shouldWork})`);
+      }
+    } catch (shiftError) {
+      console.warn('[ATTENDANCE] Shift lookup failed (non-blocking):', shiftError.message);
+    }
+
+    // Calcular estadísticas (tardanza, status, etc.)
     await calculateAttendanceStats(attendance);
 
     // Obtener el registro completo sin relaciones por ahora
@@ -209,16 +225,35 @@ router.post('/checkout', auth, async (req, res) => {
       });
     }
 
+    // Map method to valid enum: fingerprint, face, pin, manual, mobile
+    const checkMethod = method === 'mobile_app' ? 'mobile' : (method || 'manual');
     // Actualizar con datos de salida
     await attendance.update({
       check_out: now,
-      checkOutMethod: method,
+      checkOutMethod: checkMethod,
       checkOutLocation: location,
       notes: attendance.notes ? `${attendance.notes}\n${notes}` : notes
     });
 
     // Calcular estadísticas
     await calculateAttendanceStats(attendance);
+
+    // Procesar horas extra y banco de horas
+    try {
+      const overtimeCalc = new OvertimeCalculatorService();
+      const overtimeResult = await overtimeCalc.processCheckoutForHourBank(
+        attendance, req.user.company_id, req.user.user_id
+      );
+      if (overtimeResult.overtimeDetected) {
+        await attendance.update({
+          overtime_hours: overtimeResult.overtimeHours,
+          overtime_destination: overtimeResult.hourBankResult?.destination || 'pending'
+        });
+        console.log(`⏱️ [ATTENDANCE] Overtime detected: ${overtimeResult.overtimeHours}h (${overtimeResult.overtimeType})`);
+      }
+    } catch (otError) {
+      console.warn('[ATTENDANCE] Overtime processing failed (non-blocking):', otError.message);
+    }
 
     // Obtener el registro completo sin relaciones por ahora
     const fullRecord = await Attendance.findByPk(attendance.id);

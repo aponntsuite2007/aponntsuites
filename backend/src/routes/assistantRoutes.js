@@ -588,7 +588,8 @@ ${additionalDetails || 'Sin detalles adicionales'}
     try {
       // Usar el sistema de notificaciones unificado para enviar a APONNT
       // Firma: sendToAponnt(companyId, userId, { title, message, category, metadata })
-      const notificationService = new NotificationUnifiedService();
+      // NotificationUnifiedService exporta una instancia, no la clase
+      const notificationService = NotificationUnifiedService;
       await notificationService.sendToAponnt(companyId, userId, {
         title: `🎫 Ticket escalado desde IA: ${ticket_number}`,
         message: `

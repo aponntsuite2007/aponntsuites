@@ -15,6 +15,16 @@ let paymentForecastService = null;
 let checkManagementService = null;
 
 /**
+ * RBAC middleware - Verificar rol del usuario
+ */
+const requireRole = (...roles) => (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+        return res.status(403).json({ error: 'Permisos insuficientes', required: roles });
+    }
+    next();
+};
+
+/**
  * Inicializar servicios con la instancia de DB
  */
 router.initServices = (db, authMw) => {
@@ -41,7 +51,7 @@ router.initServices = (db, authMw) => {
  */
 router.get('/pending-invoices', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const { supplier_id } = req.query;
 
         if (!companyId) {
@@ -65,10 +75,10 @@ router.get('/pending-invoices', authMiddleware, async (req, res) => {
  * POST /api/payment-orders
  * Crear orden de pago
  */
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authMiddleware, requireRole('admin', 'finance'), async (req, res) => {
     try {
-        const userId = req.user?.user_id;
-        const companyId = req.user?.company_id || req.body.company_id;
+        const userId = req.user.user_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -98,7 +108,7 @@ router.post('/', authMiddleware, async (req, res) => {
  */
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -135,8 +145,8 @@ router.get('/', authMiddleware, async (req, res) => {
  */
 router.get('/pending-approval', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
-        const userRole = req.user?.role || req.query.role;
+        const companyId = req.user.company_id;
+        const userRole = req.user.role;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -161,7 +171,7 @@ router.get('/pending-approval', authMiddleware, async (req, res) => {
  */
 router.get('/upcoming', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const days = parseInt(req.query.days) || 7;
 
         if (!companyId) {
@@ -187,7 +197,7 @@ router.get('/upcoming', authMiddleware, async (req, res) => {
  */
 router.get('/stats', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const { date_from, date_to } = req.query;
 
         if (!companyId) {
@@ -207,34 +217,12 @@ router.get('/stats', authMiddleware, async (req, res) => {
 });
 
 /**
- * GET /api/payment-orders/:id
- * Obtener orden por ID
- */
-router.get('/:id', authMiddleware, async (req, res) => {
-    try {
-        const order = await paymentOrderService.getById(req.params.id);
-
-        if (!order) {
-            return res.status(404).json({ error: 'Orden de pago no encontrada' });
-        }
-
-        res.json({
-            success: true,
-            data: order
-        });
-    } catch (error) {
-        console.error('❌ Error obteniendo orden:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-/**
  * POST /api/payment-orders/:id/submit
  * Enviar orden a aprobación
  */
 router.post('/:id/submit', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const order = await paymentOrderService.submitForApproval(req.params.id, userId);
 
         res.json({
@@ -252,10 +240,10 @@ router.post('/:id/submit', authMiddleware, async (req, res) => {
  * POST /api/payment-orders/:id/approve
  * Aprobar orden
  */
-router.post('/:id/approve', authMiddleware, async (req, res) => {
+router.post('/:id/approve', authMiddleware, requireRole('admin', 'finance'), async (req, res) => {
     try {
-        const userId = req.user?.user_id;
-        const userRole = req.user?.role || req.body.role;
+        const userId = req.user.user_id;
+        const userRole = req.user.role;
         const authMethod = req.body.auth_method || 'password';
 
         const order = await paymentOrderService.approve(
@@ -282,7 +270,7 @@ router.post('/:id/approve', authMiddleware, async (req, res) => {
  */
 router.post('/:id/schedule', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const { payment_date } = req.body;
 
         if (!payment_date) {
@@ -310,9 +298,9 @@ router.post('/:id/schedule', authMiddleware, async (req, res) => {
  * POST /api/payment-orders/:id/execute
  * Ejecutar pago
  */
-router.post('/:id/execute', authMiddleware, async (req, res) => {
+router.post('/:id/execute', authMiddleware, requireRole('admin', 'finance'), async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const paymentData = req.body;
 
         const order = await paymentOrderService.execute(
@@ -336,9 +324,9 @@ router.post('/:id/execute', authMiddleware, async (req, res) => {
  * POST /api/payment-orders/:id/cancel
  * Cancelar orden
  */
-router.post('/:id/cancel', authMiddleware, async (req, res) => {
+router.post('/:id/cancel', authMiddleware, requireRole('admin', 'finance'), async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const { reason } = req.body;
 
         if (!reason) {
@@ -364,7 +352,7 @@ router.post('/:id/cancel', authMiddleware, async (req, res) => {
  */
 router.post('/:id/notify', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const order = await paymentOrderService.sendNotification(req.params.id, userId);
 
         res.json({
@@ -386,7 +374,7 @@ router.post('/:id/notify', authMiddleware, async (req, res) => {
  * POST /api/payment-orders/forecast/refresh
  * Refrescar cubo OLAP
  */
-router.post('/forecast/refresh', authMiddleware, async (req, res) => {
+router.post('/forecast/refresh', authMiddleware, requireRole('admin', 'finance'), async (req, res) => {
     try {
         const result = await paymentForecastService.refreshCube();
 
@@ -406,7 +394,7 @@ router.post('/forecast/refresh', authMiddleware, async (req, res) => {
  */
 router.get('/forecast/summary', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const { date_from, date_to } = req.query;
 
         if (!companyId) {
@@ -435,7 +423,7 @@ router.get('/forecast/summary', authMiddleware, async (req, res) => {
  */
 router.get('/forecast/cube', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -470,7 +458,7 @@ router.get('/forecast/cube', authMiddleware, async (req, res) => {
  */
 router.get('/forecast/drilldown', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const { current_level, current_value, target_level } = req.query;
 
         if (!companyId) {
@@ -510,7 +498,7 @@ router.get('/forecast/drilldown', authMiddleware, async (req, res) => {
  */
 router.get('/forecast/kpis', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -534,7 +522,7 @@ router.get('/forecast/kpis', authMiddleware, async (req, res) => {
  */
 router.get('/forecast/timeline', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const days = parseInt(req.query.days) || 30;
 
         if (!companyId) {
@@ -559,7 +547,7 @@ router.get('/forecast/timeline', authMiddleware, async (req, res) => {
  */
 router.get('/forecast/supplier-concentration', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const { date_from, date_to } = req.query;
 
         if (!companyId) {
@@ -588,7 +576,7 @@ router.get('/forecast/supplier-concentration', authMiddleware, async (req, res) 
  */
 router.get('/forecast/seasonality', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -612,7 +600,7 @@ router.get('/forecast/seasonality', authMiddleware, async (req, res) => {
  */
 router.get('/forecast/yoy', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -638,10 +626,10 @@ router.get('/forecast/yoy', authMiddleware, async (req, res) => {
  * POST /api/payment-orders/checkbooks
  * Crear chequera
  */
-router.post('/checkbooks', authMiddleware, async (req, res) => {
+router.post('/checkbooks', authMiddleware, requireRole('admin', 'finance'), async (req, res) => {
     try {
-        const userId = req.user?.user_id;
-        const companyId = req.user?.company_id || req.body.company_id;
+        const userId = req.user.user_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -671,7 +659,7 @@ router.post('/checkbooks', authMiddleware, async (req, res) => {
  */
 router.get('/checkbooks', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -702,7 +690,7 @@ router.get('/checkbooks', authMiddleware, async (req, res) => {
  */
 router.get('/checkbooks/available', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const { currency } = req.query;
 
         if (!companyId) {
@@ -728,7 +716,7 @@ router.get('/checkbooks/available', authMiddleware, async (req, res) => {
  */
 router.get('/checkbooks/stats', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -772,9 +760,9 @@ router.get('/checkbooks/:id', authMiddleware, async (req, res) => {
  * POST /api/payment-orders/checkbooks/:id/cancel
  * Cancelar chequera
  */
-router.post('/checkbooks/:id/cancel', authMiddleware, async (req, res) => {
+router.post('/checkbooks/:id/cancel', authMiddleware, requireRole('admin', 'finance'), async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const { reason } = req.body;
 
         if (!reason) {
@@ -806,10 +794,10 @@ router.post('/checkbooks/:id/cancel', authMiddleware, async (req, res) => {
  * POST /api/payment-orders/checks
  * Emitir cheque manualmente
  */
-router.post('/checks', authMiddleware, async (req, res) => {
+router.post('/checks', authMiddleware, requireRole('admin', 'finance'), async (req, res) => {
     try {
-        const userId = req.user?.user_id;
-        const companyId = req.user?.company_id || req.body.company_id;
+        const userId = req.user.user_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -839,7 +827,7 @@ router.post('/checks', authMiddleware, async (req, res) => {
  */
 router.get('/checks', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -876,7 +864,7 @@ router.get('/checks', authMiddleware, async (req, res) => {
  */
 router.get('/checks/portfolio', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const { date_from, date_to } = req.query;
 
         if (!companyId) {
@@ -902,7 +890,7 @@ router.get('/checks/portfolio', authMiddleware, async (req, res) => {
  */
 router.get('/checks/portfolio/summary', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -926,7 +914,7 @@ router.get('/checks/portfolio/summary', authMiddleware, async (req, res) => {
  */
 router.get('/checks/maturity', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -950,7 +938,7 @@ router.get('/checks/maturity', authMiddleware, async (req, res) => {
  */
 router.get('/checks/bounced', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -975,7 +963,7 @@ router.get('/checks/bounced', authMiddleware, async (req, res) => {
  */
 router.get('/checks/upcoming', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const days = parseInt(req.query.days) || 7;
 
         if (!companyId) {
@@ -1001,7 +989,7 @@ router.get('/checks/upcoming', authMiddleware, async (req, res) => {
  */
 router.get('/checks/stats', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -1025,7 +1013,7 @@ router.get('/checks/stats', authMiddleware, async (req, res) => {
  */
 router.get('/checks/timeline', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const days = parseInt(req.query.days) || 60;
 
         if (!companyId) {
@@ -1050,7 +1038,7 @@ router.get('/checks/timeline', authMiddleware, async (req, res) => {
  */
 router.get('/checks/by-beneficiary', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const { beneficiary_id, beneficiary_type } = req.query;
 
         if (!companyId) {
@@ -1079,7 +1067,7 @@ router.get('/checks/by-beneficiary', authMiddleware, async (req, res) => {
  */
 router.get('/checks/dashboard', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
 
         if (!companyId) {
             return res.status(400).json({ error: 'company_id es requerido' });
@@ -1103,7 +1091,7 @@ router.get('/checks/dashboard', authMiddleware, async (req, res) => {
  */
 router.get('/checks/search', authMiddleware, async (req, res) => {
     try {
-        const companyId = req.user?.company_id || req.query.company_id;
+        const companyId = req.user.company_id;
         const { q } = req.query;
 
         if (!companyId) {
@@ -1173,7 +1161,7 @@ router.get('/checks/:id/history', authMiddleware, async (req, res) => {
  */
 router.post('/checks/:id/deliver', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const { delivered_to, notes } = req.body;
 
         if (!delivered_to) {
@@ -1204,7 +1192,7 @@ router.post('/checks/:id/deliver', authMiddleware, async (req, res) => {
  */
 router.post('/checks/:id/cash', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const { bank } = req.body;
 
         const check = await checkManagementService.cashCheck(req.params.id, userId, bank);
@@ -1226,7 +1214,7 @@ router.post('/checks/:id/cash', authMiddleware, async (req, res) => {
  */
 router.post('/checks/:id/bounce', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const { reason, bounce_code } = req.body;
 
         if (!reason) {
@@ -1257,7 +1245,7 @@ router.post('/checks/:id/bounce', authMiddleware, async (req, res) => {
  */
 router.post('/checks/:id/void', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const { reason } = req.body;
 
         if (!reason) {
@@ -1283,7 +1271,7 @@ router.post('/checks/:id/void', authMiddleware, async (req, res) => {
  */
 router.post('/checks/:id/cancel', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const { reason } = req.body;
 
         if (!reason) {
@@ -1309,7 +1297,7 @@ router.post('/checks/:id/cancel', authMiddleware, async (req, res) => {
  */
 router.post('/checks/:id/replace', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user?.user_id;
+        const userId = req.user.user_id;
         const replacementData = req.body;
 
         const newCheck = await checkManagementService.replaceCheck(
@@ -1325,6 +1313,34 @@ router.post('/checks/:id/replace', authMiddleware, async (req, res) => {
         });
     } catch (error) {
         console.error('❌ Error reemplazando cheque:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// PARAMETERIZED ROUTE /:id (MUST BE LAST)
+// Express matches routes in order - this must come
+// after all static routes to avoid catching them
+// ==========================================
+
+/**
+ * GET /api/payment-orders/:id
+ * Obtener orden por ID
+ */
+router.get('/:id', authMiddleware, async (req, res) => {
+    try {
+        const order = await paymentOrderService.getById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({ error: 'Orden de pago no encontrada' });
+        }
+
+        res.json({
+            success: true,
+            data: order
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo orden:', error);
         res.status(500).json({ error: error.message });
     }
 });

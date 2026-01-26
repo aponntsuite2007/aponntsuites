@@ -12,9 +12,12 @@ const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 
 // ============================================================================
-// CONTRASEÑA DE AUTORIZACIÓN - Solo el administrador puede ejecutar estas acciones
+// CONTRASEÑA DE AUTORIZACIÓN - Desde variables de entorno
 // ============================================================================
-const DB_ADMIN_PASSWORD = 'Aedr15150302';
+const DB_ADMIN_PASSWORD = process.env.DB_ADMIN_PASSWORD;
+if (!DB_ADMIN_PASSWORD) {
+  console.error('⚠️ [DB-SYNC] DB_ADMIN_PASSWORD no configurada en variables de entorno');
+}
 
 /**
  * Middleware de autorización para operaciones de BD

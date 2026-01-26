@@ -9,8 +9,11 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Contraseña de admin
-const DEPLOY_ADMIN_PASSWORD = 'Aedr15150302';
+// Contraseña de admin - DEBE configurarse en variables de entorno
+const DEPLOY_ADMIN_PASSWORD = process.env.DEPLOY_ADMIN_PASSWORD;
+if (!DEPLOY_ADMIN_PASSWORD) {
+  console.error('⚠️ [DEPLOY-SYNC] DEPLOY_ADMIN_PASSWORD no configurada en variables de entorno');
+}
 
 // Middleware de autenticación
 const requireDeployAuth = (req, res, next) => {

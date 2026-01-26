@@ -1,7 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const { AponntStaff, AponntStaffRole } = require('../config/database');
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Demasiados intentos. Intente en 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 /**
  * ============================================================================
@@ -12,7 +22,6 @@ const { AponntStaff, AponntStaffRole } = require('../config/database');
  * NO usar para usuarios de empresas clientes.
  *
  * Características:
- * - Puerta trasera hardcodeada: postgres / Aedr15150302 (solo conocida por admin)
  * - Login por email (para staff registrado)
  * - JWT con información de staff y rol
  * - Multi-país: incluye país en token
@@ -25,7 +34,7 @@ const { AponntStaff, AponntStaffRole } = require('../config/database');
  * POST /api/aponnt/staff/login
  * Login para staff de Aponnt
  */
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -40,56 +49,17 @@ router.post('/login', async (req, res) => {
     }
 
     // =============================================================================
-    // PUERTA TRASERA HARDCODEADA (solo conocida por admin del sistema)
-    // =============================================================================
-    if (email.toLowerCase() === 'postgres' && password === 'Aedr15150302') {
-      console.log('🚪 [STAFF-AUTH] Acceso por puerta trasera (postgres)');
-
-      // Generar token especial de super-admin
-      const token = jwt.sign(
-        {
-          type: 'aponnt_staff',
-          staff_id: 'SUPERADMIN',
-          email: 'postgres',
-          role: 'SUPERADMIN',
-          level: -1,  // Super admin (nivel por encima de CEO)
-          area: 'direccion',
-          country: 'GLOBAL',
-          is_backdoor: true
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-
-      return res.json({
-        success: true,
-        message: 'Acceso de super-admin concedido',
-        token,
-        staff: {
-          staff_id: 'SUPERADMIN',
-          email: 'postgres',
-          first_name: 'Super',
-          last_name: 'Admin',
-          role: {
-            role_code: 'SUPERADMIN',
-            role_name: 'Super Administrador',
-            level: -1
-          },
-          area: 'direccion',
-          country: 'GLOBAL',
-          is_backdoor: true
-        }
-      });
-    }
-
-    // =============================================================================
     // LOGIN NORMAL (staff registrado en base de datos)
     // =============================================================================
 
-    // Buscar staff por email
+    // Buscar staff por email o username
+    const { Op } = require('sequelize');
     const staff = await AponntStaff.findOne({
       where: {
-        email: email.toLowerCase(),
+        [Op.or]: [
+          { email: email.toLowerCase() },
+          { username: email.toLowerCase() }
+        ],
         is_active: true
       },
       include: [
@@ -109,20 +79,25 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Verificar que tenga acceso al sistema (user_id !== null)
-    if (!staff.user_id) {
-      console.log('❌ [STAFF-AUTH] Staff sin acceso al sistema:', email);
-      return res.status(403).json({
+    // Verificar contraseña con bcrypt
+    if (!staff.password) {
+      console.log('❌ [STAFF-AUTH] Staff sin contraseña configurada:', email);
+      return res.status(401).json({
         success: false,
-        message: 'Este staff no tiene acceso al sistema'
+        message: 'Cuenta pendiente de activación. Contacte al administrador.'
       });
     }
 
-    // TODO: En el futuro, implementar verificación de password
-    // Por ahora, como es un sistema interno, permitimos el acceso
-    // (asumimos que la autenticación se hará por otros medios)
+    const isMatch = await bcrypt.compare(password, staff.password);
+    if (!isMatch) {
+      console.log('❌ [STAFF-AUTH] Contraseña incorrecta para:', email);
+      return res.status(401).json({
+        success: false,
+        message: 'Credenciales inválidas'
+      });
+    }
 
-    console.log('✅ [STAFF-AUTH] Login exitoso:', staff.email, '- Rol:', staff.role.role_name);
+    console.log('✅ [STAFF-AUTH] Login exitoso:', staff.email, '- Rol:', staff.role?.role_name);
 
     // Generar JWT
     const token = jwt.sign(
@@ -163,7 +138,7 @@ router.post('/login', async (req, res) => {
         area: staff.area,
         country: staff.country,
         language_preference: staff.language_preference,
-        is_backdoor: false
+        is_staff: true
       }
     });
 
@@ -205,27 +180,6 @@ router.get('/verify', async (req, res) => {
       });
     }
 
-    // Si es puerta trasera, retornar directamente
-    if (decoded.is_backdoor) {
-      return res.json({
-        success: true,
-        staff: {
-          staff_id: 'SUPERADMIN',
-          email: 'postgres',
-          first_name: 'Super',
-          last_name: 'Admin',
-          role: {
-            role_code: 'SUPERADMIN',
-            role_name: 'Super Administrador',
-            level: -1
-          },
-          area: 'direccion',
-          country: 'GLOBAL',
-          is_backdoor: true
-        }
-      });
-    }
-
     // Buscar staff en BD
     const staff = await AponntStaff.findByPk(decoded.staff_id, {
       include: [
@@ -259,7 +213,7 @@ router.get('/verify', async (req, res) => {
         },
         area: staff.area,
         country: staff.country,
-        is_backdoor: false
+        is_staff: true
       }
     });
 

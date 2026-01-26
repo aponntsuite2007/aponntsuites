@@ -2,9 +2,19 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const { User, BiometricData, sequelize } = require('../config/database');
 const { Op } = require('sequelize');
-const { auth } = require('../middleware/auth');
+const { auth, blacklistToken } = require('../middleware/auth');
+
+// Rate limiting para endpoints de autenticacion
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10, // maximo 10 intentos por IP
+  message: { error: 'Demasiados intentos de login. Intente nuevamente en 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 /**
  * @route GET /api/v1/auth/companies
  * @desc Obtener lista de empresas activas
@@ -34,7 +44,7 @@ router.get('/companies', async (req, res) => {
  * @route POST /api/v1/auth/login
  * @desc Login de usuario con email/legajo y contraseña
  */
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { identifier, password, companyId, companySlug } = req.body;
     console.log('🔐 [DEBUG] Login attempt:', { identifier, companyId, companySlug });
@@ -57,8 +67,8 @@ router.post('/login', async (req, res) => {
       );
 
       if (!company) {
-        return res.status(404).json({
-          error: 'Empresa no encontrada'
+        return res.status(401).json({
+          error: 'Credenciales invalidas'
         });
       }
 
@@ -82,19 +92,12 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // ⚠️ NUEVO: Verificar email antes de permitir login
+    // Verificar email antes de permitir login
     if (!user.email_verified || user.account_status === 'pending_verification') {
       return res.status(403).json({
-        error: 'Email no verificado',
-        message: 'Debe verificar su email antes de iniciar sesión. Revise su correo electrónico.',
-        can_resend: true,
-        user_id: user.user_id,
-        email: user.email,
-        verification_status: {
-          email_verified: user.email_verified,
-          account_status: user.account_status,
-          verification_pending: user.verification_pending
-        }
+        error: 'Cuenta pendiente de verificacion',
+        message: 'Debe verificar su email antes de iniciar sesion. Revise su correo electronico.',
+        can_resend: true
       });
     }
 
@@ -315,11 +318,13 @@ router.post('/refresh', async (req, res) => {
  */
 router.post('/logout', auth, async (req, res) => {
   try {
-    // En un sistema más avanzado, aquí se invalidaría el token
-    // Por ahora solo enviamos confirmación
-    
+    // Revocar el token actual
+    const token = req.header('Authorization').substring(7);
+    blacklistToken(token);
+
     res.json({
-      message: 'Sesión cerrada exitosamente'
+      success: true,
+      message: 'Sesion cerrada exitosamente'
     });
 
   } catch (error) {
