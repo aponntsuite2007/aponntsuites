@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 
 class RealAuthService {
-  static const String _baseUrl = 'http://10.0.2.2:3001/api/v1';
+  static const String _baseUrl = 'http://10.168.100.5:9998/api/v1';
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
   
@@ -26,10 +26,11 @@ class RealAuthService {
   static Future<Map<String, dynamic>> login({
     required String identifier, // email or employeeId
     required String password,
+    String companySlug = 'aponnt-empresa-demo',
   }) async {
     try {
-      print('🔐 [AUTH] Attempting login for: $identifier');
-      
+      print('🔐 [AUTH] Attempting login for: $identifier @ $companySlug');
+
       final response = await http.post(
         Uri.parse('$_baseUrl/auth/login'),
         headers: {
@@ -38,6 +39,7 @@ class RealAuthService {
         body: json.encode({
           'identifier': identifier,
           'password': password,
+          'companySlug': companySlug,
         }),
       );
       

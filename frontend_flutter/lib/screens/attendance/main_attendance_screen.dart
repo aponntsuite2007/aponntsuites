@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../services/real_auth_service.dart';
 import '../auth/real_login_screen.dart';
 
@@ -8,7 +10,14 @@ class MainAttendanceScreen extends StatefulWidget {
 }
 
 class _MainAttendanceScreenState extends State<MainAttendanceScreen> {
+  static const String _baseUrl = 'http://10.168.100.5:9998/api/v1';
+
   Map<String, dynamic>? _currentUser;
+  bool _isLoading = false;
+  bool _hasCheckedIn = false;
+  bool _hasCheckedOut = false;
+  String? _checkInTime;
+  String? _checkOutTime;
 
   @override
   void initState() {
@@ -20,6 +29,94 @@ class _MainAttendanceScreenState extends State<MainAttendanceScreen> {
     setState(() {
       _currentUser = RealAuthService.currentUser;
     });
+    _checkTodayStatus();
+  }
+
+  Future<void> _checkTodayStatus() async {
+    final token = RealAuthService.authToken;
+    if (token == null) return;
+
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/attendance/today/status'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _hasCheckedIn = data['hasCheckedIn'] ?? false;
+          _hasCheckedOut = data['hasCheckedOut'] ?? false;
+          if (data['attendance'] != null) {
+            _checkInTime = data['attendance']['check_in'];
+            _checkOutTime = data['attendance']['check_out'];
+          }
+        });
+      }
+    } catch (e) {
+      print('Error checking status: $e');
+    }
+  }
+
+  Future<void> _doCheckIn() async {
+    setState(() => _isLoading = true);
+    final token = RealAuthService.authToken;
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/attendance/checkin'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({'method': 'mobile_app'}),
+      );
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 201) {
+        setState(() => _hasCheckedIn = true);
+        _checkTodayStatus();
+        _showMessage('Entrada registrada correctamente');
+      } else {
+        _showMessage(data['error'] ?? 'Error registrando entrada');
+      }
+    } catch (e) {
+      _showMessage('Error de conexion: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _doCheckOut() async {
+    setState(() => _isLoading = true);
+    final token = RealAuthService.authToken;
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/attendance/checkout'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({'method': 'mobile_app'}),
+      );
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        setState(() => _hasCheckedOut = true);
+        _checkTodayStatus();
+        _showMessage('Salida registrada correctamente');
+      } else {
+        _showMessage(data['error'] ?? 'Error registrando salida');
+      }
+    } catch (e) {
+      _showMessage('Error de conexion: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _logout() async {
@@ -144,17 +241,47 @@ class _MainAttendanceScreenState extends State<MainAttendanceScreen> {
 
                   SizedBox(height: 16),
 
+                  // Attendance status banner
+                  if (_hasCheckedIn) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(12),
+                      margin: EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: _hasCheckedOut ? Colors.grey.shade100 : Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _hasCheckedOut ? Colors.grey.shade300 : Colors.green.shade300,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          if (_checkInTime != null)
+                            Text(
+                              'Entrada: ${_formatTime(_checkInTime!)}',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green.shade700),
+                            ),
+                          if (_checkOutTime != null)
+                            Text(
+                              'Salida: ${_formatTime(_checkOutTime!)}',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700),
+                            ),
+                          if (_hasCheckedOut)
+                            Text('Jornada completada', style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   Row(
                     children: [
                       Expanded(
                         child: _buildActionCard(
                           icon: Icons.login,
                           title: 'Entrada',
-                          subtitle: 'Registrar entrada',
-                          color: Colors.green,
-                          onTap: () {
-                            _showMessage('Funcionalidad de entrada en desarrollo');
-                          },
+                          subtitle: _hasCheckedIn ? 'Ya registrada' : 'Registrar entrada',
+                          color: _hasCheckedIn ? Colors.grey : Colors.green,
+                          onTap: (_isLoading || _hasCheckedIn) ? () {} : _doCheckIn,
                         ),
                       ),
                       SizedBox(width: 12),
@@ -162,11 +289,9 @@ class _MainAttendanceScreenState extends State<MainAttendanceScreen> {
                         child: _buildActionCard(
                           icon: Icons.logout,
                           title: 'Salida',
-                          subtitle: 'Registrar salida',
-                          color: Colors.orange,
-                          onTap: () {
-                            _showMessage('Funcionalidad de salida en desarrollo');
-                          },
+                          subtitle: _hasCheckedOut ? 'Ya registrada' : 'Registrar salida',
+                          color: (_hasCheckedIn && !_hasCheckedOut) ? Colors.orange : Colors.grey,
+                          onTap: (_isLoading || !_hasCheckedIn || _hasCheckedOut) ? () {} : _doCheckOut,
                         ),
                       ),
                     ],
@@ -368,6 +493,15 @@ class _MainAttendanceScreenState extends State<MainAttendanceScreen> {
         ),
       ],
     );
+  }
+
+  String _formatTime(String isoDate) {
+    try {
+      final dt = DateTime.parse(isoDate).toLocal();
+      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return isoDate;
+    }
   }
 
   void _showMessage(String message) {

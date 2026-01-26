@@ -11,6 +11,7 @@ class RealLoginScreen extends StatefulWidget {
 
 class _RealLoginScreenState extends State<RealLoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _companySlugController = TextEditingController(text: 'aponnt-empresa-demo');
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
   
@@ -56,6 +57,7 @@ class _RealLoginScreenState extends State<RealLoginScreen> {
       final result = await RealAuthService.login(
         identifier: _identifierController.text.trim(),
         password: _passwordController.text,
+        companySlug: _companySlugController.text.trim(),
       );
 
       if (result['success'] == true) {
@@ -317,7 +319,27 @@ class _RealLoginScreenState extends State<RealLoginScreen> {
                       ),
                       
                       SizedBox(height: 24),
-                      
+
+                      // Company slug field
+                      TextFormField(
+                        controller: _companySlugController,
+                        decoration: InputDecoration(
+                          labelText: 'Empresa (slug)',
+                          prefixIcon: Icon(Icons.business),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Ingrese el slug de la empresa';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      SizedBox(height: 16),
+
                       // Username/Email field
                       TextFormField(
                         controller: _identifierController,

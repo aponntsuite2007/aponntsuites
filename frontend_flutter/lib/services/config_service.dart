@@ -17,9 +17,15 @@ class ConfigService {
   static const String _secureTokenKey = 'kiosk_admin_token_secure';
 
   // =====================================================
-  // 🔒 URL HARDCODEADA - DOMINIO PRINCIPAL
+  // 🔒 URL DEL SERVIDOR
   // =====================================================
-  static const String BACKEND_URL = 'https://www.aponnt.com';
+  // 🔧 DEV_MODE: true = servidor local, false = producción
+  static const bool DEV_MODE = true; // TODO: Cambiar a false para producción
+
+  static const String _PROD_URL = 'https://www.aponnt.com';
+  static const String _DEV_URL = 'http://192.168.1.173:9998';
+
+  static const String BACKEND_URL = DEV_MODE ? _DEV_URL : _PROD_URL;
   static const String API_BASE = '$BACKEND_URL/api/v1';
 
   // Legacy constants (compatibilidad con config_screen.dart de otros flavors)
@@ -172,8 +178,11 @@ class ConfigService {
   // 🔐 HTTP CLIENT CON SSL PINNING
   // =====================================================
 
-  /// Obtener HTTP client con certificate pinning habilitado
-  static http.Client _getPinnedClient() => SSLPinningService.createPinnedClient();
+  /// Obtener HTTP client (con certificate pinning en producción, normal en dev)
+  static http.Client _getPinnedClient() {
+    if (DEV_MODE) return http.Client();
+    return SSLPinningService.createPinnedClient();
+  }
 
   // =====================================================
   // MÉTODOS DE API - HARDCODEADOS A PRODUCCIÓN

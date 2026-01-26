@@ -8,7 +8,8 @@
         <domain includeSubdomains="true">192.168.1.1</domain>
         <domain includeSubdomains="true">192.168.137.1</domain>
         <domain includeSubdomains="true">192.168.0.1</domain>
-        <!-- Add your specific IP here when you know it -->
+        <domain includeSubdomains="true">10.168.100.5</domain>
+        <domain includeSubdomains="true">192.168.1.173</domain>
     </domain-config>
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
