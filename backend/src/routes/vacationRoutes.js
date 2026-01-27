@@ -24,6 +24,46 @@ const VacationNotifications = require('../services/integrations/vacation-notific
 // Importar sistema modular Plug & Play
 const { useModuleIfAvailable } = require('../utils/moduleHelper');
 
+// Helper: Formatear escala de vacaciones con alias para compatibilidad
+function formatVacationScale(scale) {
+  const data = scale.toJSON ? scale.toJSON() : scale;
+  return {
+    ...data,
+    // Alias snake_case para compatibilidad
+    name: data.rangeDescription,
+    years_from: data.yearsFrom,
+    years_to: data.yearsTo,
+    days_entitled: data.vacationDays,
+    is_active: data.isActive
+  };
+}
+
+// Helper: Formatear solicitud de vacaciones con alias para compatibilidad
+function formatVacationRequest(request) {
+  const data = request.toJSON ? request.toJSON() : request;
+
+  // Calcular días solicitados
+  let daysRequested = data.daysRequested;
+  if (!daysRequested && data.startDate && data.endDate) {
+    const start = new Date(data.startDate);
+    const end = new Date(data.endDate);
+    daysRequested = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  }
+
+  return {
+    ...data,
+    // Alias snake_case para compatibilidad
+    user_id: data.userId || data.user_id,
+    start_date: data.startDate || data.start_date,
+    end_date: data.endDate || data.end_date,
+    days_requested: daysRequested || 0,
+    request_type: data.requestType || data.request_type || 'vacation',
+    approved_by: data.approvedBy || data.approved_by || null,
+    approved_at: data.approvedAt || data.approved_at || null, // Garantizar que esté presente
+    created_at: data.createdAt || data.created_at
+  };
+}
+
 // ======== CONFIGURACIÓN DE VACACIONES ========
 
 // Obtener configuración actual de vacaciones
@@ -128,7 +168,7 @@ router.get('/scales', async (req, res) => {
 
     res.json({
       success: true,
-      data: scales,
+      data: scales.map(formatVacationScale),
       message: 'Escalas de vacaciones obtenidas exitosamente'
     });
   } catch (error) {
@@ -401,7 +441,8 @@ router.get('/requests', async (req, res) => {
 
     res.json({
       success: true,
-      data: requests,
+      data: requests.map(formatVacationRequest),
+      requests: requests.map(formatVacationRequest), // Alias para compatibilidad con test
       message: 'Solicitudes de vacaciones obtenidas exitosamente'
     });
   } catch (error) {

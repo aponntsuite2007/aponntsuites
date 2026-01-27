@@ -911,4 +911,234 @@ router.get('/leads/pending-surveys', verifyStaffToken, async (req, res) => {
     }
 });
 
+// ============================================================================
+// CREACIÓN DE PRESUPUESTO DESDE LEAD
+// ============================================================================
+
+/**
+ * POST /api/marketing/leads/:id/create-quote
+ * Crea una empresa (prospecto) y presupuesto desde un lead
+ */
+router.post('/leads/:id/create-quote', verifyStaffToken, async (req, res) => {
+    const { Op } = require('sequelize');
+    const transaction = await sequelize.transaction();
+
+    try {
+        const { id } = req.params;
+        const { company_data, modules_data, notes } = req.body;
+
+        // 1. Validar que el lead existe
+        const leadResult = await pool.query(
+            'SELECT * FROM marketing_leads WHERE id = $1',
+            [id]
+        );
+
+        if (leadResult.rows.length === 0) {
+            await transaction.rollback();
+            return res.status(404).json({ success: false, error: 'Lead no encontrado' });
+        }
+
+        const lead = leadResult.rows[0];
+
+        // 2. Validar datos mínimos
+        if (!company_data?.company_name) {
+            await transaction.rollback();
+            return res.status(400).json({ success: false, error: 'El nombre de la empresa es obligatorio' });
+        }
+
+        if (!modules_data || modules_data.length === 0) {
+            await transaction.rollback();
+            return res.status(400).json({ success: false, error: 'Debe seleccionar al menos un módulo' });
+        }
+
+        // 3. Generar slug único para la empresa
+        const baseSlug = company_data.company_name
+            .toLowerCase()
+            .replace(/[áàäâ]/g, 'a')
+            .replace(/[éèëê]/g, 'e')
+            .replace(/[íìïî]/g, 'i')
+            .replace(/[óòöô]/g, 'o')
+            .replace(/[úùüû]/g, 'u')
+            .replace(/ñ/g, 'n')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+
+        // Verificar si el slug ya existe y agregar sufijo si es necesario
+        let slug = baseSlug;
+        let slugCounter = 1;
+        let existingSlug = await pool.query(
+            'SELECT company_id FROM companies WHERE slug = $1',
+            [slug]
+        );
+
+        while (existingSlug.rows.length > 0) {
+            slug = `${baseSlug}-${slugCounter}`;
+            slugCounter++;
+            existingSlug = await pool.query(
+                'SELECT company_id FROM companies WHERE slug = $1',
+                [slug]
+            );
+        }
+
+        // 4. Crear la empresa como prospecto
+        const companyResult = await sequelize.query(
+            `INSERT INTO companies (
+                name, slug, contact_email, contact_phone, tax_id,
+                max_employees, is_active, license_type,
+                active_modules, modules_data, onboarding_status
+            ) VALUES (
+                :name, :slug, :contact_email, :contact_phone, :tax_id,
+                :max_employees, false, 'trial',
+                :active_modules, :modules_data, 'PENDING'
+            ) RETURNING *`,
+            {
+                replacements: {
+                    name: company_data.company_name,
+                    slug: slug,
+                    contact_email: company_data.contact_email || lead.email,
+                    contact_phone: company_data.contact_phone || lead.phone || lead.whatsapp,
+                    tax_id: company_data.tax_id || null,
+                    max_employees: parseInt(company_data.max_employees) || 10,
+                    active_modules: JSON.stringify(modules_data.map(m => m.module_key)),
+                    modules_data: JSON.stringify(modules_data)
+                },
+                type: QueryTypes.INSERT,
+                transaction
+            }
+        );
+
+        const company = companyResult[0][0] || companyResult[0];
+        const companyId = company.company_id;
+
+        // 5. Obtener seller_id (usar partner del staff si existe, sino NULL)
+        let sellerId = null; // UUID del partner, null si no existe
+        try {
+            const sellerResult = await pool.query(
+                'SELECT id FROM partners WHERE email = $1 AND is_active = true LIMIT 1',
+                [req.staff.email]
+            );
+            if (sellerResult.rows.length > 0) {
+                sellerId = sellerResult.rows[0].id;
+            }
+        } catch (e) {
+            console.log('[MARKETING] No se encontró partner para staff, seller_id será NULL');
+        }
+
+        // 6. Calcular total del presupuesto
+        const totalAmount = modules_data.reduce((sum, mod) => {
+            return sum + (parseFloat(mod.price) * parseInt(mod.quantity || 1));
+        }, 0);
+
+        // 7. Generar quote_number
+        const year = new Date().getFullYear();
+        const lastQuoteResult = await sequelize.query(
+            `SELECT quote_number FROM quotes
+             WHERE quote_number LIKE 'PRES-${year}-%'
+             ORDER BY id DESC LIMIT 1`,
+            { type: QueryTypes.SELECT, transaction }
+        );
+
+        let nextNumber = 1;
+        if (lastQuoteResult.length > 0 && lastQuoteResult[0].quote_number) {
+            const match = lastQuoteResult[0].quote_number.match(/PRES-\d{4}-(\d{4})/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+        const quoteNumber = `PRES-${year}-${String(nextNumber).padStart(4, '0')}`;
+
+        // 8. Crear el presupuesto
+        const quoteResult = await sequelize.query(
+            `INSERT INTO quotes (
+                quote_number, company_id, seller_id, lead_id,
+                modules_data, total_amount, notes,
+                status, has_trial, trial_modules
+            ) VALUES (
+                :quote_number, :company_id, :seller_id, :lead_id,
+                :modules_data, :total_amount, :notes,
+                'draft', true, :trial_modules
+            ) RETURNING *`,
+            {
+                replacements: {
+                    quote_number: quoteNumber,
+                    company_id: companyId,
+                    seller_id: sellerId,
+                    lead_id: id,
+                    modules_data: JSON.stringify(modules_data),
+                    total_amount: totalAmount,
+                    notes: notes || `Creado desde lead: ${lead.full_name} (${lead.email})`,
+                    trial_modules: JSON.stringify(modules_data.map(m => m.module_key))
+                },
+                type: QueryTypes.INSERT,
+                transaction
+            }
+        );
+
+        const quote = quoteResult[0][0] || quoteResult[0];
+
+        // 9. Actualizar lead con referencia al quote
+        await sequelize.query(
+            `UPDATE marketing_leads SET
+                status = CASE WHEN status = 'new' THEN 'interested' ELSE status END,
+                notes = COALESCE(notes, '') || E'\n[' || NOW()::date || '] Presupuesto ${quoteNumber} creado'
+             WHERE id = :id`,
+            {
+                replacements: { id },
+                type: QueryTypes.UPDATE,
+                transaction
+            }
+        );
+
+        // 10. Registrar evento
+        await pool.query(
+            `INSERT INTO marketing_lead_events (lead_id, event_type, event_data)
+             VALUES ($1, 'quote_created', $2)`,
+            [
+                id,
+                JSON.stringify({
+                    quote_number: quoteNumber,
+                    company_id: companyId,
+                    company_name: company_data.company_name,
+                    total_amount: totalAmount,
+                    modules_count: modules_data.length,
+                    created_by: req.staff.email
+                })
+            ]
+        );
+
+        await transaction.commit();
+
+        console.log(`[MARKETING] ✅ Presupuesto ${quoteNumber} creado desde lead ${lead.email} por ${req.staff.email}`);
+
+        res.status(201).json({
+            success: true,
+            message: `Presupuesto ${quoteNumber} creado exitosamente`,
+            quote: {
+                id: quote.id,
+                quote_number: quoteNumber,
+                total_amount: totalAmount,
+                status: 'draft',
+                modules_count: modules_data.length
+            },
+            company: {
+                id: companyId,
+                name: company_data.company_name,
+                slug: slug,
+                status: 'prospecto'
+            },
+            lead: {
+                id: lead.id,
+                full_name: lead.full_name,
+                email: lead.email
+            }
+        });
+
+    } catch (error) {
+        await transaction.rollback();
+        console.error('[MARKETING] Error creating quote from lead:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 module.exports = router;

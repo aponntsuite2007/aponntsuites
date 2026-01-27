@@ -4682,6 +4682,59 @@
         setTimeout(async () => {
             console.log('🔍 [DYNAMIC-LOAD] Cargando módulo dinámicamente:', moduleId);
             try {
+                // Mapeo de módulos con nombres de archivo diferentes (GLOBAL - usado siempre como fallback)
+                const moduleFileMapping = {
+                    // Payroll
+                    'payroll': 'payroll-liquidation.js',
+                    'liquidation': 'payroll-liquidation.js',
+                    'payroll-liquidation': 'payroll-liquidation.js',
+                    // Departments/Org
+                    'departments': 'organizational-structure.js',
+                    'organizational': 'organizational-structure.js',
+                    'org-structure': 'organizational-structure.js',
+                    'estructura-org': 'organizational-structure.js',
+                    // Users
+                    'usuarios': 'users.js',
+                    'users': 'users.js',
+                    // Attendance
+                    'asistencia': 'attendance.js',
+                    'attendance': 'attendance.js',
+                    // Vacations
+                    'vacaciones': 'vacation-management.js',
+                    'vacation': 'vacation-management.js',
+                    'vacation-management': 'vacation-management.js',
+                    // Sanctions
+                    'sanciones': 'sanctions-management.js',
+                    'sanctions': 'sanctions-management.js',
+                    'sanctions-management': 'sanctions-management.js',
+                    // Visitors
+                    'visitantes': 'visitors.js',
+                    'visitors': 'visitors.js',
+                    // Medical
+                    'medical': 'medical-dashboard-professional.js',
+                    'medical-dashboard': 'medical-dashboard-professional.js',
+                    // Kiosks
+                    'kiosks': 'kiosks-professional.js',
+                    'kiosk': 'kiosks-professional.js',
+                    // Shifts
+                    'shifts': 'shift-calendar-view.js',
+                    'shift': 'shift-calendar-view.js',
+                    // Predictive
+                    'predictive-workforce': 'predictive-workforce-dashboard.js',
+                    'predictive': 'predictive-workforce-dashboard.js',
+                    // Support
+                    'user-support': 'user-support-dashboard.js',
+                    'support': 'user-support-dashboard.js',
+                    // Auditor (Engineering Dashboard)
+                    'auditor-dashboard': 'engineering-dashboard.js',
+                    'auditor': 'engineering-dashboard.js',
+                    // Notifications
+                    'notifications': 'notifications-complete.js',
+                    'inbox': 'inbox.js',
+                    // Settings (fallback to dashboard)
+                    'settings': 'dashboard.js'
+                };
+
                 // Buscar metadata del módulo en activeModules
                 let moduleMetadata = window.activeModules?.find(m => m.module_key === moduleId);
 
@@ -4689,41 +4742,6 @@
                 // Intentar cargar de todas formas usando convención de nombres
                 if (!moduleMetadata) {
                     console.warn(`⚠️  [DYNAMIC-LOAD] Módulo ${moduleId} no encontrado en activeModules (podría ser sub-módulo)`);
-
-                    // Mapeo de módulos con nombres de archivo diferentes
-                    const moduleFileMapping = {
-                        // Payroll
-                        'payroll': 'payroll-liquidation.js',
-                        'liquidation': 'payroll-liquidation.js',
-                        'payroll-liquidation': 'payroll-liquidation.js',
-                        // Departments/Org
-                        'departments': 'organizational-structure.js',
-                        'organizational': 'organizational-structure.js',
-                        'org-structure': 'organizational-structure.js',
-                        // Medical
-                        'medical': 'medical-dashboard-professional.js',
-                        'medical-dashboard': 'medical-dashboard-professional.js',
-                        // Kiosks
-                        'kiosks': 'kiosks-professional.js',
-                        'kiosk': 'kiosks-professional.js',
-                        // Shifts
-                        'shifts': 'shift-calendar-view.js',
-                        'shift': 'shift-calendar-view.js',
-                        // Predictive
-                        'predictive-workforce': 'predictive-workforce-dashboard.js',
-                        'predictive': 'predictive-workforce-dashboard.js',
-                        // Support
-                        'user-support': 'user-support-dashboard.js',
-                        'support': 'user-support-dashboard.js',
-                        // Auditor (Engineering Dashboard)
-                        'auditor-dashboard': 'engineering-dashboard.js',
-                        'auditor': 'engineering-dashboard.js',
-                        // Notifications
-                        'notifications': 'notifications-complete.js',
-                        'inbox': 'inbox.js',
-                        // Settings (fallback to dashboard)
-                        'settings': 'dashboard.js'
-                    };
 
                     const fileName = moduleFileMapping[moduleId] || `${moduleId}.js`;
 
@@ -4739,9 +4757,21 @@
 
                 console.log(`✅ [DYNAMIC-LOAD] Metadata:`, moduleMetadata);
 
-                // Cargar JS file dinámicamente (con fallback por convención)
-                const scriptPath = moduleMetadata.frontend_file || `js/modules/${moduleId}.js`;
-                console.log(`📦 [DYNAMIC-LOAD] Cargando script: ${scriptPath}`);
+                // Cargar JS file dinámicamente - prioridad: mapping > metadata.frontend_file > convención
+                // (Mapping tiene prioridad porque metadata puede tener valores incorrectos)
+                const mappedFile = moduleFileMapping[moduleId];
+                let scriptPath;
+                if (mappedFile) {
+                    scriptPath = `/js/modules/${mappedFile}`;
+                    console.log(`📦 [DYNAMIC-LOAD] Usando mapping: ${moduleId} → ${mappedFile}`);
+                } else if (moduleMetadata.frontend_file) {
+                    scriptPath = moduleMetadata.frontend_file;
+                    console.log(`📦 [DYNAMIC-LOAD] Usando metadata.frontend_file: ${scriptPath}`);
+                } else {
+                    scriptPath = `js/modules/${moduleId}.js`;
+                    console.log(`📦 [DYNAMIC-LOAD] Usando convención: ${scriptPath}`);
+                }
+                console.log(`📦 [DYNAMIC-LOAD] Cargando script final: ${scriptPath}`);
 
                 await loadModuleDynamically(moduleId, scriptPath);
 

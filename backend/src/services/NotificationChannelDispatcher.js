@@ -435,6 +435,17 @@ class NotificationChannelDispatcher {
     _renderEmailTemplate(params) {
         const { workflow, title, message, metadata, priority, logId } = params;
 
+        // Si viene HTML personalizado en metadata, usarlo directamente
+        // Esto es para emails de marketing/flyers que ya traen su propio diseño
+        if (metadata && metadata.htmlContent) {
+            console.log(`📧 [DISPATCHER] Usando HTML personalizado del metadata`);
+            return {
+                subject: title,
+                text: message,
+                html: metadata.htmlContent
+            };
+        }
+
         // TODO: Integrar con notification_templates si existe
         // Por ahora usar template simple
 
@@ -442,7 +453,8 @@ class NotificationChannelDispatcher {
             urgent: '🚨',
             high: '⚠️',
             normal: 'ℹ️',
-            low: '📌'
+            low: '📌',
+            medium: 'ℹ️'
         };
 
         const subject = `${priorityEmoji[priority] || ''} ${title}`;

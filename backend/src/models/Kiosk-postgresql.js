@@ -75,6 +75,43 @@ module.exports = (sequelize) => {
       defaultValue: [],
       comment: 'Array de department_id autorizados. Si vacío, permite todos los departamentos de la empresa.'
     },
+    // Campos de lector externo y configuración de red
+    has_external_reader: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: false,
+      comment: 'Indica si el kiosko tiene lector externo conectado'
+    },
+    reader_model: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Modelo del lector externo (ej: ZK4500, DigitalPersona, etc.)'
+    },
+    reader_config: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      comment: 'Configuración específica del lector externo'
+    },
+    ip_address: {
+      type: DataTypes.STRING(45),
+      allowNull: true,
+      comment: 'Dirección IP del kiosko en la red local'
+    },
+    port: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Puerto de comunicación del kiosko'
+    },
+    last_seen: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Última conexión del kiosko al servidor'
+    },
+    apk_version: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      comment: 'Versión de la APK instalada en el kiosko'
+    },
   }, {
     tableName: 'kiosks',
     timestamps: true,

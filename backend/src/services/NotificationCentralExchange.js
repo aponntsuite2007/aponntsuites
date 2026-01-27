@@ -141,7 +141,10 @@ class NotificationCentralExchange {
                 context: {
                     originType: params.originType,
                     originId: params.originId,
-                    metadata: params.metadata
+                    metadata: params.metadata,
+                    // Para destinatarios externos (leads, clientes potenciales)
+                    recipientEmail: params.recipientEmail,
+                    recipientName: params.recipientName
                 }
             });
 

@@ -35,26 +35,37 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // Helper: Transformar visitante al formato del frontend
 function formatVisitor(visitor) {
   const visitorData = visitor.toJSON ? visitor.toJSON() : visitor;
+  const fullName = visitor.getFullName ? visitor.getFullName() : `${visitorData.first_name} ${visitorData.last_name}`;
   return {
     id: visitorData.id,
     dni: visitorData.dni,
     firstName: visitorData.first_name,
     lastName: visitorData.last_name,
-    fullName: visitor.getFullName ? visitor.getFullName() : `${visitorData.first_name} ${visitorData.last_name}`,
+    fullName: fullName,
+    // Alias para compatibilidad con tests
+    name: fullName,
+    document_number: visitorData.dni,
+    document_type: 'DNI', // Default
     email: visitorData.email,
     phone: visitorData.phone,
     visitReason: visitorData.visit_reason,
+    reason: visitorData.visit_reason, // Alias
     visitingDepartmentId: visitorData.visiting_department_id,
     responsibleEmployeeId: visitorData.responsible_employee_id,
+    contact_person: visitorData.responsible_employee_id, // Alias
     authorizationStatus: visitorData.authorization_status,
+    status: visitorData.authorization_status, // Alias
     authorizedBy: visitorData.authorized_by,
     authorizedAt: visitorData.authorized_at,
     rejectionReason: visitorData.rejection_reason,
     gpsTrackingEnabled: visitorData.gps_tracking_enabled,
     keyringId: visitorData.keyring_id,
+    badge_number: visitorData.keyring_id, // Alias
     photoUrl: visitorData.photo_url,
     checkIn: visitorData.check_in,
+    check_in: visitorData.check_in, // Alias snake_case
     checkOut: visitorData.check_out,
+    check_out: visitorData.check_out, // Alias snake_case
     kioskId: visitorData.kiosk_id,
     scheduledVisitDate: visitorData.scheduled_visit_date,
     expectedDurationMinutes: visitorData.expected_duration_minutes,
@@ -63,6 +74,8 @@ function formatVisitor(visitor) {
     createdAt: visitorData.created_at,
     updatedAt: visitorData.updated_at,
     companyId: visitorData.company_id,
+    company_id: visitorData.company_id, // Alias snake_case
+    company_from: visitorData.company_from || visitorData.notes || null, // Campo para empresa de origen del visitante
     // Datos incluidos si existen
     responsibleEmployee: visitorData.responsibleEmployee,
     visitingDepartment: visitorData.visitingDepartment,

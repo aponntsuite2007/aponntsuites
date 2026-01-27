@@ -894,9 +894,8 @@
         baseUrl: '/api/aponnt/dashboard',
 
         getHeaders() {
-            const token = localStorage.getItem('aponntToken') ||
-                         localStorage.getItem('authToken') ||
-                         localStorage.getItem('token') || '';
+            const token = localStorage.getItem('aponnt_token_staff') ||
+                         sessionStorage.getItem('aponnt_token_staff') || '';
             return {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`

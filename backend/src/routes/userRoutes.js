@@ -160,6 +160,60 @@ function formatUserForFrontend(user) {
   if (userData.authorizedDepartments !== undefined) formatted.authorizedDepartments = userData.authorizedDepartments;
   if (userData.authorized_departments !== undefined) formatted.authorizedDepartments = userData.authorized_departments;
 
+  // Campos de ubicación del usuario
+  if (userData.city !== undefined) formatted.city = userData.city;
+  if (userData.province !== undefined) formatted.province = userData.province;
+  if (userData.country !== undefined) formatted.country = userData.country;
+  if (userData.postalCode !== undefined) formatted.postalCode = userData.postalCode;
+  if (userData.postal_code !== undefined) formatted.postalCode = userData.postal_code;
+  if (userData.neighborhood !== undefined) formatted.neighborhood = userData.neighborhood;
+  if (userData.street !== undefined) formatted.street = userData.street;
+  if (userData.streetNumber !== undefined) formatted.streetNumber = userData.streetNumber;
+  if (userData.street_number !== undefined) formatted.streetNumber = userData.street_number;
+  if (userData.floorApt !== undefined) formatted.floorApt = userData.floorApt;
+  if (userData.floor_apt !== undefined) formatted.floorApt = userData.floor_apt;
+
+  // Campos de sucursal (branch_id vs default_branch_id)
+  if (userData.branch_id !== undefined) formatted.branch_id = userData.branch_id;
+  if (userData.branchId !== undefined) formatted.branch_id = userData.branchId;
+  // NOTA: defaultBranchId ya se maneja arriba, branch_id es diferente (sucursal asignada vs default)
+
+  // Campos de seguro médico
+  if (userData.healthInsuranceProvider !== undefined) formatted.healthInsuranceProvider = userData.healthInsuranceProvider;
+  if (userData.health_insurance_provider !== undefined) formatted.healthInsuranceProvider = userData.health_insurance_provider;
+  if (userData.healthInsurancePlan !== undefined) formatted.healthInsurancePlan = userData.healthInsurancePlan;
+  if (userData.health_insurance_plan !== undefined) formatted.healthInsurancePlan = userData.health_insurance_plan;
+  if (userData.healthInsuranceNumber !== undefined) formatted.healthInsuranceNumber = userData.healthInsuranceNumber;
+  if (userData.health_insurance_number !== undefined) formatted.healthInsuranceNumber = userData.health_insurance_number;
+
+  // Campos de posición/puesto
+  if (userData.position_id !== undefined) formatted.position_id = userData.position_id;
+  if (userData.positionId !== undefined) formatted.position_id = userData.positionId;
+  if (userData.organizational_position_id !== undefined) formatted.position_id = userData.organizational_position_id;
+  if (userData.organizationalPositionId !== undefined) formatted.position_id = userData.organizationalPositionId;
+  // Garantizar que position_id siempre esté presente (null si no tiene posición asignada)
+  if (formatted.position_id === undefined) formatted.position_id = null;
+
+  // Campos de documento
+  if (userData.document_number !== undefined) formatted.document_number = userData.document_number;
+  if (userData.documentNumber !== undefined) formatted.document_number = userData.documentNumber;
+  if (userData.dni !== undefined && !formatted.document_number) formatted.document_number = userData.dni;
+  if (userData.document_type !== undefined) formatted.document_type = userData.document_type;
+  if (userData.documentType !== undefined) formatted.document_type = userData.documentType;
+  if (!formatted.document_type && formatted.document_number) formatted.document_type = 'DNI'; // Default
+
+  // Campos de turno asignado (la tabla users no tiene shift_id directamente, viene de user_shift_assignments)
+  if (userData.shift_id !== undefined) formatted.shift_id = userData.shift_id;
+  if (userData.shiftId !== undefined) formatted.shift_id = userData.shiftId;
+  // Garantizar que shift_id siempre esté presente (null si no tiene turno asignado)
+  if (formatted.shift_id === undefined) formatted.shift_id = null;
+
+  // Alias adicionales para snake_case
+  formatted.hire_date = formatted.hireDate;
+  formatted.birth_date = formatted.birthDate;
+  formatted.emergency_contact = formatted.emergencyContact;
+  formatted.is_active = formatted.isActive;
+
   // Default values for required frontend fields
   formatted.department = userData.departmentId ? { name: 'Departamento' } : null;
   formatted.lastAccess = 'Nunca';

@@ -86,6 +86,33 @@ module.exports = (sequelize) => {
       allowNull: false,
       defaultValue: false,
       comment: 'Si true, empleados pueden marcar asistencia desde APK cuando estén dentro del radio de cobertura GPS'
+    },
+    // Sucursal a la que pertenece el departamento
+    branch_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'branches',
+        key: 'id'
+      },
+      comment: 'UUID de la sucursal (branch) a la que pertenece este departamento'
+    },
+    // Manager/responsable del departamento
+    manager_user_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id'
+      },
+      comment: 'UUID del usuario responsable/manager del departamento'
+    },
+    // Destinatarios de notificaciones
+    notification_recipients: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+      comment: 'Array de user_ids o emails que reciben notificaciones de este departamento'
     }
   }, {
     tableName: 'departments',

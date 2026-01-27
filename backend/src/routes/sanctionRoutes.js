@@ -5,6 +5,19 @@ const { auth, authorize } = require('../middleware/auth');
 const SanctionWorkflowService = require('../services/SanctionWorkflowService');
 const SuspensionBlockingService = require('../services/SuspensionBlockingService');
 
+// Helper: Formatear sanción con alias para compatibilidad
+function formatSanction(sanction) {
+  const data = sanction.toJSON ? sanction.toJSON() : sanction;
+  return {
+    ...data,
+    // Alias para compatibilidad con tests
+    user_id: data.employee_id,
+    type_id: data.sanction_type,
+    date: data.sanction_date,
+    issued_by: data.created_by
+  };
+}
+
 // Middleware para roles que pueden gestionar sanciones
 const canManageSanctions = authorize('admin', 'rrhh', 'supervisor');
 const canReviewLegal = authorize('admin', 'legal');
@@ -39,7 +52,7 @@ router.get('/', auth, async (req, res) => {
 
     res.json({
       success: true,
-      sanctions,
+      sanctions: sanctions.map(formatSanction),
       stats
     });
 

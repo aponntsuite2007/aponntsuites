@@ -251,7 +251,8 @@ const AdminPanelController = {
             // ===== MARKETING =====
             'marketing': () => this._loadMarketing(),
             'sales-orchestration': () => this._loadSalesOrchestration(),
-            'pipeline-ventas': () => this._loadPipelineVentas()
+            'pipeline-ventas': () => this._loadPipelineVentas(),
+            'quotes': () => this._loadQuotes()
         };
 
         const loader = sectionLoaders[sectionId];
@@ -360,6 +361,13 @@ const AdminPanelController = {
                 if (window.LeadsPipelineDashboard) {
                     const container = document.getElementById('pipeline-ventas-container') || document.getElementById('content-area');
                     await LeadsPipelineDashboard.init(container, AdminPanelController._currentStaff);
+                }
+            },
+            'quotes': async () => {
+                if (window.QuotesManagement) {
+                    await QuotesManagement.init();
+                } else {
+                    console.error('[AdminPanel] QuotesManagement no está definido');
                 }
             }
         };
@@ -3041,6 +3049,12 @@ const AdminPanelController = {
     async _loadPipelineVentas() {
         // El módulo LeadsPipelineDashboard se encarga del render completo
         return `<div id="pipeline-ventas-container"></div>`;
+    },
+
+    async _loadQuotes() {
+        // El módulo QuotesManagement se encarga del render completo
+        // Muestra presupuestos creados desde leads (no clientes)
+        return `<div id="module-content"></div>`;
     },
 
     // ============================

@@ -107,15 +107,35 @@ function formatKiosk(kiosk) {
     description: kioskData.description,
     location: kioskData.location,
     deviceId: kioskData.device_id,
+    device_id: kioskData.device_id, // Alias snake_case
     gpsLocation: {
       lat: kioskData.gps_lat,
       lng: kioskData.gps_lng
     },
+    // Alias snake_case para GPS
+    gps_lat: kioskData.gps_lat,
+    gps_lng: kioskData.gps_lng,
     isConfigured: kioskData.is_configured,
+    is_configured: kioskData.is_configured, // Alias snake_case
     isActive: kioskData.is_active,
+    is_active: kioskData.is_active, // Alias snake_case
     createdAt: kioskData.created_at,
     updatedAt: kioskData.updated_at,
-    companyId: kioskData.company_id
+    companyId: kioskData.company_id,
+    company_id: kioskData.company_id, // Alias snake_case
+    authorized_departments: kioskData.authorized_departments || [],
+    authorizedDepartments: kioskData.authorized_departments || [], // Alias camelCase
+    hasExternalReader: kioskData.has_external_reader,
+    has_external_reader: kioskData.has_external_reader, // Alias snake_case
+    readerModel: kioskData.reader_model,
+    reader_model: kioskData.reader_model, // Alias snake_case
+    ipAddress: kioskData.ip_address,
+    ip_address: kioskData.ip_address, // Alias snake_case
+    port: kioskData.port,
+    lastSeen: kioskData.last_seen,
+    last_seen: kioskData.last_seen, // Alias snake_case
+    apkVersion: kioskData.apk_version,
+    apk_version: kioskData.apk_version // Alias snake_case
   };
 }
 

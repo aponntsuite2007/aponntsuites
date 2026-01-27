@@ -451,7 +451,7 @@ async function cargarFacturasEmitidas() {
     if (!tbody) return;
 
     try {
-        const response = await fetch(`/api/siac/facturacion/invoices?company_id=${facturacionState.companyId}`, {
+        const response = await fetch(`/api/siac/facturacion/facturas?company_id=${facturacionState.companyId}`, {
             headers: { 'Authorization': `Bearer ${facturacionState.token}` }
         });
 

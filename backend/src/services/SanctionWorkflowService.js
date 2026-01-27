@@ -84,7 +84,8 @@ class SanctionWorkflowService {
                 SELECT id, code, name, description, category,
                        default_severity, default_points_deducted,
                        requires_legal_review, suspension_days_default,
-                       is_system, sort_order
+                       is_system, sort_order, is_active, company_id,
+                       default_severity as severity
                 FROM sanction_types
                 WHERE is_active = true
                   AND (company_id IS NULL OR company_id = $1)

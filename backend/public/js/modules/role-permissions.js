@@ -322,6 +322,13 @@ const RolePermissions = (function() {
             label: 'Pipeline de Ventas',
             description: 'Gestión de leads con scoring BANT, temperatura y lifecycle',
             component: 'LeadsPipelineDashboard'
+        },
+        'quotes': {
+            id: 'quotes',
+            icon: '📋',
+            label: 'Presupuestos',
+            description: 'Gestión de presupuestos creados desde leads',
+            component: 'QuotesManagement'
         }
     };
 
@@ -350,7 +357,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'pipeline-ventas']
+                    sections: ['marketing', 'quotes', 'pipeline-ventas']
                 },
                 {
                     title: '🎫 Soporte',
@@ -381,7 +388,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'pipeline-ventas']
+                    sections: ['marketing', 'quotes', 'pipeline-ventas']
                 },
                 {
                     title: '🎫 Soporte',
@@ -407,7 +414,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'pipeline-ventas']
+                    sections: ['marketing', 'quotes', 'pipeline-ventas']
                 }
             ]
         },
@@ -439,7 +446,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'pipeline-ventas']
+                    sections: ['marketing', 'quotes', 'pipeline-ventas']
                 },
                 {
                     title: '📋 Reportes',
@@ -464,7 +471,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'pipeline-ventas']
+                    sections: ['marketing', 'quotes', 'pipeline-ventas']
                 }
             ]
         },
@@ -502,7 +509,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'pipeline-ventas']
+                    sections: ['marketing', 'quotes', 'pipeline-ventas']
                 },
                 {
                     title: '🎫 Soporte',
@@ -548,7 +555,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'pipeline-ventas']
+                    sections: ['marketing', 'quotes', 'pipeline-ventas']
                 },
                 {
                     title: '🎫 Soporte',
@@ -589,7 +596,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'pipeline-ventas']
+                    sections: ['marketing', 'quotes', 'pipeline-ventas']
                 },
                 {
                     title: '🎫 Soporte',

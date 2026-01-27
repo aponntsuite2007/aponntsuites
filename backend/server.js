@@ -1621,7 +1621,13 @@ app.get(`${API_PREFIX}/companies/:companyId/branches`, async (req, res) => {
         b.radius,
         b."isActive",
         b."createdAt",
-        b."updatedAt"
+        b."updatedAt",
+        b.country,
+        b.city,
+        b.state_province,
+        b.postal_code,
+        b.timezone,
+        b.is_main
       FROM branches b
       WHERE b.company_id = :companyId AND b."isActive" = true
       ORDER BY b.name
@@ -2263,6 +2269,48 @@ app.get(`${API_PREFIX}/companies`, async (req, res) => {
 
 // Endpoint básico para turnos (simulado)
 // ✅ FIX: Endpoint GET /shifts con filtrado multi-tenant
+// Helper para formatear turnos con alias de compatibilidad
+function formatShiftResponse(shift) {
+  const data = shift.toJSON ? shift.toJSON() : shift;
+
+  // Calcular duración del descanso
+  let breakDuration = 0;
+  if (data.breakStartTime && data.breakEndTime) {
+    try {
+      const start = String(data.breakStartTime).split(':');
+      const end = String(data.breakEndTime).split(':');
+      const startMin = parseInt(start[0]) * 60 + parseInt(start[1]);
+      const endMin = parseInt(end[0]) * 60 + parseInt(end[1]);
+      breakDuration = endMin - startMin;
+    } catch (e) { /* ignore */ }
+  }
+
+  // Determinar si es turno nocturno
+  let isNightShift = false;
+  if (data.startTime && data.endTime) {
+    try {
+      const start = String(data.startTime).split(':');
+      const end = String(data.endTime).split(':');
+      const startMin = parseInt(start[0]) * 60 + parseInt(start[1]);
+      const endMin = parseInt(end[0]) * 60 + parseInt(end[1]);
+      isNightShift = endMin < startMin;
+    } catch (e) { /* ignore */ }
+  }
+
+  return {
+    ...data,
+    // Alias snake_case para compatibilidad
+    start_time: data.startTime,
+    end_time: data.endTime,
+    break_duration: breakDuration,
+    tolerance_minutes: data.toleranceMinutes || data.toleranceMinutesEntry,
+    is_active: data.isActive,
+    working_days: data.days,
+    is_night_shift: isNightShift,
+    color: data.color || '#007bff'
+  };
+}
+
 app.get(`${API_PREFIX}/shifts`, auth, async (req, res) => {
   try {
     console.log(`🕐 === SOLICITUD TURNOS (MULTI-TENANT) ===`);
@@ -2283,7 +2331,7 @@ app.get(`${API_PREFIX}/shifts`, auth, async (req, res) => {
 
     res.json({
       success: true,
-      shifts: shifts
+      shifts: shifts.map(formatShiftResponse)
     });
 
   } catch (error) {
@@ -3726,12 +3774,12 @@ console.log('   🚗 /api/transport/fleet/* - Gestión de flota');
 
 // 🚚 CONFIGURAR API DE LOGÍSTICA AVANZADA (WMS + TMS) - Solo si están disponibles
 if (logisticsRoutes) {
-    app.use('/api/logistics', logisticsRoutes);
-    console.log('🚚 [LOGISTICS] Rutas de logística avanzada configuradas');
+    app.use('/api/logistics', auth, logisticsRoutes);
+    console.log('🚚 [LOGISTICS] Rutas de logística avanzada configuradas (con auth)');
 }
 if (warehouseRoutes) {
-    app.use('/api/warehouse', warehouseRoutes);
-    console.log('📦 [WMS] Rutas de gestión de almacenes configuradas');
+    app.use('/api/warehouse', auth, warehouseRoutes);
+    console.log('📦 [WMS] Rutas de gestión de almacenes configuradas (con auth)');
 }
 
 // 💼 CONFIGURAR API DE SIAC ERP
@@ -3817,6 +3865,11 @@ console.log('📧 [CONTACT] Ruta de contacto publico configurada: /api/contact')
 const marketingRoutes = require('./src/routes/marketingRoutes');
 app.use('/api/marketing', marketingRoutes);
 console.log('📢 [MARKETING] Sistema de leads y flyers "Preguntale a tu IA" configurado');
+
+// 📄 QUOTES - Sistema de presupuestos y onboarding
+const quotesRoutes = require('./src/routes/quotesRoutes');
+app.use('/api/quotes', quotesRoutes);
+console.log('📄 [QUOTES] Sistema de presupuestos configurado');
 
 console.log('💼 [SIAC] Rutas de ERP SIAC configuradas:');
 console.log('   ⚙️ /api/siac/configurador/* - Configuración por empresa');

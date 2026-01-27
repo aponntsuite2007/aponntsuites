@@ -3,6 +3,45 @@ const router = express.Router();
 const { Shift, Branch, User, UserShiftAssignment } = require('../config/database');
 const { auth, supervisorOrAdmin } = require('../middleware/auth');
 
+// Helper: Formatear turno con alias para compatibilidad
+function formatShift(shift) {
+  console.log('🔧 [SHIFT] formatShift called');
+  const data = shift.toJSON ? shift.toJSON() : shift;
+
+  // Calcular duración del descanso si hay horas de inicio/fin
+  let breakDuration = 0;
+  if (data.breakStartTime && data.breakEndTime) {
+    const start = data.breakStartTime.split(':');
+    const end = data.breakEndTime.split(':');
+    const startMin = parseInt(start[0]) * 60 + parseInt(start[1]);
+    const endMin = parseInt(end[0]) * 60 + parseInt(end[1]);
+    breakDuration = endMin - startMin;
+  }
+
+  // Determinar si es turno nocturno (cruza medianoche)
+  let isNightShift = false;
+  if (data.startTime && data.endTime) {
+    const start = data.startTime.split(':');
+    const end = data.endTime.split(':');
+    const startMin = parseInt(start[0]) * 60 + parseInt(start[1]);
+    const endMin = parseInt(end[0]) * 60 + parseInt(end[1]);
+    isNightShift = endMin < startMin; // Termina antes que empieza = cruza medianoche
+  }
+
+  return {
+    ...data,
+    // Alias snake_case para compatibilidad
+    start_time: data.startTime,
+    end_time: data.endTime,
+    break_duration: breakDuration,
+    tolerance_minutes: data.toleranceMinutes || data.toleranceMinutesEntry,
+    is_active: data.isActive,
+    working_days: data.days,
+    is_night_shift: isNightShift,
+    color: data.color || '#007bff'
+  };
+}
+
 /**
  * @route GET /api/v1/shifts
  * @desc Obtener turnos filtrados por empresa y opcionalmente por sucursal
@@ -37,7 +76,7 @@ router.get('/', auth, async (req, res) => {
       order: [['name', 'ASC']]
     });
 
-    res.json({ shifts });
+    res.json({ shifts: shifts.map(formatShift) });
 
   } catch (error) {
     console.error('Error obteniendo turnos:', error);

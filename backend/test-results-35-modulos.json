@@ -510,110 +510,9 @@
   {
     "id": "biometric-consent",
     "name": "Consentimiento Bio",
-    "loaded": true,
-    "hasContent": true,
-    "buttons": [
-      {
-        "text": "📊 Exportar",
-        "hasOnclick": true,
-        "classes": "bc-btn bc-btn-secondary"
-      },
-      {
-        "text": "📧 Solicitar Pendientes",
-        "hasOnclick": true,
-        "classes": "bc-btn bc-btn-primary"
-      },
-      {
-        "text": "👥 Empleados y Consentimientos",
-        "hasOnclick": true,
-        "classes": "bc-tab active"
-      },
-      {
-        "text": "📄 Documento Legal",
-        "hasOnclick": true,
-        "classes": "bc-tab "
-      },
-      {
-        "text": "🌐 Regulaciones Multi-Pais",
-        "hasOnclick": true,
-        "classes": "bc-tab "
-      },
-      {
-        "text": "📊 Reportes PDF",
-        "hasOnclick": true,
-        "classes": "bc-tab "
-      },
-      {
-        "text": "👥 Todos",
-        "hasOnclick": true,
-        "classes": "bc-filter-btn active"
-      },
-      {
-        "text": "✅ Activos",
-        "hasOnclick": true,
-        "classes": "bc-filter-btn "
-      },
-      {
-        "text": "⏳ Pendientes",
-        "hasOnclick": true,
-        "classes": "bc-filter-btn "
-      },
-      {
-        "text": "🚫 Revocados",
-        "hasOnclick": true,
-        "classes": "bc-filter-btn "
-      },
-      {
-        "text": "📧",
-        "hasOnclick": true,
-        "classes": "bc-btn-icon"
-      },
-      {
-        "text": "📧",
-        "hasOnclick": true,
-        "classes": "bc-btn-icon"
-      },
-      {
-        "text": "📧",
-        "hasOnclick": true,
-        "classes": "bc-btn-icon"
-      },
-      {
-        "text": "📧",
-        "hasOnclick": true,
-        "classes": "bc-btn-icon"
-      },
-      {
-        "text": "📧",
-        "hasOnclick": true,
-        "classes": "bc-btn-icon"
-      },
-      {
-        "text": "📧",
-        "hasOnclick": true,
-        "classes": "bc-btn-icon"
-      },
-      {
-        "text": "📧",
-        "hasOnclick": true,
-        "classes": "bc-btn-icon"
-      },
-      {
-        "text": "📧",
-        "hasOnclick": true,
-        "classes": "bc-btn-icon"
-      },
-      {
-        "text": "📧",
-        "hasOnclick": true,
-        "classes": "bc-btn-icon"
-      },
-      {
-        "text": "📧",
-        "hasOnclick": true,
-        "classes": "bc-btn-icon"
-      }
-    ],
+    "loaded": false,
+    "hasContent": false,
+    "buttons": [],
     "modals": [],
     "errors": []
   },
@@ -622,77 +521,9 @@
     "name": "Liquidación",
     "loaded": true,
     "hasContent": false,
-    "buttons": [
-      {
-        "text": "Dashboard",
-        "hasOnclick": true,
-        "classes": "pe-nav-item active"
-      },
-      {
-        "text": "Proceso",
-        "hasOnclick": true,
-        "classes": "pe-nav-item"
-      },
-      {
-        "text": "Empleados",
-        "hasOnclick": true,
-        "classes": "pe-nav-item"
-      },
-      {
-        "text": "Plantillas",
-        "hasOnclick": true,
-        "classes": "pe-nav-item"
-      },
-      {
-        "text": "Entidades",
-        "hasOnclick": true,
-        "classes": "pe-nav-item"
-      },
-      {
-        "text": "Reportes",
-        "hasOnclick": true,
-        "classes": "pe-nav-item"
-      },
-      {
-        "text": "Recibos",
-        "hasOnclick": true,
-        "classes": "pe-nav-item"
-      },
-      {
-        "text": "×",
-        "hasOnclick": true,
-        "classes": "ph-close"
-      },
-      {
-        "text": "Iniciar Liquidacion",
-        "hasOnclick": true,
-        "classes": "pe-action-btn"
-      },
-      {
-        "text": "Ver Empleados",
-        "hasOnclick": true,
-        "classes": "pe-action-btn"
-      },
-      {
-        "text": "Plantillas RRHH",
-        "hasOnclick": true,
-        "classes": "pe-action-btn"
-      },
-      {
-        "text": "Exportar Reporte",
-        "hasOnclick": true,
-        "classes": "pe-action-btn"
-      },
-      {
-        "text": "Auditar Configuracion",
-        "hasOnclick": true,
-        "classes": "pe-action-btn"
-      }
-    ],
+    "buttons": [],
     "modals": [],
-    "errors": [
-      "Texto \"Error\" detectado"
-    ]
+    "errors": []
   },
   {
     "id": "finance-dashboard",
@@ -1123,8 +954,64 @@
     "id": "dms-dashboard",
     "name": "Documentos",
     "loaded": true,
-    "hasContent": false,
-    "buttons": [],
+    "hasContent": true,
+    "buttons": [
+      {
+        "text": "✕",
+        "hasOnclick": true,
+        "classes": "dms-help-banner-close"
+      },
+      {
+        "text": "📄\n          \n            0\n  ",
+        "hasOnclick": true,
+        "classes": "dms-stat-card"
+      },
+      {
+        "text": "📬\n          \n            0\n  ",
+        "hasOnclick": true,
+        "classes": "dms-stat-card requests"
+      },
+      {
+        "text": "⚠️\n          \n            0\n  ",
+        "hasOnclick": true,
+        "classes": "dms-stat-card expiring"
+      },
+      {
+        "text": "📄\n            Mis Documentos",
+        "hasOnclick": true,
+        "classes": "dms-tab "
+      },
+      {
+        "text": "📬\n            Mis Solicitudes",
+        "hasOnclick": true,
+        "classes": "dms-tab "
+      },
+      {
+        "text": "⚠️\n            Por Vencer",
+        "hasOnclick": true,
+        "classes": "dms-tab "
+      },
+      {
+        "text": "🏠 Inicio",
+        "hasOnclick": true,
+        "classes": "dms-breadcrumb-item current"
+      },
+      {
+        "text": "📥 Descargar PDF",
+        "hasOnclick": true,
+        "classes": "dms-export-btn pdf"
+      },
+      {
+        "text": "❓ Ayuda",
+        "hasOnclick": true,
+        "classes": "dms-export-btn"
+      },
+      {
+        "text": "✕",
+        "hasOnclick": true,
+        "classes": "dms-modal-close"
+      }
+    ],
     "modals": [],
     "errors": []
   },
@@ -1676,96 +1563,33 @@
         "text": "Visitantes",
         "hasOnclick": true,
         "classes": "em-btn em-btn-sm em-btn-active"
-      },
-      {
-        "text": "Reintentar",
-        "hasOnclick": true,
-        "classes": "em-btn em-btn-primary"
       }
     ],
     "modals": [],
     "errors": [
-      "Texto \"Error\" detectado"
+      "Texto \"Cargando\" detectado"
     ]
   },
   {
     "id": "employee-360",
     "name": "Perfil 360",
     "loaded": true,
-    "hasContent": true,
-    "buttons": [
-      {
-        "text": "Generar Expediente",
-        "hasOnclick": false,
-        "classes": "btn btn-primary"
-      },
-      {
-        "text": "Comparar (0)",
-        "hasOnclick": false,
-        "classes": "btn btn-secondary"
-      },
-      {
-        "text": "Exportar PDF",
-        "hasOnclick": false,
-        "classes": "btn btn-success"
-      },
-      {
-        "text": "Limpiar selección",
-        "hasOnclick": false,
-        "classes": "btn btn-sm btn-outline-danger"
-      }
-    ],
+    "hasContent": false,
+    "buttons": [],
     "modals": [],
-    "errors": []
+    "errors": [
+      "Texto \"Cargando\" detectado"
+    ]
   },
   {
     "id": "facturacion",
     "name": "Facturación",
     "loaded": true,
-    "hasContent": true,
-    "buttons": [
-      {
-        "text": "← Volver a Módulos",
-        "hasOnclick": true,
-        "classes": ""
-      },
-      {
-        "text": "🧾\n                        Fac",
-        "hasOnclick": true,
-        "classes": "tab-btn active-tab"
-      },
-      {
-        "text": "📜\n                        Fac",
-        "hasOnclick": true,
-        "classes": "tab-btn"
-      },
-      {
-        "text": "⚙️\n                        Con",
-        "hasOnclick": true,
-        "classes": "tab-btn"
-      },
-      {
-        "text": "📝\n                MODO MANUAL",
-        "hasOnclick": true,
-        "classes": "mode-btn active-mode"
-      },
-      {
-        "text": "📋\n                MODO OCASIO",
-        "hasOnclick": true,
-        "classes": "mode-btn"
-      },
-      {
-        "text": "🔄\n                MODO RECURR",
-        "hasOnclick": true,
-        "classes": "mode-btn"
-      },
-      {
-        "text": "📝 Nueva Factura Manual",
-        "hasOnclick": true,
-        "classes": "action-btn"
-      }
-    ],
+    "hasContent": false,
+    "buttons": [],
     "modals": [],
-    "errors": []
+    "errors": [
+      "Texto \"Cargando\" detectado"
+    ]
   }
 ]

@@ -15,13 +15,25 @@ function formatDepartment(dept) {
       lat: deptData.gps_lat,
       lng: deptData.gps_lng
     },
+    // Alias flat para GPS (compatibilidad con tests)
+    gps_lat: deptData.gps_lat,
+    gps_lng: deptData.gps_lng,
     coverageRadius: deptData.coverage_radius,
+    coverage_radius: deptData.coverage_radius, // Alias snake_case
     isActive: deptData.is_active,
+    is_active: deptData.is_active, // Alias snake_case
     createdAt: deptData.created_at,
     updatedAt: deptData.updated_at,
     companyId: deptData.company_id,
+    company_id: deptData.company_id, // Alias snake_case
     allow_gps_attendance: deptData.allow_gps_attendance,
-    authorized_kiosks: deptData.authorized_kiosks || []
+    authorized_kiosks: deptData.authorized_kiosks || [],
+    // Campos faltantes agregados
+    branch_id: deptData.branch_id,
+    branchId: deptData.branch_id,  // Alias para frontend
+    default_kiosk_id: deptData.default_kiosk_id,
+    manager_user_id: deptData.manager_user_id,
+    notification_recipients: deptData.notification_recipients
   };
 }
 
@@ -110,7 +122,11 @@ router.post('/', auth, async (req, res) => {
       coverageRadius,
       gpsLocation,
       allow_gps_attendance,
-      authorized_kiosks
+      authorized_kiosks,
+      branch_id,
+      branchId,
+      default_kiosk_id,
+      manager_user_id
     } = req.body;
 
     const companyId = req.user?.company_id || 1;
@@ -118,13 +134,8 @@ router.post('/', auth, async (req, res) => {
     console.log('📝 [DEPARTMENTS] Creando departamento:', {
       name,
       companyId,
-      bodyData: req.body,
-      userFromAuth: req.user ? {
-        id: req.user.user_id,
-        email: req.user.email,
-        company_id: req.user.companyId,
-        isActive: req.user.isActive
-      } : 'NO USER'
+      branch_id: branch_id || branchId,
+      bodyData: req.body
     });
 
     if (!name) {
@@ -145,7 +156,11 @@ router.post('/', auth, async (req, res) => {
       is_active: true,
       company_id: companyId,
       allow_gps_attendance: allow_gps_attendance || false,
-      authorized_kiosks: authorized_kiosks || []
+      authorized_kiosks: authorized_kiosks || [],
+      // Campos faltantes agregados
+      branch_id: branch_id || branchId || null,
+      default_kiosk_id: default_kiosk_id || null,
+      manager_user_id: manager_user_id || null
     };
 
     console.log('📝 [DEPARTMENTS] Datos procesados:', departmentData);
@@ -201,14 +216,19 @@ router.put('/:id', auth, async (req, res) => {
       coverageRadius,
       gpsLocation,
       allow_gps_attendance,
-      authorized_kiosks
+      authorized_kiosks,
+      branch_id,
+      branchId,
+      default_kiosk_id,
+      manager_user_id
     } = req.body;
 
     const companyId = req.user?.company_id || 1;
 
     console.log('✏️ [DEPARTMENTS] Actualizando departamento:', req.params.id, {
       bodyData: req.body,
-      companyId
+      companyId,
+      branch_id: branch_id || branchId
     });
 
     const department = await Department.findOne({
@@ -250,6 +270,17 @@ router.put('/:id', auth, async (req, res) => {
     }
     if (authorized_kiosks !== undefined) {
       updateData.authorized_kiosks = authorized_kiosks;
+    }
+
+    // Campos faltantes agregados
+    if (branch_id !== undefined || branchId !== undefined) {
+      updateData.branch_id = branch_id || branchId || null;
+    }
+    if (default_kiosk_id !== undefined) {
+      updateData.default_kiosk_id = default_kiosk_id;
+    }
+    if (manager_user_id !== undefined) {
+      updateData.manager_user_id = manager_user_id;
     }
 
     console.log('✏️ [DEPARTMENTS] Datos a actualizar:', updateData);

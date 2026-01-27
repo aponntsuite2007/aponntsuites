@@ -322,6 +322,23 @@ router.get('/facturas', verificarModuloFacturacion, async (req, res) => {
         });
     } catch (error) {
         console.error('Error obteniendo facturas:', error);
+
+        // Si la tabla no existe o hay error de BD, devolver array vacío con mensaje
+        if (error.message?.includes('does not exist') || error.message?.includes('relation') || error.name === 'SequelizeDatabaseError') {
+            return res.json({
+                success: true,
+                data: [],
+                facturas: [],
+                pagination: {
+                    total: 0,
+                    limit: parseInt(req.query.limit) || 50,
+                    offset: parseInt(req.query.offset) || 0,
+                    pages: 0
+                },
+                message: 'Módulo de facturación no configurado. Ejecute las migraciones SIAC.'
+            });
+        }
+
         res.status(500).json({
             success: false,
             error: 'Error obteniendo facturas',

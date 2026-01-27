@@ -111,6 +111,12 @@ class NotificationRecipientResolver {
                     recipients = await this._resolveDynamic(recipientId, companyId, module, context);
                     break;
 
+                case 'external':
+                    // Destinatario externo (lead, cliente potencial, proveedor externo)
+                    // El email viene en recipientId o en context.recipientEmail
+                    recipients = this._resolveExternal(recipientId, context);
+                    break;
+
                 default:
                     throw new Error(`Tipo de destinatario no soportado: ${recipientType}`);
             }
@@ -121,8 +127,10 @@ class NotificationRecipientResolver {
                 throw new Error(`No se encontraron destinatarios para ${recipientType}:${recipientId}`);
             }
 
-            // Filtrar usuarios inactivos
-            recipients = recipients.filter(r => r.account_status === 'active' || r.status === 'active');
+            // Filtrar usuarios inactivos (solo para destinatarios internos, no externos)
+            if (recipientType !== 'external') {
+                recipients = recipients.filter(r => r.account_status === 'active' || r.status === 'active');
+            }
 
             console.log(`[RecipientResolver] Resueltos ${recipients.length} destinatario(s)`);
 
@@ -405,6 +413,44 @@ class NotificationRecipientResolver {
         // Por ahora, stub que busca admin
 
         return this._resolveRole('admin', companyId);
+    }
+
+    /**
+     * ========================================================================
+     * RESOLVER DESTINATARIO EXTERNO
+     * ========================================================================
+     *
+     * Para leads, clientes potenciales, proveedores externos, etc.
+     * No busca en la tabla users, simplemente retorna el email como destinatario.
+     *
+     * @param {string} recipientId - Email del destinatario o ID externo
+     * @param {Object} context - Contexto con metadata adicional
+     * @returns {Array} Lista con un único destinatario externo
+     */
+    _resolveExternal(recipientId, context = {}) {
+        const email = context?.metadata?.recipientEmail || context?.recipientEmail || recipientId;
+        const name = context?.metadata?.recipientName || context?.recipientName || 'Destinatario Externo';
+
+        console.log(`[RecipientResolver] Resolviendo destinatario EXTERNO: ${email}`);
+
+        // Validar que es un email válido
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw new Error(`Email externo inválido: ${email}`);
+        }
+
+        // Retornar como array con formato compatible
+        return [{
+            user_id: null,  // No es usuario del sistema
+            email: email,
+            full_name: name,
+            firstName: name.split(' ')[0] || name,
+            lastName: name.split(' ').slice(1).join(' ') || '',
+            phone: context?.metadata?.phone || context?.phone || null,
+            status: 'active',  // Marcar como activo para que no sea filtrado
+            account_status: 'active',
+            external: true  // Flag para indicar que es externo
+        }];
     }
 
     // ========================================================================

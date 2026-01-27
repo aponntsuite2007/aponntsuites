@@ -2543,12 +2543,40 @@
             ModuleHelpSystem.init('logistics-dashboard');
         }
 
-        // Obtener companyId desde el estado global
+        // Obtener companyId desde múltiples fuentes posibles
         const company = window.currentCompany || window.selectedCompany;
         currentCompanyId = company?.id || company?.company_id;
 
+        // Fallback: intentar obtener del usuario logueado
+        if (!currentCompanyId && window.currentUser) {
+            currentCompanyId = window.currentUser.company_id || window.currentUser.companyId;
+        }
+
+        // Fallback: intentar obtener del token decodificado
+        if (!currentCompanyId) {
+            try {
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    currentCompanyId = payload.company_id || payload.companyId;
+                }
+            } catch (e) {
+                console.warn('⚠️ [LOGISTICS] No se pudo decodificar token:', e.message);
+            }
+        }
+
         if (!currentCompanyId) {
             console.error('❌ [LOGISTICS] No se pudo obtener el ID de la empresa');
+            const container = document.getElementById(containerId) || document.getElementById('logistics-dashboard-container');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                        <h2 style="color: #dc2626;">Empresa no identificada</h2>
+                        <p style="color: #64748b;">Por favor, vuelve a iniciar sesión para acceder al módulo de logística.</p>
+                    </div>
+                `;
+            }
             return;
         }
 
@@ -4716,11 +4744,13 @@
 
     async function fetchAPI(endpoint, options = {}) {
         const url = `${API_BASE}${endpoint}${endpoint.includes('?') ? '&' : '?'}company_id=${currentCompanyId}`;
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
 
         const response = await fetch(url, {
             ...options,
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : '',
                 ...options.headers
             }
         });
@@ -4733,21 +4763,36 @@
     }
 
     async function loadWarehouses() {
-        const response = await fetchAPI('/warehouses');
-        cache.warehouses = response.data || [];
-        if (cache.warehouses.length > 0 && !currentWarehouseId) {
-            currentWarehouseId = cache.warehouses[0].id;
+        try {
+            const response = await fetchAPI('/warehouses');
+            cache.warehouses = response.data || response.warehouses || [];
+            if (cache.warehouses.length > 0 && !currentWarehouseId) {
+                currentWarehouseId = cache.warehouses[0].id;
+            }
+        } catch (e) {
+            console.warn('⚠️ [LOGISTICS] Error cargando warehouses:', e.message);
+            cache.warehouses = [];
         }
     }
 
     async function loadCarriers() {
-        const response = await fetchAPI('/carriers');
-        cache.carriers = response.data || [];
+        try {
+            const response = await fetchAPI('/carriers');
+            cache.carriers = response.data || response.carriers || [];
+        } catch (e) {
+            console.warn('⚠️ [LOGISTICS] Error cargando carriers:', e.message);
+            cache.carriers = [];
+        }
     }
 
     async function loadDeliveryZones() {
-        const response = await fetchAPI('/delivery-zones');
-        cache.deliveryZones = response.data || [];
+        try {
+            const response = await fetchAPI('/delivery-zones');
+            cache.deliveryZones = response.data || response.zones || [];
+        } catch (e) {
+            console.warn('⚠️ [LOGISTICS] Error cargando delivery zones:', e.message);
+            cache.deliveryZones = [];
+        }
     }
 
     async function loadLocationTypes() {

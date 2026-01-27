@@ -408,6 +408,12 @@ const MarketingLeadsModule = {
                     border-color: #f59e0b;
                 }
 
+                /* Fix dropdown options - texto negro en fondo blanco del browser */
+                select.form-input option {
+                    background: #fff;
+                    color: #333;
+                }
+
                 .form-row {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
@@ -673,6 +679,9 @@ const MarketingLeadsModule = {
                 <td>
                     <button class="action-btn" onclick="MarketingLeadsModule.showSendOptions('${lead.id}')" title="Enviar Flyer">
                         \ud83d\udce4
+                    </button>
+                    <button class="action-btn" onclick="MarketingLeadsModule.createQuoteFromLead('${lead.id}')" title="Crear Presupuesto" style="color: #22c55e;">
+                        \ud83d\udcdd
                     </button>
                     <button class="action-btn" onclick="MarketingLeadsModule.editLead('${lead.id}')" title="Editar">
                         \u270f\ufe0f
@@ -1189,11 +1198,281 @@ const MarketingLeadsModule = {
         this.render();
     },
 
+    // ═══════════════════════════════════════════════════════════
+    // CREACIÓN DE PRESUPUESTO DESDE LEAD
+    // ═══════════════════════════════════════════════════════════
+
+    // Módulos disponibles con precios (USD)
+    availableModules: [
+        { key: 'attendance', name: 'Control de Asistencia', price: 50, category: 'Core' },
+        { key: 'biometric', name: 'Biométrico Facial', price: 80, category: 'Core' },
+        { key: 'shifts', name: 'Gestión de Turnos', price: 40, category: 'RRHH' },
+        { key: 'payroll', name: 'Liquidación de Sueldos', price: 100, category: 'RRHH' },
+        { key: 'recruitment', name: 'Reclutamiento', price: 60, category: 'RRHH' },
+        { key: 'vacation', name: 'Vacaciones y Licencias', price: 35, category: 'RRHH' },
+        { key: 'medical', name: 'Control Médico', price: 45, category: 'RRHH' },
+        { key: 'notifications', name: 'Notificaciones Push', price: 25, category: 'Comunicación' },
+        { key: 'documents', name: 'Gestión Documental', price: 30, category: 'Documentos' },
+        { key: 'reports', name: 'Reportes Avanzados', price: 40, category: 'Analytics' },
+        { key: 'procurement', name: 'Compras y Proveedores', price: 70, category: 'Finanzas' },
+        { key: 'invoicing', name: 'Facturación', price: 55, category: 'Finanzas' },
+        { key: 'ai-assistant', name: 'Asistente IA', price: 90, category: 'Premium' }
+    ],
+
+    // Estado del presupuesto en creación
+    quoteState: {
+        lead: null,
+        selectedModules: [],
+        companyData: {}
+    },
+
+    /**
+     * Inicia creación de presupuesto desde un lead
+     */
+    async createQuoteFromLead(leadId) {
+        const lead = this.state.leads.find(l => l.id === leadId);
+        if (!lead) {
+            alert('Lead no encontrado');
+            return;
+        }
+
+        // Inicializar estado del presupuesto
+        this.quoteState = {
+            lead: lead,
+            selectedModules: [],
+            companyData: {
+                name: lead.company_name || '',
+                contact_email: lead.email || '',
+                contact_phone: lead.phone || lead.whatsapp || '',
+                contact_name: lead.full_name || '',
+                industry: lead.industry || ''
+            }
+        };
+
+        this.showQuoteModal();
+    },
+
+    /**
+     * Muestra el modal de creación de presupuesto
+     */
+    showQuoteModal() {
+        const lead = this.quoteState.lead;
+        const companyData = this.quoteState.companyData;
+
+        // Agrupar módulos por categoría
+        const modulesByCategory = {};
+        this.availableModules.forEach(mod => {
+            if (!modulesByCategory[mod.category]) {
+                modulesByCategory[mod.category] = [];
+            }
+            modulesByCategory[mod.category].push(mod);
+        });
+
+        // Generar HTML de industrias
+        const industriesOptions = this.industries.map(i =>
+            '<option value="' + i + '"' + (companyData.industry === i ? ' selected' : '') + '>' + i + '</option>'
+        ).join('');
+
+        // Generar HTML de módulos
+        let modulesHtml = '';
+        Object.entries(modulesByCategory).forEach(([category, modules]) => {
+            modulesHtml += '<div style="grid-column: 1 / -1;">';
+            modulesHtml += '<p style="color: rgba(255,255,255,0.6); font-size: 12px; margin: 8px 0 4px 0; text-transform: uppercase;">' + category + '</p>';
+            modulesHtml += '</div>';
+
+            modules.forEach(mod => {
+                modulesHtml += '<label class="module-card" style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.2s;">';
+                modulesHtml += '<input type="checkbox" class="module-checkbox" data-key="' + mod.key + '" data-name="' + mod.name + '" data-price="' + mod.price + '" onchange="MarketingLeadsModule.updateQuoteTotal()" style="width: 18px; height: 18px;">';
+                modulesHtml += '<div style="flex: 1;">';
+                modulesHtml += '<span style="color: white; font-weight: 500;">' + mod.name + '</span>';
+                modulesHtml += '<span style="color: #22c55e; font-size: 13px; display: block;">USD $' + mod.price + '/mes</span>';
+                modulesHtml += '</div></label>';
+            });
+        });
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.id = 'quoteModal';
+        modal.innerHTML =
+            '<div class="modal-content" style="max-width: 800px;">' +
+                '<div class="modal-header">' +
+                    '<h3 class="modal-title">📝 Crear Presupuesto desde Lead</h3>' +
+                    '<button class="modal-close" onclick="MarketingLeadsModule.closeModal(\'quoteModal\')">&times;</button>' +
+                '</div>' +
+                '<div class="modal-body">' +
+                    '<div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px;">' +
+                        '<p style="color: #f59e0b; font-weight: 600; margin-bottom: 4px;">👤 Lead de origen</p>' +
+                        '<p style="color: white; margin: 0;">' + lead.full_name + ' - ' + lead.email + '</p>' +
+                        (lead.company_name ? '<p style="color: rgba(255,255,255,0.6); margin: 4px 0 0 0; font-size: 13px;">🏢 ' + lead.company_name + '</p>' : '') +
+                    '</div>' +
+                    '<h4 style="color: #f59e0b; margin-bottom: 12px;">🏢 Datos de la Empresa</h4>' +
+                    '<form id="quoteCompanyForm">' +
+                        '<div class="form-row">' +
+                            '<div class="form-group">' +
+                                '<label class="form-label">Nombre de Empresa <span class="required">*</span></label>' +
+                                '<input type="text" class="form-input" name="company_name" value="' + (companyData.name || '') + '" required placeholder="Razón social o nombre comercial">' +
+                            '</div>' +
+                            '<div class="form-group">' +
+                                '<label class="form-label">CUIT/Tax ID</label>' +
+                                '<input type="text" class="form-input" name="tax_id" placeholder="30-12345678-9">' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="form-row">' +
+                            '<div class="form-group">' +
+                                '<label class="form-label">Email Contacto</label>' +
+                                '<input type="email" class="form-input" name="contact_email" value="' + (companyData.contact_email || '') + '">' +
+                            '</div>' +
+                            '<div class="form-group">' +
+                                '<label class="form-label">Teléfono</label>' +
+                                '<input type="tel" class="form-input" name="contact_phone" value="' + (companyData.contact_phone || '') + '">' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="form-row">' +
+                            '<div class="form-group">' +
+                                '<label class="form-label">Cantidad de Empleados <span class="required">*</span></label>' +
+                                '<input type="number" class="form-input" name="max_employees" min="1" value="10" required>' +
+                            '</div>' +
+                            '<div class="form-group">' +
+                                '<label class="form-label">Rubro</label>' +
+                                '<select class="form-input" name="industry"><option value="">Seleccionar...</option>' + industriesOptions + '</select>' +
+                            '</div>' +
+                        '</div>' +
+                    '</form>' +
+                    '<h4 style="color: #f59e0b; margin: 24px 0 12px 0;">📦 Seleccionar Módulos</h4>' +
+                    '<div id="modulesContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">' + modulesHtml + '</div>' +
+                    '<div id="quoteSummary" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 16px; margin-top: 20px;">' +
+                        '<div style="display: flex; justify-content: space-between; align-items: center;">' +
+                            '<div>' +
+                                '<p style="color: rgba(255,255,255,0.6); margin: 0; font-size: 13px;">Módulos seleccionados: <span id="moduleCount">0</span></p>' +
+                                '<p style="color: white; font-size: 24px; font-weight: 700; margin: 4px 0 0 0;">USD $<span id="quoteTotal">0</span>/mes</p>' +
+                            '</div>' +
+                            '<div>' +
+                                '<p style="color: rgba(255,255,255,0.5); font-size: 12px; margin: 0;">Trial 30 días</p>' +
+                                '<p style="color: #22c55e; font-weight: 600; margin: 0;">100% bonificado</p>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="form-group" style="margin-top: 16px;">' +
+                        '<label class="form-label">Notas del Presupuesto</label>' +
+                        '<textarea class="form-input" id="quoteNotes" rows="2" placeholder="Observaciones internas..."></textarea>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="modal-footer">' +
+                    '<button class="btn-marketing btn-secondary" onclick="MarketingLeadsModule.closeModal(\'quoteModal\')">Cancelar</button>' +
+                    '<button class="btn-marketing btn-success" onclick="MarketingLeadsModule.saveQuoteFromLead()">💾 Crear Presupuesto</button>' +
+                '</div>' +
+            '</div>' +
+            '<style>' +
+                '.module-card:has(input:checked) { border-color: #22c55e; background: rgba(34, 197, 94, 0.15); }' +
+                '.module-card:hover { border-color: #f59e0b; }' +
+            '</style>';
+
+        document.body.appendChild(modal);
+    },
+
+    /**
+     * Actualiza el total del presupuesto
+     */
+    updateQuoteTotal() {
+        const checkboxes = document.querySelectorAll('.module-checkbox:checked');
+        let total = 0;
+        const selectedModules = [];
+
+        checkboxes.forEach(cb => {
+            const price = parseFloat(cb.dataset.price);
+            total += price;
+            selectedModules.push({
+                module_key: cb.dataset.key,
+                module_name: cb.dataset.name,
+                price: price,
+                quantity: 1
+            });
+        });
+
+        this.quoteState.selectedModules = selectedModules;
+
+        document.getElementById('moduleCount').textContent = selectedModules.length;
+        document.getElementById('quoteTotal').textContent = total.toFixed(2);
+    },
+
+    /**
+     * Guarda el presupuesto desde el lead
+     */
+    async saveQuoteFromLead() {
+        // Validar módulos seleccionados
+        if (this.quoteState.selectedModules.length === 0) {
+            alert('Debes seleccionar al menos un módulo');
+            return;
+        }
+
+        // Obtener datos del formulario
+        const form = document.getElementById('quoteCompanyForm');
+        const formData = new FormData(form);
+        const companyData = Object.fromEntries(formData);
+
+        if (!companyData.company_name) {
+            alert('El nombre de la empresa es obligatorio');
+            return;
+        }
+
+        if (!companyData.max_employees || companyData.max_employees < 1) {
+            alert('La cantidad de empleados es obligatoria');
+            return;
+        }
+
+        const notes = document.getElementById('quoteNotes')?.value || '';
+
+        try {
+            // Llamar al endpoint para crear presupuesto desde lead
+            const response = await fetch('/api/marketing/leads/' + this.quoteState.lead.id + '/create-quote', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + this.getToken(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    company_data: companyData,
+                    modules_data: this.quoteState.selectedModules,
+                    notes: notes
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.closeModal('quoteModal');
+
+                // Actualizar estado del lead a "interested" si estaba en "new"
+                if (this.quoteState.lead.status === 'new') {
+                    await fetch('/api/marketing/leads/' + this.quoteState.lead.id, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': 'Bearer ' + this.getToken(),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: 'interested' })
+                    });
+                }
+
+                await this.loadLeads();
+                await this.loadStats();
+                this.render();
+
+                alert('✅ Presupuesto ' + (result.quote?.quote_number || '') + ' creado exitosamente!\n\nEmpresa: ' + (result.company?.name || companyData.company_name) + '\nTotal: USD $' + (result.quote?.total_amount || '0') + '/mes');
+            } else {
+                alert('❌ Error: ' + (result.error || 'No se pudo crear el presupuesto'));
+            }
+        } catch (error) {
+            console.error('[MARKETING] Error creating quote from lead:', error);
+            alert('Error de conexión al crear el presupuesto');
+        }
+    },
+
     /**
      * Agrega event listeners
      */
     attachEventListeners() {
-        // Enter en b\u00fasqueda
+        // Enter en búsqueda
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('keypress', (e) => {

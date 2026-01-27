@@ -838,15 +838,257 @@ const VacationEngine = window.VacationEngine = {
     },
 
     showNewRequestModal() {
-        alert('Modal de nueva solicitud - TODO');
+        // Obtener usuarios para el selector
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const currentUserId = userData.id || userData.user_id;
+
+        const modalHtml = `
+            <div id="vacation-request-modal" class="ve-modal-overlay" onclick="if(event.target===this) VacationEngine.closeModal()">
+                <div class="ve-modal">
+                    <div class="ve-modal-header">
+                        <h3>Nueva Solicitud de Vacaciones</h3>
+                        <button onclick="VacationEngine.closeModal()" class="ve-modal-close">&times;</button>
+                    </div>
+                    <form id="vacation-request-form" onsubmit="VacationEngine.submitNewRequest(event)">
+                        <div class="ve-modal-body">
+                            <div class="ve-form-group">
+                                <label>Tipo de Solicitud *</label>
+                                <select name="requestType" class="ve-input" required>
+                                    <option value="vacation">Vacaciones</option>
+                                    <option value="personal_leave">Licencia Personal</option>
+                                    <option value="sick_leave">Licencia Medica</option>
+                                    <option value="extraordinary">Licencia Extraordinaria</option>
+                                </select>
+                            </div>
+                            <div class="ve-form-row">
+                                <div class="ve-form-group">
+                                    <label>Fecha Inicio *</label>
+                                    <input type="date" name="startDate" class="ve-input" required>
+                                </div>
+                                <div class="ve-form-group">
+                                    <label>Fecha Fin *</label>
+                                    <input type="date" name="endDate" class="ve-input" required>
+                                </div>
+                            </div>
+                            <div class="ve-form-group">
+                                <label>Motivo / Comentarios</label>
+                                <textarea name="reason" class="ve-input" rows="3" placeholder="Describa el motivo de su solicitud..."></textarea>
+                            </div>
+                            <input type="hidden" name="userId" value="${currentUserId}">
+                        </div>
+                        <div class="ve-modal-footer">
+                            <button type="button" onclick="VacationEngine.closeModal()" class="ve-btn ve-btn-secondary">Cancelar</button>
+                            <button type="submit" class="ve-btn ve-btn-primary">Enviar Solicitud</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
     },
 
-    showScaleModal() {
-        alert('Modal de nueva escala - TODO');
+    async submitNewRequest(event) {
+        event.preventDefault();
+        const form = event.target;
+        const data = {
+            userId: parseInt(form.userId.value),
+            requestType: form.requestType.value,
+            startDate: form.startDate.value,
+            endDate: form.endDate.value,
+            reason: form.reason.value
+        };
+
+        try {
+            await VacationAPI.createRequest(data);
+            VacationEngine.closeModal();
+            VacationEngine.refresh();
+            VacationEngine.showToast('Solicitud enviada exitosamente', 'success');
+        } catch (e) {
+            VacationEngine.showToast('Error: ' + e.message, 'error');
+        }
     },
 
-    showLicenseModal() {
-        alert('Modal de nueva licencia - TODO');
+    showScaleModal(editData = null) {
+        const isEdit = !!editData;
+        const modalHtml = `
+            <div id="vacation-scale-modal" class="ve-modal-overlay" onclick="if(event.target===this) VacationEngine.closeModal()">
+                <div class="ve-modal">
+                    <div class="ve-modal-header">
+                        <h3>${isEdit ? 'Editar' : 'Nueva'} Escala de Vacaciones</h3>
+                        <button onclick="VacationEngine.closeModal()" class="ve-modal-close">&times;</button>
+                    </div>
+                    <form id="vacation-scale-form" onsubmit="VacationEngine.submitScale(event, ${editData?.id || 'null'})">
+                        <div class="ve-modal-body">
+                            <div class="ve-form-row">
+                                <div class="ve-form-group">
+                                    <label>Antiguedad Desde (anos) *</label>
+                                    <input type="number" name="yearsFrom" class="ve-input" min="0" value="${editData?.yearsFrom || 0}" required>
+                                </div>
+                                <div class="ve-form-group">
+                                    <label>Antiguedad Hasta (anos) *</label>
+                                    <input type="number" name="yearsTo" class="ve-input" min="1" value="${editData?.yearsTo || 5}" required>
+                                </div>
+                            </div>
+                            <div class="ve-form-group">
+                                <label>Dias de Vacaciones *</label>
+                                <input type="number" name="vacationDays" class="ve-input" min="1" max="60" value="${editData?.vacationDays || 14}" required>
+                            </div>
+                            <div class="ve-form-group">
+                                <label>Descripcion del Rango</label>
+                                <input type="text" name="rangeDescription" class="ve-input" value="${editData?.rangeDescription || ''}" placeholder="Ej: Menos de 5 anos">
+                            </div>
+                        </div>
+                        <div class="ve-modal-footer">
+                            <button type="button" onclick="VacationEngine.closeModal()" class="ve-btn ve-btn-secondary">Cancelar</button>
+                            <button type="submit" class="ve-btn ve-btn-primary">${isEdit ? 'Actualizar' : 'Crear'} Escala</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    },
+
+    async submitScale(event, editId) {
+        event.preventDefault();
+        const form = event.target;
+        const data = {
+            yearsFrom: parseInt(form.yearsFrom.value),
+            yearsTo: parseInt(form.yearsTo.value),
+            vacationDays: parseInt(form.vacationDays.value),
+            rangeDescription: form.rangeDescription.value
+        };
+
+        try {
+            if (editId) {
+                await VacationAPI.updateScale(editId, data);
+                VacationEngine.showToast('Escala actualizada', 'success');
+            } else {
+                await VacationAPI.createScale(data);
+                VacationEngine.showToast('Escala creada', 'success');
+            }
+            VacationEngine.closeModal();
+            VacationEngine.renderScales();
+        } catch (e) {
+            VacationEngine.showToast('Error: ' + e.message, 'error');
+        }
+    },
+
+    showLicenseModal(editData = null) {
+        const isEdit = !!editData;
+        const modalHtml = `
+            <div id="vacation-license-modal" class="ve-modal-overlay" onclick="if(event.target===this) VacationEngine.closeModal()">
+                <div class="ve-modal">
+                    <div class="ve-modal-header">
+                        <h3>${isEdit ? 'Editar' : 'Nueva'} Licencia Extraordinaria</h3>
+                        <button onclick="VacationEngine.closeModal()" class="ve-modal-close">&times;</button>
+                    </div>
+                    <form id="vacation-license-form" onsubmit="VacationEngine.submitLicense(event, ${editData?.id || 'null'})">
+                        <div class="ve-modal-body">
+                            <div class="ve-form-group">
+                                <label>Tipo de Licencia *</label>
+                                <input type="text" name="type" class="ve-input" value="${editData?.type || ''}" placeholder="Ej: Matrimonio, Nacimiento, Fallecimiento" required>
+                            </div>
+                            <div class="ve-form-row">
+                                <div class="ve-form-group">
+                                    <label>Dias *</label>
+                                    <input type="number" name="days" class="ve-input" min="1" max="30" value="${editData?.days || 1}" required>
+                                </div>
+                                <div class="ve-form-group">
+                                    <label>Tipo de Dias</label>
+                                    <select name="dayType" class="ve-input">
+                                        <option value="habil" ${editData?.dayType === 'habil' ? 'selected' : ''}>Habiles</option>
+                                        <option value="corrido" ${editData?.dayType === 'corrido' ? 'selected' : ''}>Corridos</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="ve-form-group">
+                                <label>Descripcion</label>
+                                <textarea name="description" class="ve-input" rows="2">${editData?.description || ''}</textarea>
+                            </div>
+                            <div class="ve-form-group">
+                                <label>Base Legal</label>
+                                <input type="text" name="legalBasis" class="ve-input" value="${editData?.legalBasis || ''}" placeholder="Ej: Art. 158 LCT">
+                            </div>
+                            <div class="ve-form-toggles">
+                                <label class="ve-toggle">
+                                    <input type="checkbox" name="requiresApproval" ${editData?.requiresApproval !== false ? 'checked' : ''}>
+                                    <span>Requiere aprobacion</span>
+                                </label>
+                                <label class="ve-toggle">
+                                    <input type="checkbox" name="requiresDocumentation" ${editData?.requiresDocumentation ? 'checked' : ''}>
+                                    <span>Requiere documentacion</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="ve-modal-footer">
+                            <button type="button" onclick="VacationEngine.closeModal()" class="ve-btn ve-btn-secondary">Cancelar</button>
+                            <button type="submit" class="ve-btn ve-btn-primary">${isEdit ? 'Actualizar' : 'Crear'} Licencia</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    },
+
+    async submitLicense(event, editId) {
+        event.preventDefault();
+        const form = event.target;
+        const data = {
+            type: form.type.value,
+            days: parseInt(form.days.value),
+            dayType: form.dayType.value,
+            description: form.description.value,
+            legalBasis: form.legalBasis.value,
+            requiresApproval: form.requiresApproval.checked,
+            requiresDocumentation: form.requiresDocumentation.checked
+        };
+
+        try {
+            if (editId) {
+                await VacationAPI.updateLicense(editId, data);
+                VacationEngine.showToast('Licencia actualizada', 'success');
+            } else {
+                await VacationAPI.createLicense(data);
+                VacationEngine.showToast('Licencia creada', 'success');
+            }
+            VacationEngine.closeModal();
+            VacationEngine.renderLicenses();
+        } catch (e) {
+            VacationEngine.showToast('Error: ' + e.message, 'error');
+        }
+    },
+
+    closeModal() {
+        const modals = document.querySelectorAll('.ve-modal-overlay');
+        modals.forEach(m => m.remove());
+    },
+
+    showToast(message, type = 'info') {
+        const colors = {
+            success: '#00e676',
+            error: '#ff5252',
+            warning: '#ffc107',
+            info: '#00d4ff'
+        };
+        const toast = document.createElement('div');
+        toast.className = 've-toast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: ${colors[type] || colors.info};
+            color: #000;
+            border-radius: 8px;
+            font-weight: 500;
+            z-index: 10001;
+            animation: slideIn 0.3s ease;
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
     },
 
     async saveConfig(event) {
@@ -1728,6 +1970,111 @@ function injectVacationStyles() {
             text-align: center;
             padding: 40px;
             color: var(--accent-red);
+        }
+
+        /* Modal Styles */
+        .ve-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .ve-modal {
+            background: var(--ve-bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--ve-border);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        .ve-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ve-border);
+        }
+
+        .ve-modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--ve-text-primary);
+        }
+
+        .ve-modal-close {
+            background: none;
+            border: none;
+            color: var(--ve-text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .ve-modal-close:hover {
+            color: var(--accent-red);
+        }
+
+        .ve-modal-body {
+            padding: 20px;
+        }
+
+        .ve-modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--ve-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .ve-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .ve-form-group {
+            margin-bottom: 15px;
+        }
+
+        .ve-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--ve-text-secondary);
+            font-size: 13px;
+        }
+
+        .ve-form-toggles {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
     `;
     document.head.appendChild(styles);

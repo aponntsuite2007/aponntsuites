@@ -750,3 +750,107 @@ if (!document.getElementById('shift-calendar-styles')) {
 
 // ✅ EXPOSICIÓN GLOBAL
 window.ShiftCalendarView = ShiftCalendarView;
+
+// ✅ INSTANCIA GLOBAL
+window.shiftCalendarView = new ShiftCalendarView();
+
+/**
+ * Función wrapper para panel-empresa.html
+ * Muestra lista de turnos y permite seleccionar uno para ver su calendario
+ */
+async function showShiftCalendarViewContent() {
+  const content = document.getElementById('mainContent');
+  if (!content) return;
+
+  content.innerHTML = `
+    <div style="padding: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+          <h2 style="margin: 0; color: #1e293b;">📅 Calendario de Turnos</h2>
+          <p style="margin: 5px 0 0 0; color: #64748b;">Selecciona un turno para ver su calendario de proyección</p>
+        </div>
+      </div>
+      <div id="shifts-list-container">
+        <div style="text-align: center; padding: 40px;">
+          <div class="loading-spinner-large"></div>
+          <p>Cargando turnos disponibles...</p>
+        </div>
+      </div>
+      <div id="shift-calendar-display" style="margin-top: 20px;"></div>
+    </div>
+  `;
+
+  try {
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    const response = await fetch('/api/v1/shifts', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) throw new Error('Error cargando turnos');
+
+    const data = await response.json();
+    const shifts = data.shifts || data.data || data || [];
+
+    const container = document.getElementById('shifts-list-container');
+
+    if (!shifts.length) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px; background: #f1f5f9; border-radius: 8px;">
+          <div style="font-size: 48px; margin-bottom: 10px;">📅</div>
+          <h3 style="color: #475569;">No hay turnos configurados</h3>
+          <p style="color: #64748b;">Crea turnos desde el módulo de gestión de turnos</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+        ${shifts.map(shift => `
+          <div class="shift-card" onclick="selectShiftForCalendar(${shift.id})"
+               style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s;"
+               onmouseover="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 4px 12px rgba(59,130,246,0.15)'"
+               onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+              <div style="width: 40px; height: 40px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                ${shift.code || shift.name?.charAt(0) || 'T'}
+              </div>
+              <div>
+                <h4 style="margin: 0; color: #1e293b;">${shift.name || 'Turno'}</h4>
+                <p style="margin: 0; font-size: 12px; color: #64748b;">${shift.code || ''}</p>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              ${shift.start_time ? `<span style="background: #dbeafe; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 12px;">⏰ ${shift.start_time}</span>` : ''}
+              ${shift.end_time ? `<span style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px;">🏁 ${shift.end_time}</span>` : ''}
+              ${shift.is_rotating ? `<span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px;">🔄 Rotativo</span>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error cargando turnos:', error);
+    document.getElementById('shifts-list-container').innerHTML = `
+      <div style="text-align: center; padding: 40px; background: #fef2f2; border-radius: 8px;">
+        <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
+        <h3 style="color: #dc2626;">Error cargando turnos</h3>
+        <p style="color: #64748b;">${error.message}</p>
+      </div>
+    `;
+  }
+}
+
+/**
+ * Selecciona un turno y muestra su calendario
+ */
+async function selectShiftForCalendar(shiftId) {
+  const display = document.getElementById('shift-calendar-display');
+  if (!display) return;
+
+  display.innerHTML = await window.shiftCalendarView.render(shiftId);
+}
+
+// Exponer funciones globalmente
+window.showShiftCalendarViewContent = showShiftCalendarViewContent;
+window.selectShiftForCalendar = selectShiftForCalendar;

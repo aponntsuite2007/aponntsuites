@@ -144,6 +144,73 @@ module.exports = (sequelize) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
+    // Campos de ubicación del usuario
+    city: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    province: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    country: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    postalCode: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      field: 'postal_code'
+    },
+    neighborhood: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    street: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    streetNumber: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      field: 'street_number'
+    },
+    floorApt: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: 'floor_apt'
+    },
+    // Sucursal asignada (diferente de default_branch_id)
+    branchId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: 'branch_id',
+      references: {
+        model: 'branches',
+        key: 'id'
+      }
+    },
+    // Seguro médico
+    healthInsuranceProvider: {
+      type: DataTypes.STRING(200),
+      allowNull: true,
+      field: 'health_insurance_provider'
+    },
+    healthInsurancePlan: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: 'health_insurance_plan'
+    },
+    healthInsuranceNumber: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: 'health_insurance_number'
+    },
+    healthInsuranceExpiry: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      field: 'health_insurance_expiry'
+    },
     emergencyContact: {
       type: DataTypes.JSONB,
       allowNull: true,

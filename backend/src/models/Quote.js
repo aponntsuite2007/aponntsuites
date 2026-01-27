@@ -43,6 +43,16 @@ module.exports = (sequelize) => {
       onDelete: 'RESTRICT',
       comment: 'Vendedor que generó el presupuesto'
     },
+    lead_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'marketing_leads',
+        key: 'id'
+      },
+      onDelete: 'SET NULL',
+      comment: 'Lead de origen (si el presupuesto se creó desde un lead)'
+    },
 
     // ═══════════════════════════════════════════════════════════
     // MÓDULOS INCLUIDOS
@@ -249,6 +259,7 @@ module.exports = (sequelize) => {
     indexes: [
       { fields: ['company_id'] },
       { fields: ['seller_id'] },
+      { fields: ['lead_id'] },
       { fields: ['status'] },
       { fields: ['quote_number'], unique: true },
       { fields: ['sent_date'] },
