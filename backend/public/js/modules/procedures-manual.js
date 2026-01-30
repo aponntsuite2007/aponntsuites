@@ -1430,6 +1430,7 @@ const ProceduresEngine = {
             }
         } catch (error) {
             this.showToast('Error al guardar procedimiento', 'error');
+            this.closeModal();
         }
     },
 

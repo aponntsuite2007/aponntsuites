@@ -992,9 +992,11 @@ window.HourBankModule = HourBankModule;
 async function showHourBankContent() {
     console.log('🏦 [HourBank] showHourBankContent() llamado');
 
-    const container = document.getElementById('module-content');
+    const container = document.getElementById('module-content') ||
+                     document.getElementById('hour-bank-container') ||
+                     document.getElementById('mainContent');
     if (!container) {
-        console.error('[HourBank] Container module-content no encontrado');
+        console.error('[HourBank] No se encontro container (module-content/hour-bank-container/mainContent)');
         return;
     }
 

@@ -740,12 +740,16 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
   const startTime = Date.now();
 
   try {
-    const companyId = req.headers['x-company-id'] || req.body.companyId;
+    // SSoT: company_id es OBLIGATORIO para multi-tenant
+    // Aceptamos múltiples formatos para compatibilidad
+    const companyId = req.headers['x-company-id'] || req.body.companyId || req.body.company_id;
+    const kioskId = req.headers['x-kiosk-id'] || req.body.kioskId || req.body.kiosk_id;
+    const deviceId = req.headers['x-device-id'] || req.body.deviceId || req.body.device_id;
 
     if (!companyId) {
       return res.status(400).json({
         success: false,
-        message: 'Company ID requerido',
+        message: 'Company ID requerido (multi-tenant)',
         code: 'COMPANY_REQUIRED'
       });
     }
@@ -1074,18 +1078,20 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
 
       try {
         // 1. Buscar última asistencia del empleado HOY usando SQL directo con FOR UPDATE
+        // SSoT: SIEMPRE filtrar por company_id para aislamiento multi-tenant
         const today = getArgentinaDate();
 
         const [rows] = await sequelize.query(`
           SELECT id, check_in, check_out, status
           FROM attendances
           WHERE user_id = :employeeId
+            AND (company_id = :companyId OR company_id IS NULL)
             AND DATE(check_in) = :today
           ORDER BY check_in DESC
           LIMIT 1
           FOR UPDATE
         `, {
-          replacements: { employeeId: bestMatch.employeeId, today },
+          replacements: { employeeId: bestMatch.employeeId, companyId: companyId, today },
           type: QueryTypes.SELECT,
           transaction
         });
@@ -1140,17 +1146,20 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
 
             } else {
               // DENTRO de tolerancia o sin shift → INSERT normal
+              // SSoT: SIEMPRE incluir company_id para multi-tenant
               const [insertResult] = await sequelize.query(`
-                INSERT INTO attendances (id, date, user_id, check_in, "checkInMethod", status, created_at, updated_at)
-                VALUES (gen_random_uuid(), :date, :userId, :checkInTime, :checkInMethod, :status, NOW(), NOW())
+                INSERT INTO attendances (id, date, user_id, company_id, check_in, "checkInMethod", status, kiosk_id, created_at, updated_at)
+                VALUES (gen_random_uuid(), :date, :userId, :companyId, :checkInTime, :checkInMethod, :status, :kioskId, NOW(), NOW())
                 RETURNING id, check_in
               `, {
                 replacements: {
                   date: today,
                   userId: bestMatch.employeeId,
+                  companyId: companyId,
                   checkInTime: new Date(),
                   checkInMethod: 'face',
-                  status: 'present'
+                  status: 'present',
+                  kioskId: kioskId || null
                 },
                 type: QueryTypes.INSERT,
                 transaction
@@ -1218,17 +1227,20 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
 
           if (shouldRegister) {
             // INSERT usando SQL directo con columnas camelCase (re-ingreso)
+            // SSoT: SIEMPRE incluir company_id para multi-tenant
             const [reInsertResult] = await sequelize.query(`
-              INSERT INTO attendances (id, date, user_id, check_in, "checkInMethod", status, created_at, updated_at)
-              VALUES (gen_random_uuid(), :date, :userId, :checkInTime, :checkInMethod, :status, NOW(), NOW())
+              INSERT INTO attendances (id, date, user_id, company_id, check_in, "checkInMethod", status, kiosk_id, created_at, updated_at)
+              VALUES (gen_random_uuid(), :date, :userId, :companyId, :checkInTime, :checkInMethod, :status, :kioskId, NOW(), NOW())
               RETURNING id, check_in
             `, {
               replacements: {
                 date: today,
                 userId: bestMatch.employeeId,
+                companyId: companyId,
                 checkInTime: new Date(),
                 checkInMethod: 'face',
-                status: 'present'
+                status: 'present',
+                kioskId: kioskId || null
               },
               type: QueryTypes.INSERT,
               transaction

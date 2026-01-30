@@ -17,6 +17,7 @@ window.QuotesManagement = (function() {
         status: '',
         search: ''
     };
+    let currentView = 'list'; // 'list' o 'pipeline'
 
     // Configuración de estados
     const statusConfig = {
@@ -43,7 +44,7 @@ window.QuotesManagement = (function() {
      * Renderizar vista principal
      */
     function render() {
-        const container = document.getElementById('module-content');
+        const container = document.getElementById('module-content') || document.getElementById('mainContent');
         if (!container) return;
 
         container.innerHTML = getMainHTML();
@@ -57,8 +58,12 @@ window.QuotesManagement = (function() {
         return [
             '<div class="quotes-module">',
                 '<div class="quotes-header">',
-                    '<h2><span style="font-size: 1.5em;">📋</span> Gestión de Presupuestos</h2>',
-                    '<div class="header-actions">',
+                    '<h2><span style="font-size: 1.5em;">📋</span> Pipeline de Altas</h2>',
+                    '<div class="header-actions" style="display:flex;gap:10px;align-items:center;">',
+                        '<div class="view-toggle" style="display:flex;border:1px solid #ddd;border-radius:6px;overflow:hidden;">',
+                            '<button id="btn-view-list" class="btn-view active" onclick="QuotesManagement.switchView(\'list\')" style="padding:8px 14px;border:none;cursor:pointer;background:#007bff;color:white;font-size:13px;">📋 Lista</button>',
+                            '<button id="btn-view-pipeline" class="btn-view" onclick="QuotesManagement.switchView(\'pipeline\')" style="padding:8px 14px;border:none;cursor:pointer;background:#f8f9fa;color:#333;font-size:13px;">📊 Pipeline</button>',
+                        '</div>',
                         '<button class="btn btn-secondary" onclick="QuotesManagement.loadQuotes()">',
                             '<span style="margin-right: 5px;">🔄</span> Actualizar',
                         '</button>',
@@ -88,6 +93,10 @@ window.QuotesManagement = (function() {
 
                 '<div class="quotes-list" id="quotes-list">',
                     '<div class="loading">Cargando presupuestos...</div>',
+                '</div>',
+
+                '<div class="pipeline-view" id="pipeline-view" style="display:none;">',
+                    '<div class="loading">Cargando pipeline...</div>',
                 '</div>',
             '</div>',
 
@@ -145,20 +154,50 @@ window.QuotesManagement = (function() {
             '/* Modal styles */',
             '.quote-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }',
             '.quote-modal { background: white; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; }',
-            '.quote-modal-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }',
-            '.quote-modal-header h3 { margin: 0; }',
-            '.quote-modal-body { padding: 20px; }',
-            '.quote-modal-footer { padding: 20px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }',
-            '.close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #666; }',
-            '.close-btn:hover { color: #333; }',
+            '.quote-modal-header { padding: 20px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-radius: 12px 12px 0 0; }',
+            '.quote-modal-header h3 { margin: 0; color: #1e293b; }',
+            '.quote-modal-body { padding: 20px; color: #1a1a1a; }',
+            '.quote-modal-body h4 { color: #1e293b; }',
+            '.quote-modal-footer { padding: 20px; border-top: 1px solid #ccc; display: flex; justify-content: flex-end; gap: 10px; }',
+            '.close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #444; }',
+            '.close-btn:hover { color: #111; }',
 
-            '.detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }',
-            '.detail-label { color: #666; }',
-            '.detail-value { font-weight: 500; }',
+            '.detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd; }',
+            '.detail-label { color: #444; font-weight: 500; }',
+            '.detail-value { font-weight: 600; color: #1a1a1a; }',
             '.modules-table { width: 100%; border-collapse: collapse; margin: 15px 0; }',
-            '.modules-table th, .modules-table td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }',
-            '.modules-table th { background: #f8f9fa; font-weight: 600; }',
+            '.modules-table th, .modules-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ccc; color: #1a1a1a; }',
+            '.modules-table th { background: #e2e8f0; font-weight: 700; color: #1e293b; }',
             '.modules-table .price { text-align: right; }',
+
+            '/* Pipeline Funnel */',
+            '.pipeline-funnel { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-bottom: 15px; }',
+            '.funnel-stage { background: #f8f9fa; border-radius: 8px; padding: 12px 16px; text-align: center; cursor: pointer; transition: all 0.2s; min-width: 90px; }',
+            '.funnel-stage:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }',
+            '.funnel-stage.funnel-active { box-shadow: 0 0 0 2px #007bff; background: #e8f4ff; }',
+            '.funnel-count { font-size: 22px; font-weight: bold; }',
+            '.funnel-label { font-size: 11px; color: #666; margin-top: 2px; }',
+            '.funnel-mrr { font-size: 11px; color: #28a745; font-weight: 600; margin-top: 2px; }',
+            '.funnel-arrow { color: #aaa; font-size: 13px; padding: 0 2px; white-space: nowrap; }',
+            '.funnel-separator { color: #ccc; font-size: 20px; padding: 0 5px; }',
+            '.funnel-clear { font-size: 12px; color: #007bff; cursor: pointer; padding: 5px 10px; }',
+            '.pipeline-avg-days { font-size: 12px; color: #888; padding: 5px 0; }',
+
+            '/* Stepper */',
+            '.quote-stepper { display: flex; align-items: center; gap: 0; margin-bottom: 20px; }',
+            '.stepper-step { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; }',
+            '.stepper-step.step-done { background: #d4edda; color: #155724; }',
+            '.stepper-step.step-current { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }',
+            '.stepper-step.step-pending { background: #f8f9fa; color: #aaa; }',
+            '.stepper-arrow { color: #ccc; margin: 0 2px; }',
+
+            '/* Tabs */',
+            '.quote-tabs { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 15px; }',
+            '.quote-tab { padding: 10px 18px; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; }',
+            '.quote-tab:hover { color: #333; }',
+            '.quote-tab.tab-active { color: #007bff; border-bottom-color: #007bff; }',
+            '.tab-content { display: none; }',
+            '.tab-content.tab-visible { display: block; }',
         ].join('\n');
     }
 
@@ -194,43 +233,103 @@ window.QuotesManagement = (function() {
         }
     }
 
+    // Pipeline stats from backend (avg_days, etc.)
+    let pipelineStats = {};
+
     /**
-     * Renderizar estadísticas
+     * Renderizar funnel visual de pipeline
      */
     function renderStats() {
         const container = document.getElementById('quotes-stats');
         if (!container) return;
 
-        const stats = {
-            total: quotes.length,
-            draft: quotes.filter(q => q.status === 'draft').length,
-            sent: quotes.filter(q => q.status === 'sent').length,
-            accepted: quotes.filter(q => ['accepted', 'active'].includes(q.status)).length,
-            totalAmount: quotes.reduce((sum, q) => sum + parseFloat(q.total_amount || 0), 0)
-        };
+        // Load pipeline stats async
+        loadPipelineStats();
 
-        container.innerHTML = [
-            '<div class="stat-card">',
-                '<div class="stat-value">' + stats.total + '</div>',
-                '<div class="stat-label">Total</div>',
-            '</div>',
-            '<div class="stat-card">',
-                '<div class="stat-value" style="color: #6c757d;">' + stats.draft + '</div>',
-                '<div class="stat-label">Borradores</div>',
-            '</div>',
-            '<div class="stat-card">',
-                '<div class="stat-value" style="color: #17a2b8;">' + stats.sent + '</div>',
-                '<div class="stat-label">Enviados</div>',
-            '</div>',
-            '<div class="stat-card">',
-                '<div class="stat-value" style="color: #28a745;">' + stats.accepted + '</div>',
-                '<div class="stat-label">Aceptados</div>',
-            '</div>',
-            '<div class="stat-card">',
-                '<div class="stat-value" style="color: #007bff;">$' + stats.totalAmount.toLocaleString('es-AR') + '</div>',
-                '<div class="stat-label">Monto Total</div>',
-            '</div>'
-        ].join('');
+        var funnelStages = [
+            { key: 'draft', label: 'Borrador', color: '#6c757d' },
+            { key: 'sent', label: 'Enviado', color: '#17a2b8' },
+            { key: 'in_trial', label: 'En Trial', color: '#ffc107' },
+            { key: 'accepted', label: 'Aceptado', color: '#28a745' },
+            { key: 'active', label: 'Activo', color: '#007bff' }
+        ];
+        var rejectedCount = quotes.filter(function(q) { return q.status === 'rejected'; }).length;
+        var rejectedMRR = quotes.filter(function(q) { return q.status === 'rejected'; }).reduce(function(s, q) { return s + parseFloat(q.total_amount || 0); }, 0);
+
+        var html = '<div class="pipeline-funnel">';
+
+        funnelStages.forEach(function(stage, i) {
+            var count = quotes.filter(function(q) { return q.status === stage.key; }).length;
+            var mrr = quotes.filter(function(q) { return q.status === stage.key; }).reduce(function(s, q) { return s + parseFloat(q.total_amount || 0); }, 0);
+            var nextStage = funnelStages[i + 1];
+            var nextCount = nextStage ? quotes.filter(function(q) { return q.status === nextStage.key; }).length : 0;
+            var convRate = count > 0 && nextStage ? Math.round((nextCount / count) * 100) : null;
+
+            html += '<div class="funnel-stage' + (filters.status === stage.key ? ' funnel-active' : '') + '" ';
+            html += 'style="border-top: 3px solid ' + stage.color + ';" ';
+            html += 'onclick="QuotesManagement.filterByStatus(\'' + stage.key + '\')">';
+            html += '<div class="funnel-count" style="color: ' + stage.color + ';">' + count + '</div>';
+            html += '<div class="funnel-label">' + stage.label + '</div>';
+            html += '<div class="funnel-mrr">$' + mrr.toLocaleString('es-AR') + '</div>';
+            html += '</div>';
+
+            if (nextStage) {
+                html += '<div class="funnel-arrow">';
+                html += convRate !== null ? convRate + '%' : '';
+                html += ' →</div>';
+            }
+        });
+
+        // Rejected
+        html += '<div class="funnel-separator">|</div>';
+        html += '<div class="funnel-stage' + (filters.status === 'rejected' ? ' funnel-active' : '') + '" ';
+        html += 'style="border-top: 3px solid #dc3545; opacity: 0.7;" ';
+        html += 'onclick="QuotesManagement.filterByStatus(\'rejected\')">';
+        html += '<div class="funnel-count" style="color: #dc3545;">' + rejectedCount + '</div>';
+        html += '<div class="funnel-label">Rechazado</div>';
+        html += '<div class="funnel-mrr">$' + rejectedMRR.toLocaleString('es-AR') + '</div>';
+        html += '</div>';
+
+        // Clear filter
+        if (filters.status) {
+            html += '<div class="funnel-clear" onclick="QuotesManagement.filterByStatus(\'\')">[✕ Limpiar]</div>';
+        }
+
+        html += '</div>';
+
+        // Pipeline avg days (from backend)
+        html += '<div id="pipeline-avg-days" class="pipeline-avg-days"></div>';
+
+        container.innerHTML = html;
+    }
+
+    async function loadPipelineStats() {
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/pipeline-stats', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+            if (data.success && data.stats) {
+                pipelineStats = {};
+                data.stats.forEach(function(s) { pipelineStats[s.status] = s; });
+                var el = document.getElementById('pipeline-avg-days');
+                if (el) {
+                    var parts = data.stats.filter(function(s) { return s.avg_days; }).map(function(s) {
+                        return '<span style="margin-right:15px;"><strong>' + (statusConfig[s.status]?.label || s.status) + ':</strong> ' + s.avg_days + 'd prom</span>';
+                    });
+                    el.innerHTML = parts.join('');
+                }
+            }
+        } catch (e) { /* non-critical */ }
+    }
+
+    function filterByStatus(status) {
+        filters.status = status;
+        var selectEl = document.getElementById('quote-status-filter');
+        if (selectEl) selectEl.value = status;
+        renderStats();
+        renderQuotesList();
     }
 
     /**
@@ -268,6 +367,292 @@ window.QuotesManagement = (function() {
         container.innerHTML = filtered.map(function(quote) {
             return renderQuoteCard(quote);
         }).join('');
+    }
+
+    /**
+     * Cambiar entre vista Lista y Pipeline
+     */
+    function switchView(view) {
+        currentView = view;
+
+        var btnList = document.getElementById('btn-view-list');
+        var btnPipeline = document.getElementById('btn-view-pipeline');
+        var listContainer = document.getElementById('quotes-list');
+        var pipelineContainer = document.getElementById('pipeline-view');
+        var filtersContainer = document.querySelector('.quotes-filters');
+
+        if (view === 'list') {
+            if (btnList) { btnList.style.background = '#007bff'; btnList.style.color = 'white'; }
+            if (btnPipeline) { btnPipeline.style.background = '#f8f9fa'; btnPipeline.style.color = '#333'; }
+            if (listContainer) listContainer.style.display = 'block';
+            if (pipelineContainer) pipelineContainer.style.display = 'none';
+            if (filtersContainer) filtersContainer.style.display = 'flex';
+            renderQuotesList();
+        } else {
+            if (btnList) { btnList.style.background = '#f8f9fa'; btnList.style.color = '#333'; }
+            if (btnPipeline) { btnPipeline.style.background = '#007bff'; btnPipeline.style.color = 'white'; }
+            if (listContainer) listContainer.style.display = 'none';
+            if (pipelineContainer) pipelineContainer.style.display = 'block';
+            if (filtersContainer) filtersContainer.style.display = 'none';
+            renderPipelineView();
+        }
+    }
+
+    /**
+     * Renderizar vista Pipeline Kanban
+     */
+    function renderPipelineView() {
+        var container = document.getElementById('pipeline-view');
+        if (!container) return;
+
+        // Definir columnas del pipeline con fases de onboarding
+        var pipelineColumns = [
+            { key: 'draft', label: 'Borrador', color: '#6c757d', icon: '📝', actions: ['enviar'] },
+            { key: 'sent', label: 'Enviado', color: '#17a2b8', icon: '📧', actions: ['reenviar'] },
+            { key: 'in_trial', label: 'En Trial', color: '#ffc107', icon: '🧪', actions: ['aceptar', 'contrato'] },
+            { key: 'accepted', label: 'Aceptado', color: '#28a745', icon: '✅', actions: ['contrato', 'prefactura'] },
+            { key: 'invoiced', label: 'Facturado', color: '#fd7e14', icon: '📄', actions: ['confirmar_pago'] },
+            { key: 'active', label: 'Activo', color: '#007bff', icon: '🟢', actions: [] }
+        ];
+
+        // Agregar estado "facturado" virtual basado en billing_status
+        var quotesWithBilling = quotes.map(function(q) {
+            var virtualStatus = q.status;
+            // Si tiene factura y status es accepted, mostrar en "Facturado"
+            if (q.status === 'accepted' && q.invoice_id) {
+                virtualStatus = 'invoiced';
+            }
+            return Object.assign({}, q, { virtualStatus: virtualStatus });
+        });
+
+        var html = '<div class="pipeline-kanban">';
+
+        // Stats bar superior
+        var totalMRR = quotes.reduce(function(sum, q) {
+            return sum + ((['accepted', 'active', 'in_trial'].includes(q.status)) ? parseFloat(q.total_amount || 0) : 0);
+        }, 0);
+        var totalPipeline = quotes.reduce(function(sum, q) { return sum + parseFloat(q.total_amount || 0); }, 0);
+        var conversionRate = quotes.length > 0 ? Math.round((quotes.filter(function(q) { return q.status === 'active'; }).length / quotes.length) * 100) : 0;
+
+        html += '<div class="pipeline-stats-bar" style="display:flex;gap:20px;padding:15px 20px;background:#f8fafc;border-radius:8px;margin-bottom:20px;flex-wrap:wrap;">';
+        html += '<div style="text-align:center;"><div style="font-size:24px;font-weight:bold;color:#28a745;">$' + totalMRR.toLocaleString('es-AR') + '</div><div style="font-size:11px;color:#666;">MRR Comprometido</div></div>';
+        html += '<div style="text-align:center;"><div style="font-size:24px;font-weight:bold;color:#007bff;">$' + totalPipeline.toLocaleString('es-AR') + '</div><div style="font-size:11px;color:#666;">Pipeline Total</div></div>';
+        html += '<div style="text-align:center;"><div style="font-size:24px;font-weight:bold;color:#6c757d;">' + conversionRate + '%</div><div style="font-size:11px;color:#666;">Tasa Conversión</div></div>';
+        html += '<div style="text-align:center;"><div style="font-size:24px;font-weight:bold;color:#17a2b8;">' + quotes.length + '</div><div style="font-size:11px;color:#666;">Total Presupuestos</div></div>';
+        html += '</div>';
+
+        // Columnas del kanban
+        html += '<div class="pipeline-columns" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;">';
+
+        pipelineColumns.forEach(function(col) {
+            var columnQuotes = quotesWithBilling.filter(function(q) {
+                return q.virtualStatus === col.key;
+            });
+            var columnMRR = columnQuotes.reduce(function(sum, q) { return sum + parseFloat(q.total_amount || 0); }, 0);
+
+            html += '<div class="pipeline-column" style="min-width:220px;max-width:260px;flex:1;background:#f8f9fa;border-radius:8px;padding:12px;">';
+
+            // Header de columna
+            html += '<div class="column-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:3px solid ' + col.color + ';">';
+            html += '<div style="font-weight:600;font-size:13px;">' + col.icon + ' ' + col.label + '</div>';
+            html += '<div style="background:' + col.color + ';color:white;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;">' + columnQuotes.length + '</div>';
+            html += '</div>';
+
+            // MRR de la columna
+            html += '<div style="font-size:11px;color:#28a745;font-weight:600;margin-bottom:10px;">$' + columnMRR.toLocaleString('es-AR') + '/mes</div>';
+
+            // Cards
+            html += '<div class="column-cards" style="display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 350px);overflow-y:auto;">';
+
+            if (columnQuotes.length === 0) {
+                html += '<div style="text-align:center;padding:20px;color:#aaa;font-size:12px;">Sin presupuestos</div>';
+            } else {
+                columnQuotes.forEach(function(q) {
+                    html += renderPipelineCard(q, col);
+                });
+            }
+
+            html += '</div>'; // column-cards
+            html += '</div>'; // pipeline-column
+        });
+
+        // Columna de rechazados (separada)
+        var rejectedQuotes = quotes.filter(function(q) { return q.status === 'rejected'; });
+        if (rejectedQuotes.length > 0) {
+            html += '<div class="pipeline-column" style="min-width:200px;max-width:220px;background:#fff5f5;border-radius:8px;padding:12px;opacity:0.8;">';
+            html += '<div class="column-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:3px solid #dc3545;">';
+            html += '<div style="font-weight:600;font-size:13px;">❌ Rechazados</div>';
+            html += '<div style="background:#dc3545;color:white;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;">' + rejectedQuotes.length + '</div>';
+            html += '</div>';
+            html += '<div class="column-cards" style="display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 350px);overflow-y:auto;">';
+            rejectedQuotes.forEach(function(q) {
+                html += renderPipelineCard(q, { key: 'rejected', color: '#dc3545' });
+            });
+            html += '</div>';
+            html += '</div>';
+        }
+
+        html += '</div>'; // pipeline-columns
+        html += '</div>'; // pipeline-kanban
+
+        container.innerHTML = html;
+    }
+
+    /**
+     * Renderizar card compacta para el pipeline
+     */
+    function renderPipelineCard(quote, column) {
+        var daysInStatus = Math.floor((new Date() - new Date(quote.updated_at || quote.created_at)) / (1000 * 60 * 60 * 24));
+        var isStale = daysInStatus > 7 && !['active', 'rejected'].includes(quote.status);
+
+        var html = '<div class="pipeline-card" style="background:white;border-radius:6px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;border-left:3px solid ' + column.color + ';' + (isStale ? 'border-right:3px solid #dc3545;' : '') + '" onclick="QuotesManagement.viewQuote(' + quote.id + ')">';
+
+        // Empresa
+        html += '<div style="font-weight:600;font-size:13px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (quote.company_name || 'Empresa #' + quote.company_id) + '</div>';
+
+        // Número y monto
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+        html += '<span style="font-size:11px;color:#666;">' + (quote.quote_number || '') + '</span>';
+        html += '<span style="font-size:12px;font-weight:600;color:#28a745;">$' + parseFloat(quote.total_amount || 0).toLocaleString('es-AR') + '</span>';
+        html += '</div>';
+
+        // Días y alertas
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#888;">';
+        html += '<span>' + daysInStatus + ' días</span>';
+        if (isStale) {
+            html += '<span style="color:#dc3545;font-weight:600;">⚠️ Estancado</span>';
+        }
+        html += '</div>';
+
+        // Acción principal según columna
+        var actionHtml = getPipelineAction(quote, column.key);
+        if (actionHtml) {
+            html += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #eee;" onclick="event.stopPropagation();">';
+            html += actionHtml;
+            html += '</div>';
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    /**
+     * Obtener acción principal para cada fase del pipeline
+     */
+    function getPipelineAction(quote, columnKey) {
+        var btnStyle = 'font-size:10px;padding:4px 8px;width:100%;';
+
+        switch (columnKey) {
+            case 'draft':
+                return '<button class="btn btn-primary" style="' + btnStyle + '" onclick="QuotesManagement.sendQuote(' + quote.id + ')">📧 Enviar</button>';
+
+            case 'sent':
+                return '<button class="btn btn-secondary" style="' + btnStyle + '" onclick="QuotesManagement.sendQuote(' + quote.id + ')">🔄 Reenviar</button>';
+
+            case 'in_trial':
+                var html = '<div style="display:flex;gap:4px;">';
+                html += '<button class="btn btn-success" style="' + btnStyle + '" onclick="QuotesManagement.changeStatus(' + quote.id + ', \'accepted\')">✅</button>';
+                if (quote.contract_status !== 'signed') {
+                    html += '<button class="btn btn-warning" style="' + btnStyle + '" onclick="QuotesManagement.sendContract(' + quote.id + ')">📜</button>';
+                }
+                html += '</div>';
+                return html;
+
+            case 'accepted':
+                if (quote.contract_status === 'signed') {
+                    return '<button class="btn btn-warning" style="' + btnStyle + '" onclick="QuotesManagement.generatePreInvoice(' + quote.id + ')">📄 Prefacturar</button>';
+                } else {
+                    return '<button class="btn btn-primary" style="' + btnStyle + '" onclick="QuotesManagement.sendContract(' + quote.id + ')">📜 Contrato</button>';
+                }
+
+            case 'invoiced':
+                return '<button class="btn btn-success" style="' + btnStyle + '" onclick="QuotesManagement.confirmPayment(' + quote.id + ')">💰 Confirmar Pago</button>';
+
+            case 'active':
+                return '<span style="font-size:10px;color:#28a745;font-weight:600;">✅ Empresa Activa</span>';
+
+            default:
+                return '';
+        }
+    }
+
+    /**
+     * Confirmar pago y activar empresa
+     */
+    async function confirmPayment(quoteId) {
+        if (!confirm('¿Confirmar que el pago fue recibido?\\n\\nEsto activará la empresa definitivamente.')) {
+            return;
+        }
+
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+
+            // Primero obtener el trace_id del quote
+            var quoteRes = await fetch('/api/quotes/' + quoteId, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var quoteData = await quoteRes.json();
+            var traceId = quoteData.trace_id || quoteData.quote?.trace_id;
+
+            if (!traceId) {
+                // Si no hay trace_id, usar el endpoint directo de activación
+                var activateRes = await fetch('/api/quotes/' + quoteId + '/activate-company', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                var activateData = await activateRes.json();
+
+                if (activateData.success) {
+                    showToast('✅ Empresa activada correctamente', 'success');
+                    await loadQuotes();
+                    if (currentView === 'pipeline') renderPipelineView();
+                } else {
+                    showToast('Error: ' + (activateData.error || 'No se pudo activar'), 'error');
+                }
+                return;
+            }
+
+            // Confirmar pago via onboarding
+            var paymentRes = await fetch('/api/onboarding/' + traceId + '/invoice/confirm-payment', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ payment_method: 'transfer', confirmed_by: 'admin' })
+            });
+            var paymentData = await paymentRes.json();
+
+            if (!paymentData.success) {
+                showToast('Error confirmando pago: ' + (paymentData.error || 'Error desconocido'), 'error');
+                return;
+            }
+
+            // Activar empresa
+            var activateRes2 = await fetch('/api/onboarding/' + traceId + '/activate', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            });
+            var activateData2 = await activateRes2.json();
+
+            if (activateData2.success) {
+                showToast('✅ Pago confirmado y empresa activada', 'success');
+                await loadQuotes();
+                if (currentView === 'pipeline') renderPipelineView();
+            } else {
+                showToast('Pago confirmado pero error al activar: ' + (activateData2.error || ''), 'warning');
+            }
+
+        } catch (error) {
+            console.error('[QUOTES] Error confirmando pago:', error);
+            showToast('Error: ' + error.message, 'error');
+        }
     }
 
     /**
@@ -312,21 +697,52 @@ window.QuotesManagement = (function() {
         html += '</div>';
 
         // Acciones
-        html += '<div class="quote-actions">';
-        html += '<button class="btn btn-outline" onclick="QuotesManagement.viewQuote(' + quote.id + ')"><span>👁️</span> Ver</button>';
+        html += '<div class="quote-actions" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">';
+        html += '<button class="btn btn-outline" onclick="QuotesManagement.viewQuote(' + quote.id + ')" style="font-size:11px;padding:5px 8px;"><span>👁️</span> Ver</button>';
+
+        var btnStyle = 'font-size:11px;padding:5px 8px;';
 
         if (quote.status === 'draft') {
-            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendQuote(' + quote.id + ')"><span>📧</span> Enviar</button>';
-            html += '<button class="btn btn-secondary" onclick="QuotesManagement.editQuote(' + quote.id + ')"><span>✏️</span> Editar</button>';
+            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendQuote(' + quote.id + ')" style="' + btnStyle + '"><span>📧</span> Enviar</button>';
+            html += '<button class="btn btn-secondary" onclick="QuotesManagement.editQuote(' + quote.id + ')" style="' + btnStyle + '"><span>✏️</span> Editar</button>';
+        }
+
+        if (quote.status === 'sent') {
+            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendQuote(' + quote.id + ')" style="' + btnStyle + '"><span>🔄</span> Reenviar</button>';
         }
 
         if (quote.status === 'sent' || quote.status === 'draft') {
-            html += '<button class="btn btn-warning" onclick="QuotesManagement.downloadPDF(' + quote.id + ')"><span>📄</span> PDF</button>';
+            html += '<button class="btn btn-warning" onclick="QuotesManagement.downloadPDF(' + quote.id + ')" style="' + btnStyle + '"><span>📄</span> PDF</button>';
         }
 
         if (quote.status === 'accepted') {
-            html += '<button class="btn btn-success" onclick="QuotesManagement.activateQuote(' + quote.id + ')"><span>🚀</span> Activar</button>';
+            html += '<button class="btn btn-success" onclick="QuotesManagement.activateQuote(' + quote.id + ')" style="' + btnStyle + '"><span>🚀</span> Activar</button>';
         }
+
+        // Cambiar estado manualmente (in_trial -> accepted)
+        if (quote.status === 'in_trial') {
+            html += '<button class="btn btn-success" onclick="QuotesManagement.changeStatus(' + quote.id + ', \'accepted\')" title="Marcar como Aceptado" style="' + btnStyle + '"><span>✅</span> Aceptar</button>';
+        }
+
+        // Revertir a Enviado (solo para in_trial, accepted, rejected)
+        if (['in_trial', 'accepted', 'rejected'].includes(quote.status)) {
+            html += '<button class="btn btn-outline" onclick="QuotesManagement.revertToSent(' + quote.id + ')" title="Revertir a Enviado" style="' + btnStyle + '"><span>↩️</span></button>';
+        }
+
+        // === CONTRATO EULA ===
+        // Mostrar botón de contrato para quotes aceptados, activos o en trial
+        var showContractBtn = ['accepted', 'active', 'in_trial'].includes(quote.status);
+        if (showContractBtn) {
+            html += renderContractButton(quote);
+        }
+
+        // === CIRCUITO FACTURACIÓN (para quotes accepted, active, e in_trial) ===
+        if (['accepted', 'active', 'in_trial'].includes(quote.status)) {
+            html += renderInvoiceCircuit(quote);
+        }
+
+        // Ver historial de estados
+        html += '<button class="btn btn-outline" onclick="QuotesManagement.viewStatusHistory(' + quote.id + ')" title="Ver historial de cambios de estado" style="' + btnStyle + '"><span>📜</span></button>';
 
         html += '</div>';
         html += '</div>';
@@ -335,7 +751,7 @@ window.QuotesManagement = (function() {
     }
 
     /**
-     * Ver detalle de presupuesto
+     * Ver detalle de presupuesto (enriquecido con full-context)
      */
     async function viewQuote(id) {
         const quote = quotes.find(function(q) { return q.id === id; });
@@ -345,66 +761,539 @@ window.QuotesManagement = (function() {
         const status = statusConfig[quote.status] || statusConfig.draft;
         const modules = parseModules(quote.modules_data);
 
+        // Fetch full context
+        var ctx = { contract: null, invoice: null, trials: [], lead: null, onboarding_phase: '' };
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/' + id + '/full-context', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var ctxData = await resp.json();
+            if (ctxData.success) {
+                ctx = ctxData;
+            }
+        } catch (e) { /* fallback to basic view */ }
+
         var html = '<div class="quote-modal-overlay" onclick="QuotesManagement.closeModal(event)">';
-        html += '<div class="quote-modal" onclick="event.stopPropagation()">';
+        html += '<div class="quote-modal" onclick="event.stopPropagation()" style="max-width: 800px;">';
 
         // Header
         html += '<div class="quote-modal-header">';
+        html += '<div>';
         html += '<h3>' + status.icon + ' ' + (quote.quote_number || 'Presupuesto') + '</h3>';
+        if (ctx.onboarding_phase) {
+            html += '<span style="font-size:12px;background:#e8f4ff;color:#1565c0;padding:3px 10px;border-radius:10px;">' + ctx.onboarding_phase + '</span>';
+        }
+        html += '</div>';
         html += '<button class="close-btn" onclick="QuotesManagement.closeModal()">&times;</button>';
+        html += '</div>';
+
+        // Stepper
+        html += '<div style="padding: 15px 20px 0;">';
+        html += renderStepper(quote, ctx);
+        html += '</div>';
+
+        // Tabs
+        html += '<div style="padding: 0 20px;">';
+        html += '<div class="quote-tabs">';
+        html += '<div class="quote-tab tab-active" onclick="QuotesManagement.switchTab(\'presupuesto\', this)">Presupuesto</div>';
+        html += '<div class="quote-tab" onclick="QuotesManagement.switchTab(\'ficha\', this)">Ficha de Alta</div>';
+        html += '<div class="quote-tab" onclick="QuotesManagement.switchTab(\'contrato\', this)">Contrato & Pago</div>';
+        html += '</div>';
         html += '</div>';
 
         // Body
         html += '<div class="quote-modal-body">';
 
-        // Info general
+        // TAB 1: Presupuesto
+        html += '<div class="tab-content tab-visible" id="tab-presupuesto">';
         html += '<div class="detail-row"><span class="detail-label">Estado</span><span class="detail-value" style="color: ' + status.color + ';">' + status.label + '</span></div>';
         html += '<div class="detail-row"><span class="detail-label">Empresa</span><span class="detail-value">' + (quote.company_name || 'ID: ' + quote.company_id) + '</span></div>';
         html += '<div class="detail-row"><span class="detail-label">Creado</span><span class="detail-value">' + formatDate(quote.created_at) + '</span></div>';
-
         if (quote.sent_date) {
             html += '<div class="detail-row"><span class="detail-label">Enviado</span><span class="detail-value">' + formatDate(quote.sent_date) + '</span></div>';
         }
-
-        // Módulos
-        html += '<h4 style="margin: 20px 0 10px;">Módulos incluidos</h4>';
-        html += '<table class="modules-table">';
-        html += '<thead><tr><th>Módulo</th><th class="price">Precio/mes</th></tr></thead>';
-        html += '<tbody>';
-
-        modules.forEach(function(mod) {
-            html += '<tr>';
-            html += '<td>' + (mod.module_name || mod.module_key) + '</td>';
-            html += '<td class="price">$' + parseFloat(mod.price || 0).toLocaleString('es-AR') + '</td>';
-            html += '</tr>';
-        });
-
-        html += '<tr style="font-weight: bold; background: #f8f9fa;">';
-        html += '<td>TOTAL</td>';
-        html += '<td class="price">$' + parseFloat(quote.total_amount || 0).toLocaleString('es-AR') + '/mes</td>';
-        html += '</tr>';
-        html += '</tbody></table>';
-
-        // Notas
-        if (quote.notes) {
-            html += '<h4 style="margin: 20px 0 10px;">Notas</h4>';
-            html += '<p style="color: #666;">' + quote.notes + '</p>';
+        if (ctx.lead) {
+            html += '<div class="detail-row"><span class="detail-label">Lead origen</span><span class="detail-value">' + (ctx.lead.company_name || '') + ' (' + (ctx.lead.temperature || '') + ')</span></div>';
         }
+
+        html += '<h4 style="margin: 20px 0 10px;">Módulos incluidos</h4>';
+        html += '<table class="modules-table"><thead><tr><th>Módulo</th><th class="price">Precio/mes</th></tr></thead><tbody>';
+        modules.forEach(function(mod) {
+            html += '<tr><td>' + (mod.module_name || mod.module_key) + '</td><td class="price">$' + parseFloat(mod.price || 0).toLocaleString('es-AR') + '</td></tr>';
+        });
+        html += '<tr style="font-weight: bold; background: #e2e8f0; color: #1e293b;"><td>TOTAL</td><td class="price">$' + parseFloat(quote.total_amount || 0).toLocaleString('es-AR') + '/mes</td></tr>';
+        html += '</tbody></table>';
+        if (quote.notes) {
+            html += '<h4 style="margin: 20px 0 10px;">Notas</h4><p style="color: #333;">' + quote.notes + '</p>';
+        }
+        html += '</div>';
+
+        // TAB 2: Ficha de Alta
+        html += '<div class="tab-content" id="tab-ficha">';
+        var hasOnboarding = quote.company_legal_name || quote.company_tax_id;
+        if (hasOnboarding) {
+            html += '<div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;margin-bottom:10px;">';
+            [{ label: 'Razón Social', val: quote.company_legal_name },
+             { label: 'CUIT / Tax ID', val: quote.company_tax_id },
+             { label: 'Dirección', val: quote.company_address },
+             { label: 'Ciudad', val: quote.company_city },
+             { label: 'Provincia', val: quote.company_province },
+             { label: 'País', val: quote.company_country },
+             { label: 'Teléfono', val: quote.company_phone }
+            ].forEach(function(f) {
+                if (f.val) html += '<div class="detail-row"><span class="detail-label">' + f.label + '</span><span class="detail-value">' + f.val + '</span></div>';
+            });
+
+            var meta = quote.company_metadata;
+            if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e) { meta = null; } }
+            if (meta && meta.onboarding_admin) {
+                var admin = meta.onboarding_admin;
+                html += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #bfdbfe;">';
+                html += '<strong style="color:#1e40af;">Administrador designado</strong>';
+                if (admin.full_name) html += '<div class="detail-row"><span class="detail-label">Nombre</span><span class="detail-value">' + admin.full_name + '</span></div>';
+                if (admin.email) html += '<div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">' + admin.email + '</span></div>';
+                if (admin.phone) html += '<div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">' + admin.phone + '</span></div>';
+                html += '</div>';
+            }
+            html += '</div>';
+        } else {
+            html += '<p style="color:#888;text-align:center;padding:20px;">El cliente aún no completó la ficha de alta.</p>';
+        }
+        // Trials
+        if (ctx.trials && ctx.trials.length > 0) {
+            html += '<h4 style="margin:15px 0 10px;">Trials de Módulos</h4>';
+            ctx.trials.forEach(function(t) {
+                var tColor = t.status === 'active' ? '#28a745' : t.status === 'expired' ? '#dc3545' : '#ffc107';
+                html += '<div class="detail-row"><span class="detail-label">' + t.module_key + '</span><span class="detail-value" style="color:' + tColor + ';">' + t.status + ' (' + formatDate(t.start_date) + ' - ' + formatDate(t.end_date) + ')</span></div>';
+            });
+        }
+        html += '</div>';
+
+        // TAB 3: Contrato & Pago
+        html += '<div class="tab-content" id="tab-contrato">';
+
+        // Contrato existente
+        if (ctx.contract) {
+            html += '<h4>Contrato Firmado</h4>';
+            html += '<div class="detail-row"><span class="detail-label">Estado</span><span class="detail-value">' + (ctx.contract.status || '-') + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Fecha firma</span><span class="detail-value">' + formatDate(ctx.contract.signed_date) + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Inicio</span><span class="detail-value">' + formatDate(ctx.contract.start_date) + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Fin</span><span class="detail-value">' + formatDate(ctx.contract.end_date) + '</span></div>';
+        }
+
+        // Estado del contrato EULA
+        var cs = quote.contract_status || 'none';
+        var csColors = { none: '#6c757d', draft: '#ffc107', sent: '#17a2b8', signed: '#28a745' };
+        var csLabels = { none: 'Sin generar', draft: 'Borrador', sent: 'Enviado al cliente', signed: 'Firmado' };
+
+        html += '<div style="margin:15px 0;padding:15px;background:#f0f4ff;border:1px solid #c7d2fe;border-radius:8px;">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+        html += '<h4 style="margin:0;color:#3730a3;">EULA / Contrato MSA v2.0</h4>';
+        html += '<span style="background:' + csColors[cs] + ';color:white;padding:3px 10px;border-radius:10px;font-size:12px;">' + csLabels[cs] + '</span>';
+        html += '</div>';
+
+        if (cs === 'signed') {
+            html += '<div style="background:#d4edda;border:1px solid #c3e6cb;border-radius:6px;padding:10px;margin-bottom:10px;">';
+            html += '<strong style="color:#155724;">✅ EULA Aceptado</strong>';
+            if (quote.contract_signed_at) html += '<br><small>Fecha: ' + formatDate(quote.contract_signed_at) + '</small>';
+            if (quote.contract_signature_ip) html += '<br><small>IP: ' + quote.contract_signature_ip + '</small>';
+
+            // Mostrar datos de aceptación EULA si existen
+            var acceptData = quote.contract_acceptance_data;
+            if (typeof acceptData === 'string') { try { acceptData = JSON.parse(acceptData); } catch(e) { acceptData = null; } }
+            if (acceptData) {
+                html += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #c3e6cb;font-size:11px;">';
+                html += '<div><strong>ID Aceptacion:</strong> ' + (acceptData.acceptance_id || '-').substring(0, 8) + '...</div>';
+                html += '<div><strong>Hash documento:</strong> ' + (acceptData.document_hash || '-').substring(0, 16) + '...</div>';
+                html += '<div><strong>Version:</strong> ' + (acceptData.document_version || 'v2.0') + '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        if (cs === 'sent') {
+            var sentData = quote.contract_acceptance_data;
+            if (typeof sentData === 'string') { try { sentData = JSON.parse(sentData); } catch(e) { sentData = null; } }
+            html += '<div style="background:#e0f2fe;border:1px solid #7dd3fc;border-radius:6px;padding:10px;margin-bottom:10px;">';
+            html += '<p style="font-size:12px;color:#0c5460;margin:0;">📧 Enviado el ' + formatDate(quote.contract_sent_at) + '</p>';
+            if (sentData && sentData.sent_to_email) {
+                html += '<p style="font-size:12px;color:#0c5460;margin:5px 0 0;"><strong>Email destino:</strong> ' + sentData.sent_to_email + '</p>';
+            }
+            html += '<p style="font-size:11px;color:#0369a1;margin:5px 0 0;">El cliente debe hacer click en el link del email para aceptar.</p>';
+            html += '</div>';
+        }
+
+        html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+        html += '<button class="btn btn-outline" onclick="QuotesManagement.showContractPreview(' + quote.id + ')" style="font-size:12px;">📄 Ver Contrato</button>';
+        html += '<button class="btn btn-outline" onclick="QuotesManagement.downloadContractPDF(' + quote.id + ')" style="font-size:12px;">📥 PDF</button>';
+        if (cs === 'none') {
+            html += '<button class="btn btn-primary" onclick="QuotesManagement.generateContract(' + quote.id + ')" style="font-size:12px;">📝 Generar</button>';
+        }
+        if (cs === 'draft') {
+            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendContract(' + quote.id + ')" style="font-size:12px;">📨 Enviar al Cliente</button>';
+        }
+        if (cs === 'sent') {
+            html += '<button class="btn btn-outline" onclick="QuotesManagement.sendContract(' + quote.id + ')" style="font-size:12px;">🔄 Reenviar</button>';
+            html += '<button class="btn btn-success" onclick="QuotesManagement.markContractSigned(' + quote.id + ')" style="font-size:12px;">✍️ Registrar Firma</button>';
+        }
+        if (cs === 'signed') {
+            html += '<button class="btn btn-outline" onclick="QuotesManagement.downloadContractPDF(' + quote.id + ')" style="font-size:12px;">📥 Descargar PDF Firmado</button>';
+        }
+        html += '</div>';
+        html += '</div>';
+
+        // Factura
+        if (ctx.invoice) {
+            html += '<h4 style="margin-top:15px;">Factura</h4>';
+            var invColor = ctx.invoice.status === 'paid' ? '#28a745' : ctx.invoice.status === 'sent' ? '#17a2b8' : '#ffc107';
+            html += '<div class="detail-row"><span class="detail-label">Numero</span><span class="detail-value">' + (ctx.invoice.invoice_number || '-') + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Estado</span><span class="detail-value" style="color:' + invColor + ';">' + (ctx.invoice.status || '-') + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Monto</span><span class="detail-value">$' + parseFloat(ctx.invoice.total_amount || 0).toLocaleString('es-AR') + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Vencimiento</span><span class="detail-value">' + formatDate(ctx.invoice.due_date) + '</span></div>';
+            if (ctx.invoice.paid_at) {
+                html += '<div class="detail-row"><span class="detail-label">Pagada</span><span class="detail-value" style="color:#28a745;">' + formatDate(ctx.invoice.paid_at) + '</span></div>';
+            }
+        } else {
+            html += '<p style="color:#888;margin-top:15px;">Sin factura generada.</p>';
+        }
+        html += '</div>';
 
         html += '</div>';
 
         // Footer
         html += '<div class="quote-modal-footer">';
         if (quote.status === 'draft') {
-            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendQuote(' + quote.id + ')"><span>📧</span> Enviar por Email</button>';
+            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendQuote(' + quote.id + ')"><span>📧</span> Enviar</button>';
         }
-        html += '<button class="btn btn-warning" onclick="QuotesManagement.downloadPDF(' + quote.id + ')"><span>📄</span> Descargar PDF</button>';
+        if (quote.status === 'sent') {
+            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendQuote(' + quote.id + ')"><span>🔄</span> Reenviar</button>';
+        }
+        if (['in_trial', 'accepted', 'rejected'].includes(quote.status)) {
+            html += '<button class="btn btn-danger" onclick="QuotesManagement.revertToSent(' + quote.id + ')"><span>↩️</span> Revertir</button>';
+        }
+        html += '<button class="btn btn-outline" onclick="QuotesManagement.viewStatusHistory(' + quote.id + ')"><span>📜</span> Historial</button>';
+        html += '<button class="btn btn-warning" onclick="QuotesManagement.downloadPDF(' + quote.id + ')"><span>📄</span> PDF</button>';
         html += '<button class="btn btn-secondary" onclick="QuotesManagement.closeModal()">Cerrar</button>';
         html += '</div>';
 
         html += '</div></div>';
-
         document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    /**
+     * Render stepper visual
+     */
+    function renderStepper(quote, ctx) {
+        var contractSigned = quote.contract_status === 'signed' || !!ctx.contract;
+        var steps = [
+            { label: 'Presupuesto', done: true },
+            { label: 'Trial', done: ['in_trial', 'accepted', 'active'].includes(quote.status) },
+            { label: 'Contrato', done: contractSigned },
+            { label: 'Factura', done: !!ctx.invoice },
+            { label: 'Pago', done: ctx.invoice && ctx.invoice.status === 'paid' },
+            { label: 'Activo', done: quote.status === 'active' || (ctx.quote && ctx.quote.company_is_active) }
+        ];
+
+        // Find current step
+        var currentIdx = 0;
+        for (var i = steps.length - 1; i >= 0; i--) {
+            if (steps[i].done) { currentIdx = i + 1; break; }
+        }
+
+        var html = '<div class="quote-stepper">';
+        steps.forEach(function(step, idx) {
+            var cls = step.done ? 'step-done' : (idx === currentIdx ? 'step-current' : 'step-pending');
+            var icon = step.done ? '✅' : (idx === currentIdx ? '⏳' : '○');
+            html += '<div class="stepper-step ' + cls + '">' + icon + ' ' + step.label + '</div>';
+            if (idx < steps.length - 1) html += '<span class="stepper-arrow">→</span>';
+        });
+        html += '</div>';
+        return html;
+    }
+
+    /**
+     * Renderizar boton de contrato en la tarjeta del quote
+     */
+    function renderContractButton(quote) {
+        var cs = quote.contract_status || 'none';
+        var html = '';
+
+        if (cs === 'none') {
+            html += '<button class="btn btn-outline" onclick="event.stopPropagation(); QuotesManagement.generateContract(' + quote.id + ')" title="Generar contrato EULA">';
+            html += '<span>📝</span> Generar Contrato</button>';
+        } else if (cs === 'draft') {
+            html += '<button class="btn btn-primary" onclick="event.stopPropagation(); QuotesManagement.sendContract(' + quote.id + ')" title="Enviar contrato al cliente para firma">';
+            html += '<span>📨</span> Enviar Contrato</button>';
+            html += '<button class="btn btn-outline" onclick="event.stopPropagation(); QuotesManagement.showContractPreview(' + quote.id + ')" title="Ver contrato">';
+            html += '<span>📄</span> Ver</button>';
+        } else if (cs === 'sent') {
+            html += '<span class="quote-status" style="background:#17a2b8;font-size:11px;margin-right:5px;">Contrato Enviado</span>';
+            html += '<button class="btn btn-outline" onclick="event.stopPropagation(); QuotesManagement.sendContract(' + quote.id + ')" title="Reenviar contrato">';
+            html += '<span>🔄</span> Reenviar</button>';
+            html += '<button class="btn btn-success" onclick="event.stopPropagation(); QuotesManagement.markContractSigned(' + quote.id + ')" title="Registrar firma del cliente">';
+            html += '<span>✍️</span> Registrar Firma</button>';
+            html += '<button class="btn btn-outline" onclick="event.stopPropagation(); QuotesManagement.showContractPreview(' + quote.id + ')">';
+            html += '<span>📄</span> Ver</button>';
+        } else if (cs === 'signed') {
+            html += '<span class="quote-status" style="background:#28a745;font-size:11px;margin-right:5px;">Contrato Firmado ✅</span>';
+            html += '<button class="btn btn-outline" onclick="event.stopPropagation(); QuotesManagement.showContractPreview(' + quote.id + ')">';
+            html += '<span>📄</span> Ver</button>';
+        }
+
+        return html;
+    }
+
+    /**
+     * Generar contrato (draft)
+     */
+    async function generateContract(quoteId) {
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/' + quoteId + '/contract/generate', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+            if (!data.success) throw new Error(data.error);
+            showToast('Contrato generado. Revise y envie al cliente.', 'success');
+            await loadQuotes();
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    /**
+     * Enviar contrato al cliente por email
+     */
+    async function sendContract(quoteId) {
+        if (!confirm('¿Enviar el contrato EULA por email al cliente?\n\nEl cliente recibira un link para aceptar los terminos.')) return;
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/' + quoteId + '/contract/send', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+            if (!data.success) throw new Error(data.error);
+
+            // Mostrar resultado con link de aceptacion
+            var msg = 'Email enviado a: ' + (data.sent_to || 'cliente');
+            if (data.acceptance_link) {
+                msg += '\n\nLink de aceptacion (valido 7 dias):\n' + data.acceptance_link;
+                msg += '\n\n¿Copiar link al portapapeles?';
+                if (confirm(msg)) {
+                    navigator.clipboard.writeText(data.acceptance_link).then(function() {
+                        showToast('Link copiado al portapapeles', 'success');
+                    }).catch(function() {
+                        prompt('Copie este link:', data.acceptance_link);
+                    });
+                }
+            } else {
+                showToast(msg, 'success');
+            }
+
+            await loadQuotes();
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    /**
+     * Registrar aceptacion EULA del cliente
+     * Los EULA funcionan con simple aceptacion de terminos + registro de metadatos
+     */
+    async function markContractSigned(quoteId) {
+        // Confirmación simple - EULA es "Acepto los términos"
+        if (!confirm('¿Confirmar que el cliente ACEPTO los terminos del contrato EULA MSA v2.0?\n\nSe registrara:\n- Timestamp de aceptacion\n- IP del cliente\n- Hash del documento (inmutabilidad)\n- User-Agent del navegador')) {
+            return;
+        }
+
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/' + quoteId + '/contract/sign', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    // EULA: no necesita nombre/DNI, la identidad viene de la sesion
+                    acceptance_type: 'eula_click',
+                    user_agent: navigator.userAgent,
+                    screen_resolution: window.screen.width + 'x' + window.screen.height,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                })
+            });
+            var data = await resp.json();
+            if (!data.success) throw new Error(data.error);
+
+            showToast('EULA aceptado. Registro inmutable creado. Proceder con facturacion.', 'success');
+            await loadQuotes();
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    /**
+     * Descargar contrato en PDF
+     */
+    async function downloadContractPDF(quoteId) {
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/' + quoteId + '/contract-pdf', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (!resp.ok) {
+                var err = await resp.json();
+                throw new Error(err.error || 'Error generando PDF');
+            }
+
+            // Descargar el blob
+            var blob = await resp.blob();
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'contrato-eula-quote-' + quoteId + '.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+
+            showToast('PDF descargado', 'success');
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    // Mantener para compatibilidad con test E2E
+    async function confirmContractSign(quoteId) {
+        return markContractSigned(quoteId);
+    }
+
+    /**
+     * Mostrar preview del contrato EULA completo
+     */
+    async function showContractPreview(quoteId) {
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/' + quoteId + '/contract-preview', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+            if (!data.success) throw new Error(data.error || 'Error cargando contrato');
+
+            var tpl = data.template;
+            var q = data.quote;
+
+            // Build replacements
+            var replacements = {
+                '{{APONNT_LEGAL_NAME}}': 'APONNT S.A.S.',
+                '{{APONNT_ADDRESS}}': 'Ciudad Autonoma de Buenos Aires, Argentina',
+                '{{APONNT_CUIT}}': '30-XXXXXXXX-X',
+                '{{COMPANY_LEGAL_NAME}}': q.company_legal_name || q.company_name || 'EMPRESA',
+                '{{COMPANY_ADDRESS}}': [q.company_address, q.company_city, q.company_province, q.company_country].filter(Boolean).join(', ') || '-',
+                '{{COMPANY_CUIT}}': q.company_tax_id || '-'
+            };
+
+            var contractHtml = '<div class="quote-modal-overlay" onclick="QuotesManagement.closeContractPreview(event)" style="z-index:2000;">';
+            contractHtml += '<div class="quote-modal" onclick="event.stopPropagation()" style="max-width:900px;max-height:95vh;">';
+            contractHtml += '<div class="quote-modal-header" style="background:#1e3a5f;color:white;">';
+            contractHtml += '<div><h3>' + tpl.header.title + '</h3>';
+            contractHtml += '<p style="font-size:12px;margin:4px 0 0;opacity:0.8;">' + tpl.header.subtitle + ' - ' + tpl.header.version + '</p></div>';
+            contractHtml += '<button class="close-btn" onclick="QuotesManagement.closeContractPreview()" style="color:white;">&times;</button>';
+            contractHtml += '</div>';
+            contractHtml += '<div class="quote-modal-body" style="padding:30px;font-size:13px;line-height:1.7;max-height:75vh;overflow-y:auto;">';
+
+            // Secciones
+            tpl.sections.forEach(function(sec) {
+                var content = sec.content;
+                Object.keys(replacements).forEach(function(k) {
+                    content = content.split(k).join(replacements[k]);
+                });
+                contractHtml += '<div style="margin-bottom:25px;">';
+                contractHtml += '<h4 style="color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding-bottom:5px;margin-bottom:10px;">' + sec.id + '. ' + sec.title + '</h4>';
+                contractHtml += '<div style="white-space:pre-wrap;color:#333;">' + content + '</div>';
+                contractHtml += '</div>';
+            });
+
+            // Anexo A con datos del quote
+            contractHtml += '<div style="margin-bottom:25px;background:#f8f9fa;padding:20px;border-radius:8px;border:2px solid #1e3a5f;">';
+            contractHtml += '<h4 style="color:#1e3a5f;margin:0 0 15px;">ANEXO A: ORDER FORM</h4>';
+            contractHtml += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+
+            var annFields = [
+                ['Razon Social', q.company_legal_name || q.company_name || '-'],
+                ['CUIT', q.company_tax_id || '-'],
+                ['Domicilio', replacements['{{COMPANY_ADDRESS}}']],
+                ['Telefono', q.company_phone || '-']
+            ];
+            annFields.forEach(function(f) {
+                contractHtml += '<tr><td style="padding:6px 10px;border-bottom:1px solid #ddd;font-weight:600;width:30%;">' + f[0] + '</td><td style="padding:6px 10px;border-bottom:1px solid #ddd;">' + f[1] + '</td></tr>';
+            });
+
+            // Modulos
+            var mods = [];
+            try { mods = typeof q.modules_data === 'string' ? JSON.parse(q.modules_data || '[]') : (q.modules_data || []); } catch(e) {}
+            contractHtml += '<tr><td style="padding:6px 10px;font-weight:600;vertical-align:top;">Modulos Contratados</td><td style="padding:6px 10px;">';
+            mods.forEach(function(m) {
+                contractHtml += (m.module_name || m.module_key) + ' — $' + parseFloat(m.price || 0).toLocaleString('es-AR') + '/mes<br>';
+            });
+            contractHtml += '</td></tr>';
+            contractHtml += '<tr style="background:#e2e8f0;font-weight:bold;"><td style="padding:8px 10px;">MONTO MENSUAL TOTAL</td><td style="padding:8px 10px;">$' + parseFloat(q.total_amount || 0).toLocaleString('es-AR') + '/mes</td></tr>';
+            contractHtml += '</table>';
+            contractHtml += '</div>';
+
+            // Aceptacion electronica EULA (click-wrap)
+            contractHtml += '<div style="margin-top:30px;background:#f0fdf4;border:2px solid #22c55e;border-radius:8px;padding:20px;">';
+            contractHtml += '<h4 style="margin:0 0 10px;color:#166534;">ACEPTACION ELECTRONICA</h4>';
+            contractHtml += '<p style="font-size:13px;color:#166534;margin:0 0 10px;">Este contrato se acepta electronicamente mediante el link enviado por email al cliente.</p>';
+            contractHtml += '<p style="font-size:12px;color:#666;margin:0;">Al hacer click en "Acepto los Terminos", se registra automaticamente:</p>';
+            contractHtml += '<ul style="font-size:11px;color:#666;margin:8px 0 0 20px;padding:0;">';
+            contractHtml += '<li>Timestamp UTC de aceptacion</li>';
+            contractHtml += '<li>Email del aceptante</li>';
+            contractHtml += '<li>Direccion IP</li>';
+            contractHtml += '<li>Hash SHA-256 del documento (inmutabilidad)</li>';
+            contractHtml += '</ul>';
+            contractHtml += '<p style="font-size:10px;color:#888;margin:10px 0 0;font-style:italic;">Conforme Ley 25.506 de Firma Digital</p>';
+            contractHtml += '</div>';
+
+            contractHtml += '</div>';
+            contractHtml += '<div class="quote-modal-footer" style="display:flex;justify-content:space-between;">';
+            contractHtml += '<button class="btn btn-primary" onclick="QuotesManagement.downloadContractPDF(' + quoteId + ')"><span>📥</span> Descargar PDF</button>';
+            contractHtml += '<button class="btn btn-secondary" onclick="QuotesManagement.closeContractPreview()">Cerrar</button>';
+            contractHtml += '</div>';
+            contractHtml += '</div></div>';
+
+            document.body.insertAdjacentHTML('beforeend', contractHtml);
+
+        } catch (e) {
+            alert('Error cargando contrato: ' + e.message);
+        }
+    }
+
+    function closeContractPreview(event) {
+        // Si se llama con evento, verificar que sea el overlay
+        if (event && event.target && event.target !== event.currentTarget) return;
+        // Buscar el overlay del contrato (el que tiene z-index 2000)
+        var contractOverlay = document.querySelector('.quote-modal-overlay[style*="z-index:2000"], .quote-modal-overlay[style*="z-index: 2000"]');
+        if (contractOverlay) {
+            contractOverlay.remove();
+        } else {
+            // Fallback: remover el último overlay si hay más de uno
+            var overlays = document.querySelectorAll('.quote-modal-overlay');
+            if (overlays.length > 1) {
+                overlays[overlays.length - 1].remove();
+            }
+        }
+    }
+
+    /**
+     * Switch tab in modal
+     */
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('tab-visible'); });
+        document.querySelectorAll('.quote-tab').forEach(function(t) { t.classList.remove('tab-active'); });
+        var tab = document.getElementById('tab-' + tabId);
+        if (tab) tab.classList.add('tab-visible');
+        if (el) el.classList.add('tab-active');
     }
 
     /**
@@ -514,6 +1403,163 @@ window.QuotesManagement = (function() {
     }
 
     /**
+     * Revertir presupuesto a estado "Enviado"
+     */
+    async function revertToSent(id) {
+        var reason = prompt('Razón para revertir este presupuesto a "Enviado":');
+        if (!reason || reason.trim().length < 5) {
+            if (reason !== null) showToast('La razón debe tener al menos 5 caracteres', 'error');
+            return;
+        }
+
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var response = await fetch('/api/quotes/' + id + '/revert-to-sent', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ reason: reason.trim() })
+            });
+
+            var data = await response.json();
+
+            if (data.success) {
+                showToast(data.message || 'Presupuesto revertido a Enviado', 'success');
+                closeModal();
+                await loadQuotes();
+            } else {
+                showToast('Error: ' + (data.error || 'No se pudo revertir'), 'error');
+            }
+
+        } catch (error) {
+            console.error('[QUOTES] Error revirtiendo:', error);
+            showToast('Error al revertir: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Cambiar estado del presupuesto manualmente
+     */
+    async function changeStatus(id, newStatus) {
+        var statusLabels = {
+            'draft': 'Borrador',
+            'sent': 'Enviado',
+            'in_trial': 'En Trial',
+            'accepted': 'Aceptado',
+            'active': 'Activo',
+            'rejected': 'Rechazado'
+        };
+
+        if (!confirm('¿Cambiar estado a "' + (statusLabels[newStatus] || newStatus) + '"?')) {
+            return;
+        }
+
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var response = await fetch('/api/quotes/' + id + '/change-status', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ new_status: newStatus })
+            });
+
+            var data = await response.json();
+
+            if (data.success) {
+                showToast('Estado cambiado a ' + (statusLabels[newStatus] || newStatus), 'success');
+                closeModal();
+                await loadQuotes();
+            } else {
+                showToast('Error: ' + (data.error || 'No se pudo cambiar estado'), 'error');
+            }
+
+        } catch (error) {
+            console.error('[QUOTES] Error cambiando estado:', error);
+            showToast('Error: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Ver historial de cambios de estado
+     */
+    async function viewStatusHistory(id) {
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var response = await fetch('/api/quotes/' + id + '/status-history', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            var data = await response.json();
+
+            if (!data.success) {
+                showToast('Error: ' + (data.error || 'No se pudo obtener historial'), 'error');
+                return;
+            }
+
+            var history = data.status_history || [];
+
+            // Build modal HTML
+            var html = '<div class="quote-modal-overlay" onclick="QuotesManagement.closeHistoryModal(event)">';
+            html += '<div class="quote-modal" onclick="event.stopPropagation()" style="max-width: 550px;">';
+            html += '<div class="quote-modal-header">';
+            html += '<h3>📜 Historial de Estados</h3>';
+            html += '<button class="close-btn" onclick="QuotesManagement.closeHistoryModal()">&times;</button>';
+            html += '</div>';
+            html += '<div class="quote-modal-body">';
+
+            if (history.length === 0) {
+                html += '<p style="text-align: center; color: #888;">Sin cambios de estado registrados</p>';
+            } else {
+                html += '<div class="status-timeline">';
+                for (var i = history.length - 1; i >= 0; i--) {
+                    var entry = history[i];
+                    var fromCfg = statusConfig[entry.from] || { label: entry.from, icon: '•', color: '#666' };
+                    var toCfg = statusConfig[entry.to] || { label: entry.to, icon: '•', color: '#666' };
+                    var dateStr = entry.changed_at ? formatDate(entry.changed_at) : '-';
+
+                    html += '<div style="padding: 12px; border-left: 3px solid ' + toCfg.color + '; margin-bottom: 10px; background: #f8f9fa; border-radius: 0 8px 8px 0;">';
+                    html += '<div style="font-weight: 600; color: #1a1a1a;">' + fromCfg.icon + ' ' + fromCfg.label + ' → ' + toCfg.icon + ' ' + toCfg.label + '</div>';
+                    html += '<div style="font-size: 12px; color: #666; margin-top: 4px;">' + dateStr;
+                    if (entry.changed_by) html += ' • Usuario ID: ' + entry.changed_by;
+                    html += '</div>';
+                    if (entry.reason) {
+                        html += '<div style="font-size: 13px; color: #444; margin-top: 6px; font-style: italic;">"' + entry.reason + '"</div>';
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+
+            html += '</div>';
+            html += '<div class="quote-modal-footer">';
+            html += '<button class="btn btn-secondary" onclick="QuotesManagement.closeHistoryModal()">Cerrar</button>';
+            html += '</div>';
+            html += '</div></div>';
+
+            document.body.insertAdjacentHTML('beforeend', html);
+
+        } catch (error) {
+            console.error('[QUOTES] Error obteniendo historial:', error);
+            showToast('Error al obtener historial: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Cerrar modal de historial
+     */
+    function closeHistoryModal(event) {
+        if (event && event.target.className !== 'quote-modal-overlay') return;
+        var overlays = document.querySelectorAll('.quote-modal-overlay');
+        if (overlays.length > 0) {
+            overlays[overlays.length - 1].remove();
+        }
+    }
+
+    /**
      * Aplicar filtros
      */
     function applyFilters() {
@@ -527,6 +1573,633 @@ window.QuotesManagement = (function() {
      */
     function attachEventListeners() {
         // Los eventos se manejan con onclick inline
+    }
+
+    // =========================================================================
+    // CIRCUITO: Quote → Factura → Pago → Alta Definitiva
+    // =========================================================================
+
+    /**
+     * Renderiza los botones/status del circuito de facturación en la card
+     * FLUJO: Generar Prefactura → Cargar Factura (CAE) → Enviar → Registrar Pago
+     */
+    function renderInvoiceCircuit(quote) {
+        var btnStyle = 'font-size: 11px; padding: 6px 10px; display: inline-flex; align-items: center; gap: 4px;';
+
+        var html = '<div class="invoice-circuit" style="margin-top: 12px; padding: 12px; background: linear-gradient(135deg, #e3f2fd 0%, #f0f7ff 100%); border-radius: 8px; border: 1px solid #90caf9;">';
+        html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
+        html += '<span style="font-weight: 600; color: #1565c0; font-size: 13px;">💳 Facturación Inicial</span>';
+        // Inline step indicator
+        html += '<span id="circuit-steps-' + quote.id + '" style="font-size: 11px; color: #666;">Cargando...</span>';
+        html += '</div>';
+        // Auto-fetch status for inline indicator
+        html += '<script>QuotesManagement.loadInlineSteps(' + quote.id + ')</script>';
+        html += '<div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">';
+
+        // Step 1: Generar Prefactura
+        html += '<button class="btn btn-secondary" onclick="QuotesManagement.generatePreInvoice(' + quote.id + ')" style="' + btnStyle + '">';
+        html += '📋 Prefactura</button>';
+
+        // Step 2: Cargar Factura (upload real CAE invoice)
+        html += '<button class="btn btn-primary" onclick="QuotesManagement.showUploadInvoiceModal(' + quote.id + ')" style="' + btnStyle + '">';
+        html += '🧾 Cargar Factura</button>';
+
+        // Step 3: Enviar factura
+        html += '<button class="btn btn-warning" onclick="QuotesManagement.sendInvoiceEmail(' + quote.id + ')" style="' + btnStyle + '">';
+        html += '📧 Enviar</button>';
+
+        // Step 4: Registrar pago
+        html += '<button class="btn btn-success" onclick="QuotesManagement.showPaymentModal(' + quote.id + ')" style="' + btnStyle + '">';
+        html += '💰 Pago</button>';
+
+        // Check status button
+        html += '<button class="btn btn-outline" onclick="QuotesManagement.checkInvoiceStatus(' + quote.id + ')" style="' + btnStyle + '">';
+        html += '🔍 Estado</button>';
+
+        html += '</div>';
+        html += '</div>';
+        return html;
+    }
+
+    /**
+     * Generar Prefactura desde quote
+     * Crea una pre-factura en el módulo de billing
+     */
+    async function generatePreInvoice(quoteId) {
+        var quote = quotes.find(function(q) { return q.id === quoteId; });
+        if (!quote) {
+            showToast('Presupuesto no encontrado', 'error');
+            return;
+        }
+
+        if (!confirm('¿Generar prefactura inicial para ' + (quote.company_name || 'este cliente') + '?\n\nMonto: $' + parseFloat(quote.total_amount || 0).toLocaleString('es-AR'))) {
+            return;
+        }
+
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var response = await fetch('/api/quotes/' + quoteId + '/generate-pre-invoice', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            var data = await response.json();
+
+            if (data.success) {
+                showToast('✅ Prefactura generada: ' + (data.pre_invoice_code || data.pre_invoice_number), 'success');
+                await loadQuotes();
+            } else {
+                showToast('Error: ' + (data.error || 'No se pudo generar prefactura'), 'error');
+            }
+        } catch (error) {
+            console.error('[QUOTES] Error generando prefactura:', error);
+            showToast('Error: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Mostrar modal para cargar factura (número CAE + PDF)
+     * NOTA: La factura ya fue emitida en AFIP/sistema externo
+     */
+    function showUploadInvoiceModal(quoteId) {
+        // Obtener datos del quote para prefill
+        var quote = quotes.find(function(q) { return q.id === quoteId; });
+        var prefillAmount = quote ? parseFloat(quote.total_amount || 0).toFixed(2) : '';
+
+        var html = '<div class="quote-modal-overlay" onclick="QuotesManagement.closeUploadInvoiceModal(event)">';
+        html += '<div class="quote-modal" onclick="event.stopPropagation()" style="max-width: 500px;">';
+        html += '<div class="quote-modal-header" style="background: linear-gradient(135deg, #1565c0, #0d47a1);">';
+        html += '<h3>🧾 Cargar Factura Emitida</h3>';
+        html += '<button class="close-btn" onclick="QuotesManagement.closeUploadInvoiceModal()">&times;</button>';
+        html += '</div>';
+        html += '<div class="quote-modal-body">';
+
+        html += '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 16px;">';
+        html += '<strong>💡 Nota:</strong> Cargue aquí la factura ya emitida en AFIP u otro sistema de facturación.';
+        html += '</div>';
+
+        html += '<form id="upload-invoice-form" onsubmit="QuotesManagement.submitUploadInvoice(event, ' + quoteId + ')">';
+
+        // Número de factura
+        html += '<div class="form-group" style="margin-bottom: 16px;">';
+        html += '<label style="font-weight: 600; display: block; margin-bottom: 6px;">Número de Factura *</label>';
+        html += '<input type="text" id="invoice-number" name="invoice_number" required placeholder="Ej: A-0001-00001234" ';
+        html += 'style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">';
+        html += '</div>';
+
+        // Monto total
+        html += '<div class="form-group" style="margin-bottom: 16px;">';
+        html += '<label style="font-weight: 600; display: block; margin-bottom: 6px;">Monto Total *</label>';
+        html += '<input type="number" id="invoice-amount" name="total_amount" required step="0.01" value="' + prefillAmount + '" ';
+        html += 'style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">';
+        html += '</div>';
+
+        // Fecha de vencimiento
+        html += '<div class="form-group" style="margin-bottom: 16px;">';
+        html += '<label style="font-weight: 600; display: block; margin-bottom: 6px;">Fecha de Vencimiento *</label>';
+        var defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 15);
+        var dateStr = defaultDate.toISOString().split('T')[0];
+        html += '<input type="date" id="invoice-due-date" name="due_date" required value="' + dateStr + '" ';
+        html += 'style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">';
+        html += '</div>';
+
+        // Archivo PDF
+        html += '<div class="form-group" style="margin-bottom: 16px;">';
+        html += '<label style="font-weight: 600; display: block; margin-bottom: 6px;">Archivo PDF de Factura *</label>';
+        html += '<input type="file" id="invoice-pdf" name="invoice_pdf" required accept=".pdf" ';
+        html += 'style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: #f8f9fa;">';
+        html += '</div>';
+
+        // Notas opcionales
+        html += '<div class="form-group" style="margin-bottom: 16px;">';
+        html += '<label style="font-weight: 600; display: block; margin-bottom: 6px;">Notas (opcional)</label>';
+        html += '<textarea id="invoice-notes" name="notes" rows="2" placeholder="Observaciones internas..." ';
+        html += 'style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>';
+        html += '</div>';
+
+        html += '</form>';
+
+        html += '</div>';
+        html += '<div class="quote-modal-footer">';
+        html += '<button class="btn btn-secondary" onclick="QuotesManagement.closeUploadInvoiceModal()">Cancelar</button>';
+        html += '<button class="btn btn-primary" onclick="document.getElementById(\'upload-invoice-form\').requestSubmit()">';
+        html += '<span>📄</span> Cargar Factura</button>';
+        html += '</div>';
+        html += '</div></div>';
+
+        document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    function closeUploadInvoiceModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        var overlay = document.querySelector('.quote-modal-overlay');
+        if (overlay) overlay.remove();
+    }
+
+    /**
+     * Enviar factura cargada al backend
+     */
+    async function submitUploadInvoice(event, quoteId) {
+        event.preventDefault();
+
+        var form = document.getElementById('upload-invoice-form');
+        var formData = new FormData(form);
+        formData.append('quote_id', quoteId);
+
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var response = await fetch('/api/quotes/' + quoteId + '/upload-invoice', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+                body: formData
+            });
+
+            var data = await response.json();
+
+            if (data.success) {
+                showToast('✅ Factura cargada: ' + data.invoice_number, 'success');
+                closeUploadInvoiceModal();
+                await loadQuotes();
+            } else {
+                showToast('Error: ' + (data.error || 'No se pudo cargar'), 'error');
+            }
+        } catch (error) {
+            console.error('[QUOTES] Error cargando factura:', error);
+            showToast('Error: ' + error.message, 'error');
+        }
+    }
+
+    // Legacy function - kept for backwards compatibility
+    async function uploadInvoicePDF(quoteId) {
+        // Redirect to the new modal
+        showUploadInvoiceModal(quoteId);
+    }
+
+    // Legacy function - kept for backwards compatibility
+    async function generateInvoice(quoteId) {
+        // Redirect to the new upload modal
+        showUploadInvoiceModal(quoteId);
+    }
+
+    /**
+     * Subir PDF adicional a factura existente (legacy)
+     */
+    async function uploadInvoicePDFLegacy(quoteId) {
+        // First get the invoice
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/' + quoteId + '/invoice', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+
+            if (!data.success || !data.invoice) {
+                showToast('Primero debe cargar la factura', 'error');
+                return;
+            }
+
+            var invoiceId = data.invoice.id;
+
+            // Create file input
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.pdf';
+            input.onchange = async function() {
+                if (!input.files[0]) return;
+
+                var formData = new FormData();
+                formData.append('invoice_pdf', input.files[0]);
+
+                try {
+                    var uploadResp = await fetch('/api/invoicing/invoices/' + invoiceId + '/upload-pdf', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token },
+                        body: formData
+                    });
+
+                    var uploadData = await uploadResp.json();
+
+                    if (uploadData.success) {
+                        showToast('PDF subido correctamente', 'success');
+                    } else {
+                        showToast('Error: ' + (uploadData.error || 'No se pudo subir'), 'error');
+                    }
+                } catch (err) {
+                    showToast('Error subiendo PDF: ' + err.message, 'error');
+                }
+            };
+            input.click();
+
+        } catch (error) {
+            console.error('[QUOTES] Error:', error);
+            showToast('Error: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Enviar factura por email
+     */
+    async function sendInvoiceEmail(quoteId) {
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/' + quoteId + '/invoice', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+
+            if (!data.success || !data.invoice) {
+                showToast('Primero debe generar la factura', 'error');
+                return;
+            }
+
+            var invoiceId = data.invoice.id;
+
+            if (!confirm('¿Enviar factura por email al cliente?')) return;
+
+            var sendResp = await fetch('/api/invoicing/invoices/' + invoiceId + '/send-email', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            });
+
+            var sendData = await sendResp.json();
+
+            if (sendData.success) {
+                showToast(sendData.message || 'Factura enviada', 'success');
+            } else {
+                showToast('Error: ' + (sendData.error || 'No se pudo enviar'), 'error');
+            }
+        } catch (error) {
+            console.error('[QUOTES] Error enviando factura:', error);
+            showToast('Error: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Mostrar modal de registro de pago
+     */
+    async function showPaymentModal(quoteId) {
+        // Pre-fetch invoice to get amount
+        var prefillAmount = '';
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/' + quoteId + '/invoice', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+            if (data.invoice && data.invoice.total_amount) {
+                prefillAmount = parseFloat(data.invoice.total_amount).toFixed(2);
+            }
+        } catch (e) { /* ignore, user can type manually */ }
+
+        var html = '<div class="quote-modal-overlay" onclick="QuotesManagement.closePaymentModal(event)">';
+        html += '<div class="quote-modal" onclick="event.stopPropagation()" style="max-width: 500px;">';
+        html += '<div class="quote-modal-header">';
+        html += '<h3>💰 Registrar Pago</h3>';
+        html += '<button class="close-btn" onclick="QuotesManagement.closePaymentModal()">&times;</button>';
+        html += '</div>';
+        html += '<div class="quote-modal-body">';
+
+        html += '<div style="margin-bottom: 15px;">';
+        html += '<label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Monto (USD)</label>';
+        html += '<input type="number" id="payment-amount" class="form-control" step="0.01" placeholder="Monto del pago" value="' + prefillAmount + '">';
+        html += '</div>';
+
+        html += '<div style="margin-bottom: 15px;">';
+        html += '<label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Método de Pago</label>';
+        html += '<select id="payment-method" class="form-control">';
+        html += '<option value="transfer">Transferencia Bancaria</option>';
+        html += '<option value="cash">Efectivo</option>';
+        html += '<option value="check">Cheque</option>';
+        html += '<option value="credit_card">Tarjeta de Crédito</option>';
+        html += '<option value="debit_card">Tarjeta de Débito</option>';
+        html += '</select>';
+        html += '</div>';
+
+        html += '<div style="margin-bottom: 15px;">';
+        html += '<label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Referencia / N° Operación</label>';
+        html += '<input type="text" id="payment-reference" class="form-control" placeholder="N° de transferencia, cheque, etc.">';
+        html += '</div>';
+
+        html += '<div style="margin-bottom: 15px;">';
+        html += '<label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Fecha de Pago</label>';
+        html += '<input type="date" id="payment-date" class="form-control" value="' + new Date().toISOString().split('T')[0] + '">';
+        html += '</div>';
+
+        html += '<div style="margin-bottom: 15px;">';
+        html += '<label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Comprobante (opcional)</label>';
+        html += '<input type="file" id="payment-receipt" class="form-control" accept=".jpg,.jpeg,.png,.pdf">';
+        html += '</div>';
+
+        html += '<div style="margin-bottom: 15px;">';
+        html += '<label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Notas</label>';
+        html += '<textarea id="payment-notes" class="form-control" rows="2" placeholder="Notas adicionales..."></textarea>';
+        html += '</div>';
+
+        html += '</div>';
+        html += '<div class="quote-modal-footer">';
+        html += '<button class="btn btn-success" onclick="QuotesManagement.submitPayment(' + quoteId + ')">💰 Confirmar Pago</button>';
+        html += '<button class="btn btn-secondary" onclick="QuotesManagement.closePaymentModal()">Cancelar</button>';
+        html += '</div>';
+        html += '</div></div>';
+
+        document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    /**
+     * Enviar pago
+     */
+    async function submitPayment(quoteId) {
+        var amount = document.getElementById('payment-amount')?.value;
+        var method = document.getElementById('payment-method')?.value;
+        var reference = document.getElementById('payment-reference')?.value;
+        var date = document.getElementById('payment-date')?.value;
+        var notes = document.getElementById('payment-notes')?.value;
+        var receiptFile = document.getElementById('payment-receipt')?.files?.[0];
+
+        if (!amount || parseFloat(amount) <= 0) {
+            showToast('Ingrese un monto válido', 'error');
+            return;
+        }
+
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+
+            var formData = new FormData();
+            formData.append('amount', amount);
+            formData.append('payment_method', method || 'transfer');
+            formData.append('payment_reference', reference || '');
+            formData.append('payment_date', date || new Date().toISOString().split('T')[0]);
+            formData.append('notes', notes || '');
+            if (receiptFile) {
+                formData.append('receipt', receiptFile);
+            }
+
+            var response = await fetch('/api/quotes/' + quoteId + '/confirm-payment', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+                body: formData
+            });
+
+            var data = await response.json();
+
+            if (data.success) {
+                showToast(data.already_paid ? 'Factura ya estaba pagada' : 'Pago registrado correctamente', 'success');
+                closePaymentModal();
+                await loadQuotes();
+            } else {
+                showToast('Error: ' + (data.error || 'No se pudo registrar el pago'), 'error');
+            }
+        } catch (error) {
+            console.error('[QUOTES] Error registrando pago:', error);
+            showToast('Error: ' + error.message, 'error');
+        }
+    }
+
+    function closePaymentModal(event) {
+        if (event && event.target.className !== 'quote-modal-overlay') return;
+        var overlays = document.querySelectorAll('.quote-modal-overlay');
+        if (overlays.length > 0) {
+            overlays[overlays.length - 1].remove();
+        }
+    }
+
+    /**
+     * Check invoice status for a quote
+     */
+    async function checkInvoiceStatus(quoteId) {
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/quotes/' + quoteId + '/invoice', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+
+            var inv = data.invoice;
+
+            var html = '<div class="quote-modal-overlay" onclick="QuotesManagement.closePaymentModal(event)">';
+            html += '<div class="quote-modal" onclick="event.stopPropagation()" style="max-width: 450px;">';
+            html += '<div class="quote-modal-header">';
+            html += '<h3>🔍 Estado del Circuito</h3>';
+            html += '<button class="close-btn" onclick="QuotesManagement.closePaymentModal()">&times;</button>';
+            html += '</div>';
+            html += '<div class="quote-modal-body">';
+
+            // Try to get full billing status
+            var preInv = null;
+            try {
+                var billingResp = await fetch('/api/quotes/' + quoteId + '/billing-status', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                var billingData = await billingResp.json();
+                preInv = billingData.pre_invoice;
+                if (billingData.invoice) inv = billingData.invoice;
+            } catch (e) { /* fallback to inv from original call */ }
+
+            var hasPreInvoice = !!preInv;
+            var hasInvoice = inv && !!inv.invoice_number;
+            var wasSent = inv && !!inv.sent_at;
+            var isPaid = inv && inv.status === 'paid';
+
+            // Mostrar datos si existen
+            if (preInv) {
+                html += '<div style="margin-bottom: 8px; padding: 8px; background: #e8f5e9; border-radius: 6px;">';
+                html += '<strong>Prefactura:</strong> ' + (preInv.pre_invoice_code || preInv.id);
+                html += '</div>';
+            }
+            if (inv && inv.invoice_number) {
+                html += '<div style="margin-bottom: 8px; padding: 8px; background: #e3f2fd; border-radius: 6px;">';
+                html += '<strong>Factura:</strong> ' + inv.invoice_number;
+                if (inv.total_amount) {
+                    html += ' | <strong>Monto:</strong> $' + parseFloat(inv.total_amount).toLocaleString('es-AR');
+                }
+                html += '</div>';
+            }
+
+            // Steps
+            html += renderStep('1. Prefactura Generada', hasPreInvoice);
+            html += renderStep('2. Factura Cargada', hasInvoice);
+            html += renderStep('3. Enviada por Email', wasSent);
+            html += renderStep('4. Pago Registrado', isPaid);
+
+            if (!hasPreInvoice && !hasInvoice) {
+                html += '<div style="margin-top: 12px; padding: 10px; background: #fff3cd; border-radius: 6px; font-size: 12px; color: #856404;">';
+                html += '💡 Haga clic en <strong>Prefactura</strong> para iniciar el circuito de facturación.';
+                html += '</div>';
+            }
+
+            if (isPaid) {
+                html += '<div style="margin-top: 15px; padding: 12px; background: #d4edda; border-radius: 8px; color: #155724; font-weight: 600; text-align: center;">';
+                html += '✅ Circuito Completo - Empresa Activa';
+                html += '</div>';
+            }
+
+            html += '</div>';
+            html += '<div class="quote-modal-footer">';
+            html += '<button class="btn btn-secondary" onclick="QuotesManagement.closePaymentModal()">Cerrar</button>';
+            html += '</div>';
+            html += '</div></div>';
+
+            document.body.insertAdjacentHTML('beforeend', html);
+
+        } catch (error) {
+            console.error('[QUOTES] Error:', error);
+            showToast('Error: ' + error.message, 'error');
+        }
+    }
+
+    async function loadInlineSteps(quoteId) {
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+
+            // Fetch invoice and pre-invoice status
+            var resp = await fetch('/api/quotes/' + quoteId + '/billing-status', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+            var el = document.getElementById('circuit-steps-' + quoteId);
+            if (!el) return;
+
+            var preInv = data.pre_invoice;
+            var inv = data.invoice;
+
+            // Calculate steps: 1=Prefactura, 2=Factura, 3=Enviada, 4=Pagada
+            var steps = 0;
+            if (preInv) steps = 1;
+            if (inv && inv.invoice_number) steps = 2;
+            if (inv && inv.sent_at) steps = 3;
+            if (inv && inv.status === 'paid') steps = 4;
+
+            var dots = '';
+            for (var i = 1; i <= 4; i++) {
+                dots += '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px;background:' + (i <= steps ? '#28a745' : '#ccc') + ';"></span>';
+            }
+            el.innerHTML = dots + ' <span style="color:' + (steps === 4 ? '#28a745' : '#1565c0') + ';font-weight:600;">' + steps + '/4</span>';
+
+            // Actualizar botones según estado
+            var container = el.closest('.invoice-circuit');
+            if (container) {
+                var btnStyle = 'font-size: 11px; padding: 6px 10px; display: inline-flex; align-items: center; gap: 4px;';
+                var buttons = container.querySelectorAll('button');
+                buttons.forEach(function(btn) {
+                    var text = btn.textContent || '';
+
+                    // Prefactura generada
+                    if (text.includes('Prefactura') && preInv) {
+                        btn.innerHTML = '✅ ' + (preInv.pre_invoice_code || 'Prefactura');
+                        btn.className = 'btn btn-outline';
+                        btn.style.cssText = btnStyle;
+                        btn.disabled = true;
+                    }
+
+                    // Cargar factura ya cargada
+                    if (text.includes('Cargar Factura') && inv && inv.invoice_number) {
+                        btn.innerHTML = '✅ ' + inv.invoice_number;
+                        btn.className = 'btn btn-outline';
+                        btn.style.cssText = btnStyle;
+                        btn.disabled = true;
+                    }
+
+                    // Enviar/Reenviar factura
+                    if (text.includes('Enviar') && inv && inv.sent_at) {
+                        btn.innerHTML = '🔄 Reenviar';
+                        btn.className = 'btn btn-outline';
+                        btn.style.cssText = btnStyle;
+                    }
+
+                    // Pago registrado
+                    if (text.includes('Pago') && inv && inv.status === 'paid') {
+                        btn.innerHTML = '✅ Pagada';
+                        btn.className = 'btn btn-outline';
+                        btn.style.cssText = btnStyle;
+                        btn.disabled = true;
+                    }
+                });
+            }
+        } catch (e) {
+            // Fallback: try old endpoint
+            try {
+                var token2 = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                var resp2 = await fetch('/api/quotes/' + quoteId + '/invoice', {
+                    headers: { 'Authorization': 'Bearer ' + token2 }
+                });
+                var data2 = await resp2.json();
+                var el2 = document.getElementById('circuit-steps-' + quoteId);
+                if (!el2) return;
+
+                if (!data2.invoice) {
+                    el2.innerHTML = '<span style="color:#888;">0/4</span>';
+                    return;
+                }
+                var inv2 = data2.invoice;
+                var steps2 = 1; // assume prefactura done if invoice exists
+                if (inv2.invoice_number) steps2 = 2;
+                if (inv2.sent_at) steps2 = 3;
+                if (inv2.status === 'paid') steps2 = 4;
+
+                var dots2 = '';
+                for (var j = 1; j <= 4; j++) {
+                    dots2 += '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px;background:' + (j <= steps2 ? '#28a745' : '#ccc') + ';"></span>';
+                }
+                el2.innerHTML = dots2 + ' <span style="color:' + (steps2 === 4 ? '#28a745' : '#1565c0') + ';font-weight:600;">' + steps2 + '/4</span>';
+            } catch (e2) {
+                var el3 = document.getElementById('circuit-steps-' + quoteId);
+                if (el3) el3.innerHTML = '<span style="color:#888;">0/4</span>';
+            }
+        }
+    }
+
+    function renderStep(label, done) {
+        var icon = done ? '✅' : '⬜';
+        var color = done ? '#155724' : '#666';
+        return '<div style="padding: 8px 12px; margin: 4px 0; background: ' + (done ? '#d4edda' : '#f8f9fa') + '; border-radius: 6px; color: ' + color + ';">' + icon + ' ' + label + '</div>';
     }
 
     // =========================================================================
@@ -578,8 +2251,38 @@ window.QuotesManagement = (function() {
         sendQuote: sendQuote,
         downloadPDF: downloadPDF,
         activateQuote: activateQuote,
+        revertToSent: revertToSent,
+        viewStatusHistory: viewStatusHistory,
+        closeHistoryModal: closeHistoryModal,
         applyFilters: applyFilters,
-        closeModal: closeModal
+        filterByStatus: filterByStatus,
+        switchTab: switchTab,
+        generateContract: generateContract,
+        sendContract: sendContract,
+        markContractSigned: markContractSigned,
+        confirmContractSign: confirmContractSign,
+        showContractPreview: showContractPreview,
+        closeContractPreview: closeContractPreview,
+        downloadContractPDF: downloadContractPDF,
+        closeModal: closeModal,
+        // Invoice circuit
+        generateInvoice: generateInvoice,
+        uploadInvoicePDF: uploadInvoicePDF,
+        sendInvoiceEmail: sendInvoiceEmail,
+        showPaymentModal: showPaymentModal,
+        submitPayment: submitPayment,
+        closePaymentModal: closePaymentModal,
+        checkInvoiceStatus: checkInvoiceStatus,
+        loadInlineSteps: loadInlineSteps,
+        // New invoice upload flow
+        showUploadInvoiceModal: showUploadInvoiceModal,
+        closeUploadInvoiceModal: closeUploadInvoiceModal,
+        submitUploadInvoice: submitUploadInvoice,
+        generatePreInvoice: generatePreInvoice,
+        changeStatus: changeStatus,
+        // Pipeline view
+        switchView: switchView,
+        confirmPayment: confirmPayment
     };
 
 })();

@@ -653,4 +653,185 @@ router.get('/pending', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/v1/authorization/:authorizationId/status
+ * Consultar estado de autorización por ID (formato esperado por Flutter APK)
+ * Este endpoint es llamado por Flutter en authorization_polling_service.dart:329
+ */
+router.get('/:authorizationId/status', async (req, res) => {
+  try {
+    const { authorizationId } = req.params;
+
+    if (!authorizationId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Authorization ID is required'
+      });
+    }
+
+    // Buscar registro de asistencia con este token (authorizationId es el token)
+    const attendance = await sequelize.query(
+      `SELECT
+        id,
+        "UserId",
+        authorization_status,
+        authorized_by_user_id,
+        authorized_at,
+        authorization_notes,
+        "checkInTime"
+      FROM attendances
+      WHERE authorization_token = $1`,
+      {
+        bind: [authorizationId],
+        type: QueryTypes.SELECT,
+        plain: true
+      }
+    );
+
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        error: 'Authorization request not found'
+      });
+    }
+
+    // Si todavía está pendiente
+    if (attendance.authorization_status === 'pending') {
+      return res.json({
+        success: true,
+        status: 'pending',
+        message: 'Waiting for authorization'
+      });
+    }
+
+    // Si fue aprobado o rechazado
+    let authorizerName = 'Sistema';
+    if (attendance.authorized_by_user_id) {
+      const authorizer = await sequelize.query(
+        `SELECT first_name, last_name FROM users WHERE user_id = $1`,
+        {
+          bind: [attendance.authorized_by_user_id],
+          type: QueryTypes.SELECT,
+          plain: true
+        }
+      );
+      if (authorizer) {
+        authorizerName = `${authorizer.first_name} ${authorizer.last_name}`;
+      }
+    }
+
+    return res.json({
+      success: true,
+      status: attendance.authorization_status,
+      authorizedBy: authorizerName,
+      authorizedAt: attendance.authorized_at,
+      notes: attendance.authorization_notes,
+      checkInTime: attendance.checkInTime
+    });
+
+  } catch (error) {
+    console.error('❌ Error checking authorization status:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * POST /api/v1/authorization/request
+ * Solicitar autorización de llegada tardía (desde APK Kiosk/Mobile)
+ * Este endpoint es llamado por Flutter en authorization_polling_service.dart
+ */
+router.post('/request', async (req, res) => {
+  try {
+    const {
+      attendanceId,
+      employeeId,
+      employeeName,
+      lateMinutes,
+      kioskId,
+      companyId
+    } = req.body;
+
+    // Validar campos requeridos
+    if (!attendanceId || !employeeId) {
+      return res.status(400).json({
+        success: false,
+        error: 'attendanceId y employeeId son requeridos'
+      });
+    }
+
+    console.log(`📨 [AUTHORIZATION] Request received: employee=${employeeName}, late=${lateMinutes}min`);
+
+    // Generar token único para esta solicitud
+    const crypto = require('crypto');
+    const authorizationToken = crypto.randomBytes(32).toString('hex');
+
+    // Actualizar el registro de asistencia con el token y estado pendiente
+    await sequelize.query(
+      `UPDATE attendances
+       SET authorization_status = 'pending',
+           authorization_token = $1,
+           authorization_requested_at = NOW()
+       WHERE id = $2`,
+      {
+        bind: [authorizationToken, attendanceId],
+        type: QueryTypes.UPDATE
+      }
+    );
+
+    // Obtener datos del empleado y supervisores
+    const employeeData = await sequelize.query(
+      `SELECT
+        u.user_id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.legajo,
+        u.department_id,
+        u.company_id,
+        d.name as department_name
+      FROM users u
+      LEFT JOIN departments d ON u.department_id = d.id
+      WHERE u.user_id = $1`,
+      {
+        bind: [employeeId],
+        type: QueryTypes.SELECT,
+        plain: true
+      }
+    );
+
+    // Usar el servicio de autorización para notificar supervisores
+    const authResult = await authorizationService.requestAuthorization({
+      attendanceId,
+      employeeId,
+      employeeName: employeeName || `${employeeData?.first_name} ${employeeData?.last_name}`,
+      lateMinutes: lateMinutes || 0,
+      companyId: companyId || employeeData?.company_id,
+      departmentId: employeeData?.department_id,
+      authorizationToken
+    });
+
+    console.log(`✅ [AUTHORIZATION] Request created: token=${authorizationToken.substring(0, 8)}...`);
+
+    return res.json({
+      success: true,
+      message: 'Solicitud de autorización enviada',
+      authorizationId: authorizationToken,
+      token: authorizationToken,
+      status: 'pending',
+      notifiedSupervisors: authResult?.notifiedSupervisors || 0
+    });
+
+  } catch (error) {
+    console.error('❌ Error creating authorization request:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Error al crear solicitud de autorización',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;

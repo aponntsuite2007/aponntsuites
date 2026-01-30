@@ -16,28 +16,75 @@
 
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const AponntBillingService = require('../services/AponntBillingService');
 
-// Middleware de autenticación de staff APONNT
+// JWT secret (same as used in aponntDashboard)
+const JWT_SECRET = process.env.JWT_SECRET || 'sistema_asistencia_super_secret_key_2024';
+
+// Middleware de autenticación de staff APONNT (con verificación JWT)
 const requireAponntStaff = (req, res, next) => {
-    // Verificar que es staff de APONNT (no empresa)
-    if (!req.user) {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({
+                success: false,
+                error: 'No autenticado - Token no proporcionado'
+            });
+        }
+
+        const token = authHeader.substring(7);
+        const decoded = jwt.verify(token, JWT_SECRET);
+
+        // Verificar que sea token de staff Aponnt
+        if (!decoded.staff_id && !decoded.staffId) {
+            return res.status(403).json({
+                success: false,
+                error: 'Acceso denegado: Se requiere token de staff Aponnt'
+            });
+        }
+
+        // Agregar datos del staff al request
+        req.user = {
+            id: decoded.staff_id || decoded.staffId,
+            staff_id: decoded.staff_id || decoded.staffId,
+            email: decoded.email,
+            firstName: decoded.firstName || decoded.first_name,
+            lastName: decoded.lastName || decoded.last_name,
+            area: decoded.area,
+            level: decoded.level || 1,
+            role: decoded.area || 'staff',
+            role_code: decoded.area,
+            permissions: decoded.permissions || []
+        };
+
+        next();
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({
+                success: false,
+                error: 'Token expirado, por favor inicie sesión nuevamente'
+            });
+        }
         return res.status(401).json({
             success: false,
-            error: 'No autenticado'
+            error: 'Token inválido'
         });
     }
-
-    // Verificar rol de staff APONNT
-    // Por ahora permitimos cualquier usuario autenticado con token de staff
-    next();
 };
 
 // Middleware para roles específicos
 const requireRole = (allowedRoles) => {
     return (req, res, next) => {
-        const userRole = req.user?.role_code || req.user?.role || 'viewer';
-        if (!allowedRoles.includes(userRole) && userRole !== 'GG' && userRole !== 'admin') {
+        const userRole = req.user?.role_code || req.user?.role || req.user?.area || 'viewer';
+        const userLevel = req.user?.level || 0;
+
+        // Level 5+ (admin) tiene todos los permisos
+        if (userLevel >= 5 || userRole === 'admin' || userRole === 'GG') {
+            return next();
+        }
+
+        if (!allowedRoles.includes(userRole)) {
             return res.status(403).json({
                 success: false,
                 error: 'No tienes permisos para esta acción',

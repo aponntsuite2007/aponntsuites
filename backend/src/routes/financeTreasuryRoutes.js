@@ -31,11 +31,6 @@ router.get('/bank-accounts', auth, async (req, res) => {
 
         const accounts = await db.FinanceBankAccount.findAll({
             where,
-            include: [{
-                model: db.FinanceChartOfAccounts,
-                as: 'ledgerAccount',
-                attributes: ['id', 'account_code', 'name']
-            }],
             order: [['is_primary', 'DESC'], ['account_name', 'ASC']]
         });
 
@@ -86,11 +81,7 @@ router.get('/bank-accounts/:id', auth, async (req, res) => {
         const { id } = req.params;
 
         const account = await db.FinanceBankAccount.findOne({
-            where: { id, company_id: companyId },
-            include: [{
-                model: db.FinanceChartOfAccounts,
-                as: 'ledgerAccount'
-            }]
+            where: { id, company_id: companyId }
         });
 
         if (!account) {
@@ -243,11 +234,6 @@ router.get('/transactions', auth, async (req, res) => {
 
         const { rows: transactions, count } = await db.FinanceBankTransaction.findAndCountAll({
             where,
-            include: [{
-                model: db.FinanceBankAccount,
-                as: 'bankAccount',
-                attributes: ['id', 'account_name', 'bank_name', 'account_number']
-            }],
             order: [['transaction_date', 'DESC'], ['id', 'DESC']],
             limit: parseInt(limit),
             offset: parseInt(offset)

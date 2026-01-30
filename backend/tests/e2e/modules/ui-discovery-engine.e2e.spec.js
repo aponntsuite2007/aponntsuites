@@ -47,7 +47,8 @@ async function getElementAttributes(element) {
   }
 }
 
-test.describe('Discovery Engine - Inspección Completa', () => {
+// SKIPPED: Discovery tool, not a test - run manually when needed
+test.describe.skip('Discovery Engine - Inspección Completa', () => {
 
   let discoveryResults = {
     module: '',

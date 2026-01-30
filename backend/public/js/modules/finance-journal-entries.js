@@ -92,6 +92,7 @@ window.FinanceJournalEntries = (function() {
                         <select id="entry-status" class="filter-select" onchange="FinanceJournalEntries.filterEntries()">
                             <option value="">Todos</option>
                             <option value="draft">Borrador</option>
+                            <option value="pending_approval">Pendiente Aprobación</option>
                             <option value="posted">Contabilizado</option>
                             <option value="reversed">Revertido</option>
                         </select>
@@ -632,6 +633,7 @@ window.FinanceJournalEntries = (function() {
             }
         } catch (error) {
             console.error('Error saving entry:', error);
+            closeModal('create');
             alert('Error al guardar');
         }
     }

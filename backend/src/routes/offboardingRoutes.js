@@ -25,16 +25,14 @@ function requireStaffAuth(req, res, next) {
   next();
 }
 
-// Middleware de rol mínimo gerente
+// Middleware de rol mínimo gerente (level <= 1 = gerente o superior)
 function requireManagerRole(req, res, next) {
-  const allowedRoles = ['gerente', 'director', 'ceo', 'admin', 'superadmin'];
-  const role = (req.staffRole || '').toLowerCase();
+  const level = req.staffUser?.level ?? req.user?.level;
 
-  if (!allowedRoles.includes(role)) {
+  if (level === undefined || level === null || level > 1) {
     return res.status(403).json({
       error: 'Permiso denegado',
-      message: `Se requiere rol de gerente o superior. Rol actual: ${req.staffRole}`,
-      requiredRoles: allowedRoles
+      message: `Se requiere rol de gerente o superior. Nivel actual: ${level ?? 'desconocido'}`
     });
   }
   next();

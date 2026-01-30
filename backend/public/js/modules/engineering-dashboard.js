@@ -441,6 +441,8 @@ const EngineeringDashboard = {
       { id: 'database', icon: '🗄️', label: 'Base de Datos' },
       { id: 'workflows', icon: '🔄', label: 'Workflows' },
       { id: 'auto-healing', icon: '🔧', label: 'Auto-Healing' },
+      { id: 'company-restore', icon: '🔄', label: 'Restaurar Empresa' },
+      { id: 'system-settings', icon: '⚙️', label: 'Configuración Sistema' },
     ];
 
     return `
@@ -531,6 +533,28 @@ const EngineeringDashboard = {
               <div style="font-size: 64px; margin-bottom: 20px;">🔧</div>
               <h2 style="color: #374151;">Sistema de Auto-Healing</h2>
               <p style="color: #6b7280;">Cargando dashboard...</p>
+            </div>
+          </div>
+        `;
+      case 'company-restore':
+        setTimeout(() => this.loadCompanyRestoreView(), 100);
+        return `
+          <div id="company-restore-container" style="padding: 20px;">
+            <div style="text-align: center; padding: 50px;">
+              <div style="font-size: 64px; margin-bottom: 20px;">🔄</div>
+              <h2 style="color: #374151;">Restauración de Empresas</h2>
+              <p style="color: #6b7280;">Cargando módulo de restauración...</p>
+            </div>
+          </div>
+        `;
+      case 'system-settings':
+        setTimeout(() => this.loadSystemSettingsView(), 100);
+        return `
+          <div id="system-settings-container" style="padding: 20px;">
+            <div style="text-align: center; padding: 50px;">
+              <div style="font-size: 64px; margin-bottom: 20px;">⚙️</div>
+              <h2 style="color: #374151;">Configuración del Sistema</h2>
+              <p style="color: #6b7280;">Cargando parámetros...</p>
             </div>
           </div>
         `;
@@ -6042,6 +6066,910 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
       btn.innerHTML = originalText;
       btn.disabled = false;
     }
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RESTAURACIÓN DE EMPRESAS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Cargar vista de restauración de empresas
+   */
+  async loadCompanyRestoreView() {
+    const container = document.getElementById('company-restore-container');
+    if (!container) return;
+
+    try {
+      // Obtener candidatos para restauración
+      const token = localStorage.getItem('aponnt_token_staff');
+      const response = await fetch('/api/restore/candidates', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          container.innerHTML = this.renderRestoreAccessDenied();
+          return;
+        }
+        throw new Error('Error cargando candidatos');
+      }
+
+      const data = await response.json();
+      container.innerHTML = this.renderCompanyRestoreUI(data.candidates || []);
+      this.setupRestoreEventListeners();
+
+    } catch (error) {
+      console.error('Error cargando vista de restauración:', error);
+      container.innerHTML = `
+        <div style="text-align: center; padding: 50px;">
+          <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
+          <h2 style="color: #dc2626;">Error cargando módulo</h2>
+          <p style="color: #6b7280;">${error.message}</p>
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * Renderiza mensaje de acceso denegado
+   */
+  renderRestoreAccessDenied() {
+    return `
+      <div style="text-align: center; padding: 50px; background: linear-gradient(135deg, #fef2f2, #fee2e2); border-radius: 12px; margin: 20px;">
+        <div style="font-size: 64px; margin-bottom: 20px;">🔒</div>
+        <h2 style="color: #dc2626; margin-bottom: 10px;">Acceso Restringido</h2>
+        <p style="color: #7f1d1d; max-width: 500px; margin: 0 auto;">
+          La restauración de empresas requiere nivel <strong>Director o Superior</strong> (level 0).
+          <br><br>
+          Este módulo permite restaurar datos de empresas dadas de baja desde archivos ZIP de export.
+          Por seguridad, solo los roles más altos tienen acceso.
+        </p>
+      </div>
+    `;
+  },
+
+  /**
+   * Renderiza la UI principal de restauración
+   */
+  renderCompanyRestoreUI(candidates) {
+    return `
+      <div style="padding: 20px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+          <div>
+            <h1 style="color: #1e293b; margin: 0; display: flex; align-items: center; gap: 10px;">
+              🔄 Restauración de Empresas
+            </h1>
+            <p style="color: #64748b; margin: 5px 0 0 0;">
+              Restaurar datos operacionales desde ZIP de export (post-baja)
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button onclick="EngineeringDashboard.loadCompanyRestoreView()"
+                    style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+              🔄 Actualizar
+            </button>
+          </div>
+        </div>
+
+        <!-- Warning Banner -->
+        <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #f59e0b; padding: 15px 20px; border-radius: 8px; margin-bottom: 30px;">
+          <div style="display: flex; align-items: start; gap: 15px;">
+            <span style="font-size: 24px;">⚠️</span>
+            <div>
+              <strong style="color: #92400e;">Operación Crítica - Múltiples Validaciones Requeridas</strong>
+              <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #78350f;">
+                <li>Solo roles Director/Superadmin (level 0)</li>
+                <li>La empresa debe tener status "cancelled" y baja completada</li>
+                <li>Debe existir un contrato nuevo activo posterior a la baja</li>
+                <li>El ZIP debe ser compatible >= 90% con el schema actual</li>
+                <li>Se requiere el CUIT completo como código de confirmación</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Candidates Table -->
+        <div style="background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="padding: 20px; border-bottom: 1px solid #e5e7eb;">
+            <h3 style="margin: 0; color: #374151;">
+              📋 Empresas Candidatas para Restauración (${candidates.length})
+            </h3>
+          </div>
+
+          ${candidates.length === 0 ? `
+            <div style="padding: 50px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+              <p style="color: #6b7280;">No hay empresas dadas de baja pendientes de restauración</p>
+            </div>
+          ` : `
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #f9fafb;">
+                  <th style="padding: 12px 15px; text-align: left; color: #6b7280; font-weight: 600;">ID</th>
+                  <th style="padding: 12px 15px; text-align: left; color: #6b7280; font-weight: 600;">Empresa</th>
+                  <th style="padding: 12px 15px; text-align: left; color: #6b7280; font-weight: 600;">CUIT</th>
+                  <th style="padding: 12px 15px; text-align: left; color: #6b7280; font-weight: 600;">Fecha Baja</th>
+                  <th style="padding: 12px 15px; text-align: left; color: #6b7280; font-weight: 600;">Contrato Nuevo</th>
+                  <th style="padding: 12px 15px; text-align: center; color: #6b7280; font-weight: 600;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${candidates.map(c => `
+                  <tr style="border-bottom: 1px solid #e5e7eb;" data-company-id="${c.company_id}">
+                    <td style="padding: 12px 15px; color: #374151;">${c.company_id}</td>
+                    <td style="padding: 12px 15px;">
+                      <strong style="color: #1e293b;">${c.name}</strong>
+                      <div style="font-size: 12px; color: #6b7280;">${c.slug}</div>
+                    </td>
+                    <td style="padding: 12px 15px; color: #374151; font-family: monospace;">${c.tax_id || '-'}</td>
+                    <td style="padding: 12px 15px; color: #374151;">
+                      ${c.offboarding_confirmed_at ? new Date(c.offboarding_confirmed_at).toLocaleDateString('es-AR') : '-'}
+                    </td>
+                    <td style="padding: 12px 15px;">
+                      ${c.has_new_contract
+                        ? '<span style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px;">✅ Sí</span>'
+                        : '<span style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 12px;">❌ No</span>'
+                      }
+                    </td>
+                    <td style="padding: 12px 15px; text-align: center;">
+                      <button onclick="EngineeringDashboard.openRestoreModal(${c.company_id}, '${c.name.replace(/'/g, "\\'")}', '${c.tax_id || ''}')"
+                              style="background: ${c.has_new_contract ? '#10b981' : '#9ca3af'}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: ${c.has_new_contract ? 'pointer' : 'not-allowed'}; font-size: 13px;"
+                              ${c.has_new_contract ? '' : 'disabled'}>
+                        🔄 Restaurar
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `}
+        </div>
+
+        <!-- Manual Restore Section -->
+        <div style="background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-top: 30px; padding: 20px;">
+          <h3 style="margin: 0 0 15px 0; color: #374151;">📤 Restauración Manual (con ZIP)</h3>
+          <p style="color: #6b7280; margin-bottom: 15px;">
+            Si tienes el archivo ZIP de export del cliente, puedes subirlo directamente para restaurar.
+          </p>
+          <div style="display: flex; gap: 15px; align-items: center;">
+            <input type="number" id="restore-company-id" placeholder="ID de Empresa"
+                   style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; width: 150px;">
+            <input type="file" id="restore-zip-file" accept=".zip"
+                   style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; flex: 1;">
+            <button onclick="EngineeringDashboard.uploadAndValidateZip()"
+                    style="background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">
+              📋 Validar ZIP
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Restauración -->
+      <div id="restore-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;">
+          <div id="restore-modal-content"></div>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Abrir modal de restauración
+   */
+  openRestoreModal(companyId, companyName, taxId) {
+    const modal = document.getElementById('restore-modal');
+    const content = document.getElementById('restore-modal-content');
+
+    content.innerHTML = `
+      <div style="padding: 20px; border-bottom: 1px solid #e5e7eb;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="margin: 0; color: #1e293b;">🔄 Restaurar: ${companyName}</h2>
+          <button onclick="document.getElementById('restore-modal').style.display='none'"
+                  style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">×</button>
+        </div>
+      </div>
+
+      <div style="padding: 20px;">
+        <!-- Step 1: Upload ZIP -->
+        <div style="margin-bottom: 20px;">
+          <h4 style="color: #374151; margin: 0 0 10px 0;">Paso 1: Subir archivo ZIP de export</h4>
+          <input type="file" id="modal-zip-file" accept=".zip"
+                 style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; width: 100%;">
+          <button onclick="EngineeringDashboard.uploadZipForRestore(${companyId})"
+                  style="margin-top: 10px; background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+            📤 Subir ZIP
+          </button>
+        </div>
+
+        <!-- Step 2: Validation Results (hidden initially) -->
+        <div id="restore-validation-results" style="display: none; margin-bottom: 20px;">
+          <h4 style="color: #374151; margin: 0 0 10px 0;">Paso 2: Resultados de Validación</h4>
+          <div id="validation-content"></div>
+        </div>
+
+        <!-- Step 3: Confirmation (hidden initially) -->
+        <div id="restore-confirmation" style="display: none; margin-bottom: 20px;">
+          <h4 style="color: #374151; margin: 0 0 10px 0;">Paso 3: Confirmar Restauración</h4>
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+            <p style="color: #991b1b; margin: 0;">
+              <strong>⚠️ ADVERTENCIA:</strong> Esta acción reemplazará todos los datos actuales de la empresa
+              con los datos del ZIP. Esta operación es irreversible.
+            </p>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: #374151; margin-bottom: 5px;">
+              Ingrese el CUIT completo de la empresa para confirmar:
+            </label>
+            <input type="text" id="restore-cuit-confirm" placeholder="${taxId || 'XX-XXXXXXXX-X'}"
+                   style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; width: 100%; font-family: monospace;">
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button onclick="EngineeringDashboard.executeDryRun(${companyId})"
+                    style="background: #f59e0b; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; flex: 1;">
+              🧪 Dry Run (Simulación)
+            </button>
+            <button onclick="EngineeringDashboard.executeRestore(${companyId})"
+                    style="background: #dc2626; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; flex: 1;">
+              🚀 Ejecutar Restauración
+            </button>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div id="restore-results" style="display: none;">
+          <h4 style="color: #374151; margin: 0 0 10px 0;">Resultado</h4>
+          <div id="results-content"></div>
+        </div>
+      </div>
+    `;
+
+    modal.style.display = 'flex';
+  },
+
+  // Variable para almacenar path del ZIP subido
+  currentRestoreZipPath: null,
+
+  /**
+   * Subir ZIP para restauración
+   */
+  async uploadZipForRestore(companyId) {
+    const fileInput = document.getElementById('modal-zip-file');
+    if (!fileInput.files[0]) {
+      alert('Por favor seleccione un archivo ZIP');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('zipFile', fileInput.files[0]);
+
+    try {
+      const token = localStorage.getItem('aponnt_token_staff');
+      const response = await fetch(`/api/restore/${companyId}/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        this.currentRestoreZipPath = result.zipPath;
+
+        // Validar automáticamente
+        await this.validateRestoreZip(companyId, result.zipPath);
+      } else {
+        alert('Error subiendo ZIP: ' + (result.error || 'Error desconocido'));
+      }
+    } catch (error) {
+      console.error('Error subiendo ZIP:', error);
+      alert('Error subiendo ZIP: ' + error.message);
+    }
+  },
+
+  /**
+   * Validar ZIP subido
+   */
+  async validateRestoreZip(companyId, zipPath) {
+    const validationDiv = document.getElementById('restore-validation-results');
+    const validationContent = document.getElementById('validation-content');
+    const confirmationDiv = document.getElementById('restore-confirmation');
+
+    validationDiv.style.display = 'block';
+    validationContent.innerHTML = '<p>⏳ Validando compatibilidad...</p>';
+
+    try {
+      const token = localStorage.getItem('aponnt_token_staff');
+      const response = await fetch(`/api/restore/${companyId}/validate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ zipPath })
+      });
+
+      const result = await response.json();
+      const v = result.validation;
+
+      if (v.canRestore) {
+        validationContent.innerHTML = `
+          <div style="background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 15px;">
+            <p style="color: #166534; margin: 0 0 10px 0;">
+              <strong>✅ ZIP Compatible - Score: ${v.compatibility?.score || 0}%</strong>
+            </p>
+            <p style="color: #15803d; margin: 0; font-size: 14px;">
+              Tablas compatibles: ${v.compatibility?.details?.tablesCompatible || 0} / ${v.compatibility?.details?.tablesChecked || 0}
+            </p>
+            ${v.warnings?.length > 0 ? `
+              <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #86efac;">
+                <strong style="color: #ca8a04;">⚠️ Warnings:</strong>
+                <ul style="margin: 5px 0 0 20px; color: #854d0e; font-size: 13px;">
+                  ${v.warnings.slice(0, 5).map(w => `<li>${w}</li>`).join('')}
+                  ${v.warnings.length > 5 ? `<li>... y ${v.warnings.length - 5} más</li>` : ''}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+        `;
+        confirmationDiv.style.display = 'block';
+      } else {
+        validationContent.innerHTML = `
+          <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px;">
+            <p style="color: #991b1b; margin: 0 0 10px 0;">
+              <strong>❌ ZIP Incompatible - Score: ${v.compatibility?.score || 0}%</strong>
+            </p>
+            <ul style="margin: 0; padding-left: 20px; color: #7f1d1d; font-size: 14px;">
+              ${v.errors.map(e => `<li>${e}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+        confirmationDiv.style.display = 'none';
+      }
+    } catch (error) {
+      validationContent.innerHTML = `
+        <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px;">
+          <p style="color: #991b1b; margin: 0;">Error validando: ${error.message}</p>
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * Ejecutar Dry Run
+   */
+  async executeDryRun(companyId) {
+    if (!this.currentRestoreZipPath) {
+      alert('Primero debe subir un archivo ZIP');
+      return;
+    }
+
+    const resultsDiv = document.getElementById('restore-results');
+    const resultsContent = document.getElementById('results-content');
+
+    resultsDiv.style.display = 'block';
+    resultsContent.innerHTML = '<p>⏳ Ejecutando simulación...</p>';
+
+    try {
+      const token = localStorage.getItem('aponnt_token_staff');
+      const response = await fetch(`/api/restore/${companyId}/dry-run`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ zipPath: this.currentRestoreZipPath })
+      });
+
+      const data = await response.json();
+
+      if (data.result?.success) {
+        resultsContent.innerHTML = `
+          <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 15px;">
+            <p style="color: #1e40af; margin: 0 0 10px 0;">
+              <strong>🧪 Dry Run Exitoso</strong>
+            </p>
+            <p style="color: #1e3a8a; margin: 0;">
+              Se restaurarían <strong>${data.result.recordsRestored}</strong> registros
+              en <strong>${data.result.tablesRestored}</strong> tablas.
+            </p>
+          </div>
+        `;
+      } else {
+        resultsContent.innerHTML = `
+          <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px;">
+            <p style="color: #991b1b; margin: 0;">
+              Error en dry run: ${data.result?.errors?.join(', ') || 'Error desconocido'}
+            </p>
+          </div>
+        `;
+      }
+    } catch (error) {
+      resultsContent.innerHTML = `
+        <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px;">
+          <p style="color: #991b1b; margin: 0;">Error: ${error.message}</p>
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * Ejecutar Restauración Real
+   */
+  async executeRestore(companyId) {
+    if (!this.currentRestoreZipPath) {
+      alert('Primero debe subir un archivo ZIP');
+      return;
+    }
+
+    const cuitInput = document.getElementById('restore-cuit-confirm');
+    const confirmationCode = cuitInput.value.trim();
+
+    if (!confirmationCode) {
+      alert('Debe ingresar el CUIT completo para confirmar');
+      return;
+    }
+
+    if (!confirm('⚠️ ÚLTIMA ADVERTENCIA ⚠️\n\n¿Está seguro de ejecutar la restauración?\n\nEsta acción reemplazará TODOS los datos actuales de la empresa con los del ZIP.\n\nEsta operación es IRREVERSIBLE.')) {
+      return;
+    }
+
+    const resultsDiv = document.getElementById('restore-results');
+    const resultsContent = document.getElementById('results-content');
+
+    resultsDiv.style.display = 'block';
+    resultsContent.innerHTML = '<p>⏳ Ejecutando restauración... (esto puede tardar varios minutos)</p>';
+
+    try {
+      const token = localStorage.getItem('aponnt_token_staff');
+      const response = await fetch(`/api/restore/${companyId}/execute`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          zipPath: this.currentRestoreZipPath,
+          confirmationCode
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        resultsContent.innerHTML = `
+          <div style="background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 20px; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 15px;">🎉</div>
+            <h3 style="color: #166534; margin: 0 0 10px 0;">¡Restauración Exitosa!</h3>
+            <p style="color: #15803d; margin: 0;">
+              Se restauraron <strong>${data.result?.recordsRestored || 0}</strong> registros
+              en <strong>${data.result?.tablesRestored || 0}</strong> tablas.
+            </p>
+            <button onclick="document.getElementById('restore-modal').style.display='none'; EngineeringDashboard.loadCompanyRestoreView();"
+                    style="margin-top: 20px; background: #16a34a; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">
+              ✅ Cerrar
+            </button>
+          </div>
+        `;
+      } else {
+        resultsContent.innerHTML = `
+          <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px;">
+            <p style="color: #991b1b; margin: 0 0 10px 0;">
+              <strong>❌ Error en restauración</strong>
+            </p>
+            <ul style="margin: 0; padding-left: 20px; color: #7f1d1d; font-size: 14px;">
+              ${(data.errors || [data.error || 'Error desconocido']).map(e => `<li>${e}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
+    } catch (error) {
+      resultsContent.innerHTML = `
+        <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px;">
+          <p style="color: #991b1b; margin: 0;">Error: ${error.message}</p>
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * Subir y validar ZIP desde la sección manual
+   */
+  async uploadAndValidateZip() {
+    const companyIdInput = document.getElementById('restore-company-id');
+    const fileInput = document.getElementById('restore-zip-file');
+
+    const companyId = parseInt(companyIdInput.value);
+    if (!companyId) {
+      alert('Ingrese un ID de empresa válido');
+      return;
+    }
+
+    if (!fileInput.files[0]) {
+      alert('Seleccione un archivo ZIP');
+      return;
+    }
+
+    // Abrir modal y subir
+    const taxId = ''; // No lo tenemos en este flujo
+    this.openRestoreModal(companyId, `Empresa #${companyId}`, taxId);
+
+    // Copiar archivo al input del modal
+    const modalInput = document.getElementById('modal-zip-file');
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(fileInput.files[0]);
+    modalInput.files = dataTransfer.files;
+
+    // Ejecutar upload
+    await this.uploadZipForRestore(companyId);
+  },
+
+  /**
+   * Setup event listeners para restauración
+   */
+  setupRestoreEventListeners() {
+    // Click fuera del modal lo cierra
+    const modal = document.getElementById('restore-modal');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONFIGURACIÓN DEL SISTEMA (System Settings)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Cargar vista de configuración del sistema
+   */
+  async loadSystemSettingsView() {
+    const container = document.getElementById('system-settings-container');
+    if (!container) return;
+
+    try {
+      const token = localStorage.getItem('aponnt_token_staff');
+      const response = await fetch('/api/system-settings', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          container.innerHTML = this.renderSettingsAccessDenied();
+          return;
+        }
+        throw new Error('Error cargando configuración');
+      }
+
+      const data = await response.json();
+      container.innerHTML = this.renderSystemSettingsUI(data.categories || {});
+      this.setupSettingsEventListeners();
+
+    } catch (error) {
+      console.error('Error cargando configuración del sistema:', error);
+      container.innerHTML = `
+        <div style="text-align: center; padding: 50px;">
+          <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
+          <h2 style="color: #dc2626;">Error cargando configuración</h2>
+          <p style="color: #6b7280;">${error.message}</p>
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * Renderiza mensaje de acceso denegado para settings
+   */
+  renderSettingsAccessDenied() {
+    return `
+      <div style="text-align: center; padding: 50px; background: linear-gradient(135deg, #fef2f2, #fee2e2); border-radius: 12px; margin: 20px;">
+        <div style="font-size: 64px; margin-bottom: 20px;">🔒</div>
+        <h2 style="color: #dc2626; margin-bottom: 10px;">Acceso Restringido</h2>
+        <p style="color: #7f1d1d; max-width: 500px; margin: 0 auto;">
+          La configuración del sistema requiere autenticación de staff.
+          <br><br>
+          Para modificar parámetros se requiere nivel <strong>Gerente o Superior</strong>.
+        </p>
+      </div>
+    `;
+  },
+
+  /**
+   * Renderiza la UI principal de configuración
+   */
+  renderSystemSettingsUI(categories) {
+    const categoryKeys = Object.keys(categories);
+
+    return `
+      <div style="padding: 20px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+          <div>
+            <h1 style="color: #1e293b; margin: 0; display: flex; align-items: center; gap: 10px;">
+              ⚙️ Configuración del Sistema
+            </h1>
+            <p style="color: #64748b; margin: 5px 0 0 0;">
+              Parámetros configurables sin modificar código - Base de datos tiene prioridad sobre .env
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button onclick="EngineeringDashboard.loadSystemSettingsView()"
+                    style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+              🔄 Actualizar
+            </button>
+            <button onclick="EngineeringDashboard.seedSystemSettings()"
+                    style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+              🌱 Seed Defaults
+            </button>
+          </div>
+        </div>
+
+        <!-- Info Banner -->
+        <div style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border-left: 4px solid #3b82f6; padding: 15px 20px; border-radius: 8px; margin-bottom: 30px;">
+          <div style="display: flex; align-items: start; gap: 15px;">
+            <span style="font-size: 24px;">💡</span>
+            <div>
+              <strong style="color: #1e40af;">Cómo funciona</strong>
+              <p style="margin: 5px 0 0 0; color: #1e3a8a;">
+                Los valores aquí configurados tienen <strong>prioridad sobre .env</strong>. Si "value" está vacío, se usa "default_value" (de .env o hardcodeado).
+                Los cambios marcados con ⚡ requieren reinicio del servidor para aplicar.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Categories Grid -->
+        <div style="display: grid; gap: 20px;">
+          ${categoryKeys.map(categoryKey => {
+            const category = categories[categoryKey];
+            return `
+              <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
+                <!-- Category Header -->
+                <div style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); padding: 15px 20px; border-bottom: 1px solid #e5e7eb;">
+                  <h3 style="margin: 0; color: #1e293b; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 24px;">${category.icon || '📋'}</span>
+                    <span>${category.label || categoryKey}</span>
+                    <span style="font-size: 12px; color: #64748b; font-weight: normal; background: #e5e7eb; padding: 2px 8px; border-radius: 4px;">${category.settings?.length || 0} settings</span>
+                  </h3>
+                  ${category.description ? `<p style="margin: 5px 0 0 0; color: #64748b; font-size: 13px;">${category.description}</p>` : ''}
+                </div>
+
+                <!-- Settings List -->
+                <div style="padding: 15px 20px;">
+                  ${(category.settings || []).map(setting => this.renderSettingRow(setting)).join('')}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        ${categoryKeys.length === 0 ? `
+          <div style="text-align: center; padding: 50px; background: #f9fafb; border-radius: 12px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+            <h3 style="color: #374151; margin-bottom: 10px;">No hay configuraciones</h3>
+            <p style="color: #6b7280;">Usa el botón "🌱 Seed Defaults" para crear las configuraciones iniciales.</p>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  /**
+   * Renderiza una fila de setting individual
+   */
+  renderSettingRow(setting) {
+    const isBoolean = setting.data_type === 'boolean';
+    const isNumber = setting.data_type === 'number';
+    const isPassword = setting.data_type === 'password' || setting.is_sensitive;
+    const hasOptions = setting.options && Array.isArray(setting.options) && setting.options.length > 0;
+
+    // Determinar el valor actual (o default si value es null)
+    const currentValue = setting.value !== null ? setting.value : (setting.default_value || '');
+    const isUsingDefault = setting.value === null || setting.value === undefined;
+
+    return `
+      <div style="display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f1f5f9;" data-setting-key="${setting.key}">
+        <!-- Info -->
+        <div style="flex: 1; min-width: 200px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <strong style="color: #1e293b;">${setting.display_name}</strong>
+            ${setting.requires_restart ? '<span title="Requiere reinicio" style="color: #f59e0b; font-size: 14px;">⚡</span>' : ''}
+            ${setting.is_sensitive ? '<span title="Dato sensible" style="color: #ef4444; font-size: 14px;">🔐</span>' : ''}
+            ${isUsingDefault ? '<span style="color: #3b82f6; font-size: 11px; background: #eff6ff; padding: 1px 6px; border-radius: 3px;">default</span>' : ''}
+          </div>
+          <p style="margin: 3px 0 0 0; color: #64748b; font-size: 12px;">${setting.description || ''}</p>
+          <code style="font-size: 10px; color: #9ca3af; background: #f9fafb; padding: 1px 4px; border-radius: 2px;">${setting.key}</code>
+        </div>
+
+        <!-- Input -->
+        <div style="flex: 0 0 300px;">
+          ${hasOptions ? `
+            <select
+              id="setting-${setting.key}"
+              data-key="${setting.key}"
+              style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white;"
+            >
+              ${setting.options.map(opt => `
+                <option value="${opt.value}" ${String(currentValue) === String(opt.value) ? 'selected' : ''}>${opt.label}</option>
+              `).join('')}
+            </select>
+          ` : isBoolean ? `
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+              <input
+                type="checkbox"
+                id="setting-${setting.key}"
+                data-key="${setting.key}"
+                ${currentValue === 'true' || currentValue === true ? 'checked' : ''}
+                style="width: 20px; height: 20px; cursor: pointer;"
+              >
+              <span style="color: #374151;">${currentValue === 'true' || currentValue === true ? 'Habilitado' : 'Deshabilitado'}</span>
+            </label>
+          ` : `
+            <input
+              type="${isPassword && !setting.masked ? 'password' : isNumber ? 'number' : 'text'}"
+              id="setting-${setting.key}"
+              data-key="${setting.key}"
+              value="${setting.masked ? '' : currentValue}"
+              placeholder="${setting.masked ? '********' : (setting.default_value || '')}"
+              style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;"
+            >
+          `}
+        </div>
+
+        <!-- Actions -->
+        <div style="flex: 0 0 auto; display: flex; gap: 5px;">
+          <button
+            onclick="EngineeringDashboard.updateSetting('${setting.key}')"
+            style="background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;"
+            title="Guardar"
+          >
+            💾
+          </button>
+          <button
+            onclick="EngineeringDashboard.resetSetting('${setting.key}')"
+            style="background: #6b7280; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;"
+            title="Reset a default"
+          >
+            ↩️
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Actualizar un setting individual
+   */
+  async updateSetting(key) {
+    try {
+      const input = document.getElementById(`setting-${key}`);
+      if (!input) {
+        alert('Input no encontrado');
+        return;
+      }
+
+      let value;
+      if (input.type === 'checkbox') {
+        value = input.checked;
+      } else {
+        value = input.value;
+      }
+
+      const token = localStorage.getItem('aponnt_token_staff');
+      const response = await fetch(`/api/system-settings/key/${key}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ value })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || data.message || 'Error desconocido'}`);
+        return;
+      }
+
+      // Mostrar mensaje de éxito
+      if (data.setting?.requires_restart) {
+        alert(`✅ Setting "${key}" actualizado.\n\n⚡ ATENCIÓN: Este cambio requiere reiniciar el servidor para aplicar.`);
+      } else {
+        alert(`✅ Setting "${key}" actualizado correctamente.`);
+      }
+
+      // Refrescar vista
+      this.loadSystemSettingsView();
+
+    } catch (error) {
+      console.error('Error actualizando setting:', error);
+      alert(`Error: ${error.message}`);
+    }
+  },
+
+  /**
+   * Resetear un setting a su valor por defecto
+   */
+  async resetSetting(key) {
+    if (!confirm(`¿Resetear "${key}" a su valor por defecto?\n\nEl valor actual será eliminado y se usará el default.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('aponnt_token_staff');
+      const response = await fetch(`/api/system-settings/reset/${key}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || data.message || 'Error desconocido'}`);
+        return;
+      }
+
+      alert(`✅ Setting "${key}" reseteado a default: ${data.default_value || '(vacío)'}`);
+
+      // Refrescar vista
+      this.loadSystemSettingsView();
+
+    } catch (error) {
+      console.error('Error reseteando setting:', error);
+      alert(`Error: ${error.message}`);
+    }
+  },
+
+  /**
+   * Ejecutar seed de settings por defecto
+   */
+  async seedSystemSettings() {
+    if (!confirm('¿Ejecutar seed de configuraciones por defecto?\n\nEsto creará los settings que no existan (no modifica los existentes).')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('aponnt_token_staff');
+      const response = await fetch('/api/system-settings/seed', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || data.message || 'Error desconocido'}`);
+        return;
+      }
+
+      alert(`✅ ${data.message}`);
+
+      // Refrescar vista
+      this.loadSystemSettingsView();
+
+    } catch (error) {
+      console.error('Error en seed:', error);
+      alert(`Error: ${error.message}`);
+    }
+  },
+
+  /**
+   * Setup event listeners para la vista de settings
+   */
+  setupSettingsEventListeners() {
+    // Toggle para checkboxes - actualizar texto
+    document.querySelectorAll('[id^="setting-"][type="checkbox"]').forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const label = e.target.parentElement.querySelector('span');
+        if (label) {
+          label.textContent = e.target.checked ? 'Habilitado' : 'Deshabilitado';
+        }
+      });
+    });
   }
 };
 

@@ -29,7 +29,8 @@ const uiHelper = require('../helpers/ui.helper');
 const perfHelper = require('../helpers/performance.helper');
 
 // Test Suite Principal
-test.describe('👥 Users Module - E2E Complete', () => {
+// SKIPPED: Legacy test with outdated selectors - use crud-real-interaction.e2e.spec.js instead
+test.describe.skip('👥 Users Module - E2E Complete', () => {
   let dbClient;
   let testUserId;
   let performanceMetrics = [];

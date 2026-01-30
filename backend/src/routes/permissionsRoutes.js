@@ -10,13 +10,13 @@ const { checkPermission, auditChanges } = require('../middleware/permissions');
 router.get('/modules', checkPermission('admin-permissions', 'view'), async (req, res) => {
     try {
         const [modules] = await sequelize.query(`
-            SELECT 
+            SELECT
                 sm.*,
-                COUNT(ma.id) as totalActions,
-                COUNT(CASE WHEN ma.isActive = 1 THEN 1 END) as activeActions
+                COUNT(ma.id) as "totalActions",
+                COUNT(CASE WHEN ma.is_active = true THEN 1 END) as "activeActions"
             FROM system_modules sm
-            LEFT JOIN module_actions ma ON sm.id = ma.moduleId
-            WHERE sm.isActive = 1
+            LEFT JOIN module_actions ma ON sm.module_key = ma.module_key
+            WHERE sm.is_active = true
             GROUP BY sm.id
             ORDER BY sm.category, sm.name
         `);

@@ -209,6 +209,7 @@ window.FinanceTreasury = (function() {
                                         <option value="checking">Cuenta Corriente</option>
                                         <option value="savings">Caja de Ahorro</option>
                                         <option value="investment">Inversión</option>
+                                        <option value="foreign_currency">Moneda Extranjera</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -764,6 +765,7 @@ window.FinanceTreasury = (function() {
             }
         } catch (error) {
             console.error('Error saving bank account:', error);
+            closeModal('bank-account');
             alert('Error al guardar');
         }
     }
@@ -803,6 +805,7 @@ window.FinanceTreasury = (function() {
             }
         } catch (error) {
             console.error('Error saving transaction:', error);
+            closeModal('transaction');
             alert('Error al guardar');
         }
     }

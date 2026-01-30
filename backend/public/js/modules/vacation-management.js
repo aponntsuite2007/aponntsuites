@@ -336,10 +336,7 @@ const VacationEngine = window.VacationEngine = {
                         <select class="ve-select" id="filter-type" onchange="VacationEngine.filterRequests()">
                             <option value="all">Todos los tipos</option>
                             <option value="vacation">Vacaciones</option>
-                            <option value="personal_leave">Permiso Personal</option>
-                            <option value="sick_leave">Licencia Medica</option>
-                            <option value="maternity">Maternidad</option>
-                            <option value="study_leave">Estudio</option>
+                            <option value="extraordinary">Licencia Extraordinaria</option>
                         </select>
                         <select class="ve-select" id="filter-status" onchange="VacationEngine.filterRequests()">
                             <option value="all">Todos los estados</option>
@@ -774,11 +771,7 @@ const VacationEngine = window.VacationEngine = {
     getRequestTypeBadge(type) {
         const types = {
             'vacation': { label: 'Vacaciones', class: 'success' },
-            'personal_leave': { label: 'Personal', class: 'info' },
-            'sick_leave': { label: 'Médica', class: 'warning' },
-            'maternity': { label: 'Maternidad', class: 'info' },
-            'study_leave': { label: 'Estudio', class: 'info' },
-            'leave': { label: 'Licencia', class: 'info' }
+            'extraordinary': { label: 'Extraordinaria', class: 'warning' }
         };
         const t = types[type] || { label: type || 'Sin tipo', class: 'secondary' };
         return `<span class="ve-badge ve-badge-${t.class}">${t.label}</span>`;
@@ -855,8 +848,6 @@ const VacationEngine = window.VacationEngine = {
                                 <label>Tipo de Solicitud *</label>
                                 <select name="requestType" class="ve-input" required>
                                     <option value="vacation">Vacaciones</option>
-                                    <option value="personal_leave">Licencia Personal</option>
-                                    <option value="sick_leave">Licencia Medica</option>
                                     <option value="extraordinary">Licencia Extraordinaria</option>
                                 </select>
                             </div>
@@ -905,6 +896,7 @@ const VacationEngine = window.VacationEngine = {
             VacationEngine.showToast('Solicitud enviada exitosamente', 'success');
         } catch (e) {
             VacationEngine.showToast('Error: ' + e.message, 'error');
+            VacationEngine.closeModal();
         }
     },
 
@@ -971,6 +963,7 @@ const VacationEngine = window.VacationEngine = {
             VacationEngine.renderScales();
         } catch (e) {
             VacationEngine.showToast('Error: ' + e.message, 'error');
+            VacationEngine.closeModal();
         }
     },
 
@@ -1057,6 +1050,7 @@ const VacationEngine = window.VacationEngine = {
             VacationEngine.renderLicenses();
         } catch (e) {
             VacationEngine.showToast('Error: ' + e.message, 'error');
+            VacationEngine.closeModal();
         }
     },
 

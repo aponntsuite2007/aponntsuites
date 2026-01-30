@@ -3219,6 +3219,73 @@ async function showAddKioskModal(kioskId = null) {
                                     </div>
                                 </div>
 
+                                <!-- Ubicación GPS -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">📍 Ubicación GPS (Geofencing)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-5">
+                                                <label class="form-label">Latitud</label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="kiosk-gps-lat"
+                                                       value="${kioskData?.gps_lat || ''}"
+                                                       placeholder="-34.6037"
+                                                       step="0.000001"
+                                                       min="-90" max="90">
+                                                <small class="text-muted">Entre -90 y 90</small>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="form-label">Longitud</label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="kiosk-gps-lng"
+                                                       value="${kioskData?.gps_lng || ''}"
+                                                       placeholder="-58.3816"
+                                                       step="0.000001"
+                                                       min="-180" max="180">
+                                                <small class="text-muted">Entre -180 y 180</small>
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-outline-primary w-100" onclick="getMyLocation()">
+                                                    <i class="fas fa-location-crosshairs"></i> Mi Ubicación
+                                                </button>
+                                            </div>
+                                            <div class="col-12">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    Las coordenadas GPS se usan para validar que los fichajes se realicen dentro del área del kiosco.
+                                                    También pueden configurarse desde la APK al momento de la instalación.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Departamentos Autorizados -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">🏢 Departamentos Autorizados</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-12">
+                                                <label class="form-label">Departamentos que pueden fichar en este kiosco</label>
+                                                <select class="form-select" id="kiosk-departments" multiple size="5">
+                                                    <option value="">Cargando departamentos...</option>
+                                                </select>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    Si no selecciona ninguno, todos los departamentos pueden fichar en este kiosco.
+                                                    Mantenga Ctrl para seleccionar múltiples.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Hardware de Reconocimiento Facial -->
                                 <div class="card mb-4">
                                     <div class="card-header bg-light">
@@ -3407,10 +3474,92 @@ async function showAddKioskModal(kioskId = null) {
             showHardwareDetails(kioskData.detection_method_fingerprint, 'fingerprint');
         }
 
+        // Cargar departamentos para el multi-select
+        await loadDepartmentsForKioskModal(kioskData?.authorized_departments || []);
+
     } catch (error) {
         console.error('❌ Error mostrando modal:', error);
         showToast('Error al abrir el modal', 'error');
     }
+}
+
+/**
+ * Carga los departamentos para el modal de kiosks
+ */
+async function loadDepartmentsForKioskModal(selectedDepts = []) {
+    try {
+        const response = await fetch('/api/departments', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Error al cargar departamentos');
+
+        const data = await response.json();
+        const departments = data.departments || data.data || data || [];
+
+        const select = document.getElementById('kiosk-departments');
+        if (!select) return;
+
+        select.innerHTML = departments.map(dept => {
+            const deptId = dept.id || dept.department_id;
+            const deptName = dept.name || dept.nombre;
+            const isSelected = selectedDepts.includes(deptId);
+            return `<option value="${deptId}" ${isSelected ? 'selected' : ''}>${deptName}</option>`;
+        }).join('');
+
+        if (departments.length === 0) {
+            select.innerHTML = '<option value="">No hay departamentos disponibles</option>';
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando departamentos:', error);
+        const select = document.getElementById('kiosk-departments');
+        if (select) {
+            select.innerHTML = '<option value="">Error al cargar departamentos</option>';
+        }
+    }
+}
+
+/**
+ * Obtiene la ubicación GPS actual del navegador
+ */
+function getMyLocation() {
+    if (!navigator.geolocation) {
+        showToast('Tu navegador no soporta geolocalización', 'error');
+        return;
+    }
+
+    showToast('Obteniendo ubicación...', 'info');
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const latInput = document.getElementById('kiosk-gps-lat');
+            const lngInput = document.getElementById('kiosk-gps-lng');
+
+            if (latInput) latInput.value = position.coords.latitude.toFixed(6);
+            if (lngInput) lngInput.value = position.coords.longitude.toFixed(6);
+
+            showToast('Ubicación obtenida correctamente', 'success');
+        },
+        (error) => {
+            let msg = 'Error obteniendo ubicación';
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    msg = 'Permiso de ubicación denegado';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    msg = 'Ubicación no disponible';
+                    break;
+                case error.TIMEOUT:
+                    msg = 'Tiempo de espera agotado';
+                    break;
+            }
+            showToast(msg, 'error');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
 }
 
 /**
@@ -3541,11 +3690,23 @@ async function saveKiosk(kioskId = null) {
         const isEdit = kioskId !== null;
 
         // Recopilar datos del formulario
+        const gpsLatVal = document.getElementById('kiosk-gps-lat').value;
+        const gpsLngVal = document.getElementById('kiosk-gps-lng').value;
+        const deptSelect = document.getElementById('kiosk-departments');
+        const selectedDepts = Array.from(deptSelect.selectedOptions).map(opt => parseInt(opt.value)).filter(v => !isNaN(v));
+
         const formData = {
             name: document.getElementById('kiosk-name').value.trim(),
             location: document.getElementById('kiosk-location').value.trim(),
             device_id: document.getElementById('kiosk-device-id').value.trim(),
             is_active: document.getElementById('kiosk-active').value === '1',
+
+            // GPS (Geofencing)
+            gps_lat: gpsLatVal ? parseFloat(gpsLatVal) : null,
+            gps_lng: gpsLngVal ? parseFloat(gpsLngVal) : null,
+
+            // Departamentos autorizados
+            authorized_departments: selectedDepts,
 
             // Hardware Facial
             hardware_profile: document.getElementById('facial-hardware-select').value,
@@ -3753,6 +3914,8 @@ window.saveKiosk = saveKiosk;
 window.deleteKiosk = deleteKiosk;
 window.showKioskDetails = showKioskDetails;
 window.showEditKioskModal = showAddKioskModal; // Alias
+window.getMyLocation = getMyLocation;
+window.loadDepartmentsForKioskModal = loadDepartmentsForKioskModal;
 
 console.log('✅ [KIOSKS-PRO] Módulo completo cargado:', {
     facial: Object.keys(HARDWARE_FACIAL_PROFILES).length,

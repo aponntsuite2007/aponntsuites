@@ -1,10 +1,9 @@
 {
   "module": "users",
-  "discoveredAt": "2025-12-30T15:13:10.962Z",
+  "discoveredAt": "2026-01-28T14:30:28.011Z",
   "entryPoint": {},
   "actions": [],
   "modals": [],
   "relationships": [],
-  "validations": [],
-  "error": "locator.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#companySelect').first()\u001b[22m\n\u001b[2m    - locator resolved to <select required=\"\" id=\"companySelect\" class=\"form-control\">…</select>\u001b[22m\n\u001b[2m  - attempting select option action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - did not find some options\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - did not find some options\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    57 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m       - did not find some options\u001b[22m\n\u001b[2m     - retrying select option action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+  "validations": []
 }

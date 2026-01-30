@@ -188,7 +188,14 @@ const AdminPanelController = {
             'todas-empresas': () => this._loadTodasEmpresas(),
             'comercial': () => this._loadComercial(),
             'modulos-comerciales': () => this._loadModulosComerciales(),
-            'presupuestos': () => this._loadPresupuestos(),
+            'presupuestos': async () => {
+                // Usar QuotesManagement para el Pipeline de Altas
+                if (window.QuotesManagement) {
+                    await QuotesManagement.init();
+                    return '';
+                }
+                return this._loadPresupuestos();
+            },
             'contratos': () => this._loadContratos(),
             'mis-comisiones': () => this._loadMisComisiones(),
             'todos-presupuestos': () => this._loadTodosPresupuestos(),

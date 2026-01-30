@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aceptar Contrato EULA - APONNT 360</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header p { opacity: 0.8; font-size: 14px; }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .loading, .error, .success, .expired {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #1e3a5f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error { color: #dc2626; }
+        .success { color: #16a34a; }
+        .expired { color: #d97706; }
+        .contract-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .contract-header {
+            background: #f8fafc;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .contract-header h2 { color: #1e3a5f; font-size: 18px; }
+        .quote-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .quote-info-item {
+            background: #f0f9ff;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .quote-info-item label { font-size: 12px; color: #6b7280; display: block; }
+        .quote-info-item span { font-size: 15px; font-weight: 600; color: #1e3a5f; }
+        .contract-body {
+            padding: 25px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #374151;
+        }
+        .contract-section { margin-bottom: 20px; }
+        .contract-section h3 {
+            color: #1e3a5f;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .acceptance-box {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .acceptance-box h3 { color: #166534; margin-bottom: 15px; }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .checkbox-container input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .checkbox-container label { color: #374151; cursor: pointer; }
+        .btn-accept {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-accept:hover { background: #16a34a; }
+        .btn-accept:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .legal-note {
+            margin-top: 15px;
+            font-size: 11px;
+            color: #6b7280;
+        }
+        .audit-info {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 11px;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>APONNT 360</h1>
+        <p>Contrato Marco de Suscripcion de Servicios (EULA)</p>
+    </div>
+
+    <div class="container">
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Cargando contrato...</p>
+        </div>
+
+        <div id="error" class="error" style="display:none;">
+            <h2>Error</h2>
+            <p id="error-message"></p>
+        </div>
+
+        <div id="expired" class="expired" style="display:none;">
+            <h2>Link Expirado</h2>
+            <p>Este link de aceptacion ha expirado. Por favor contacte a su vendedor para solicitar un nuevo envio.</p>
+        </div>
+
+        <div id="already-signed" class="success" style="display:none;">
+            <h2>Contrato Ya Aceptado</h2>
+            <p>Este contrato ya fue aceptado anteriormente. Gracias por confiar en APONNT 360.</p>
+        </div>
+
+        <div id="success" class="success" style="display:none;">
+            <h2>Contrato Aceptado Exitosamente</h2>
+            <p>Su aceptacion ha sido registrada. Recibira un email de confirmacion.</p>
+            <div class="audit-info" style="max-width:400px;margin:20px auto;">
+                <strong>Registro de Aceptacion:</strong><br>
+                ID: <span id="acceptance-id"></span><br>
+                Fecha: <span id="acceptance-date"></span><br>
+                Hash: <span id="acceptance-hash"></span>
+            </div>
+        </div>
+
+        <div id="contract-content" style="display:none;">
+            <div class="contract-card">
+                <div class="contract-header">
+                    <h2>CONTRATO MARCO DE SUSCRIPCION DE SERVICIOS (MSA)</h2>
+                    <p style="color:#6b7280;font-size:13px;">Sistema de Gestion de Asistencia Biometrica y RRHH - v2.0</p>
+
+                    <div class="quote-info">
+                        <div class="quote-info-item">
+                            <label>Empresa</label>
+                            <span id="company-name">-</span>
+                        </div>
+                        <div class="quote-info-item">
+                            <label>Presupuesto</label>
+                            <span id="quote-number">-</span>
+                        </div>
+                        <div class="quote-info-item">
+                            <label>Monto Mensual</label>
+                            <span id="quote-amount">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contract-body" id="contract-sections">
+                    <!-- Secciones del contrato se cargan dinamicamente -->
+                </div>
+            </div>
+
+            <div class="acceptance-box">
+                <h3>Aceptacion Electronica</h3>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="accept-terms" onchange="toggleAcceptButton()">
+                    <label for="accept-terms">He leido y acepto los terminos del Contrato EULA</label>
+                </div>
+                <button id="btn-accept" class="btn-accept" disabled onclick="acceptContract()">
+                    Acepto los Terminos
+                </button>
+                <p class="legal-note">
+                    Al hacer click, su aceptacion quedara registrada electronicamente<br>
+                    conforme la Ley 25.506 de Firma Digital de Argentina.
+                </p>
+                <div class="audit-info">
+                    <strong>Se registrara automaticamente:</strong>
+                    Timestamp UTC | Su direccion IP | Hash del documento | ID unico de aceptacion
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        const quoteId = params.get('quote');
+
+        async function loadContract() {
+            if (!token || !quoteId) {
+                showError('Link invalido. Faltan parametros.');
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/api/quotes/public/contract/${quoteId}?token=${token}`);
+                const data = await resp.json();
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (!data.success) {
+                    if (data.error === 'expired') {
+                        document.getElementById('expired').style.display = 'block';
+                    } else if (data.error === 'already_signed') {
+                        document.getElementById('already-signed').style.display = 'block';
+                    } else {
+                        showError(data.error || 'Error cargando contrato');
+                    }
+                    return;
+                }
+
+                // Mostrar datos
+                document.getElementById('company-name').textContent = data.quote.company_legal_name || data.quote.company_name;
+                document.getElementById('quote-number').textContent = data.quote.quote_number;
+                document.getElementById('quote-amount').textContent = '$' + parseFloat(data.quote.total_amount || 0).toLocaleString('es-AR') + '/mes';
+
+                // Renderizar secciones del contrato
+                const sectionsHtml = data.template.sections.map(s => `
+                    <div class="contract-section">
+                        <h3>${s.id}. ${s.title}</h3>
+                        <p>${s.content.replace(/\n/g, '<br>')}</p>
+                    </div>
+                `).join('');
+                document.getElementById('contract-sections').innerHTML = sectionsHtml;
+
+                document.getElementById('contract-content').style.display = 'block';
+
+            } catch (e) {
+                showError('Error de conexion: ' + e.message);
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error-message').textContent = msg;
+        }
+
+        function toggleAcceptButton() {
+            document.getElementById('btn-accept').disabled = !document.getElementById('accept-terms').checked;
+        }
+
+        async function acceptContract() {
+            const btn = document.getElementById('btn-accept');
+            btn.disabled = true;
+            btn.textContent = 'Procesando...';
+
+            try {
+                const resp = await fetch(`/api/quotes/public/contract/${quoteId}/accept`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: token,
+                        user_agent: navigator.userAgent,
+                        screen_resolution: window.screen.width + 'x' + window.screen.height,
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    })
+                });
+
+                const data = await resp.json();
+
+                if (data.success) {
+                    document.getElementById('contract-content').style.display = 'none';
+                    document.getElementById('success').style.display = 'block';
+                    document.getElementById('acceptance-id').textContent = data.acceptance.id.substring(0, 8) + '...';
+                    document.getElementById('acceptance-date').textContent = new Date(data.acceptance.signed_at).toLocaleString('es-AR');
+                    document.getElementById('acceptance-hash').textContent = data.acceptance.document_hash.substring(0, 16) + '...';
+                } else {
+                    alert('Error: ' + (data.error || 'No se pudo registrar la aceptacion'));
+                    btn.disabled = false;
+                    btn.textContent = 'Acepto los Terminos';
+                }
+            } catch (e) {
+                alert('Error de conexion: ' + e.message);
+                btn.disabled = false;
+                btn.textContent = 'Acepto los Terminos';
+            }
+        }
+
+        // Cargar al inicio
+        loadContract();
+    </script>
+</body>
+</html>

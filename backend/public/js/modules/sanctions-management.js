@@ -827,19 +827,17 @@ const WORKFLOW_STATUS_CONFIG = {
 };
 
 const SEVERITY_CONFIG = {
-    warning: { label: 'Advertencia', icon: '⚠️', color: '#f1c40f', points: -5 },
-    minor: { label: 'Sanción Menor', icon: '🔸', color: '#e67e22', points: -10 },
-    major: { label: 'Sanción Mayor', icon: '🔴', color: '#e74c3c', points: -20 },
-    suspension: { label: 'Suspensión', icon: '⛔', color: '#8e44ad', points: -30 },
-    termination: { label: 'Despido', icon: '🚫', color: '#2c3e50', points: -100 }
+    low: { label: 'Baja', icon: '⚠️', color: '#f1c40f', points: -5 },
+    medium: { label: 'Media', icon: '🔸', color: '#e67e22', points: -10 },
+    high: { label: 'Alta', icon: '🔴', color: '#e74c3c', points: -20 },
+    critical: { label: 'Critica', icon: '⛔', color: '#8e44ad', points: -50 }
 };
 
 const CATEGORY_CONFIG = {
-    attendance: { label: 'Asistencia', icon: '⏰' },
-    training: { label: 'Capacitación', icon: '📚' },
-    behavior: { label: 'Comportamiento', icon: '🤝' },
-    performance: { label: 'Desempeño', icon: '📊' },
-    safety: { label: 'Seguridad', icon: '🦺' },
+    warning: { label: 'Apercibimiento', icon: '⚠️' },
+    written_warning: { label: 'Apercibimiento Escrito', icon: '📝' },
+    suspension: { label: 'Suspensión', icon: '🚫' },
+    dismissal: { label: 'Despido', icon: '❌' },
     other: { label: 'Otro', icon: '📋' }
 };
 
@@ -1034,7 +1032,7 @@ function renderSanctionsList() {
 function renderSanctionRow(sanction) {
     const statusConfig = WORKFLOW_STATUS_CONFIG[sanction.workflow_status] || WORKFLOW_STATUS_CONFIG.draft;
     const severityConfig = SEVERITY_CONFIG[sanction.severity] || SEVERITY_CONFIG.warning;
-    const categoryConfig = CATEGORY_CONFIG[sanction.category] || CATEGORY_CONFIG.other;
+    const categoryConfig = CATEGORY_CONFIG[sanction.sanction_type] || CATEGORY_CONFIG.other;
 
     const date = sanction.created_at ? new Date(sanction.created_at).toLocaleDateString('es-AR') : '-';
 
@@ -1045,7 +1043,7 @@ function renderSanctionRow(sanction) {
                 <div style="font-size: 12px; color: rgba(255,255,255,0.5);">${sanction.employee_code || ''}</div>
             </td>
             <td>
-                <span class="category-badge ${sanction.category || 'other'}">
+                <span class="category-badge ${sanction.sanction_type || 'other'}">
                     ${categoryConfig.icon} ${categoryConfig.label}
                 </span>
                 <div style="font-size: 12px; margin-top: 4px; color: rgba(255,255,255,0.7);">
@@ -1167,7 +1165,7 @@ function renderCreateModal() {
                         <div class="form-row">
                             <div class="form-group">
                                 <label>👤 Empleado *</label>
-                                <select name="employee_id" id="sanction-employee" required>
+                                <select name="user_id" id="sanction-employee" required>
                                     <option value="">Seleccionar empleado...</option>
                                 </select>
                             </div>
@@ -1189,21 +1187,19 @@ function renderCreateModal() {
                                     </span>
                                 </label>
                                 <select name="severity" id="sanction-severity" required>
-                                    <option value="warning">⚠️ Advertencia (-5 pts)</option>
-                                    <option value="minor">🔸 Sanción Menor (-10 pts)</option>
-                                    <option value="major">🔴 Sanción Mayor (-20 pts)</option>
-                                    <option value="suspension">⛔ Suspensión (-30 pts)</option>
-                                    <option value="termination">🚫 Despido (-100 pts)</option>
+                                    <option value="low">⚠️ Baja (-5 pts)</option>
+                                    <option value="medium">🔸 Media (-10 pts)</option>
+                                    <option value="high">🔴 Alta (-20 pts)</option>
+                                    <option value="critical">⛔ Critica (-50 pts)</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>📌 Categoría</label>
-                                <select name="category" id="sanction-category">
-                                    <option value="attendance">⏰ Asistencia</option>
-                                    <option value="training">📚 Capacitación</option>
-                                    <option value="behavior">🤝 Comportamiento</option>
-                                    <option value="performance">📊 Desempeño</option>
-                                    <option value="safety">🦺 Seguridad</option>
+                                <label>📌 Tipo de Falta</label>
+                                <select name="sanction_type" id="sanction-category">
+                                    <option value="warning">⚠️ Apercibimiento</option>
+                                    <option value="written_warning">📝 Apercibimiento Escrito</option>
+                                    <option value="suspension">🚫 Suspensión</option>
+                                    <option value="dismissal">❌ Despido</option>
                                     <option value="other">📋 Otro</option>
                                 </select>
                             </div>
@@ -1822,7 +1818,7 @@ async function submitCreate(event) {
     const data = Object.fromEntries(formData.entries());
 
     // Validate
-    if (!data.employee_id || !data.title || !data.description) {
+    if (!data.user_id || !data.title || !data.description) {
         showError('Por favor complete todos los campos requeridos');
         return;
     }
@@ -1853,6 +1849,7 @@ async function submitCreate(event) {
     } catch (error) {
         console.error('❌ [SANCTIONS-v2] Error creating:', error);
         showError(error.message);
+        closeModals();
     }
 }
 
@@ -1924,6 +1921,7 @@ async function executeWorkflowAction(event, sanctionId, action) {
     } catch (error) {
         console.error('❌ [SANCTIONS-v2] Error executing action:', error);
         showError(error.message);
+        closeModals();
     }
 }
 
@@ -2067,7 +2065,7 @@ function populateTypeSelect() {
     if (select && state.sanctionTypes.length > 0) {
         select.innerHTML = '<option value="">Seleccionar tipo...</option>' +
             state.sanctionTypes.map(t => `
-                <option value="${t.id}" data-severity="${t.default_severity}" data-category="${t.category}">
+                <option value="${t.id}" data-severity="${t.default_severity}" data-sanction-type="${t.category}">
                     ${t.name}
                 </option>
             `).join('');
@@ -2078,16 +2076,16 @@ function onTypeChange(select) {
     const option = select.options[select.selectedIndex];
     if (option) {
         const severity = option.dataset.severity;
-        const category = option.dataset.category;
+        const sanctionType = option.dataset.sanctionType;
 
         if (severity) {
             const severitySelect = document.getElementById('sanction-severity');
             if (severitySelect) severitySelect.value = severity;
         }
 
-        if (category) {
+        if (sanctionType) {
             const categorySelect = document.getElementById('sanction-category');
-            if (categorySelect) categorySelect.value = category;
+            if (categorySelect) categorySelect.value = sanctionType;
         }
     }
 }

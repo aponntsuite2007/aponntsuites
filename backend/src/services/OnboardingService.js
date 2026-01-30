@@ -664,18 +664,22 @@ class OnboardingService {
     console.log(`   - isActive: ${newCompany.isActive}`);
     console.log(`   - trace_id: ${newCompany.traceId}`);
 
-    // Crear sucursal CENTRAL (inactiva también)
+    // Crear sucursal CENTRAL (inactiva también) - solo si no existen branches ya creadas por formulario
     const { Branch } = require('../config/database');
-    await Branch.create({
-      name: 'CENTRAL',
-      code: `CENTRAL-${newCompany.company_id}`,
-      company_id: newCompany.company_id,
-      is_main: true,
-      isActive: false,  // Inactiva hasta que se active la empresa
-      address: newCompany.address
-    });
-
-    console.log(`   - Sucursal CENTRAL creada`);
+    const existingBranches = await Branch.count({ where: { company_id: newCompany.company_id } });
+    if (existingBranches === 0) {
+      await Branch.create({
+        name: 'CENTRAL',
+        code: `CENTRAL-${newCompany.company_id}`,
+        company_id: newCompany.company_id,
+        is_main: true,
+        isActive: false,  // Inactiva hasta que se active la empresa
+        address: newCompany.address
+      });
+      console.log(`   - Sucursal CENTRAL creada`);
+    } else {
+      console.log(`   - ${existingBranches} sucursal(es) ya existen (creadas por formulario de alta)`);
+    }
 
     // Marcar lead como convertido (si existe)
     if (budget.lead_id) {
@@ -778,6 +782,67 @@ class OnboardingService {
       console.log(`✅ [ONBOARDING] Email de bienvenida enviado a ${company.name}`);
     } catch (error) {
       console.error(`⚠️ [ONBOARDING] Error enviando email de bienvenida:`, error.message);
+    }
+  }
+
+  /**
+   * ============================================================================
+   * INITIATE FROM QUOTE (puente Quote → Onboarding fases 2-6)
+   * ============================================================================
+   * Cuando un Quote pasa a 'active' (post-trial o directo), este método
+   * ejecuta las fases 2-6 del onboarding usando datos del quote.
+   */
+  async initiateFromQuote(quote) {
+    const trace_id = `ONBOARDING-QUOTE-${quote.id}-${uuidv4().substring(0, 8)}`;
+    console.log(`🚀 [ONBOARDING] Iniciando desde Quote ${quote.quote_number} - trace: ${trace_id}`);
+
+    try {
+      // El quote ya tiene contrato creado por QuoteManagementService._createContractFromQuote
+      const contract = await Contract.findOne({
+        where: { quote_id: quote.id, status: 'active' }
+      });
+
+      if (!contract) {
+        console.log(`⚠️ [ONBOARDING] No se encontró contrato activo para quote ${quote.id}. Fases 3-6 pendientes.`);
+        return {
+          success: true,
+          trace_id,
+          status: 'WAITING_CONTRACT',
+          message: 'Quote activado. Contrato pendiente para continuar fases 3-6.'
+        };
+      }
+
+      console.log(`📄 [ONBOARDING] Contrato encontrado: ${contract.contract_number}`);
+
+      // FASE 3: Generar factura inicial
+      let invoiceResult;
+      try {
+        invoiceResult = await this.generateInitialInvoice(contract);
+        console.log(`✅ [ONBOARDING] Fase 3 (Factura) completada desde quote`);
+      } catch (err) {
+        console.warn(`⚠️ [ONBOARDING] Fase 3 (Factura) falló: ${err.message}`);
+      }
+
+      // FASES 4-6 se ejecutan cuando se confirma el pago (confirmInvoicePayment)
+      // No se ejecutan aquí porque dependen del pago
+
+      return {
+        success: true,
+        trace_id,
+        quote_id: quote.id,
+        contract_id: contract.id,
+        invoice: invoiceResult || null,
+        status: 'INVOICE_GENERATED',
+        message: `Onboarding iniciado desde Quote ${quote.quote_number}. Factura generada. Fases 4-6 pendientes de pago.`
+      };
+    } catch (error) {
+      console.error(`❌ [ONBOARDING] Error en initiateFromQuote:`, error);
+      // No lanzar - el quote ya se activó, el onboarding es secundario
+      return {
+        success: false,
+        trace_id,
+        error: error.message
+      };
     }
   }
 

@@ -664,7 +664,7 @@ window.AssociateMarketplace = (function() {
      * Cargar categorías
      */
     async function loadCategories() {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         try {
             const res = await fetch(`${config.apiBase}/categories`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -683,7 +683,7 @@ window.AssociateMarketplace = (function() {
      * Cargar contratos
      */
     async function loadContracts() {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         try {
             const res = await fetch(`${config.apiBase}/contracts/my-company`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -704,7 +704,7 @@ window.AssociateMarketplace = (function() {
         state.isLoading = true;
         renderAssociatesList();
 
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         const params = new URLSearchParams();
 
         if (state.filters.category) params.append('category', state.filters.category);
@@ -760,7 +760,7 @@ window.AssociateMarketplace = (function() {
      * Mostrar detalle de asociado
      */
     async function showAssociateDetail(associateId) {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
 
         try {
             const res = await fetch(`${config.apiBase}/${associateId}`, {
@@ -1087,7 +1087,7 @@ window.AssociateMarketplace = (function() {
      * Crear contrato
      */
     async function createContract(formData) {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         const data = {
             associateId: formData.get('associateId'),
             contractType: formData.get('contractType'),
@@ -1120,6 +1120,7 @@ window.AssociateMarketplace = (function() {
         } catch (error) {
             console.error('[MARKETPLACE] Error creating contract:', error);
             showNotification('Error al crear contrato', 'error');
+            document.getElementById('contract-modal')?.remove();
         }
     }
 
@@ -1129,7 +1130,7 @@ window.AssociateMarketplace = (function() {
     async function pauseContract(contractId) {
         if (!confirm('¿Está seguro de pausar este contrato?')) return;
 
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         try {
             const res = await fetch(`${config.apiBase}/contracts/${contractId}/pause`, {
                 method: 'PUT',
@@ -1154,7 +1155,7 @@ window.AssociateMarketplace = (function() {
      * Activar contrato
      */
     async function activateContract(contractId) {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         try {
             const res = await fetch(`${config.apiBase}/contracts/${contractId}/activate`, {
                 method: 'PUT',
@@ -1182,7 +1183,7 @@ window.AssociateMarketplace = (function() {
         const reason = prompt('Ingrese el motivo de terminación:');
         if (reason === null) return;
 
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         try {
             const res = await fetch(`${config.apiBase}/contracts/${contractId}`, {
                 method: 'DELETE',

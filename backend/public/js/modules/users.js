@@ -1510,6 +1510,7 @@ async function saveNewUser() {
         
     } catch (error) {
         console.error('❌ [USERS] Error guardando usuario:', error);
+        closeUserModal();
         showUserMessage('❌ Error de conexión al guardar usuario', 'error');
     }
 }
@@ -1987,6 +1988,7 @@ async function saveEditUser(userId) {
         
     } catch (error) {
         console.error('❌ Error guardando usuario:', error);
+        closeEditModal();
         showUserMessage('❌ Error guardando cambios', 'error');
     }
 }
@@ -4779,6 +4781,7 @@ async function performUserShiftAssignment(userId, userName) {
         }
     } catch (error) {
         console.error('Error asignando turno:', error);
+        closeModal('assignUserShiftsModal');
         showUserMessage('❌ Error al asignar turno', 'error');
     }
 }
@@ -4808,6 +4811,7 @@ async function removeUserShift(userShiftId) {
         }
     } catch (error) {
         console.error('Error removiendo turno:', error);
+        closeModal('assignUserShiftsModal');
         showUserMessage('❌ Error al remover turno', 'error');
     }
 }
@@ -4875,6 +4879,7 @@ async function startBiometricCapture(userId, employeeId) {
 
     } catch (error) {
         console.error('❌ [BIOMETRIC] Error al iniciar captura:', error);
+        closeModal('employeeFileModal');
         showUserMessage('❌ Error al iniciar captura biométrica. Verifique que el módulo esté disponible.', 'error');
     }
 }
@@ -4941,12 +4946,17 @@ window.showFileTab = function(tabName, button) {
         if (tabName === 'medical') {
             console.log('🏥 [MEDICAL] Cargando datos médicos avanzados...');
             const userId = window.currentViewUserId;
-            if (userId && typeof loadMedicalAdvancedData === 'function') {
-                loadMedicalAdvancedData(userId);
-            } else if (!userId) {
-                console.warn('⚠️ [MEDICAL] No hay userId disponible');
+            if (userId) {
+                if (typeof loadMedicalAdvancedData === 'function') loadMedicalAdvancedData(userId);
+                if (typeof loadChronicConditions === 'function') loadChronicConditions(userId);
+                if (typeof loadMedications === 'function') loadMedications(userId);
+                if (typeof loadAllergies === 'function') loadAllergies(userId);
+                if (typeof loadActivityRestrictions === 'function') loadActivityRestrictions(userId);
+                if (typeof loadWorkRestrictions === 'function') loadWorkRestrictions(userId);
+                if (typeof loadVaccinations === 'function') loadVaccinations(userId);
+                if (typeof loadMedicalExams === 'function') loadMedicalExams(userId);
             } else {
-                console.warn('⚠️ [MEDICAL] Función loadMedicalAdvancedData no disponible');
+                console.warn('⚠️ [MEDICAL] No hay userId disponible');
             }
         }
 
@@ -5079,6 +5089,23 @@ window.showFileTab = function(tabName, button) {
                 } else {
                     console.warn('⚠️ [LEGAL-ISSUES] Función loadLegalIssuesFromSSOT no disponible');
                 }
+            }
+        }
+
+        // Si es el tab biométrico, cargar estado de consentimiento
+        if (tabName === 'biometric') {
+            console.log('📸 [BIOMETRIC] Cargando estado biométrico...');
+            const userId = window.currentViewUserId;
+            if (userId && typeof loadBiometricConsentStatus === 'function') {
+                loadBiometricConsentStatus(userId);
+            }
+        }
+
+        // Si es el tab familiar, también cargar estado civil
+        if (tabName === 'family') {
+            const userId = window.currentViewUserId;
+            if (userId && typeof loadMaritalStatus === 'function') {
+                loadMaritalStatus(userId);
             }
         }
     } else {
@@ -5941,6 +5968,7 @@ function addWorkHistory(userId) {
             }
         } catch (error) {
             console.error('❌ [WORK-HISTORY] Error completo:', error);
+            closeModal('workHistoryModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -6064,6 +6092,7 @@ function addFamilyMember(userId) {
             }
         } catch (error) {
             console.error('❌ Error al agregar familiar:', error);
+            closeModal('familyMemberModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -6098,9 +6127,9 @@ function addPreexistingCondition(userId) {
                     <div style="margin: 10px 0;">
                         <label>Severidad:</label>
                         <select id="severity" class="form-control">
-                            <option value="low">Leve</option>
-                            <option value="medium">Moderada</option>
-                            <option value="high">Grave</option>
+                            <option value="leve">Leve</option>
+                            <option value="moderada">Moderada</option>
+                            <option value="grave">Grave</option>
                         </select>
                     </div>
                 </div>
@@ -6530,6 +6559,7 @@ function addPermissionRequest(userId) {
             loadAttendanceHistory(userId);
         } catch (error) {
             console.error('❌ [MEDICAL-CASES] Error:', error);
+            closeModal('permissionRequestModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -6749,11 +6779,11 @@ function addDisciplinaryAction(userId) {
 
         try {
             const formData = {
-            action_type: document.getElementById('actionType').value || null,
-            severity: 'moderada', // Default severity
-            description: document.getElementById('description').value || null,
-            date_occurred: document.getElementById('actionDate').value || null,
-            action_taken: document.getElementById('reason').value || null,
+            action_type: document.getElementById('actionType')?.value || null,
+            severity: 'moderada',
+            description: document.getElementById('description')?.value || null,
+            date_occurred: document.getElementById('actionDate')?.value || new Date().toISOString().split('T')[0],
+            action_taken: document.getElementById('reason')?.value || 'Registrado por administrador',
             follow_up_required: false,
         };
 
@@ -6777,6 +6807,7 @@ function addDisciplinaryAction(userId) {
             if (typeof loadDisciplinaryActions === 'function') { loadDisciplinaryActions(userId); }
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('disciplinaryModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -6912,6 +6943,7 @@ function addEducation(userId) {
             }
         } catch (error) {
             console.error('❌ Error al agregar educación:', error);
+            closeModal('educationModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -7095,14 +7127,8 @@ async function loadFamilyMembers(userId) {
 
         const familyList = document.getElementById('family-members-list');
         if (familyList) {
-            // Limpiar mensaje "No hay familiares"
-            const noDataMsg = familyList.querySelector('.text-muted, .no-data, p');
-            if (noDataMsg && noDataMsg.textContent.includes('No hay')) {
-                noDataMsg.remove();
-            }
-
             if (familyRecords.length > 0) {
-                const recordsHtml = familyRecords.map(member => `
+                familyList.innerHTML = familyRecords.map(member => `
                     <div class="family-member-card" style="background: #e8f5e9; padding: 10px; border-radius: 4px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <strong>${member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim()}</strong>
@@ -7114,21 +7140,8 @@ async function loadFamilyMembers(userId) {
                         </button>
                     </div>
                 `).join('');
-
-                const existingRecords = familyList.querySelector('.family-records');
-                if (existingRecords) {
-                    existingRecords.innerHTML = recordsHtml;
-                } else {
-                    const recordsDiv = document.createElement('div');
-                    recordsDiv.className = 'family-records';
-                    recordsDiv.innerHTML = recordsHtml;
-                    familyList.appendChild(recordsDiv);
-                }
             } else {
-                // Mostrar mensaje si no hay familiares
-                if (!familyList.querySelector('.family-records')) {
-                    familyList.innerHTML = '<p class="text-muted text-center">No hay otros familiares registrados</p>';
-                }
+                familyList.innerHTML = '<p class="text-muted text-center">No hay otros familiares registrados</p>';
             }
         }
         console.log('✅ Miembros de familia cargados');
@@ -7193,22 +7206,21 @@ async function loadChildren(userId) {
         console.log('👶 Hijos:', childrenRecords);
 
         const childrenList = document.getElementById('children-list');
-        if (childrenList && childrenRecords.length > 0) {
-            const recordsHtml = childrenRecords.map(child => `
-                <div style="background: #fff3e0; padding: 10px; border-radius: 4px; margin-bottom: 8px;">
-                    <strong>${child.first_name || ''} ${child.last_name || ''}</strong>
-                    <br><small>Fecha nacimiento: ${child.birth_date || 'N/A'} | ${child.gender || ''}</small>
-                </div>
-            `).join('');
-
-            const existingRecords = childrenList.querySelector('.children-records');
-            if (existingRecords) {
-                existingRecords.innerHTML = recordsHtml;
+        if (childrenList) {
+            if (childrenRecords.length > 0) {
+                childrenList.innerHTML = childrenRecords.map(child => `
+                    <div style="background: #fff3e0; padding: 10px; border-radius: 4px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${child.full_name || `${child.first_name || ''} ${child.last_name || ''}`.trim() || 'Sin nombre'}</strong>
+                            <br><small>Fecha nacimiento: ${child.birth_date ? new Date(child.birth_date).toLocaleDateString() : 'N/A'} | ${child.gender || ''}</small>
+                        </div>
+                        <button class="btn btn-sm btn-danger" onclick="deleteChild('${child.id}', '${child.user_id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('');
             } else {
-                const recordsDiv = document.createElement('div');
-                recordsDiv.className = 'children-records';
-                recordsDiv.innerHTML = recordsHtml;
-                childrenList.appendChild(recordsDiv);
+                childrenList.innerHTML = '<p style="text-align: center; color: #666; font-style: italic; font-size: 12px;">No hay hijos registrados</p>';
             }
         }
         console.log('✅ Hijos cargados');
@@ -7219,6 +7231,210 @@ async function loadChildren(userId) {
 
 window.loadChildren = loadChildren;
 
+// =================== FUNCIÓN PARA CARGAR ESTADO CIVIL ===================
+
+async function loadMaritalStatus(userId) {
+    console.log('💑 [MARITAL] Cargando estado civil para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-profile/${userId}/marital-status`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            console.error('❌ Error al cargar estado civil:', response.status);
+            return;
+        }
+
+        const data = await response.json();
+        console.log('💑 Estado civil:', data);
+
+        const statusMap = {
+            'single': 'Soltero/a', 'married': 'Casado/a', 'divorced': 'Divorciado/a',
+            'widowed': 'Viudo/a', 'separated': 'Separado/a', 'domestic_partner': 'Concubino/a'
+        };
+
+        const statusEl = document.getElementById('marital-status');
+        if (statusEl) statusEl.textContent = statusMap[data.marital_status] || data.marital_status || 'No especificado';
+
+        const marriageDateEl = document.getElementById('marriage-date');
+        if (marriageDateEl) marriageDateEl.textContent = data.marriage_date ? new Date(data.marriage_date).toLocaleDateString() : '-';
+
+        const spouseDependentEl = document.getElementById('spouse-dependent');
+        if (spouseDependentEl) spouseDependentEl.textContent = data.spouse_is_dependent ? 'Sí' : '-';
+
+        const spouseDetails = document.getElementById('spouse-details');
+        if (spouseDetails && data.spouse_name) {
+            spouseDetails.style.display = 'block';
+            const nameEl = document.getElementById('spouse-name');
+            if (nameEl) nameEl.textContent = data.spouse_name || '-';
+            const surnameEl = document.getElementById('spouse-surname');
+            if (surnameEl) surnameEl.textContent = data.spouse_surname || '-';
+            const dniEl = document.getElementById('spouse-dni');
+            if (dniEl) dniEl.textContent = data.spouse_dni || '-';
+            const bdEl = document.getElementById('spouse-birthdate');
+            if (bdEl) bdEl.textContent = data.spouse_birth_date ? new Date(data.spouse_birth_date).toLocaleDateString() : '-';
+            const covEl = document.getElementById('spouse-coverage');
+            if (covEl) covEl.textContent = data.spouse_health_coverage ? 'Sí' : 'No';
+        } else if (spouseDetails) {
+            spouseDetails.style.display = 'none';
+        }
+
+        console.log('✅ Estado civil cargado');
+    } catch (error) {
+        console.error('❌ Error al cargar estado civil:', error);
+    }
+}
+
+window.loadMaritalStatus = loadMaritalStatus;
+
+// =================== FUNCIONES DE CARGA MÉDICA (CRUD reload) ===================
+
+async function loadChronicConditions(userId) {
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-medical/${userId}/chronic-conditions`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+        const records = await response.json();
+        const container = document.getElementById('chronic-conditions-list');
+        if (container) {
+            container.innerHTML = records.length > 0
+                ? records.map(r => `<div style="background:#fff3e0;padding:8px;border-radius:4px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><div><strong>${r.condition_name||r.name||'Condición'}</strong><br><small>${r.diagnosis_date?'Dx: '+new Date(r.diagnosis_date).toLocaleDateString():''}${r.severity?' | Severidad: '+r.severity:''}</small></div><button class="btn btn-sm btn-danger" onclick="deleteChronicCondition('${r.id}','${userId}')"><i class="fas fa-trash"></i></button></div>`).join('')
+                : '<p style="text-align:center;color:#666;font-style:italic;font-size:12px;">Sin condiciones crónicas registradas</p>';
+        }
+    } catch (e) { console.error('Error cargando condiciones crónicas:', e); }
+}
+
+async function loadMedications(userId) {
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-medical/${userId}/medications`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+        const records = await response.json();
+        const container = document.getElementById('medications-list');
+        if (container) {
+            container.innerHTML = records.length > 0
+                ? records.map(r => `<div style="background:#e8f5e9;padding:8px;border-radius:4px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><div><strong>${r.medication_name||r.name||'Medicamento'}</strong><br><small>${r.dosage||''} ${r.frequency?'| '+r.frequency:''}</small></div><button class="btn btn-sm btn-danger" onclick="deleteMedication('${r.id}','${userId}')"><i class="fas fa-trash"></i></button></div>`).join('')
+                : '<p style="text-align:center;color:#666;font-style:italic;font-size:12px;">Sin medicamentos registrados</p>';
+        }
+    } catch (e) { console.error('Error cargando medicamentos:', e); }
+}
+
+async function loadAllergies(userId) {
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-medical/${userId}/allergies`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+        const records = await response.json();
+        const container = document.getElementById('allergies-list');
+        if (container) {
+            container.innerHTML = records.length > 0
+                ? records.map(r => `<div style="background:#fce4ec;padding:8px;border-radius:4px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><div><strong>${r.allergen||r.name||'Alergia'}</strong><br><small>${r.severity?'Severidad: '+r.severity:''} ${r.reaction?' | Reacción: '+r.reaction:''}</small></div><button class="btn btn-sm btn-danger" onclick="deleteAllergy('${r.id}','${userId}')"><i class="fas fa-trash"></i></button></div>`).join('')
+                : '<p style="text-align:center;color:#666;font-style:italic;font-size:12px;">Sin alergias registradas</p>';
+        }
+    } catch (e) { console.error('Error cargando alergias:', e); }
+}
+
+async function loadActivityRestrictions(userId) {
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-medical/${userId}/activity-restrictions`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+        const records = await response.json();
+        const container = document.getElementById('activity-restrictions-list');
+        if (container) {
+            container.innerHTML = records.length > 0
+                ? records.map(r => `<div style="background:#fff8e1;padding:8px;border-radius:4px;margin-bottom:6px;"><strong>${r.restriction_type||r.activity||'Restricción'}</strong><br><small>${r.description||''} ${r.valid_until?'| Hasta: '+new Date(r.valid_until).toLocaleDateString():''}</small></div>`).join('')
+                : '<p style="text-align:center;color:#666;font-style:italic;font-size:12px;">Sin restricciones de actividad</p>';
+        }
+    } catch (e) { console.error('Error cargando restricciones de actividad:', e); }
+}
+
+async function loadWorkRestrictions(userId) {
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-medical/${userId}/work-restrictions`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+        const records = await response.json();
+        const container = document.getElementById('work-restrictions-list');
+        if (container) {
+            container.innerHTML = records.length > 0
+                ? records.map(r => `<div style="background:#ffebee;padding:8px;border-radius:4px;margin-bottom:6px;"><strong>${r.restriction_type||r.description||'Restricción laboral'}</strong><br><small>${r.valid_from?'Desde: '+new Date(r.valid_from).toLocaleDateString():''} ${r.valid_until?'| Hasta: '+new Date(r.valid_until).toLocaleDateString():''}</small></div>`).join('')
+                : '<p style="text-align:center;color:#666;font-style:italic;font-size:12px;">Sin restricciones laborales</p>';
+        }
+    } catch (e) { console.error('Error cargando restricciones laborales:', e); }
+}
+
+async function loadVaccinations(userId) {
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-medical/${userId}/vaccinations`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+        const records = await response.json();
+        const container = document.getElementById('vaccinations-list');
+        if (container) {
+            container.innerHTML = records.length > 0
+                ? records.map(r => `<div style="background:#e8f5e9;padding:8px;border-radius:4px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><div><strong>${r.vaccine_name||r.name||'Vacuna'}</strong><br><small>${r.application_date?'Fecha: '+new Date(r.application_date).toLocaleDateString():''} ${r.next_dose_date?'| Próxima: '+new Date(r.next_dose_date).toLocaleDateString():''}</small></div><button class="btn btn-sm btn-danger" onclick="deleteVaccination('${r.id}','${userId}')"><i class="fas fa-trash"></i></button></div>`).join('')
+                : '<p style="text-align:center;color:#666;font-style:italic;font-size:12px;">Sin vacunas registradas</p>';
+        }
+    } catch (e) { console.error('Error cargando vacunas:', e); }
+}
+
+async function loadMedicalExams(userId) {
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-medical/${userId}/medical-exams`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+        const records = await response.json();
+        const container = document.getElementById('medical-exams-list');
+        if (container) {
+            container.innerHTML = records.length > 0
+                ? records.map(r => `<div style="background:#e3f2fd;padding:8px;border-radius:4px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><div><strong>${r.exam_type||r.name||'Examen'}</strong><br><small>${r.exam_date?'Fecha: '+new Date(r.exam_date).toLocaleDateString():''} ${r.result?'| Resultado: '+r.result:''}</small></div><button class="btn btn-sm btn-danger" onclick="deleteMedicalExam('${r.id}','${userId}')"><i class="fas fa-trash"></i></button></div>`).join('')
+                : '<p style="text-align:center;color:#666;font-style:italic;font-size:12px;">Sin exámenes médicos registrados</p>';
+        }
+    } catch (e) { console.error('Error cargando exámenes médicos:', e); }
+}
+
+async function loadDisciplinaryActions(userId) {
+    try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/v1/user-admin/${userId}/disciplinary`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+        const records = await response.json();
+        const container = document.getElementById('disciplinary-history');
+        if (container) {
+            container.innerHTML = records.length > 0
+                ? records.map(r => `<div style="background:#fff3e0;padding:10px;border-radius:4px;margin-bottom:8px;border-left:3px solid ${r.severity==='high'?'#f44336':r.severity==='medium'?'#ff9800':'#ffc107'};"><strong>${r.action_type||r.type||'Acción disciplinaria'}</strong><br><small>${r.date?new Date(r.date).toLocaleDateString():''} ${r.description?' - '+r.description:''}</small></div>`).join('')
+                : '<p style="text-align:center;color:#666;font-style:italic;">Sin acciones disciplinarias registradas</p>';
+        }
+    } catch (e) { console.error('Error cargando acciones disciplinarias:', e); }
+}
+
+window.loadChronicConditions = loadChronicConditions;
+window.loadMedications = loadMedications;
+window.loadAllergies = loadAllergies;
+window.loadActivityRestrictions = loadActivityRestrictions;
+window.loadWorkRestrictions = loadWorkRestrictions;
+window.loadVaccinations = loadVaccinations;
+window.loadMedicalExams = loadMedicalExams;
+window.loadDisciplinaryActions = loadDisciplinaryActions;
 
 // =================== FUNCIONES DE SCORING ===================
 
@@ -7471,6 +7687,7 @@ function addLegalIssue(userId) {
             }
         } catch (error) {
             console.error('❌ [LEGAL-ISSUE] Error:', error);
+            closeModal('legalIssueModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -7685,6 +7902,7 @@ async function editBasicData(userId) {
 
         } catch (error) {
             console.error('Error guardando datos básicos:', error);
+            closeModal('basicDataModal');
             showUserMessage('❌ Error al guardar: ' + error.message, 'danger');
         }
     };
@@ -7806,6 +8024,7 @@ function editContactInfo(userId) {
             showUserMessage('✅ Información de contacto actualizada y guardada en BD', 'success');
         } catch (error) {
             console.error('Error guardando contactos:', error);
+            closeModal('contactInfoModal');
             showUserMessage('❌ Error al guardar información de contacto', 'danger');
         }
     };
@@ -8054,6 +8273,7 @@ function editMaritalStatus(userId) {
             if (typeof loadMaritalStatus === 'function') { loadMaritalStatus(userId); }
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('maritalStatusModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -8187,6 +8407,7 @@ function addChild(userId) {
             if (typeof loadChildren === 'function') { loadChildren(userId); }
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('childModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -8387,9 +8608,9 @@ function addChronicCondition(userId) {
                     <div>
                         <label>Severidad:</label>
                         <select id="conditionSeverity" class="form-control" required>
-                            <option value="mild">Leve</option>
-                            <option value="moderate">Moderada</option>
-                            <option value="severe">Severa</option>
+                            <option value="leve">Leve</option>
+                            <option value="moderada">Moderada</option>
+                            <option value="grave">Grave</option>
                         </select>
                     </div>
                     <div>
@@ -8451,6 +8672,7 @@ function addChronicCondition(userId) {
             if (typeof loadChronicConditions === 'function') { loadChronicConditions(userId); }
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('chronicConditionModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -8534,15 +8756,15 @@ function addMedication(userId) {
 
         try {
             const formData = {
-            medication_name: document.getElementById('medicationName').value || null,
-            dosage: document.getElementById('dosage').value || null,
-            frequency: document.getElementById('frequency').value || null,
-            route: document.getElementById('route').value || null,
-            start_date: document.getElementById('medStartDate').value || null,
-            end_date: document.getElementById('medEndDate').value || null,
+            medication_name: document.getElementById('medicationName')?.value || null,
+            dosage: document.getElementById('medicationDose')?.value || null,
+            frequency: document.getElementById('medicationFrequency')?.value || null,
+            route: document.getElementById('route')?.value || null,
+            start_date: document.getElementById('medStartDate')?.value || null,
+            end_date: document.getElementById('medEndDate')?.value || null,
             is_continuous: document.getElementById('isContinuous')?.checked || false,
-            prescribing_doctor: document.getElementById('prescribingDoctor').value || null,
-            purpose: document.getElementById('medPurpose').value || null,
+            prescribing_doctor: document.getElementById('prescribingDoctor')?.value || null,
+            purpose: document.getElementById('medPurpose')?.value || null,
         };
 
             const response = await fetch(`/api/v1/user-medical/${userId}/medications`, {
@@ -8565,6 +8787,7 @@ function addMedication(userId) {
             if (typeof loadMedications === 'function') { loadMedications(userId); }
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('medicationModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -8589,13 +8812,12 @@ function addAllergy(userId) {
                     <label>Tipo de Alergia:</label>
                     <select id="allergyType" class="form-control" onchange="toggleCustomAllergy()" required>
                         <option value="">Seleccionar...</option>
-                        <option value="food">Alimentaria</option>
-                        <option value="medication">Medicamentos</option>
-                        <option value="environmental">Ambiental</option>
-                        <option value="chemical">Química</option>
-                        <option value="latex">Látex</option>
-                        <option value="insect">Picaduras de insectos</option>
-                        <option value="custom">Otra (especificar)</option>
+                        <option value="alimento">Alimentaria</option>
+                        <option value="medicamento">Medicamentos</option>
+                        <option value="ambiental">Ambiental</option>
+                        <option value="contacto">Contacto/Química</option>
+                        <option value="insecto">Picaduras de insectos</option>
+                        <option value="otro">Otra (especificar)</option>
                     </select>
                 </div>
                 <div style="margin: 15px 0;">
@@ -8606,10 +8828,10 @@ function addAllergy(userId) {
                     <div>
                         <label>Severidad:</label>
                         <select id="allergySeverity" class="form-control" required>
-                            <option value="mild">Leve</option>
-                            <option value="moderate">Moderada</option>
-                            <option value="severe">Severa</option>
-                            <option value="anaphylactic">Anafiláctica</option>
+                            <option value="leve">Leve</option>
+                            <option value="moderada">Moderada</option>
+                            <option value="grave">Grave</option>
+                            <option value="anafilaxia">Anafiláctica</option>
                         </select>
                     </div>
                     <div>
@@ -8645,13 +8867,13 @@ function addAllergy(userId) {
 
         try {
             const formData = {
-            allergen: document.getElementById('allergen').value || null,
-            allergy_type: document.getElementById('allergyType').value || null,
-            severity: document.getElementById('allergySeverity').value || null,
-            symptoms: document.getElementById('symptoms').value || null,
-            diagnosed_date: document.getElementById('allergyDiagnosedDate').value || null,
-            requires_epipen: document.getElementById('requiresEpipen')?.checked || false,
-            notes: document.getElementById('allergyNotes').value || null,
+            allergen: document.getElementById('allergen')?.value || null,
+            allergy_type: document.getElementById('allergyType')?.value || null,
+            severity: document.getElementById('allergySeverity')?.value || null,
+            symptoms: document.getElementById('allergySymptoms')?.value || null,
+            diagnosed_date: document.getElementById('allergyDiagnosedDate')?.value || null,
+            requires_epipen: document.getElementById('carriesEpipen')?.checked || false,
+            notes: document.getElementById('allergyNotes')?.value || null,
         };
 
             const response = await fetch(`/api/v1/user-medical/${userId}/allergies`, {
@@ -8674,6 +8896,7 @@ function addAllergy(userId) {
             if (typeof loadAllergies === 'function') { loadAllergies(userId); }
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('allergyModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -8781,6 +9004,7 @@ function addActivityRestriction(userId) {
             if (typeof loadActivityRestrictions === 'function') { loadActivityRestrictions(userId); }
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('activityRestrictionModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -8906,6 +9130,7 @@ function addWorkRestriction(userId) {
             if (typeof loadWorkRestrictions === 'function') { loadWorkRestrictions(userId); }
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('workRestrictionModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -9138,6 +9363,7 @@ async function addFamilyDocument(userId) {
 
         } catch (error) {
             console.error('[FAMILY-DOCS] Error:', error);
+            closeModal('familyDocumentModal');
             showUserMessage(`Error: ${error.message}`, 'error');
         }
     };
@@ -9422,12 +9648,14 @@ async function editFamilyDocument(documentId, userId) {
 
             } catch (error) {
                 console.error('[FAMILY-DOCS] Error actualizando:', error);
+                closeModal('editFamilyDocumentModal');
                 showUserMessage(`Error: ${error.message}`, 'error');
             }
         };
 
     } catch (error) {
         console.error('[FAMILY-DOCS] Error:', error);
+        closeModal('editFamilyDocumentModal');
         showUserMessage(`Error: ${error.message}`, 'error');
     }
 }
@@ -9559,6 +9787,7 @@ function editAnthropometricData(userId) {
             loadMedicalAdvancedData(userId);
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('anthropometricModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -9714,6 +9943,7 @@ function addSurgery(userId) {
             loadMedicalAdvancedData(userId);
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('surgeryModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -9870,6 +10100,7 @@ function addPsychiatricTreatment(userId) {
             loadMedicalAdvancedData(userId);
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('psychiatricModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -10022,6 +10253,7 @@ function addSportsActivity(userId) {
             loadMedicalAdvancedData(userId);
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('sportsModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -10164,6 +10396,7 @@ function editHealthyHabits(userId) {
             loadMedicalAdvancedData(userId);
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('habitsModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -10473,6 +10706,7 @@ async function editSalaryConfig(userId) {
             loadSalaryAdvancedData(userId);
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('salaryConfigModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -10572,6 +10806,7 @@ function addSalaryIncrease(userId) {
             loadSalaryAdvancedData(userId);
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('salaryIncreaseModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -11530,6 +11765,7 @@ function addVaccination(userId) {
             if (typeof loadVaccinations === 'function') { loadVaccinations(userId); }
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('vaccinationModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -11657,6 +11893,7 @@ function addMedicalExam(userId) {
             if (typeof loadMedicalExams === 'function') { loadMedicalExams(userId); }
         } catch (error) {
             console.error('❌ Error:', error);
+            closeModal('medicalExamModal');
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -14060,6 +14297,7 @@ window.manageCertificadoConducta = async function(userId) {
 
     } catch (error) {
         console.error('Error:', error);
+        closeModal('certificadoConductaModal');
         showUserMessage('❌ Error al cargar certificado: ' + error.message, 'error');
     }
 };
@@ -14214,6 +14452,7 @@ window.manageEvaluacionAmbiental = async function(userId) {
 
     } catch (error) {
         console.error('Error:', error);
+        closeModal('evaluacionAmbientalModal');
         showUserMessage('❌ Error al cargar evaluación: ' + error.message, 'error');
     }
 };
@@ -14829,6 +15068,7 @@ async function auditUserHistory(userId) {
 
     } catch (error) {
         console.error('Error:', error);
+        closeModal('auditHistoryModal');
         showUserMessage('❌ Error al cargar historial: ' + error.message, 'error');
     }
 }
@@ -15408,6 +15648,7 @@ async function manageHiringStatus(userId) {
 
     } catch (error) {
         console.error('Error abriendo gestión de alta:', error);
+        closeModal('hiringStatusModal');
         showUserMessage('❌ Error al cargar proceso de alta', 'error');
     }
 }

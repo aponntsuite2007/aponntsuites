@@ -11,11 +11,13 @@
  */
 
 const { Op, QueryTypes } = require('sequelize');
+const ProcurementNotifications = require('./ProcurementNotificationIntegration');
 
 class ProcurementService {
     constructor(db) {
         this.db = db;
         this.sequelize = db.sequelize;
+        this.notifications = ProcurementNotifications;
 
         // Modelos
         this.Requisition = db.ProcurementRequisition;
@@ -184,9 +186,9 @@ class ProcurementService {
         ];
         await requisition.save();
 
-        // Enviar notificación a aprobadores
+        // Enviar notificación a aprobadores via NCE
         try {
-            await this.notifyApprovers(companyId, 'requisition', requisition);
+            await this.notifications.notifyRequisitionPendingApproval(companyId, requisition, userId);
         } catch (notifError) {
             console.warn('[Procurement] Error enviando notificación a aprobadores:', notifError.message);
         }
@@ -220,6 +222,13 @@ class ProcurementService {
         // Aprobar
         await requisition.approve(userId, userName, comments);
 
+        // Notificar aprobación via NCE
+        try {
+            await this.notifications.notifyRequisitionApproved(companyId, requisition, userId, userName);
+        } catch (notifError) {
+            console.warn('[Procurement] Error notificando aprobación:', notifError.message);
+        }
+
         return { success: true, requisition };
     }
 
@@ -235,6 +244,13 @@ class ProcurementService {
         if (requisition.status !== 'pending_approval') throw new Error('Requisición no está pendiente de aprobación');
 
         await requisition.reject(userId, userName, reason);
+
+        // Notificar rechazo via NCE
+        try {
+            await this.notifications.notifyRequisitionRejected(companyId, requisition, userId, userName, reason);
+        } catch (notifError) {
+            console.warn('[Procurement] Error notificando rechazo:', notifError.message);
+        }
 
         return { success: true, requisition };
     }
@@ -586,14 +602,23 @@ class ProcurementService {
         // Aprobar
         await order.approve(userId, userName);
 
-        // Enviar notificación al proveedor
+        // ENVIAR EMAIL AL PROVEEDOR via NCE
+        let supplierEmailResult;
         try {
-            await this.notifySupplier(companyId, order);
+            supplierEmailResult = await this.notifications.sendOrderToSupplier(companyId, order);
+            if (!supplierEmailResult.success) {
+                console.warn('[Procurement] Email al proveedor no enviado:', supplierEmailResult.error);
+            }
         } catch (notifError) {
-            console.warn('[Procurement] Error enviando notificación al proveedor:', notifError.message);
+            console.warn('[Procurement] Error enviando email al proveedor:', notifError.message);
         }
 
-        return { success: true, order };
+        return {
+            success: true,
+            order,
+            supplierNotified: supplierEmailResult?.success || false,
+            supplierEmail: supplierEmailResult?.email
+        };
     }
 
     /**

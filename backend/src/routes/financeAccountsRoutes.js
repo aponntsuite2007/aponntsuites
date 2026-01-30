@@ -31,12 +31,7 @@ router.get('/chart', auth, async (req, res) => {
 
         const accounts = await db.FinanceChartOfAccounts.findAll({
             where,
-            order: [['account_number', 'ASC']],
-            include: [{
-                model: db.FinanceChartOfAccounts,
-                as: 'parent',
-                attributes: ['id', 'account_code', 'name']
-            }]
+            order: [['account_number', 'ASC']]
         });
 
         res.json({
@@ -86,11 +81,7 @@ router.get('/chart/:id', auth, async (req, res) => {
         const { id } = req.params;
 
         const account = await db.FinanceChartOfAccounts.findOne({
-            where: { id, company_id: companyId },
-            include: [
-                { model: db.FinanceChartOfAccounts, as: 'parent' },
-                { model: db.FinanceChartOfAccounts, as: 'children' }
-            ]
+            where: { id, company_id: companyId }
         });
 
         if (!account) {
@@ -265,11 +256,7 @@ router.get('/cost-centers', auth, async (req, res) => {
 
         const costCenters = await db.FinanceCostCenter.findAll({
             where,
-            order: [['path', 'ASC']],
-            include: [
-                { model: db.FinanceCostCenter, as: 'parent', attributes: ['id', 'code', 'name'] },
-                { model: db.Department, as: 'department', attributes: ['id', 'name'] }
-            ]
+            order: [['path', 'ASC']]
         });
 
         res.json({
@@ -557,16 +544,7 @@ router.get('/journal-entries', auth, async (req, res) => {
             where,
             order: [['entry_date', 'DESC'], ['entry_number', 'DESC']],
             limit: parseInt(limit),
-            offset: parseInt(offset),
-            include: [{
-                model: db.FinanceJournalEntryLine,
-                as: 'lines',
-                include: [{
-                    model: db.FinanceChartOfAccounts,
-                    as: 'account',
-                    attributes: ['id', 'account_code', 'name']
-                }]
-            }]
+            offset: parseInt(offset)
         });
 
         res.json({
@@ -597,15 +575,7 @@ router.get('/journal-entries/:id', auth, async (req, res) => {
         const { id } = req.params;
 
         const entry = await db.FinanceJournalEntry.findOne({
-            where: { id, company_id: companyId },
-            include: [{
-                model: db.FinanceJournalEntryLine,
-                as: 'lines',
-                include: [
-                    { model: db.FinanceChartOfAccounts, as: 'account' },
-                    { model: db.FinanceCostCenter, as: 'costCenter' }
-                ]
-            }]
+            where: { id, company_id: companyId }
         });
 
         if (!entry) {
@@ -723,9 +693,7 @@ router.post('/journal-entries', auth, async (req, res) => {
         }
 
         // Recargar con líneas
-        const createdEntry = await db.FinanceJournalEntry.findByPk(entry.id, {
-            include: [{ model: db.FinanceJournalEntryLine, as: 'lines' }]
-        });
+        const createdEntry = await db.FinanceJournalEntry.findByPk(entry.id);
 
         res.status(201).json({
             success: true,
@@ -752,8 +720,7 @@ router.post('/journal-entries/:id/post', auth, async (req, res) => {
         const { id } = req.params;
 
         const entry = await db.FinanceJournalEntry.findOne({
-            where: { id, company_id: companyId },
-            include: [{ model: db.FinanceJournalEntryLine, as: 'lines' }]
+            where: { id, company_id: companyId }
         });
 
         if (!entry) {
@@ -762,6 +729,12 @@ router.post('/journal-entries/:id/post', auth, async (req, res) => {
                 error: 'Asiento no encontrado'
             });
         }
+
+        // Load lines separately (association FK mismatch workaround)
+        entry.lines = await db.FinanceJournalEntryLine.findAll({
+            where: { journal_entry_id: entry.id },
+            order: [['line_number', 'ASC']]
+        });
 
         if (entry.status !== 'draft') {
             return res.status(400).json({
@@ -831,8 +804,7 @@ router.post('/journal-entries/:id/reverse', auth, async (req, res) => {
         const { reversal_date, description } = req.body;
 
         const entry = await db.FinanceJournalEntry.findOne({
-            where: { id, company_id: companyId },
-            include: [{ model: db.FinanceJournalEntryLine, as: 'lines' }]
+            where: { id, company_id: companyId }
         });
 
         if (!entry) {

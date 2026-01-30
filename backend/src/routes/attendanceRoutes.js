@@ -398,6 +398,7 @@ router.get('/', auth, async (req, res) => {
         a.check_out_latitude,
         a.check_out_longitude,
         a."workingHours" as working_hours,
+        a.is_justified,
         a.notes,
         a.shift_id as attendance_shift_id,
         CONCAT(u."firstName", ' ', u."lastName") as user_name,
@@ -489,6 +490,8 @@ router.get('/', auth, async (req, res) => {
         workingHours: att.working_hours,
         worked_hours: att.working_hours, // Alias para test
         late_minutes: lateInfo.minutesLate || 0, // Alias para test
+        // Justificación
+        is_justified: att.is_justified,
         notes: att.notes,
         // Sucursal, Departamento, Sector
         branch_id: att.branch_id,

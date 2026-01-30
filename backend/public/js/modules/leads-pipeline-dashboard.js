@@ -616,6 +616,22 @@ const LeadsPipelineDashboard = (function() {
                         </div>
                     </div>
 
+                    <!-- Sección Presupuesto -->
+                    ${lead.quote_id ? `
+                    <div class="detail-section" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                        <h3>📋 Presupuesto Asociado</h3>
+                        <p style="margin-bottom: 12px; color: rgba(255,255,255,0.7);">Este lead tiene un presupuesto generado.</p>
+                        <button class="btn-primary" onclick="LeadsPipelineDashboard.goToQuote('${lead.quote_id}')">
+                            📋 Ver Presupuesto
+                        </button>
+                    </div>
+                    ` : `
+                    <div class="detail-section">
+                        <h3>📋 Presupuesto</h3>
+                        <p style="color: rgba(255,255,255,0.5);">Sin presupuesto asociado a este lead.</p>
+                    </div>
+                    `}
+
                     <!-- Sección Timeline -->
                     <div class="detail-section timeline-section">
                         <h3>📅 Actividades Recientes</h3>
@@ -935,6 +951,23 @@ const LeadsPipelineDashboard = (function() {
     // =========================================================================
     // UTILIDADES
     // =========================================================================
+
+    function goToQuote(quoteId) {
+        // Close lead modal
+        document.querySelector('.lead-modal-overlay')?.remove();
+        // Navigate to Presupuestos tab in admin panel
+        if (typeof window.navigateToModule === 'function') {
+            window.navigateToModule('quotes');
+        } else if (typeof window.loadModule === 'function') {
+            window.loadModule('quotes');
+        }
+        // After module loads, open the quote detail
+        setTimeout(function() {
+            if (window.QuotesManagement && typeof window.QuotesManagement.viewQuote === 'function') {
+                window.QuotesManagement.viewQuote(parseInt(quoteId));
+            }
+        }, 800);
+    }
 
     function showToast(message, type = 'info') {
         const toast = document.createElement('div');
@@ -1780,7 +1813,8 @@ const LeadsPipelineDashboard = (function() {
         showDisqualifyModal,
         confirmDisqualify,
         showHelp,
-        closeHelp
+        closeHelp,
+        goToQuote
     };
 
 })();

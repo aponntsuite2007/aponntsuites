@@ -23,7 +23,7 @@
  */
 
 const nodemailer = require('nodemailer');
-const { sequelize } = require('../config/database');
+const { sequelize, UserNotificationPreference } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const EmailConfigService = require('./EmailConfigService');
 const CompanyEmailProcessService = require('./CompanyEmailProcessService');
@@ -63,18 +63,93 @@ class NotificationChannelDispatcher {
         } = params;
 
         console.log(`\n📤 [DISPATCHER] Dispatching to ${recipient.email || recipient.user_id}`);
-        console.log(`📋 [DISPATCHER] Channels: ${channels.join(', ')}`);
+        console.log(`📋 [DISPATCHER] Requested channels: ${channels.join(', ')}`);
 
         const results = {
             logId,
             recipient: recipient.email || recipient.user_id,
             channels: {},
             success: false,
-            errors: []
+            errors: [],
+            preferencesApplied: false,
+            quietHoursDeferred: false
         };
 
+        // ========================================================================
+        // USER PREFERENCES ENFORCEMENT (FIX - Enero 2025)
+        // ========================================================================
+        let effectiveChannels = [...channels];
+        const userId = recipient.user_id;
+        const companyId = recipient.company_id || workflow.company_id || metadata.companyId;
+        const module = workflow.module || metadata.module || 'general';
+
+        // Solo verificar preferencias si hay user_id (no aplica para externos)
+        if (userId && companyId) {
+            try {
+                const userPrefs = await UserNotificationPreference.getForUser(userId, companyId, module);
+
+                if (userPrefs) {
+                    results.preferencesApplied = true;
+
+                    // CHECK 1: Quiet Hours - Diferir a inbox si estamos en horario silencioso
+                    // (excepto notificaciones urgentes)
+                    if (priority !== 'urgent' && userPrefs.isQuietHours()) {
+                        console.log(`🌙 [DISPATCHER] User ${userId} in quiet hours - deferring to inbox only`);
+                        results.quietHoursDeferred = true;
+
+                        // En quiet hours, solo enviar a inbox (siempre permitido)
+                        effectiveChannels = ['inbox'];
+
+                        // Guardar notificación diferida para enviar después de quiet hours
+                        // (el inbox siempre funciona)
+                    } else {
+                        // CHECK 2: Filter channels based on user's enabled channels
+                        const enabledChannels = userPrefs.getEnabledChannels();
+                        console.log(`🔧 [DISPATCHER] User ${userId} enabled channels: ${enabledChannels.join(', ')}`);
+
+                        // Mapeo de nombres de canales (preferencias → dispatcher)
+                        const channelMapping = {
+                            'app': 'websocket',       // app = websocket + inbox
+                            'email': 'email',
+                            'sms': 'sms',
+                            'whatsapp': 'whatsapp',
+                            'push': 'push'
+                        };
+
+                        // Filtrar canales: solo los que el usuario tiene habilitados
+                        effectiveChannels = channels.filter(ch => {
+                            // inbox siempre permitido
+                            if (ch === 'inbox') return true;
+                            // websocket = canal 'app' en preferencias
+                            if (ch === 'websocket') return enabledChannels.includes('app');
+                            // otros canales directamente
+                            return enabledChannels.includes(ch);
+                        });
+
+                        // Si el usuario tiene 'app' habilitado, asegurar inbox
+                        if (enabledChannels.includes('app') && !effectiveChannels.includes('inbox')) {
+                            effectiveChannels.push('inbox');
+                        }
+                    }
+
+                    console.log(`✅ [DISPATCHER] Effective channels after preferences: ${effectiveChannels.join(', ')}`);
+                }
+            } catch (prefError) {
+                console.warn(`⚠️ [DISPATCHER] Error checking user preferences: ${prefError.message}`);
+                // Si falla la verificación de preferencias, continuar con canales originales
+            }
+        }
+
+        // Si no quedan canales efectivos, al menos inbox
+        if (effectiveChannels.length === 0) {
+            console.log(`⚠️ [DISPATCHER] No effective channels - defaulting to inbox`);
+            effectiveChannels = ['inbox'];
+        }
+
+        console.log(`📋 [DISPATCHER] Final channels to dispatch: ${effectiveChannels.join(', ')}`);
+
         // Dispatch a cada canal en paralelo
-        const dispatchPromises = channels.map(async (channel) => {
+        const dispatchPromises = effectiveChannels.map(async (channel) => {
             try {
                 console.log(`\n🔹 [DISPATCHER] Sending via ${channel}...`);
 
@@ -172,11 +247,20 @@ class NotificationChannelDispatcher {
 
         console.log(`\n📊 [DISPATCHER] Results:`, {
             success: results.success,
+            preferencesApplied: results.preferencesApplied,
+            quietHoursDeferred: results.quietHoursDeferred,
             channels: Object.keys(results.channels).map(ch => ({
                 channel: ch,
                 status: results.channels[ch].status
             }))
         });
+
+        // Agregar info de canales filtrados por preferencias
+        if (results.preferencesApplied) {
+            results.requestedChannels = channels;
+            results.effectiveChannels = effectiveChannels;
+            results.channelsSkippedByPreference = channels.filter(ch => !effectiveChannels.includes(ch));
+        }
 
         return results;
     }
@@ -336,15 +420,15 @@ class NotificationChannelDispatcher {
             throw new Error(`No se encontró configuración SMTP de Aponnt para tipo: ${emailType}`);
         }
 
-        console.log(`✅ [SMTP APONNT] Config found for ${emailType}: ${config.email}`);
+        console.log(`✅ [SMTP APONNT] Config found for ${emailType}: ${config.from_email || config.email_address}`);
 
         return {
             host: config.smtp_host,
             port: config.smtp_port,
-            username: config.smtp_user,
-            password: config.smtp_password, // Ya viene desencriptado por EmailConfigService
-            fromEmail: config.email,
-            fromName: config.from_name || 'Aponnt',
+            username: config.from_email || config.email_address,
+            password: config.app_password_decrypted || config.smtp_password_decrypted,
+            fromEmail: config.from_email || config.email_address,
+            fromName: config.from_name || config.display_name || 'Aponnt',
             requireTls: config.require_tls
         };
     }

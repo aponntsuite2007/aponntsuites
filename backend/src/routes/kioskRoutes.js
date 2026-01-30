@@ -1703,6 +1703,85 @@ router.post('/:id/update-gps',
 });
 
 /**
+ * @route GET /api/v1/kiosks/:id/geofence-zones
+ * @desc Obtener zonas de geofencing del kiosko (para Flutter APK)
+ * Llamado por Flutter en geofencing_service.dart:418
+ */
+router.get('/:id/geofence-zones', async (req, res) => {
+  try {
+    const kioskId = req.params.id;
+    const company_id = req.query.company_id;
+
+    if (!company_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'company_id es requerido como query param'
+      });
+    }
+
+    const { sequelize } = require('../config/database');
+
+    const [kiosks] = await sequelize.query(`
+      SELECT id, name, gps_lat, gps_lng, location
+      FROM kiosks
+      WHERE id = :kioskId AND company_id = :companyId
+      LIMIT 1
+    `, {
+      replacements: {
+        kioskId: parseInt(kioskId),
+        companyId: parseInt(company_id)
+      }
+    });
+
+    if (kiosks.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Kiosko no encontrado'
+      });
+    }
+
+    const kiosk = kiosks[0];
+
+    // Construir zonas de geofencing basadas en GPS del kiosko
+    const geofenceZones = [];
+
+    if (kiosk.gps_lat && kiosk.gps_lng) {
+      geofenceZones.push({
+        id: `kiosk_${kiosk.id}_zone`,
+        name: `Zona ${kiosk.name}`,
+        type: 'circle',
+        center: {
+          lat: parseFloat(kiosk.gps_lat),
+          lng: parseFloat(kiosk.gps_lng)
+        },
+        radius: 100, // 100 metros por defecto
+        is_active: true
+      });
+    }
+
+    res.json({
+      success: true,
+      kiosk: {
+        id: kiosk.id,
+        name: kiosk.name,
+        gps_lat: kiosk.gps_lat,
+        gps_lng: kiosk.gps_lng
+      },
+      geofenceZones: geofenceZones,
+      defaultRadius: 100
+    });
+
+  } catch (error) {
+    console.error('❌ [KIOSKS] Error obteniendo geofence zones:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener zonas de geofencing',
+      details: error.message
+    });
+  }
+});
+
+/**
  * @route POST /api/v1/kiosks/seed-demo
  * @desc Crear kioscos de prueba para DEMO company (SIN AUTH - Solo para testing)
  */

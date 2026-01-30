@@ -241,6 +241,15 @@ window.FinanceBudget = (function() {
                                     </select>
                                 </div>
                                 <div class="form-group">
+                                    <label>Tipo de Presupuesto *</label>
+                                    <select name="budget_type" required>
+                                        <option value="annual">Anual</option>
+                                        <option value="quarterly">Trimestral</option>
+                                        <option value="monthly">Mensual</option>
+                                        <option value="rolling">Rolling (continuo)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
                                     <label>Tasa de Inflación Anual (%)</label>
                                     <input type="number" name="inflation_rate" step="0.1" value="0" min="0" max="200">
                                 </div>
@@ -821,6 +830,7 @@ window.FinanceBudget = (function() {
             name: form.name.value,
             fiscal_year: parseInt(form.fiscal_year.value),
             category: form.category.value,
+            budget_type: form.budget_type.value,
             inflation_rate: parseFloat(form.inflation_rate.value) || 0,
             growth_rate: parseFloat(form.growth_rate.value) || 0,
             description: form.description.value,
@@ -848,6 +858,7 @@ window.FinanceBudget = (function() {
             }
         } catch (error) {
             console.error('Error saving budget:', error);
+            closeModal('budget');
             alert('Error al guardar');
         }
     }
@@ -887,6 +898,7 @@ window.FinanceBudget = (function() {
             }
         } catch (error) {
             console.error('Error generating budget:', error);
+            closeModal('generate');
             alert('Error al generar');
         }
     }
@@ -929,6 +941,7 @@ window.FinanceBudget = (function() {
             }
         } catch (error) {
             console.error('Error saving line:', error);
+            closeModal('line');
             alert('Error al guardar');
         }
     }

@@ -83,22 +83,22 @@ module.exports = (sequelize) => {
     // ═══════════════════════════════════════════════════════════
     first_billing_month: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
-      comment: 'Mes de primera facturación (mes siguiente al que termina el trial)'
+      allowNull: true,
+      comment: 'Mes de primera facturación (calculado por hook beforeCreate)'
     },
     proportional_days: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       comment: 'Días ya usados en el mes de primera facturación'
     },
     total_days_month: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       comment: 'Total de días del mes de primera facturación'
     },
     proportional_percentage: {
       type: DataTypes.DECIMAL(5, 2),
-      allowNull: false,
+      allowNull: true,
       validate: {
         min: 0,
         max: 100
@@ -107,7 +107,7 @@ module.exports = (sequelize) => {
     },
     proportional_amount: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
+      allowNull: true,
       validate: {
         min: 0
       },
@@ -115,7 +115,7 @@ module.exports = (sequelize) => {
     },
     full_month_amount: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
+      allowNull: true,
       validate: {
         min: 0
       },

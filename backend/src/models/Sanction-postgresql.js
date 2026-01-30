@@ -18,6 +18,7 @@ module.exports = (sequelize) => {
     employee_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      field: 'user_id',
       references: {
         model: 'users',
         key: 'user_id'
@@ -32,14 +33,14 @@ module.exports = (sequelize) => {
       allowNull: true
     },
     sanction_type: {
-      type: DataTypes.ENUM('attendance', 'training', 'behavior', 'performance', 'safety', 'other'),
+      type: DataTypes.ENUM('warning', 'written_warning', 'suspension', 'dismissal', 'other'),
       allowNull: false,
       defaultValue: 'other'
     },
     severity: {
-      type: DataTypes.ENUM('warning', 'minor', 'major', 'suspension', 'termination'),
+      type: DataTypes.ENUM('low', 'medium', 'high', 'critical'),
       allowNull: false,
-      defaultValue: 'warning'
+      defaultValue: 'low'
     },
     title: {
       type: DataTypes.STRING,

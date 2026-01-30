@@ -108,16 +108,12 @@ class ProceduresService {
                     scope_entities: JSON.stringify(data.scope_entities || []),
                     inherit_scope: data.inherit_scope !== false
                 },
-                type: QueryTypes.INSERT
+                type: QueryTypes.SELECT
             });
 
             console.log(`[PROCEDURES] Procedimiento creado: ${data.code}`);
 
-            return {
-                success: true,
-                procedure: result[0],
-                message: 'Procedimiento creado exitosamente'
-            };
+            return result;
 
         } catch (error) {
             console.error('[PROCEDURES] Error creando procedimiento:', error);
@@ -260,7 +256,7 @@ class ProceduresService {
     static async update(procedureId, companyId, data, userId) {
         try {
             // Verificar que está en borrador
-            const [current] = await sequelize.query(`
+            const current = await sequelize.query(`
                 SELECT status FROM procedures
                 WHERE id = :procedureId AND company_id = :companyId
             `, {
@@ -316,8 +312,8 @@ class ProceduresService {
                     effective_date: data.effective_date || null,
                     expiry_date: data.expiry_date || null,
                     review_date: data.review_date || null,
-                    is_critical: data.is_critical,
-                    requires_training: data.requires_training
+                    is_critical: data.is_critical != null ? data.is_critical : null,
+                    requires_training: data.requires_training != null ? data.requires_training : null
                 },
                 type: QueryTypes.UPDATE
             });
@@ -341,6 +337,38 @@ class ProceduresService {
 
         } catch (error) {
             console.error('[PROCEDURES] Error actualizando:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Eliminar procedimiento
+     */
+    static async delete(procedureId, companyId) {
+        try {
+            const result = await sequelize.query(`
+                DELETE FROM procedures
+                WHERE id = :procedureId AND company_id = :companyId
+                RETURNING *
+            `, {
+                replacements: { procedureId, companyId },
+                type: QueryTypes.SELECT
+            });
+
+            if (!result || result.length === 0) {
+                return { success: false, error: 'Procedimiento no encontrado' };
+            }
+
+            console.log(`[PROCEDURES] Procedimiento eliminado: ${result[0].code}`);
+
+            return {
+                success: true,
+                message: 'Procedimiento eliminado correctamente',
+                deleted: result[0]
+            };
+
+        } catch (error) {
+            console.error('[PROCEDURES] Error eliminando procedimiento:', error);
             throw error;
         }
     }

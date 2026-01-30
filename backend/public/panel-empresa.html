@@ -2375,6 +2375,7 @@
     <script src="js/modules/interactive-tour-engine.js"></script>
     <!-- <script src="js/modules/licensing-management.js"></script> --> <!-- REMOVIDO - Solo para panel-administrativo -->
     <script src="js/modules/art-management.js"></script>
+    <script src="js/modules/hse-management.js"></script>
 
     <!-- 🏗️ Engineering Dashboard - E2E Advanced Testing + Brain Integration -->
     <script src="js/modules/engineering-dashboard.js"></script>
@@ -5261,11 +5262,30 @@
                             showModuleFallback(moduleId, moduleName, 'payslip-template-editor.js no cargado');
                         }
                         break;
+                    case 'quotes-management':
+                        moduleContainer.innerHTML = '<div id="module-content" style="padding:20px;"></div>';
+                        if (typeof QuotesManagement !== 'undefined' && QuotesManagement.init) {
+                            QuotesManagement.init();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'quotes-management.js no cargado');
+                        }
+                        break;
                     case 'art-management':
                         if (typeof showArtManagementContent === 'function') {
                             showArtManagementContent();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'art-management.js no cargado');
+                        }
+                        break;
+                    case 'hse-management':
+                        // Seguridad e Higiene Laboral (HSE) - EPP, inspecciones, matriz de riesgos
+                        moduleContainer.innerHTML = '<div id="module-content" style="padding:20px;"></div>';
+                        if (typeof window.Modules !== 'undefined' && window.Modules['hse-management']) {
+                            window.Modules['hse-management'].init();
+                        } else if (typeof initHseManagement === 'function') {
+                            initHseManagement(document.getElementById('module-content'));
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'hse-management.js no cargado');
                         }
                         break;
                     case 'roles-permissions':
@@ -8303,6 +8323,7 @@
     <!-- 🔐 SISTEMA ENTERPRISE DE CONTROL DE ACCESO (RBAC + SSOT) - Diciembre 2025 -->
     <script src="js/modules/roles-permissions.js"></script>
     <script src="js/modules/associate-marketplace.js"></script>
+    <script src="js/modules/quotes-management.js"></script>
     <!-- DESACTIVADO: Reemplazado por unified-help-center.js -->
     <!-- <script src="js/modules/contextual-help-system.js"></script> -->
 

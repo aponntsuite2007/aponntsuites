@@ -213,8 +213,13 @@ function toggleMedicalDashboardMode() {
 
 // Medical Dashboard functions - IMPORTANTE: nombre correcto sin mayúscula en 'dashboard'
 function showMedicaldashboardContent() {
-    const content = document.getElementById('mainContent');
-    if (!content) return;
+    const content = document.getElementById('mainContent') ||
+                   document.getElementById('module-content') ||
+                   document.getElementById('medical-dashboard-container');
+    if (!content) {
+        console.error('[MEDICAL] No se encontro container (mainContent/module-content/medical-dashboard-container)');
+        return;
+    }
 
     // Inyectar estilos enterprise dark theme
     injectMedicalEnterpriseStyles();
@@ -985,6 +990,7 @@ function initMedicalEngineNav() {
 
             } catch (error) {
                 console.error('[MEDICAL] Error registrando resultado:', error);
+                this.closeMedicalResultModal();
                 alert('Error al registrar resultado: ' + error.message);
             }
         },
@@ -1586,9 +1592,11 @@ function initMedicalEngineNav() {
                     <select id="medicalFilterStatus" style="padding: 12px 16px; border-radius: 8px; border: 1px solid var(--me-border); background: var(--me-bg-secondary); color: var(--me-text-primary);">
                         <option value="">Todos los estados</option>
                         <option value="apto">Aptos</option>
-                        <option value="apto_restricciones">Apto con restricciones</option>
-                        <option value="ausente">Ausentes</option>
-                        <option value="pendiente_examen">Pendiente examen</option>
+                        <option value="apto_con_observaciones">Apto con observaciones</option>
+                        <option value="no_apto">No aptos</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="vencido">Vencido</option>
+                        <option value="suspendido">Suspendido</option>
                     </select>
                     <button onclick="loadEmployeesWithMedicalRecords()" class="me-btn me-btn-primary">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -2135,6 +2143,7 @@ async function requestEmployeePhoto(employeeId) {
             }, 1000);
             
         } catch (error) {
+            closePhotoModal();
             showMedicalMessage('❌ Error al enviar solicitud: ' + error.message, 'error');
         }
     };
@@ -2229,6 +2238,7 @@ async function requestEmployeeStudy(employeeId) {
             }, 2000);
             
         } catch (error) {
+            closeStudyModal();
             showMedicalMessage('❌ Error al enviar solicitud: ' + error.message, 'error');
         }
     };
@@ -2380,6 +2390,7 @@ async function requestEmployeeCertificate(employeeId) {
             }, 1000);
             
         } catch (error) {
+            closeCertificateModal();
             showMedicalMessage('❌ Error al enviar solicitud: ' + error.message, 'error');
         }
     };

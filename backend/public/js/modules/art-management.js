@@ -3,7 +3,7 @@ console.log('🏥 [ART-MANAGEMENT] Módulo ART v1.0 inicializado');
 
 // Variables globales del módulo ART
 let currentArtProvider = null;
-window.window.artProviders = window.window.artProviders || [];
+window.artProviders = window.artProviders || [];
 let medicalExams = [];
 let workAccidents = [];
 let artCommunications = [];
@@ -11,8 +11,13 @@ let legislationData = {};
 
 // Función principal para mostrar el contenido del módulo ART
 function showArtManagementContent() {
-    const content = document.getElementById('mainContent');
-    if (!content) return;
+    const content = document.getElementById('mainContent') ||
+                   document.getElementById('module-content') ||
+                   document.getElementById('art-container');
+    if (!content) {
+        console.error('[ART] No se encontro container (mainContent/module-content/art-container)');
+        return;
+    }
     
     content.innerHTML = `
         <div class="tab-content active" id="art-management">
@@ -679,7 +684,7 @@ async function loadArtData() {
     
     try {
         // Cargar datos de demostración
-        window.window.artProviders = [
+        window.artProviders = [
             {
                 id: 1,
                 name: 'La Segunda ART S.A.',
@@ -1149,6 +1154,7 @@ async function submitArtProvider(event) {
     } catch (error) {
         console.error('Error creating ART provider:', error);
         showNotification('❌ Error de conexión', 'error');
+        closeArtModal();
     }
 }
 
@@ -1223,17 +1229,21 @@ function reportNewAccident() {
                         <div class="form-group">
                             <label>🔍 Tipo de Accidente</label>
                             <select name="accident_type">
-                                <option value="work">Accidente de trabajo</option>
-                                <option value="transit">In itinere (trayecto)</option>
-                                <option value="illness">Enfermedad profesional</option>
+                                <option value="accident">Accidente de trabajo</option>
+                                <option value="in_itinere">In itinere (trayecto)</option>
+                                <option value="occupational_disease">Enfermedad profesional</option>
+                                <option value="near_miss">Casi accidente</option>
+                                <option value="unsafe_condition">Condición insegura</option>
+                                <option value="unsafe_act">Acto inseguro</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>⚠️ Severidad</label>
                             <select name="severity">
+                                <option value="no_injury">Sin lesión</option>
                                 <option value="minor">Leve</option>
                                 <option value="moderate">Moderado</option>
-                                <option value="severe">Grave</option>
+                                <option value="serious">Grave</option>
                                 <option value="fatal">Fatal</option>
                             </select>
                         </div>
@@ -1298,6 +1308,7 @@ async function submitAccidentReport(event) {
     } catch (error) {
         console.error('Error reporting accident:', error);
         showNotification('❌ Error de conexión', 'error');
+        closeArtModal();
     }
 }
 

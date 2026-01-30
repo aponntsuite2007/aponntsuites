@@ -470,7 +470,8 @@ class NotificationCentralExchange {
      * Validar parámetros obligatorios
      */
     _validateRequiredParams(params) {
-        const required = ['companyId', 'module', 'workflowKey', 'recipientType', 'recipientId', 'title', 'message'];
+        // companyId es opcional para workflows scope 'aponnt' (emails globales de Aponnt)
+        const required = ['module', 'workflowKey', 'recipientType', 'recipientId', 'title', 'message'];
 
         for (const field of required) {
             if (!params[field]) {

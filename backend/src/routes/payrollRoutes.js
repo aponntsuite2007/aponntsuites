@@ -620,6 +620,45 @@ router.post('/templates/:id/duplicate', async (req, res) => {
 // ============================================================================
 
 /**
+ * GET /api/payroll/concepts
+ * Lista todos los conceptos disponibles para la empresa
+ */
+router.get('/concepts', async (req, res) => {
+    try {
+        const companyId = req.companyId || req.user?.company_id;
+
+        // Query SQL directa para evitar problemas de asociaciones
+        const [concepts] = await sequelize.query(`
+            SELECT DISTINCT ON (ptc.concept_code)
+                ptc.id,
+                ptc.concept_code as code,
+                ptc.concept_name as name,
+                ptc.calculation_type,
+                ptc.is_active,
+                ptc.is_mandatory,
+                ptc.is_visible_receipt,
+                ptc.display_order,
+                pt.template_name as template_name
+            FROM payroll_template_concepts ptc
+            INNER JOIN payroll_templates pt ON ptc.template_id = pt.id
+            WHERE pt.company_id = :companyId AND ptc.is_active = true
+            ORDER BY ptc.concept_code, ptc.display_order
+        `, {
+            replacements: { companyId }
+        });
+
+        res.json({
+            success: true,
+            data: concepts,
+            total: concepts.length
+        });
+    } catch (error) {
+        console.error('Error getting concepts:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * POST /api/payroll/templates/:templateId/concepts
  * Agrega un concepto a una plantilla
  */

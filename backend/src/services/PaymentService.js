@@ -16,8 +16,7 @@
  * 5. Notificar vendedor y soporte del pago
  */
 
-const { sequelize } = require('../config/database');
-const Invoice = require('../models/Invoice');
+const { sequelize, Invoice } = require('../config/database');
 const Payment = require('../models/Payment');
 const CommissionCalculationService = require('./CommissionCalculationService');
 const bcrypt = require('bcrypt');

@@ -13,7 +13,7 @@ console.log('üîê E2E_SERVICE_TOKEN:', process.env.E2E_SERVICE_TOKEN ? 'LOADED ‚
  */
 module.exports = defineConfig({
   testDir: './tests/e2e',
-  testMatch: ['modules/**/*.spec.js', 'levels/**/*.spec.js'],
+  testMatch: /\.spec\.js$/,
 
   // Timeout por test (3 minutos - CRUD puede ser largo)
   timeout: 60000,

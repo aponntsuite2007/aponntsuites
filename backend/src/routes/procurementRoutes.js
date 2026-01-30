@@ -2969,4 +2969,301 @@ router.delete('/company-tax-config/override/:conceptCode', async (req, res) => {
     }
 });
 
+// ============================================
+// PDF GENERATION & PRINTABLE FORMS
+// ============================================
+
+const ProcurementPDFService = require('../services/ProcurementPDFService');
+
+/**
+ * GET /api/procurement/requisitions/:id/pdf
+ * Generar PDF de Solicitud de Compra
+ */
+router.get('/requisitions/:id/pdf', async (req, res) => {
+    try {
+        const pdfService = new ProcurementPDFService(req.app.get('db'));
+        const pdf = await pdfService.generateRequisitionPDF(req.user.company_id, req.params.id);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="requisicion-${req.params.id}.pdf"`);
+        res.send(pdf);
+    } catch (error) {
+        console.error('❌ [Procurement] Error generando PDF requisición:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/orders/:id/pdf
+ * Generar PDF de Orden de Compra
+ */
+router.get('/orders/:id/pdf', async (req, res) => {
+    try {
+        const pdfService = new ProcurementPDFService(req.app.get('db'));
+        const pdf = await pdfService.generatePurchaseOrderPDF(req.user.company_id, req.params.id);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="orden-compra-${req.params.id}.pdf"`);
+        res.send(pdf);
+    } catch (error) {
+        console.error('❌ [Procurement] Error generando PDF orden:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/receipts/:id/pdf
+ * Generar PDF de Remito de Recepción
+ */
+router.get('/receipts/:id/pdf', async (req, res) => {
+    try {
+        const pdfService = new ProcurementPDFService(req.app.get('db'));
+        const pdf = await pdfService.generateReceiptPDF(req.user.company_id, req.params.id);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="recepcion-${req.params.id}.pdf"`);
+        res.send(pdf);
+    } catch (error) {
+        console.error('❌ [Procurement] Error generando PDF recepción:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/payments/:id/pdf
+ * Generar PDF de Orden de Pago
+ */
+router.get('/payments/:id/pdf', async (req, res) => {
+    try {
+        const pdfService = new ProcurementPDFService(req.app.get('db'));
+        const pdf = await pdfService.generatePaymentOrderPDF(req.user.company_id, req.params.id);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="orden-pago-${req.params.id}.pdf"`);
+        res.send(pdf);
+    } catch (error) {
+        console.error('❌ [Procurement] Error generando PDF pago:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// PARAMETRIC STATISTICAL REPORTS
+// ============================================
+
+/**
+ * GET /api/procurement/reports/supplier-analysis
+ * Reporte parametrizable de análisis por proveedor
+ */
+router.get('/reports/supplier-analysis', async (req, res) => {
+    try {
+        const pdfService = new ProcurementPDFService(req.app.get('db'));
+        const { startDate, endDate, supplierId, format } = req.query;
+
+        const data = await pdfService.getSupplierReportData(req.user.company_id, {
+            startDate, endDate, supplierId
+        });
+
+        if (format === 'pdf') {
+            const pdf = await pdfService.generateSupplierReport(req.user.company_id, {
+                startDate, endDate, supplierId
+            });
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename="reporte-proveedores.pdf"');
+            return res.send(pdf);
+        }
+
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('❌ [Procurement] Error en reporte proveedores:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/reports/price-evolution
+ * Reporte parametrizable de evolución de precios
+ */
+router.get('/reports/price-evolution', async (req, res) => {
+    try {
+        const pdfService = new ProcurementPDFService(req.app.get('db'));
+        const { itemId, supplierId, startDate, endDate, format } = req.query;
+
+        if (!itemId) {
+            return res.status(400).json({ success: false, error: 'itemId es requerido' });
+        }
+
+        const data = await pdfService.getPriceEvolutionData(req.user.company_id, {
+            itemId, supplierId, startDate, endDate
+        });
+
+        if (format === 'pdf') {
+            const pdf = await pdfService.generatePriceEvolutionReport(req.user.company_id, {
+                itemId, supplierId, startDate, endDate
+            });
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename="evolucion-precios.pdf"');
+            return res.send(pdf);
+        }
+
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('❌ [Procurement] Error en reporte precios:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/reports/budget-execution
+ * Reporte parametrizable de ejecución presupuestaria
+ */
+router.get('/reports/budget-execution', async (req, res) => {
+    try {
+        const pdfService = new ProcurementPDFService(req.app.get('db'));
+        const { costCenterId, accountId, year, month, format } = req.query;
+
+        const data = await pdfService.getBudgetExecutionData(req.user.company_id, {
+            costCenterId, accountId, year: year ? parseInt(year) : null, month: month ? parseInt(month) : null
+        });
+
+        if (format === 'pdf') {
+            const pdf = await pdfService.generateBudgetExecutionReport(req.user.company_id, {
+                costCenterId, accountId, year: year ? parseInt(year) : null, month: month ? parseInt(month) : null
+            });
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename="ejecucion-presupuestaria.pdf"');
+            return res.send(pdf);
+        }
+
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('❌ [Procurement] Error en reporte presupuesto:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/reports/supplier-performance
+ * Reporte parametrizable de performance de proveedores
+ */
+router.get('/reports/supplier-performance', async (req, res) => {
+    try {
+        const pdfService = new ProcurementPDFService(req.app.get('db'));
+        const { startDate, endDate, minOrders, format } = req.query;
+
+        const data = await pdfService.getSupplierPerformanceData(req.user.company_id, {
+            startDate, endDate, minOrders
+        });
+
+        if (format === 'pdf') {
+            const pdf = await pdfService.generateSupplierPerformanceReport(req.user.company_id, {
+                startDate, endDate, minOrders
+            });
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename="performance-proveedores.pdf"');
+            return res.send(pdf);
+        }
+
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('❌ [Procurement] Error en reporte performance:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/reports/monthly
+ * Reporte mensual completo
+ */
+router.get('/reports/monthly', async (req, res) => {
+    try {
+        const pdfService = new ProcurementPDFService(req.app.get('db'));
+        const year = parseInt(req.query.year) || new Date().getFullYear();
+        const month = parseInt(req.query.month) || new Date().getMonth() + 1;
+        const format = req.query.format;
+
+        const data = await pdfService.getMonthlyReportData(req.user.company_id, year, month);
+
+        if (format === 'pdf') {
+            const pdf = await pdfService.generateMonthlyReport(req.user.company_id, year, month);
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="reporte-mensual-${year}-${month}.pdf"`);
+            return res.send(pdf);
+        }
+
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('❌ [Procurement] Error en reporte mensual:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/procurement/reports/available
+ * Lista de reportes disponibles con sus parámetros
+ */
+router.get('/reports/available', async (req, res) => {
+    res.json({
+        success: true,
+        reports: [
+            {
+                id: 'supplier-analysis',
+                name: 'Análisis por Proveedor',
+                description: 'Compras agrupadas por proveedor con totales y promedios',
+                params: [
+                    { name: 'startDate', type: 'date', required: false },
+                    { name: 'endDate', type: 'date', required: false },
+                    { name: 'supplierId', type: 'number', required: false }
+                ],
+                formats: ['json', 'pdf']
+            },
+            {
+                id: 'price-evolution',
+                name: 'Evolución de Precios',
+                description: 'Historial de precios de un artículo por proveedor',
+                params: [
+                    { name: 'itemId', type: 'number', required: true },
+                    { name: 'supplierId', type: 'number', required: false },
+                    { name: 'startDate', type: 'date', required: false },
+                    { name: 'endDate', type: 'date', required: false }
+                ],
+                formats: ['json', 'pdf']
+            },
+            {
+                id: 'budget-execution',
+                name: 'Ejecución Presupuestaria',
+                description: 'Presupuestado vs ejecutado por centro de costo',
+                params: [
+                    { name: 'costCenterId', type: 'number', required: false },
+                    { name: 'accountId', type: 'number', required: false },
+                    { name: 'year', type: 'number', required: false },
+                    { name: 'month', type: 'number', required: false }
+                ],
+                formats: ['json', 'pdf']
+            },
+            {
+                id: 'supplier-performance',
+                name: 'Performance de Proveedores',
+                description: 'Ranking de proveedores por score de calidad, entrega y precio',
+                params: [
+                    { name: 'startDate', type: 'date', required: false },
+                    { name: 'endDate', type: 'date', required: false },
+                    { name: 'minOrders', type: 'number', required: false }
+                ],
+                formats: ['json', 'pdf']
+            },
+            {
+                id: 'monthly',
+                name: 'Reporte Mensual',
+                description: 'Resumen completo mensual con KPIs y tops',
+                params: [
+                    { name: 'year', type: 'number', required: false },
+                    { name: 'month', type: 'number', required: false }
+                ],
+                formats: ['json', 'pdf']
+            }
+        ]
+    });
+});
+
 module.exports = router;

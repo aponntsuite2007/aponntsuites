@@ -174,7 +174,8 @@ async function continuousCycle(notFixed, page) {
 // TESTS
 // ═════════════════════════════════════════════════════════
 
-test.describe(`🧪 ${moduleConfig.moduleName} - ADVANCED TESTING`, () => {
+// SKIPPED: Config-based test with empty/outdated configs - use crud-real-interaction.e2e.spec.js instead
+test.describe.skip(`🧪 ${moduleConfig.moduleName} - ADVANCED TESTING`, () => {
   let database;
   let testEntityId;
   let testResults = [];

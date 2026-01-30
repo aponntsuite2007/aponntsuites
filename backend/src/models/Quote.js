@@ -239,6 +239,30 @@ module.exports = (sequelize) => {
     },
 
     // ═══════════════════════════════════════════════════════════
+    // FACTURA ASOCIADA
+    // ═══════════════════════════════════════════════════════════
+    invoice_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'invoices',
+        key: 'id'
+      },
+      onDelete: 'SET NULL',
+      comment: 'Factura generada desde este presupuesto'
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // HISTORIAL DE ESTADOS
+    // ═══════════════════════════════════════════════════════════
+    status_history: {
+      type: DataTypes.JSONB,
+      allowNull: false,
+      defaultValue: [],
+      comment: 'Array de cambios: [{from, to, changed_by, changed_at, reason}]'
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // AUDITORÍA
     // ═══════════════════════════════════════════════════════════
     created_by: {
@@ -459,6 +483,54 @@ module.exports = (sequelize) => {
 
     this.status = 'active';
     await this.save({ transaction });
+    return this;
+  };
+
+  /**
+   * Cambia el estado del presupuesto con audit trail
+   * @param {string} newStatus - Nuevo estado
+   * @param {number|null} userId - ID del usuario que realiza el cambio
+   * @param {string|null} reason - Razón del cambio
+   * @param {Object} options - Opciones de Sequelize (transaction, etc)
+   */
+  Quote.prototype.changeStatus = async function(newStatus, userId = null, reason = null, options = {}) {
+    const VALID_TRANSITIONS = {
+      draft: ['sent'],
+      sent: ['in_trial', 'accepted', 'rejected', 'expired'],
+      in_trial: ['accepted', 'active', 'rejected', 'sent'],
+      accepted: ['active', 'rejected', 'sent'],
+      active: ['superseded'],
+      rejected: ['sent'],
+      expired: ['sent'],
+      superseded: []
+    };
+
+    const currentStatus = this.status;
+    const allowed = VALID_TRANSITIONS[currentStatus] || [];
+
+    if (!allowed.includes(newStatus)) {
+      throw new Error(`Transición no permitida: ${currentStatus} → ${newStatus}. Permitidas: ${allowed.join(', ')}`);
+    }
+
+    const historyEntry = {
+      from: currentStatus,
+      to: newStatus,
+      changed_by: userId,
+      changed_at: new Date().toISOString(),
+      reason: reason || null
+    };
+
+    const history = Array.isArray(this.status_history) ? [...this.status_history] : [];
+    history.push(historyEntry);
+
+    this.status = newStatus;
+    this.status_history = history;
+
+    if (userId && Number.isInteger(Number(userId))) {
+      this.updated_by = userId;
+    }
+
+    await this.save(options);
     return this;
   };
 

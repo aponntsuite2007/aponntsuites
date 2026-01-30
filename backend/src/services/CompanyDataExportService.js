@@ -3,15 +3,26 @@
  * Exporta todos los datos operacionales de una empresa a un ZIP
  * para entrega al cliente antes de la baja definitiva.
  *
- * @version 1.0.0
- * @date 2026-01-24
+ * INCLUYE SISTEMA DE COMPATIBILIDAD PARA RESTAURACIÓN:
+ * - Schema snapshot de cada tabla
+ * - Fingerprints de estructura para validación
+ * - Checksums SHA256 de cada archivo
+ * - Versión del sistema al momento del export
+ *
+ * @version 2.0.0
+ * @date 2026-01-28
  */
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const archiver = require('archiver');
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
+
+// Versión del formato de export (para compatibilidad futura)
+const EXPORT_FORMAT_VERSION = '2.0.0';
+const MIN_COMPATIBILITY_SCORE = 90; // Porcentaje mínimo requerido para restauración
 
 // Directorio temporal para exports
 const EXPORTS_DIR = path.join(__dirname, '../../exports');
@@ -212,15 +223,86 @@ class CompanyDataExportService {
         }
       }
 
+      // ═══════════════════════════════════════════════════════════════════
+      // METADATA PARA RESTAURACIÓN Y COMPATIBILIDAD
+      // ═══════════════════════════════════════════════════════════════════
+
+      // Crear directorio de metadata
+      const metadataDir = path.join(tempDir, '_metadata');
+      fs.mkdirSync(metadataDir, { recursive: true });
+
+      // 1. Capturar schema snapshot de todas las tablas exportadas
+      const schemaSnapshot = await this._captureSchemaSnapshot(Object.keys(recordsByTable));
+      fs.writeFileSync(
+        path.join(metadataDir, 'schema_snapshot.json'),
+        JSON.stringify(schemaSnapshot, null, 2)
+      );
+
+      // 2. Generar fingerprints de cada tabla (hash de estructura)
+      const fingerprints = this._generateFingerprints(schemaSnapshot);
+      fs.writeFileSync(
+        path.join(metadataDir, 'table_fingerprints.json'),
+        JSON.stringify(fingerprints, null, 2)
+      );
+
+      // 3. Calcular checksums de cada archivo exportado
+      const fileChecksums = await this._calculateDirectoryChecksums(tempDir);
+      fs.writeFileSync(
+        path.join(metadataDir, 'file_checksums.json'),
+        JSON.stringify(fileChecksums, null, 2)
+      );
+
+      // 4. Información del sistema al momento del export
+      const systemVersion = await this._getSystemVersion();
+      fs.writeFileSync(
+        path.join(metadataDir, 'system_version.json'),
+        JSON.stringify(systemVersion, null, 2)
+      );
+
+      // 5. Manifest de compatibilidad completo
+      const compatibilityManifest = {
+        export_format_version: EXPORT_FORMAT_VERSION,
+        min_compatibility_score: MIN_COMPATIBILITY_SCORE,
+        export_timestamp: new Date().toISOString(),
+        system_version: systemVersion.app_version,
+        database_version: systemVersion.db_version,
+        total_tables: Object.keys(schemaSnapshot).length,
+        total_columns: Object.values(schemaSnapshot).reduce((sum, t) => sum + t.columns.length, 0),
+        tables: Object.keys(schemaSnapshot).map(table => ({
+          name: table,
+          columns: schemaSnapshot[table].columns.length,
+          fingerprint: fingerprints[table],
+          records: recordsByTable[table] || 0
+        }))
+      };
+      fs.writeFileSync(
+        path.join(metadataDir, 'compatibility_manifest.json'),
+        JSON.stringify(compatibilityManifest, null, 2)
+      );
+
+      // ═══════════════════════════════════════════════════════════════════
+      // RESUMEN PRINCIPAL
+      // ═══════════════════════════════════════════════════════════════════
+
       // Generar resumen
       const summary = {
         company_id: companyId,
         company_name: company.name,
         export_date: new Date().toISOString(),
+        export_format_version: EXPORT_FORMAT_VERSION,
         total_records: totalRecords,
         records_by_table: recordsByTable,
         format: format,
-        phases_exported: phases.length
+        phases_exported: phases.length,
+        restoration_compatible: true,
+        min_compatibility_for_restore: `${MIN_COMPATIBILITY_SCORE}%`,
+        metadata_files: [
+          '_metadata/schema_snapshot.json',
+          '_metadata/table_fingerprints.json',
+          '_metadata/file_checksums.json',
+          '_metadata/system_version.json',
+          '_metadata/compatibility_manifest.json'
+        ]
       };
 
       fs.writeFileSync(
@@ -330,6 +412,425 @@ class CompanyDataExportService {
       archive.finalize();
     });
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MÉTODOS DE SCHEMA Y COMPATIBILIDAD
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Captura el schema completo de las tablas exportadas
+   * @param {string[]} tableNames - Lista de nombres de tablas
+   * @returns {Object} Schema snapshot con estructura de cada tabla
+   * @private
+   */
+  async _captureSchemaSnapshot(tableNames) {
+    const snapshot = {};
+
+    for (const tableName of tableNames) {
+      try {
+        // Obtener columnas de la tabla
+        const columns = await sequelize.query(`
+          SELECT
+            column_name,
+            data_type,
+            character_maximum_length,
+            numeric_precision,
+            numeric_scale,
+            is_nullable,
+            column_default,
+            udt_name
+          FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = :tableName
+          ORDER BY ordinal_position
+        `, { replacements: { tableName }, type: QueryTypes.SELECT });
+
+        if (columns.length === 0) continue;
+
+        // Obtener constraints (PKs, FKs, UNIQUEs)
+        const constraints = await sequelize.query(`
+          SELECT
+            tc.constraint_name,
+            tc.constraint_type,
+            kcu.column_name,
+            ccu.table_name AS foreign_table_name,
+            ccu.column_name AS foreign_column_name
+          FROM information_schema.table_constraints tc
+          LEFT JOIN information_schema.key_column_usage kcu
+            ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+          LEFT JOIN information_schema.constraint_column_usage ccu
+            ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
+          WHERE tc.table_schema = 'public' AND tc.table_name = :tableName
+        `, { replacements: { tableName }, type: QueryTypes.SELECT });
+
+        // Obtener índices
+        const indexes = await sequelize.query(`
+          SELECT indexname, indexdef
+          FROM pg_indexes
+          WHERE schemaname = 'public' AND tablename = :tableName
+        `, { replacements: { tableName }, type: QueryTypes.SELECT });
+
+        snapshot[tableName] = {
+          columns: columns.map(c => ({
+            name: c.column_name,
+            type: c.data_type,
+            maxLength: c.character_maximum_length,
+            precision: c.numeric_precision,
+            scale: c.numeric_scale,
+            nullable: c.is_nullable === 'YES',
+            default: c.column_default,
+            udtName: c.udt_name
+          })),
+          constraints: constraints.map(c => ({
+            name: c.constraint_name,
+            type: c.constraint_type,
+            column: c.column_name,
+            foreignTable: c.foreign_table_name,
+            foreignColumn: c.foreign_column_name
+          })),
+          indexes: indexes.map(i => ({
+            name: i.indexname,
+            definition: i.indexdef
+          })),
+          capturedAt: new Date().toISOString()
+        };
+      } catch (err) {
+        console.warn(`⚠️ [Export] No se pudo capturar schema de ${tableName}: ${err.message}`);
+      }
+    }
+
+    return snapshot;
+  }
+
+  /**
+   * Genera fingerprints (hashes) de la estructura de cada tabla
+   * @param {Object} schemaSnapshot - Schema capturado
+   * @returns {Object} { tableName: fingerprint_hash }
+   * @private
+   */
+  _generateFingerprints(schemaSnapshot) {
+    const fingerprints = {};
+
+    for (const [tableName, schema] of Object.entries(schemaSnapshot)) {
+      // Crear string normalizado de la estructura (solo lo que importa para compatibilidad)
+      const structureString = schema.columns
+        .map(c => `${c.name}:${c.type}:${c.nullable}:${c.udtName}`)
+        .sort()
+        .join('|');
+
+      // Generar hash SHA256
+      fingerprints[tableName] = crypto
+        .createHash('sha256')
+        .update(structureString)
+        .digest('hex')
+        .substring(0, 16); // Solo primeros 16 chars para legibilidad
+    }
+
+    return fingerprints;
+  }
+
+  /**
+   * Calcula checksums SHA256 de todos los archivos en un directorio
+   * @param {string} dirPath - Ruta del directorio
+   * @returns {Object} { relativePath: sha256_hash }
+   * @private
+   */
+  async _calculateDirectoryChecksums(dirPath) {
+    const checksums = {};
+
+    const processDir = (currentPath, basePath) => {
+      const items = fs.readdirSync(currentPath);
+
+      for (const item of items) {
+        const itemPath = path.join(currentPath, item);
+        const relativePath = path.relative(basePath, itemPath).replace(/\\/g, '/');
+        const stats = fs.statSync(itemPath);
+
+        if (stats.isDirectory()) {
+          processDir(itemPath, basePath);
+        } else if (stats.isFile()) {
+          const content = fs.readFileSync(itemPath);
+          checksums[relativePath] = crypto
+            .createHash('sha256')
+            .update(content)
+            .digest('hex');
+        }
+      }
+    };
+
+    processDir(dirPath, dirPath);
+    return checksums;
+  }
+
+  /**
+   * Obtiene información de versión del sistema
+   * @returns {Object} Información de versión
+   * @private
+   */
+  async _getSystemVersion() {
+    // Leer package.json
+    let appVersion = 'unknown';
+    try {
+      const pkgPath = path.join(__dirname, '../../package.json');
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      appVersion = pkg.version;
+    } catch (err) {
+      console.warn('⚠️ [Export] No se pudo leer package.json');
+    }
+
+    // Obtener versión de PostgreSQL
+    let dbVersion = 'unknown';
+    try {
+      const [result] = await sequelize.query('SELECT version()', { type: QueryTypes.SELECT });
+      dbVersion = result.version.split(' ')[1]; // "PostgreSQL 15.2 ..." -> "15.2"
+    } catch (err) {
+      console.warn('⚠️ [Export] No se pudo obtener versión de PostgreSQL');
+    }
+
+    // Obtener conteo total de tablas en el schema public
+    let totalTables = 0;
+    try {
+      const [result] = await sequelize.query(
+        "SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = 'public'",
+        { type: QueryTypes.SELECT }
+      );
+      totalTables = parseInt(result.count);
+    } catch (err) { /* ignore */ }
+
+    return {
+      app_version: appVersion,
+      app_name: 'attendance-system-backend',
+      db_version: dbVersion,
+      db_dialect: 'postgresql',
+      export_format_version: EXPORT_FORMAT_VERSION,
+      node_version: process.version,
+      platform: process.platform,
+      total_tables_in_db: totalTables,
+      exported_at: new Date().toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VALIDACIÓN DE COMPATIBILIDAD PARA RESTAURACIÓN
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Valida la compatibilidad de un ZIP de export con el schema actual
+   * USAR ANTES DE INTENTAR RESTAURAR UNA EMPRESA
+   *
+   * @param {string} zipPath - Ruta al archivo ZIP de export
+   * @returns {Object} { compatible, score, details, errors, warnings }
+   */
+  async validateCompatibility(zipPath) {
+    const AdmZip = require('adm-zip');
+    const result = {
+      compatible: false,
+      score: 0,
+      minRequired: MIN_COMPATIBILITY_SCORE,
+      details: {
+        tablesChecked: 0,
+        tablesCompatible: 0,
+        tablesMissing: 0,
+        columnsChecked: 0,
+        columnsCompatible: 0,
+        columnsIncompatible: 0,
+        columnsNew: 0,
+        columnsRemoved: 0
+      },
+      tableResults: [],
+      errors: [],
+      warnings: []
+    };
+
+    try {
+      // Abrir ZIP
+      if (!fs.existsSync(zipPath)) {
+        result.errors.push(`Archivo no encontrado: ${zipPath}`);
+        return result;
+      }
+
+      const zip = new AdmZip(zipPath);
+      const zipEntries = zip.getEntries();
+
+      // Buscar manifest de compatibilidad
+      const manifestEntry = zipEntries.find(e => e.entryName === '_metadata/compatibility_manifest.json');
+      if (!manifestEntry) {
+        result.errors.push('ZIP no contiene _metadata/compatibility_manifest.json - Export incompatible o versión antigua');
+        return result;
+      }
+
+      const manifest = JSON.parse(manifestEntry.getData().toString('utf8'));
+
+      // Buscar schema snapshot
+      const schemaEntry = zipEntries.find(e => e.entryName === '_metadata/schema_snapshot.json');
+      if (!schemaEntry) {
+        result.errors.push('ZIP no contiene _metadata/schema_snapshot.json');
+        return result;
+      }
+
+      const exportedSchema = JSON.parse(schemaEntry.getData().toString('utf8'));
+
+      // Verificar versión del formato de export
+      if (manifest.export_format_version !== EXPORT_FORMAT_VERSION) {
+        result.warnings.push(
+          `Versión de formato diferente: Export=${manifest.export_format_version}, Actual=${EXPORT_FORMAT_VERSION}`
+        );
+      }
+
+      // Capturar schema actual de las tablas que estaban en el export
+      const tableNames = Object.keys(exportedSchema);
+      const currentSchema = await this._captureSchemaSnapshot(tableNames);
+
+      // Comparar cada tabla
+      for (const tableName of tableNames) {
+        const exportedTable = exportedSchema[tableName];
+        const currentTable = currentSchema[tableName];
+
+        result.details.tablesChecked++;
+
+        const tableResult = {
+          table: tableName,
+          compatible: true,
+          score: 100,
+          exportedColumns: exportedTable?.columns?.length || 0,
+          currentColumns: currentTable?.columns?.length || 0,
+          issues: []
+        };
+
+        if (!currentTable) {
+          // Tabla ya no existe en el sistema actual
+          tableResult.compatible = false;
+          tableResult.score = 0;
+          tableResult.issues.push('Tabla no existe en el sistema actual');
+          result.details.tablesMissing++;
+          result.warnings.push(`Tabla ${tableName} no existe en el sistema actual`);
+        } else {
+          // Comparar columnas
+          const exportedCols = new Map(exportedTable.columns.map(c => [c.name, c]));
+          const currentCols = new Map(currentTable.columns.map(c => [c.name, c]));
+
+          let compatibleCols = 0;
+          let incompatibleCols = 0;
+
+          // Verificar columnas del export en el schema actual
+          for (const [colName, exportedCol] of exportedCols) {
+            result.details.columnsChecked++;
+            const currentCol = currentCols.get(colName);
+
+            if (!currentCol) {
+              // Columna fue removida del sistema actual
+              result.details.columnsRemoved++;
+              tableResult.issues.push(`Columna ${colName} fue eliminada`);
+              result.warnings.push(`${tableName}.${colName}: columna eliminada (dato se perdería)`);
+              incompatibleCols++;
+            } else if (!this._areColumnsCompatible(exportedCol, currentCol)) {
+              // Tipos incompatibles
+              result.details.columnsIncompatible++;
+              tableResult.issues.push(
+                `Columna ${colName}: tipo incompatible (${exportedCol.type} → ${currentCol.type})`
+              );
+              result.errors.push(
+                `${tableName}.${colName}: tipo incompatible ${exportedCol.type} → ${currentCol.type}`
+              );
+              incompatibleCols++;
+            } else {
+              result.details.columnsCompatible++;
+              compatibleCols++;
+            }
+          }
+
+          // Verificar columnas nuevas en el sistema actual
+          for (const [colName, currentCol] of currentCols) {
+            if (!exportedCols.has(colName)) {
+              result.details.columnsNew++;
+              if (!currentCol.nullable && !currentCol.default) {
+                // Nueva columna NOT NULL sin default = INCOMPATIBLE
+                tableResult.issues.push(
+                  `Nueva columna ${colName} es NOT NULL sin default`
+                );
+                result.errors.push(
+                  `${tableName}.${colName}: nueva columna NOT NULL sin default - BLOQUEANTE`
+                );
+                incompatibleCols++;
+              } else {
+                // Nueva columna con NULL o default = OK
+                result.warnings.push(
+                  `${tableName}.${colName}: nueva columna (se llenará con ${currentCol.default || 'NULL'})`
+                );
+              }
+            }
+          }
+
+          // Calcular score de la tabla
+          const totalCols = exportedCols.size + incompatibleCols;
+          tableResult.score = totalCols > 0
+            ? Math.round((compatibleCols / totalCols) * 100)
+            : 100;
+
+          tableResult.compatible = tableResult.score >= MIN_COMPATIBILITY_SCORE;
+
+          if (tableResult.compatible) {
+            result.details.tablesCompatible++;
+          }
+        }
+
+        result.tableResults.push(tableResult);
+      }
+
+      // Calcular score global
+      const totalScore = result.tableResults.reduce((sum, t) => sum + t.score, 0);
+      result.score = result.tableResults.length > 0
+        ? Math.round(totalScore / result.tableResults.length)
+        : 0;
+
+      result.compatible = result.score >= MIN_COMPATIBILITY_SCORE && result.errors.length === 0;
+
+      // Resumen final
+      if (result.compatible) {
+        console.log(`✅ [Compatibility] ZIP compatible (score: ${result.score}%)`);
+      } else {
+        console.log(`❌ [Compatibility] ZIP INCOMPATIBLE (score: ${result.score}%, min: ${MIN_COMPATIBILITY_SCORE}%)`);
+      }
+
+      return result;
+    } catch (err) {
+      result.errors.push(`Error al validar ZIP: ${err.message}`);
+      return result;
+    }
+  }
+
+  /**
+   * Compara si dos definiciones de columna son compatibles para restauración
+   * @private
+   */
+  _areColumnsCompatible(exportedCol, currentCol) {
+    // Mismo tipo exacto = compatible
+    if (exportedCol.type === currentCol.type && exportedCol.udtName === currentCol.udtName) {
+      return true;
+    }
+
+    // Mapeo de tipos compatibles (upgrades seguros)
+    const compatibleUpgrades = {
+      'integer': ['bigint'],
+      'smallint': ['integer', 'bigint'],
+      'real': ['double precision'],
+      'character varying': ['text'],
+      'varchar': ['text'],
+      'timestamp without time zone': ['timestamp with time zone'],
+    };
+
+    const upgrades = compatibleUpgrades[exportedCol.type] || [];
+    if (upgrades.includes(currentCol.type)) {
+      return true;
+    }
+
+    // Tipos incompatibles por defecto
+    return false;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // UTILIDADES
+  // ═══════════════════════════════════════════════════════════════════════════
 
   /**
    * Elimina recursivamente un directorio temporal

@@ -59,8 +59,6 @@ const TALENT_CONSTANTS = {
         apto: { label: 'Apto Médico', color: '#28a745', icon: '💚' },
         apto_con_observaciones: { label: 'Apto con Obs.', color: '#ffc107', icon: '⚠️' },
         no_apto: { label: 'No Apto', color: '#dc3545', icon: '❌' },
-        revision_legal: { label: 'Revisión Legal', color: '#795548', icon: '⚖️' },
-        aprobado_legal: { label: 'Aprobado Legal', color: '#4caf50', icon: '✔️' },
         contratado: { label: 'Contratado', color: '#28a745', icon: '🎉' },
         rechazado: { label: 'Rechazado', color: '#dc3545', icon: '🚫' },
         desistio: { label: 'Desistió', color: '#6c757d', icon: '👋' }
@@ -1602,6 +1600,7 @@ const TalentEngine = {
             this.loadViewData();
         } catch (error) {
             TalentUI.showToast('Error guardando borrador', 'error');
+            this.closeModal('create-offer-modal');
         }
     },
 
@@ -1672,6 +1671,7 @@ const TalentEngine = {
             this.loadViewData();
         } catch (error) {
             TalentUI.showToast('Error publicando oferta: ' + error.message, 'error');
+            this.closeModal('create-offer-modal');
         }
     },
 
@@ -1857,10 +1857,13 @@ const TalentEngine = {
         const formData = new FormData(form);
 
         const appId = formData.get('application_id');
+        const scheduledAt = formData.get('scheduled_at') || '';
+        const [datePart, timePart] = scheduledAt.split('T');
         const data = {
-            scheduled_at: formData.get('scheduled_at'),
+            interview_date: datePart || null,
+            interview_time: timePart || null,
             interview_type: formData.get('interview_type'),
-            location: formData.get('location'),
+            interview_location: formData.get('location'),
             interviewer_name: formData.get('interviewer_name'),
             bring_documents: formData.get('bring_documents'),
             notes: formData.get('notes')
@@ -1874,6 +1877,7 @@ const TalentEngine = {
             this.loadViewData();
         } catch (error) {
             TalentUI.showToast('Error agendando entrevista', 'error');
+            this.closeModal('schedule-interview-modal');
         }
     },
 
@@ -1977,6 +1981,7 @@ const TalentEngine = {
             this.loadViewData();
         } catch (error) {
             TalentUI.showToast('Error contratando candidato: ' + error.message, 'error');
+            this.closeModal('hire-modal');
         }
     },
 
@@ -2080,6 +2085,7 @@ const TalentEngine = {
             this.loadViewData();
         } catch (error) {
             TalentUI.showToast('Error rechazando candidato', 'error');
+            this.closeModal('reject-modal');
         }
     },
 
@@ -2377,6 +2383,7 @@ const TalentEngine = {
             this.loadViewData();
         } catch (error) {
             TalentUI.showToast('Error guardando entrevista', 'error');
+            this.closeModal('complete-interview-modal');
         }
     }
 };

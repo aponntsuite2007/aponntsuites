@@ -1840,16 +1840,16 @@ router.get('/fichajes', auth, supervisorOrAdmin, async (req, res) => {
                 u."firstName" || ' ' || u."lastName" as employee_name,
                 u.legajo,
                 cb.id as branch_id,
-                cb.name as branch_name,
+                cb.branch_name as branch_name,
                 d.id as department_id,
                 d.name as department_name,
                 s.id as sector_id,
                 s.name as sector_name,
                 pd.status as decision_status,
-                pd.employee_decision
+                pd.decision as employee_decision
             FROM attendances a
             INNER JOIN users u ON a."UserId" = u.user_id
-            LEFT JOIN company_branches cb ON u.branch_id = cb.id
+            LEFT JOIN company_branches cb ON u.branch_id::text = cb.id::text
             LEFT JOIN departments d ON u.department_id = d.id
             LEFT JOIN sectors s ON u.sector_id = s.id
             LEFT JOIN hour_bank_pending_decisions pd ON pd.attendance_id = a.id AND pd.company_id = a.company_id

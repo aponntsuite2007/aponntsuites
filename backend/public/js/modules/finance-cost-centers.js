@@ -384,6 +384,7 @@ window.FinanceCostCenters = (function() {
             }
         } catch (error) {
             console.error('Error saving cost center:', error);
+            closeModal();
             alert('Error al guardar');
         }
     }

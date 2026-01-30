@@ -1,24 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const { Attendance, User, Branch, Shift } = require('../config/database');
+const { Attendance, User } = require('../config/database');
 const { auth, supervisorOrAdmin } = require('../middleware/auth');
 const ExcelJS = require('exceljs');
 const moment = require('moment-timezone');
 const { Op } = require('sequelize');
+const sequelize = require('../config/database').sequelize;
 
 /**
- * @route GET /api/v1/reports/attendance
- * @desc Generar reporte de asistencias
+ * @route GET /api/reports/attendance
+ * @desc Generar reporte de asistencias (JSON o Excel)
  */
 router.get('/attendance', auth, supervisorOrAdmin, async (req, res) => {
   try {
     const {
       startDate,
       endDate,
-      branchId,
       userId,
       format = 'json'
     } = req.query;
+
+    const companyId = req.user.company_id;
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -26,28 +28,35 @@ router.get('/attendance', auth, supervisorOrAdmin, async (req, res) => {
       });
     }
 
-    const where = {
-      date: {
-        [Op.between]: [startDate, endDate]
-      }
-    };
-
-    if (branchId) where.BranchId = branchId;
-    if (userId) where.UserId = userId;
-
-    const attendances = await Attendance.findAll({
-      where,
-      include: [
-        {
-          model: User,
-          attributes: ['legajo', 'firstName', 'lastName', 'email']
-        },
-        {
-          model: Branch,
-          attributes: ['name', 'code']
-        }
-      ],
-      order: [['date', 'DESC'], ['checkInTime', 'DESC']]
+    // Query directa para evitar problemas de asociaciones
+    const [attendances] = await sequelize.query(`
+      SELECT
+        a.id,
+        a.date,
+        a."checkInTime",
+        a."checkOutTime",
+        a."workingHours",
+        a.overtime_hours,
+        a.status,
+        a.is_late,
+        a.minutes_late,
+        a.is_justified,
+        a.absence_type,
+        u.user_id,
+        u.legajo,
+        u."firstName",
+        u."lastName",
+        u.email,
+        d.name as department_name
+      FROM attendances a
+      LEFT JOIN users u ON a."UserId" = u.user_id
+      LEFT JOIN departments d ON u.department_id = d.id
+      WHERE a.company_id = :companyId
+        AND a.date BETWEEN :startDate AND :endDate
+        ${userId ? 'AND a."UserId" = :userId' : ''}
+      ORDER BY a.date DESC, a."checkInTime" DESC
+    `, {
+      replacements: { companyId, startDate, endDate, userId }
     });
 
     if (format === 'excel') {
@@ -58,36 +67,38 @@ router.get('/attendance', auth, supervisorOrAdmin, async (req, res) => {
     const summary = {
       totalRecords: attendances.length,
       presentCount: attendances.filter(a => a.status === 'present').length,
-      lateCount: attendances.filter(a => a.status === 'late').length,
+      lateCount: attendances.filter(a => a.status === 'late' || a.is_late).length,
       absentCount: attendances.filter(a => a.status === 'absent').length,
-      totalWorkingHours: attendances.reduce((sum, a) => sum + (a.workingHours || 0), 0),
-      totalOvertimeHours: attendances.reduce((sum, a) => sum + (a.overtimeHours || 0), 0)
+      totalWorkingHours: attendances.reduce((sum, a) => sum + (parseFloat(a.workingHours) || 0), 0),
+      totalOvertimeHours: attendances.reduce((sum, a) => sum + (parseFloat(a.overtime_hours) || 0), 0)
     };
 
     res.json({
+      success: true,
       summary,
-      attendances,
+      data: attendances,
       period: { startDate, endDate }
     });
 
   } catch (error) {
     console.error('Error generando reporte:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
   }
 });
 
 /**
- * @route GET /api/v1/reports/users-summary
+ * @route GET /api/reports/user-summary
  * @desc Reporte resumen por usuario
  */
-router.get('/users-summary', auth, supervisorOrAdmin, async (req, res) => {
+router.get('/user-summary', auth, supervisorOrAdmin, async (req, res) => {
   try {
     const {
       startDate,
       endDate,
-      branchId,
       format = 'json'
     } = req.query;
+
+    const companyId = req.user.company_id;
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -95,78 +106,84 @@ router.get('/users-summary', auth, supervisorOrAdmin, async (req, res) => {
       });
     }
 
-    const whereUser = { isActive: true };
-    if (branchId) whereUser.defaultBranchId = branchId;
-
-    const users = await User.findAll({
-      where: whereUser,
-      attributes: ['id', 'legajo', 'firstName', 'lastName', 'email'],
-      include: [{
-        model: Branch,
-        as: 'defaultBranch',
-        attributes: ['name', 'code']
-      }]
+    // Query para obtener resumen por usuario
+    const [userSummaries] = await sequelize.query(`
+      SELECT
+        u.user_id,
+        u.legajo,
+        u."firstName",
+        u."lastName",
+        u.email,
+        d.name as department_name,
+        COUNT(a.id) as attended_days,
+        COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_days,
+        COUNT(CASE WHEN a.status = 'late' OR a.is_late = true THEN 1 END) as late_days,
+        COALESCE(SUM(a."workingHours"), 0) as total_hours,
+        COALESCE(SUM(a.overtime_hours), 0) as overtime_hours,
+        COALESCE(SUM(a.minutes_late), 0) as late_minutes
+      FROM users u
+      LEFT JOIN attendances a ON a."UserId" = u.user_id
+        AND a.date BETWEEN :startDate AND :endDate
+        AND a.company_id = :companyId
+      LEFT JOIN departments d ON u.department_id = d.id
+      WHERE u.company_id = :companyId
+        AND u.is_active = true
+      GROUP BY u.user_id, u.legajo, u."firstName", u."lastName", u.email, d.name
+      ORDER BY u."lastName", u."firstName"
+    `, {
+      replacements: { companyId, startDate, endDate }
     });
 
-    const userSummaries = await Promise.all(users.map(async (user) => {
-      const attendances = await Attendance.findAll({
-        where: {
-          UserId: user.user_id,
-          date: {
-            [Op.between]: [startDate, endDate]
-          }
-        }
-      });
+    const workingDays = moment(endDate).diff(moment(startDate), 'days') + 1;
 
-      const workingDays = moment(endDate).diff(moment(startDate), 'days') + 1;
-      
-      return {
-        user: {
-          id: user.user_id,
-          legajo: user.legajo,
-          fullName: `${user.firstName} ${user.lastName}`,
-          email: user.email,
-          branch: user.defaultBranch?.name
-        },
-        stats: {
-          workingDays,
-          attendedDays: attendances.length,
-          presentDays: attendances.filter(a => a.status === 'present').length,
-          lateDays: attendances.filter(a => a.status === 'late').length,
-          totalHours: attendances.reduce((sum, a) => sum + (a.workingHours || 0), 0),
-          overtimeHours: attendances.reduce((sum, a) => sum + (a.overtimeHours || 0), 0),
-          lateMinutes: attendances.reduce((sum, a) => sum + (a.lateMinutes || 0), 0),
-          attendanceRate: Math.round((attendances.length / workingDays) * 100)
-        }
-      };
+    const formattedSummaries = userSummaries.map(u => ({
+      user: {
+        id: u.user_id,
+        legajo: u.legajo,
+        fullName: `${u.firstName} ${u.lastName}`,
+        email: u.email,
+        department: u.department_name
+      },
+      stats: {
+        workingDays,
+        attendedDays: parseInt(u.attended_days) || 0,
+        presentDays: parseInt(u.present_days) || 0,
+        lateDays: parseInt(u.late_days) || 0,
+        totalHours: parseFloat(u.total_hours) || 0,
+        overtimeHours: parseFloat(u.overtime_hours) || 0,
+        lateMinutes: parseInt(u.late_minutes) || 0,
+        attendanceRate: workingDays > 0 ? Math.round(((parseInt(u.attended_days) || 0) / workingDays) * 100) : 0
+      }
     }));
 
     if (format === 'excel') {
-      return await generateUserSummaryExcel(userSummaries, res, { startDate, endDate });
+      return await generateUserSummaryExcel(formattedSummaries, res, { startDate, endDate });
     }
 
     res.json({
+      success: true,
       period: { startDate, endDate },
-      userSummaries
+      data: formattedSummaries
     });
 
   } catch (error) {
     console.error('Error generando reporte de usuarios:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
   }
 });
 
 /**
- * @route GET /api/v1/reports/daily-summary
+ * @route GET /api/reports/daily-summary
  * @desc Reporte resumen diario
  */
 router.get('/daily-summary', auth, supervisorOrAdmin, async (req, res) => {
   try {
     const {
       startDate,
-      endDate,
-      branchId
+      endDate
     } = req.query;
+
+    const companyId = req.user.company_id;
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -174,39 +191,34 @@ router.get('/daily-summary', auth, supervisorOrAdmin, async (req, res) => {
       });
     }
 
-    const where = {
-      date: {
-        [Op.between]: [startDate, endDate]
-      }
-    };
-
-    if (branchId) where.BranchId = branchId;
-
-    // Agrupar por fecha
-    const dailyStats = await Attendance.findAll({
-      where,
-      attributes: [
-        'date',
-        [Attendance.sequelize.fn('COUNT', Attendance.sequelize.col('id')), 'totalRecords'],
-        [Attendance.sequelize.fn('COUNT', Attendance.sequelize.literal('CASE WHEN status = "present" THEN 1 END')), 'presentCount'],
-        [Attendance.sequelize.fn('COUNT', Attendance.sequelize.literal('CASE WHEN status = "late" THEN 1 END')), 'lateCount'],
-        [Attendance.sequelize.fn('COUNT', Attendance.sequelize.literal('CASE WHEN status = "absent" THEN 1 END')), 'absentCount'],
-        [Attendance.sequelize.fn('SUM', Attendance.sequelize.col('workingHours')), 'totalWorkingHours'],
-        [Attendance.sequelize.fn('SUM', Attendance.sequelize.col('overtimeHours')), 'totalOvertimeHours']
-      ],
-      group: ['date'],
-      order: [['date', 'DESC']],
-      raw: true
+    // Query agrupada por fecha
+    const [dailyStats] = await sequelize.query(`
+      SELECT
+        date,
+        COUNT(*) as total_records,
+        COUNT(CASE WHEN status = 'present' THEN 1 END) as present_count,
+        COUNT(CASE WHEN status = 'late' OR is_late = true THEN 1 END) as late_count,
+        COUNT(CASE WHEN status = 'absent' THEN 1 END) as absent_count,
+        COALESCE(SUM("workingHours"), 0) as total_working_hours,
+        COALESCE(SUM(overtime_hours), 0) as total_overtime_hours
+      FROM attendances
+      WHERE company_id = :companyId
+        AND date BETWEEN :startDate AND :endDate
+      GROUP BY date
+      ORDER BY date DESC
+    `, {
+      replacements: { companyId, startDate, endDate }
     });
 
     res.json({
+      success: true,
       period: { startDate, endDate },
-      dailyStats
+      data: dailyStats
     });
 
   } catch (error) {
     console.error('Error generando reporte diario:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
   }
 });
 
@@ -222,28 +234,32 @@ async function generateAttendanceExcel(attendances, res, period) {
     { header: 'Fecha', key: 'date', width: 15 },
     { header: 'Legajo', key: 'legajo', width: 15 },
     { header: 'Nombre', key: 'name', width: 25 },
-    { header: 'Sucursal', key: 'branch', width: 20 },
+    { header: 'Departamento', key: 'department', width: 20 },
     { header: 'Entrada', key: 'checkIn', width: 15 },
     { header: 'Salida', key: 'checkOut', width: 15 },
     { header: 'Horas Trabajadas', key: 'workingHours', width: 18 },
     { header: 'Horas Extra', key: 'overtimeHours', width: 15 },
     { header: 'Estado', key: 'status', width: 15 },
-    { header: 'Minutos de Retraso', key: 'lateMinutes', width: 18 }
+    { header: 'Min. Retraso', key: 'lateMinutes', width: 15 },
+    { header: 'Justificado', key: 'justified', width: 12 }
   ];
 
   // Agregar datos
   attendances.forEach(attendance => {
     worksheet.addRow({
       date: moment(attendance.date).format('DD/MM/YYYY'),
-      legajo: attendance.User.legajo,
-      name: `${attendance.User.firstName} ${attendance.User.lastName}`,
-      branch: attendance.Branch?.name || 'N/A',
+      legajo: attendance.legajo || 'N/A',
+      name: attendance.firstName && attendance.lastName
+        ? `${attendance.firstName} ${attendance.lastName}`
+        : 'N/A',
+      department: attendance.department_name || 'N/A',
       checkIn: attendance.checkInTime ? moment(attendance.checkInTime).format('HH:mm') : 'N/A',
       checkOut: attendance.checkOutTime ? moment(attendance.checkOutTime).format('HH:mm') : 'N/A',
-      workingHours: attendance.workingHours || 0,
-      overtimeHours: attendance.overtimeHours || 0,
-      status: attendance.status,
-      lateMinutes: attendance.lateMinutes || 0
+      workingHours: parseFloat(attendance.workingHours) || 0,
+      overtimeHours: parseFloat(attendance.overtime_hours) || 0,
+      status: attendance.status || 'N/A',
+      lateMinutes: parseInt(attendance.minutes_late) || 0,
+      justified: attendance.is_justified ? 'Sí' : 'No'
     });
   });
 
@@ -252,8 +268,9 @@ async function generateAttendanceExcel(attendances, res, period) {
   worksheet.getRow(1).fill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FFE0E0E0' }
+    fgColor: { argb: 'FF4472C4' }
   };
+  worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
 
   // Configurar respuesta
   res.setHeader(
@@ -281,14 +298,14 @@ async function generateUserSummaryExcel(userSummaries, res, period) {
     { header: 'Legajo', key: 'legajo', width: 15 },
     { header: 'Nombre', key: 'name', width: 25 },
     { header: 'Email', key: 'email', width: 25 },
-    { header: 'Sucursal', key: 'branch', width: 20 },
+    { header: 'Departamento', key: 'department', width: 20 },
     { header: 'Días Laborales', key: 'workingDays', width: 15 },
     { header: 'Días Asistidos', key: 'attendedDays', width: 15 },
     { header: 'Días Puntuales', key: 'presentDays', width: 15 },
-    { header: 'Días Tarde', key: 'lateDays', width: 15 },
-    { header: 'Total Horas', key: 'totalHours', width: 15 },
-    { header: 'Horas Extra', key: 'overtimeHours', width: 15 },
-    { header: '% Asistencia', key: 'attendanceRate', width: 15 }
+    { header: 'Días Tarde', key: 'lateDays', width: 12 },
+    { header: 'Total Horas', key: 'totalHours', width: 12 },
+    { header: 'Horas Extra', key: 'overtimeHours', width: 12 },
+    { header: '% Asistencia', key: 'attendanceRate', width: 12 }
   ];
 
   // Agregar datos
@@ -297,7 +314,7 @@ async function generateUserSummaryExcel(userSummaries, res, period) {
       legajo: summary.user.legajo,
       name: summary.user.fullName,
       email: summary.user.email,
-      branch: summary.user.branch || 'N/A',
+      department: summary.user.department || 'N/A',
       workingDays: summary.stats.workingDays,
       attendedDays: summary.stats.attendedDays,
       presentDays: summary.stats.presentDays,
@@ -309,11 +326,11 @@ async function generateUserSummaryExcel(userSummaries, res, period) {
   });
 
   // Estilo del header
-  worksheet.getRow(1).font = { bold: true };
+  worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
   worksheet.getRow(1).fill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FFE0E0E0' }
+    fgColor: { argb: 'FF4472C4' }
   };
 
   // Configurar respuesta

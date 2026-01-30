@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Aponnt Kiosk Web - Sistema Biometrico</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Socket.IO para NotificationCentralExchange -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Face-api.js para detección facial -->
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+    <style>
+        :root {
+            --dark-bg-1: #0f172a;
+            --dark-bg-2: #1e293b;
+            --dark-bg-3: #334155;
+            --accent-blue: #3b82f6;
+            --accent-green: #10B981;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --accent-orange: #f97316;
+            --accent-purple: #8b5cf6;
+            --text-primary: #f8fafc;
+            --text-secondary: rgba(255,255,255,0.7);
+            --border-color: rgba(255,255,255,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        html, body {
+            width: 100%; height: 100%; overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--dark-bg-1); color: var(--text-primary);
+        }
+
+        /* ============================================
+           LOADING SCREEN
+           ============================================ */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--dark-bg-1) 0%, var(--dark-bg-2) 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 3000;
+        }
+        .loading-logo { font-size: 3rem; font-weight: 700; margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .loading-progress { width: 300px; height: 6px; background: var(--dark-bg-3); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+        .loading-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-green)); width: 0%; transition: width 0.3s; }
+        .loading-status { color: var(--text-secondary); font-size: 0.95rem; }
+
+        /* ============================================
+           SETUP SCREEN
+           ============================================ */
+        #setup-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--dark-bg-1) 0%, var(--dark-bg-2) 50%, var(--dark-bg-3) 100%);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; padding: 20px; overflow-y: auto;
+        }
+        .setup-container {
+            background: rgba(30, 41, 59, 0.95); border-radius: 20px; padding: 35px;
+            max-width: 500px; width: 100%; border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .setup-logo { text-align: center; margin-bottom: 25px; }
+        .setup-logo h1 { font-size: 2.2rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .setup-logo p { color: var(--text-secondary); margin-top: 5px; font-size: 0.9rem; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary); font-size: 0.85rem; }
+        .form-group select, .form-group input {
+            width: 100%; padding: 12px 14px; border-radius: 10px;
+            border: 1px solid var(--border-color); background: var(--dark-bg-1);
+            color: var(--text-primary); font-size: 0.95rem; transition: all 0.2s;
+        }
+        .form-group select:focus, .form-group input:focus {
+            outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        .form-group select option { background: var(--dark-bg-1); color: var(--text-primary); }
+
+        .gps-section {
+            background: var(--dark-bg-1); border-radius: 12px; padding: 15px;
+            margin-bottom: 18px; border: 1px solid var(--border-color);
+        }
+        .gps-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .gps-header .icon { font-size: 1.3rem; }
+        .gps-header .title { font-weight: 600; font-size: 0.95rem; }
+        .gps-coords { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .gps-coords input { padding: 10px 12px; font-size: 0.85rem; }
+        .gps-coords label { font-size: 0.75rem; margin-bottom: 4px; }
+        .btn-gps {
+            width: 100%; padding: 10px; border: none; border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white; font-weight: 500; cursor: pointer; font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-gps:hover { opacity: 0.9; }
+        .btn-gps:disabled { opacity: 0.5; cursor: not-allowed; }
+        .gps-status { font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px; text-align: center; }
+        .gps-status.success { color: var(--accent-green); }
+        .gps-status.error { color: var(--accent-red); }
+
+        .btn-primary {
+            width: 100%; padding: 14px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+            color: white; font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; margin-top: 10px;
+        }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-red);
+            color: #fca5a5; padding: 12px 14px; border-radius: 8px; margin-bottom: 18px; font-size: 0.85rem;
+        }
+
+        .loading-spinner {
+            display: inline-block; width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3); border-radius: 50%;
+            border-top-color: white; animation: spin 0.8s linear infinite;
+            margin-right: 8px; vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ============================================
+           KIOSK MAIN SCREEN
+           ============================================ */
+        #kiosk-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: none;
+        }
+        #kiosk-screen.active { display: block; }
+
+        #camera-video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; transform: scaleX(-1);
+        }
+        #face-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; transform: scaleX(-1);
+        }
+
+        /* TRAFFIC LIGHT */
+        #traffic-light {
+            position: absolute; top: 40px; right: 20px; width: 60px; height: 170px;
+            background: rgba(15, 23, 42, 0.92); border-radius: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            display: flex; flex-direction: column; align-items: center; justify-content: space-evenly;
+            padding: 10px 0; z-index: 100; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .traffic-light-bulb {
+            width: 40px; height: 40px; border-radius: 50%; transition: all 0.3s ease;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .traffic-light-bulb.red { background: #4a1515; }
+        .traffic-light-bulb.red.active {
+            background: #ef4444 !important;
+            box-shadow: 0 0 30px #ef4444, 0 0 60px #ef4444, inset 0 0 15px rgba(255,255,255,0.3) !important;
+        }
+        .traffic-light-bulb.yellow { background: #4a3f15; }
+        .traffic-light-bulb.yellow.active {
+            background: #f59e0b !important;
+            box-shadow: 0 0 30px #f59e0b, 0 0 60px #f59e0b, inset 0 0 15px rgba(255,255,255,0.3) !important;
+        }
+        .traffic-light-bulb.green { background: #154a2a; }
+        .traffic-light-bulb.green.active {
+            background: #10B981 !important;
+            box-shadow: 0 0 30px #10B981, 0 0 60px #10B981, inset 0 0 15px rgba(255,255,255,0.3) !important;
+        }
+
+        /* SETTINGS BUTTON */
+        #settings-btn {
+            position: absolute; top: 40px; left: 20px; width: 55px; height: 55px;
+            background: rgba(15, 23, 42, 0.92); border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 100; transition: all 0.2s;
+        }
+        #settings-btn:hover { background: rgba(30, 41, 59, 0.95); transform: scale(1.05); }
+        #settings-btn svg { width: 26px; height: 26px; fill: white; }
+
+        /* STATUS INDICATOR */
+        #status-indicator {
+            position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.92); padding: 10px 18px; border-radius: 20px;
+            font-size: 0.8rem; z-index: 100; display: flex; align-items: center; gap: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-yellow); }
+        .status-dot.online { background: var(--accent-green); animation: pulse 2s infinite; }
+        .status-dot.offline { background: var(--accent-red); }
+        .status-dot.connecting { background: var(--accent-yellow); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* COMPANY INDICATOR */
+        #company-indicator {
+            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9); padding: 12px 20px; border-radius: 25px;
+            border: 1px solid var(--border-color); font-size: 0.85rem;
+            z-index: 100; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+        }
+        .company-name { color: var(--text-primary); font-weight: 600; }
+        .kiosk-name { color: var(--accent-blue); }
+        .gps-badge { font-size: 0.75rem; padding: 3px 8px; background: var(--accent-green); border-radius: 10px; color: white; }
+        .gps-badge.no-gps { background: var(--accent-orange); }
+
+        /* FACE GUIDE OVAL */
+        #face-guide {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 280px; height: 360px; pointer-events: none; z-index: 5;
+        }
+        #face-guide .oval {
+            width: 100%; height: 100%; border: 4px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%; position: relative;
+            box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        #face-guide .oval.detecting {
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.3), 0 0 30px var(--accent-yellow);
+            animation: pulseOval 1s ease infinite;
+        }
+        #face-guide .oval.detected {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.3), 0 0 40px var(--accent-green);
+        }
+        #face-guide .oval.no-face {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        @keyframes pulseOval {
+            0%, 100% { border-width: 4px; }
+            50% { border-width: 6px; }
+        }
+        #face-guide .guide-text {
+            position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%);
+            color: white; font-size: 1rem; font-weight: 500; text-align: center;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8); white-space: nowrap;
+            background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px;
+        }
+        #face-guide .guide-text.hidden { opacity: 0; }
+
+        /* Corner markers */
+        #face-guide .corner { position: absolute; width: 30px; height: 30px; border: 3px solid white; }
+        #face-guide .corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-radius: 15px 0 0 0; }
+        #face-guide .corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-radius: 0 15px 0 0; }
+        #face-guide .corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-radius: 0 0 0 15px; }
+        #face-guide .corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 15px 0; }
+
+        /* RECOGNITION OVERLAY */
+        #recognition-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none; z-index: 10;
+        }
+        .recognition-result {
+            background: rgba(0, 0, 0, 0.9); padding: 30px 50px; border-radius: 20px;
+            text-align: center; transform: scale(0); transition: transform 0.3s ease;
+            border: 3px solid transparent; max-width: 90%;
+        }
+        .recognition-result.show { transform: scale(1); }
+        .recognition-result.success { border-color: var(--accent-green); }
+        .recognition-result.error { border-color: var(--accent-red); }
+        .recognition-result.warning { border-color: var(--accent-orange); }
+        .recognition-result .icon { font-size: 4rem; margin-bottom: 15px; }
+        .recognition-result .name { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
+        .recognition-result .time { font-size: 1.1rem; color: var(--text-secondary); }
+        .recognition-result .sub-message { font-size: 0.9rem; color: var(--text-secondary); margin-top: 10px; }
+
+        /* AUTHORIZATION PANEL */
+        #authorization-panel {
+            position: absolute; bottom: 80px; left: 20px; right: 20px;
+            background: rgba(15, 23, 42, 0.95); border-radius: 16px;
+            padding: 20px; z-index: 150; display: none;
+            border: 2px solid var(--accent-orange); box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        #authorization-panel.show { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .auth-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .auth-header .icon { font-size: 2rem; }
+        .auth-header .title { font-size: 1.1rem; font-weight: 600; }
+        .auth-info { background: var(--dark-bg-1); border-radius: 10px; padding: 12px; margin-bottom: 15px; }
+        .auth-info p { margin-bottom: 6px; font-size: 0.9rem; color: var(--text-secondary); }
+        .auth-info strong { color: var(--text-primary); }
+        .auth-status { text-align: center; padding: 10px; border-radius: 8px; }
+        .auth-status.pending { background: rgba(249, 115, 22, 0.2); color: var(--accent-orange); }
+        .auth-status.approved { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+        .auth-status.rejected { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+
+        /* TOAST */
+        #toast-container {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; display: flex; flex-direction: column; gap: 10px;
+            width: 90%; max-width: 450px;
+        }
+        .toast {
+            background: rgba(15, 23, 42, 0.98); border-radius: 12px; padding: 14px 18px;
+            display: flex; align-items: flex-start; gap: 12px;
+            border: 1px solid var(--border-color); animation: slideIn 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        .toast.success { border-left: 4px solid var(--accent-green); }
+        .toast.error { border-left: 4px solid var(--accent-red); }
+        .toast.warning { border-left: 4px solid var(--accent-orange); }
+        .toast.info { border-left: 4px solid var(--accent-blue); }
+        .toast .toast-icon { font-size: 1.4rem; flex-shrink: 0; }
+        .toast .toast-content { flex: 1; }
+        .toast .toast-title { font-weight: 600; margin-bottom: 3px; font-size: 0.95rem; }
+        .toast .toast-message { font-size: 0.85rem; color: var(--text-secondary); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.2s;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--dark-bg-2); border-radius: 16px; padding: 30px;
+            max-width: 400px; width: 90%; border: 1px solid var(--border-color); text-align: center;
+        }
+        .modal-content h3 { margin-bottom: 15px; font-size: 1.2rem; }
+        .modal-content p { color: var(--text-secondary); margin-bottom: 25px; font-size: 0.95rem; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; }
+        .modal-buttons button { padding: 12px 24px; border-radius: 8px; border: none; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-cancel { background: var(--dark-bg-3); color: var(--text-primary); }
+        .btn-danger { background: var(--accent-red); color: white; }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .setup-container { padding: 25px; }
+            #traffic-light { width: 50px; height: 140px; top: 25px; right: 12px; }
+            .traffic-light-bulb { width: 32px; height: 32px; }
+            #settings-btn { width: 45px; height: 45px; top: 25px; left: 12px; }
+            #status-indicator { top: 25px; padding: 8px 14px; font-size: 0.75rem; }
+            .recognition-result .name { font-size: 1.3rem; }
+            .recognition-result { padding: 20px 30px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">Aponnt Kiosk</div>
+            <div class="loading-progress"><div class="loading-progress-bar" id="loading-bar"></div></div>
+            <div class="loading-status" id="loading-status">Iniciando...</div>
+        </div>
+    </div>
+
+    <!-- SETUP SCREEN -->
+    <div id="setup-screen">
+        <div class="setup-container">
+            <div class="setup-logo">
+                <h1>Aponnt Kiosk</h1>
+                <p>Sistema de Asistencia Biometrica Web</p>
+            </div>
+
+            <div id="setup-error" class="error-message" style="display: none;"></div>
+
+            <form id="setup-form">
+                <div class="form-group">
+                    <label>Empresa</label>
+                    <select id="company-select" required>
+                        <option value="">Cargando empresas...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Kiosko</label>
+                    <select id="kiosk-select" required disabled>
+                        <option value="">Primero seleccione una empresa</option>
+                    </select>
+                </div>
+
+                <!-- GPS SECTION -->
+                <div class="gps-section">
+                    <div class="gps-header">
+                        <span class="icon">📍</span>
+                        <span class="title">Ubicacion GPS (Geofencing)</span>
+                    </div>
+                    <div class="gps-coords">
+                        <div class="form-group" style="margin-bottom:0">
+                            <label>Latitud</label>
+                            <input type="number" id="gps-lat" step="0.000001" placeholder="-34.603722">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label>Longitud</label>
+                            <input type="number" id="gps-lng" step="0.000001" placeholder="-58.381592">
+                        </div>
+                    </div>
+                    <button type="button" class="btn-gps" id="btn-get-gps">
+                        <span>📡</span> Obtener Mi Ubicacion
+                    </button>
+                    <div class="gps-status" id="gps-status"></div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="setup-btn">Iniciar Kiosk</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- KIOSK MAIN SCREEN -->
+    <div id="kiosk-screen">
+        <video id="camera-video" autoplay playsinline muted></video>
+        <canvas id="face-canvas"></canvas>
+
+        <!-- Face Guide Oval -->
+        <div id="face-guide">
+            <div class="oval no-face">
+                <div class="corner tl"></div>
+                <div class="corner tr"></div>
+                <div class="corner bl"></div>
+                <div class="corner br"></div>
+            </div>
+            <div class="guide-text" id="guide-text">Coloque su rostro aqui</div>
+        </div>
+
+        <!-- Traffic Light -->
+        <div id="traffic-light">
+            <div class="traffic-light-bulb red" id="light-red"></div>
+            <div class="traffic-light-bulb yellow active" id="light-yellow"></div>
+            <div class="traffic-light-bulb green" id="light-green"></div>
+        </div>
+
+        <!-- Settings Button -->
+        <div id="settings-btn" title="Configuracion">
+            <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+        </div>
+
+        <!-- Status Indicator -->
+        <div id="status-indicator">
+            <div class="status-dot connecting" id="status-dot"></div>
+            <span id="status-text">Conectando...</span>
+        </div>
+
+        <!-- Company Indicator -->
+        <div id="company-indicator">
+            <span class="company-name" id="display-company">-</span>
+            <span>|</span>
+            <span class="kiosk-name" id="display-kiosk">-</span>
+            <span class="gps-badge no-gps" id="gps-badge">Sin GPS</span>
+        </div>
+
+        <!-- Recognition Overlay -->
+        <div id="recognition-overlay">
+            <div class="recognition-result" id="recognition-result">
+                <div class="icon" id="result-icon"></div>
+                <div class="name" id="result-name"></div>
+                <div class="time" id="result-time"></div>
+                <div class="sub-message" id="result-sub"></div>
+            </div>
+        </div>
+
+        <!-- Authorization Panel -->
+        <div id="authorization-panel">
+            <div class="auth-header">
+                <span class="icon">⏰</span>
+                <span class="title">Solicitud de Autorizacion</span>
+            </div>
+            <div class="auth-info">
+                <p><strong id="auth-employee">-</strong></p>
+                <p>Llegada tardia: <strong id="auth-minutes">-</strong> minutos</p>
+                <p>Solicitado: <strong id="auth-time">-</strong></p>
+            </div>
+            <div class="auth-status pending" id="auth-status">
+                ⏳ Esperando respuesta del supervisor...
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Confirmar</h3>
+            <p id="modal-message">¿Esta seguro?</p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button class="btn-danger" id="modal-confirm-btn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURACIÓN - Auto-detecta entorno (local vs producción)
+        // ============================================
+        const ENV = (() => {
+            const host = window.location.hostname;
+            const isLocal = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.');
+            const isProd = host.includes('aponnt.com') || host.includes('render.com');
+
+            if (isLocal) {
+                return {
+                    name: 'LOCAL',
+                    baseUrl: window.location.origin,  // http://localhost:9998
+                    wsUrl: window.location.origin
+                };
+            } else if (isProd || host.includes('aponnt')) {
+                return {
+                    name: 'PRODUCTION',
+                    baseUrl: 'https://www.aponnt.com',
+                    wsUrl: 'https://www.aponnt.com'
+                };
+            } else {
+                // Fallback: usar la URL actual
+                return {
+                    name: 'AUTO',
+                    baseUrl: window.location.origin,
+                    wsUrl: window.location.origin
+                };
+            }
+        })();
+
+        console.log(`🌐 Entorno detectado: ${ENV.name} → ${ENV.baseUrl}`);
+
+        const CONFIG = {
+            API_BASE: ENV.baseUrl + '/api/v1',
+            API_V2: ENV.baseUrl + '/api/v2',
+            WS_URL: ENV.wsUrl,
+            DETECTION_INTERVAL: 150,      // Reducido: TinyFaceDetector es mas rapido
+            COOLDOWN_RECOGNIZED: 5000,
+            COOLDOWN_NOT_RECOGNIZED: 3000,
+            COOLDOWN_ERROR: 8000,
+            TRAFFIC_LIGHT_DURATION: 2500,
+            AUTHORIZATION_POLL_INTERVAL: 5000
+        };
+
+        // ============================================
+        // ESTADO GLOBAL
+        // ============================================
+        const STATE = {
+            companyId: null, companyName: null, companySlug: null,
+            kioskId: null, kioskName: null, kioskLocation: null,
+            gpsLat: null, gpsLng: null,
+            authToken: null, deviceId: null,
+            isProcessing: false, cooldownUntil: null,
+            faceApiReady: false, cameraStream: null, detectionInterval: null,
+            socket: null, socketConnected: false,
+            pendingAuthorization: null, authPollingInterval: null
+        };
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            STATE.deviceId = localStorage.getItem('kiosk_device_id') || ('web-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9));
+            localStorage.setItem('kiosk_device_id', STATE.deviceId);
+            await initializeApp();
+        });
+
+        async function initializeApp() {
+            try {
+                updateLoading('Cargando modelos de IA...', 10);
+                await loadFaceApiModels();
+
+                updateLoading('Verificando configuracion...', 80);
+                const saved = loadSavedConfig();
+
+                if (saved && saved.companyId && saved.kioskId) {
+                    Object.assign(STATE, saved);
+                    updateLoading('Iniciando kiosk...', 90);
+                    await startKiosk();
+                } else {
+                    updateLoading('Preparando configuracion...', 100);
+                    await showSetupScreen();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                updateLoading('Error: ' + error.message, 0);
+            }
+        }
+
+        function updateLoading(msg, pct) {
+            document.getElementById('loading-status').textContent = msg;
+            document.getElementById('loading-bar').style.width = pct + '%';
+        }
+
+        // ============================================
+        // FACE-API.JS
+        // ============================================
+        async function loadFaceApiModels() {
+            const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+            // TinyFaceDetector es MUCHO mas rapido que SsdMobilenetv1
+            updateLoading('Modelo TinyFace (rapido)...', 20);
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            updateLoading('Modelo landmarks...', 40);
+            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+            updateLoading('Modelo reconocimiento...', 60);
+            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+            STATE.faceApiReady = true;
+            console.log('✅ Face-API.js ready (TinyFaceDetector)');
+        }
+
+        // ============================================
+        // LOCAL STORAGE
+        // ============================================
+        function loadSavedConfig() {
+            try { return JSON.parse(localStorage.getItem('kiosk_config')); } catch { return null; }
+        }
+        function saveConfig() {
+            localStorage.setItem('kiosk_config', JSON.stringify({
+                companyId: STATE.companyId, companyName: STATE.companyName, companySlug: STATE.companySlug,
+                kioskId: STATE.kioskId, kioskName: STATE.kioskName, kioskLocation: STATE.kioskLocation,
+                gpsLat: STATE.gpsLat, gpsLng: STATE.gpsLng, authToken: STATE.authToken, deviceId: STATE.deviceId
+            }));
+        }
+        function clearConfig() { localStorage.removeItem('kiosk_config'); }
+
+        // ============================================
+        // SETUP SCREEN
+        // ============================================
+        async function showSetupScreen() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('setup-screen').style.display = 'flex';
+            await loadCompanies();
+
+            document.getElementById('company-select').addEventListener('change', onCompanyChange);
+            document.getElementById('kiosk-select').addEventListener('change', onKioskChange);
+            document.getElementById('setup-form').addEventListener('submit', onSetupSubmit);
+            document.getElementById('btn-get-gps').addEventListener('click', getGPSLocation);
+        }
+
+        async function loadCompanies() {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE}/companies/public-list`);
+                const data = await res.json();
+                const select = document.getElementById('company-select');
+                select.innerHTML = '<option value="">Seleccione una empresa</option>';
+                (data.companies || data.data || []).forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id; opt.dataset.name = c.name; opt.dataset.slug = c.slug;
+                    opt.textContent = c.name;
+                    select.appendChild(opt);
+                });
+            } catch (e) { showSetupError('Error cargando empresas: ' + e.message); }
+        }
+
+        async function onCompanyChange(e) {
+            const cid = e.target.value;
+            const kioskSelect = document.getElementById('kiosk-select');
+
+            if (!cid) {
+                kioskSelect.innerHTML = '<option value="">Primero seleccione empresa</option>';
+                kioskSelect.disabled = true; return;
+            }
+
+            const opt = e.target.options[e.target.selectedIndex];
+            STATE.companyId = cid; STATE.companyName = opt.dataset.name; STATE.companySlug = opt.dataset.slug;
+
+            try {
+                kioskSelect.innerHTML = '<option value="">Cargando kioscos...</option>';
+                const res = await fetch(`${CONFIG.API_BASE}/kiosks/available?company_id=${cid}`);
+                const data = await res.json();
+                kioskSelect.innerHTML = '<option value="">Seleccione un kiosko</option>';
+                const kiosks = data.kiosks || [];
+                if (kiosks.length === 0) { kioskSelect.innerHTML = '<option value="">No hay kioscos</option>'; return; }
+                kiosks.forEach(k => {
+                    const opt = document.createElement('option');
+                    opt.value = k.id; opt.dataset.name = k.name; opt.dataset.location = k.location || '';
+                    opt.dataset.lat = k.gps_lat || ''; opt.dataset.lng = k.gps_lng || '';
+                    opt.textContent = `${k.name}${k.location ? ' - ' + k.location : ''}`;
+                    kioskSelect.appendChild(opt);
+                });
+                kioskSelect.disabled = false;
+            } catch (e) { showSetupError('Error cargando kioscos: ' + e.message); }
+        }
+
+        function onKioskChange(e) {
+            const kid = e.target.value;
+            if (kid) {
+                const opt = e.target.options[e.target.selectedIndex];
+                STATE.kioskId = kid; STATE.kioskName = opt.dataset.name; STATE.kioskLocation = opt.dataset.location;
+                // Pre-fill GPS if kiosk has it
+                if (opt.dataset.lat) document.getElementById('gps-lat').value = opt.dataset.lat;
+                if (opt.dataset.lng) document.getElementById('gps-lng').value = opt.dataset.lng;
+            }
+        }
+
+        function getGPSLocation() {
+            const btn = document.getElementById('btn-get-gps');
+            const status = document.getElementById('gps-status');
+
+            if (!navigator.geolocation) {
+                status.textContent = 'Geolocalizacion no soportada'; status.className = 'gps-status error'; return;
+            }
+
+            btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Obteniendo...';
+            status.textContent = 'Solicitando ubicacion...'; status.className = 'gps-status';
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    document.getElementById('gps-lat').value = pos.coords.latitude.toFixed(6);
+                    document.getElementById('gps-lng').value = pos.coords.longitude.toFixed(6);
+                    status.textContent = `✅ Ubicacion obtenida (precision: ${Math.round(pos.coords.accuracy)}m)`;
+                    status.className = 'gps-status success';
+                    btn.disabled = false; btn.innerHTML = '<span>📡</span> Obtener Mi Ubicacion';
+                },
+                (err) => {
+                    status.textContent = 'Error: ' + err.message; status.className = 'gps-status error';
+                    btn.disabled = false; btn.innerHTML = '<span>📡</span> Obtener Mi Ubicacion';
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
+        async function onSetupSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('setup-btn');
+
+            if (!STATE.companyId || !STATE.kioskId) { showSetupError('Seleccione empresa y kiosko'); return; }
+
+            btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>Iniciando kiosk...';
+
+            try {
+                // Kiosk publico - no requiere autenticacion
+                STATE.gpsLat = parseFloat(document.getElementById('gps-lat').value) || null;
+                STATE.gpsLng = parseFloat(document.getElementById('gps-lng').value) || null;
+
+                // Activate kiosk (sin token - modo publico)
+                await activateKiosk();
+                saveConfig();
+                await startKiosk();
+
+            } catch (e) {
+                showSetupError(e.message);
+                btn.disabled = false; btn.textContent = 'Iniciar Kiosk';
+            }
+        }
+
+        async function activateKiosk() {
+            try {
+                await fetch(`${CONFIG.API_BASE}/kiosks/${STATE.kioskId}/activate`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        device_id: STATE.deviceId, company_id: STATE.companyId,
+                        gps_lat: STATE.gpsLat, gps_lng: STATE.gpsLng
+                    })
+                });
+
+                if (STATE.gpsLat && STATE.gpsLng) {
+                    await fetch(`${CONFIG.API_BASE}/kiosks/${STATE.kioskId}/update-gps`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            company_id: STATE.companyId, gps_lat: STATE.gpsLat, gps_lng: STATE.gpsLng, device_id: STATE.deviceId
+                        })
+                    });
+                }
+            } catch (e) { console.warn('Activate kiosk warning:', e); }
+        }
+
+        function showSetupError(msg) {
+            const err = document.getElementById('setup-error');
+            err.textContent = msg; err.style.display = 'block';
+        }
+
+        // ============================================
+        // KIOSK MAIN
+        // ============================================
+        async function startKiosk() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('kiosk-screen').classList.add('active');
+
+            document.getElementById('display-company').textContent = STATE.companyName || 'Empresa';
+            document.getElementById('display-kiosk').textContent = STATE.kioskName || 'Kiosk';
+
+            const gpsBadge = document.getElementById('gps-badge');
+            if (STATE.gpsLat && STATE.gpsLng) {
+                gpsBadge.textContent = '📍 GPS OK'; gpsBadge.className = 'gps-badge';
+            } else {
+                gpsBadge.textContent = 'Sin GPS'; gpsBadge.className = 'gps-badge no-gps';
+            }
+
+            document.getElementById('settings-btn').addEventListener('click', showSettingsModal);
+
+            await initializeCamera();
+            connectSocket();
+            startContinuousDetection();
+        }
+
+        async function initializeCamera() {
+            try {
+                STATE.cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
+                });
+                const video = document.getElementById('camera-video');
+                video.srcObject = STATE.cameraStream;
+                await new Promise(r => { video.onloadedmetadata = () => { video.play(); r(); }; });
+                const canvas = document.getElementById('face-canvas');
+                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                console.log('✅ Camera ready');
+            } catch (e) {
+                console.error('Camera error:', e);
+                showToast('error', 'Error Camara', 'No se pudo acceder a la camara');
+            }
+        }
+
+        // ============================================
+        // SOCKET.IO - NotificationCentralExchange
+        // ============================================
+        function connectSocket() {
+            updateStatus('connecting', 'Conectando...');
+            console.log(`🔌 Conectando Socket.IO a: ${CONFIG.WS_URL}`);
+
+            // Polling primero (mas compatible), luego upgrade a websocket
+            STATE.socket = io(CONFIG.WS_URL, {
+                transports: ['polling', 'websocket'],
+                upgrade: true,
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+                timeout: 5000
+            });
+
+            STATE.socket.on('connect', () => {
+                console.log('✅ Socket connected');
+                STATE.socketConnected = true;
+                updateStatus('online', 'Conectado');
+
+                // Authenticate as kiosk
+                STATE.socket.emit('authenticate', {
+                    kioskId: STATE.kioskId, companyId: STATE.companyId,
+                    clientType: 'kiosk-web', deviceId: STATE.deviceId
+                });
+
+                // Join company room
+                STATE.socket.emit('join_room', { room: `company_${STATE.companyId}` });
+                STATE.socket.emit('join_room', { room: `kiosk_${STATE.kioskId}` });
+            });
+
+            STATE.socket.on('disconnect', () => {
+                STATE.socketConnected = false;
+                updateStatus('offline', 'Desconectado');
+            });
+
+            STATE.socket.on('connect_error', (err) => {
+                console.warn('⚠️ Socket connect error:', err.message);
+                // Despues de 3 segundos, mostrar "Listo" aunque no haya socket
+                setTimeout(() => {
+                    if (!STATE.socketConnected) {
+                        updateStatus('online', 'Listo (offline)');
+                    }
+                }, 3000);
+            });
+
+            STATE.socket.on('authenticated', (data) => {
+                console.log('✅ Socket authenticated:', data);
+            });
+
+            // Timeout: si no conecta en 5 seg, seguir funcionando
+            setTimeout(() => {
+                if (!STATE.socketConnected) {
+                    console.warn('⚠️ Socket timeout - continuando sin WebSocket');
+                    updateStatus('online', 'Listo');
+                }
+            }, 5000);
+
+            // Listen for authorization responses
+            STATE.socket.on('authorization_response', handleAuthorizationResponse);
+            STATE.socket.on('late_arrival_result', handleAuthorizationResponse);
+
+            // Listen for notifications
+            STATE.socket.on('notification', (data) => {
+                console.log('📨 Notification:', data);
+                showToast('info', data.title || 'Notificacion', data.message || data.body);
+            });
+        }
+
+        function handleAuthorizationResponse(data) {
+            console.log('📨 Authorization response:', data);
+
+            if (!STATE.pendingAuthorization) return;
+
+            const approved = data.status === 'approved';
+            const panel = document.getElementById('authorization-panel');
+            const statusDiv = document.getElementById('auth-status');
+
+            if (approved) {
+                statusDiv.className = 'auth-status approved';
+                statusDiv.innerHTML = '✅ APROBADO por ' + (data.approverName || 'Supervisor');
+                setTrafficLight('green');
+                showToast('success', 'Autorizado', `Ingreso aprobado por ${data.approverName || 'supervisor'}`);
+                speakMessage(`Autorizado. Bienvenido.`);
+            } else {
+                statusDiv.className = 'auth-status rejected';
+                statusDiv.innerHTML = '❌ RECHAZADO - Contacte a RRHH';
+                setTrafficLight('red');
+                showToast('error', 'Rechazado', 'Autorizacion denegada. Contacte a RRHH.');
+            }
+
+            setTimeout(() => {
+                panel.classList.remove('show');
+                STATE.pendingAuthorization = null;
+                setTrafficLight('yellow');
+            }, 5000);
+
+            if (STATE.authPollingInterval) {
+                clearInterval(STATE.authPollingInterval);
+                STATE.authPollingInterval = null;
+            }
+        }
+
+        // ============================================
+        // CONTINUOUS DETECTION
+        // ============================================
+        function startContinuousDetection() {
+            if (STATE.detectionInterval) clearInterval(STATE.detectionInterval);
+
+            STATE.detectionInterval = setInterval(async () => {
+                if (STATE.isProcessing || isInCooldown() || STATE.pendingAuthorization) return;
+                await detectAndRecognize();
+            }, CONFIG.DETECTION_INTERVAL);
+
+            console.log('🚀 Detection started');
+        }
+
+        function isInCooldown() {
+            return STATE.cooldownUntil && Date.now() < STATE.cooldownUntil;
+        }
+
+        function setCooldown(ms) {
+            STATE.cooldownUntil = Date.now() + ms;
+        }
+
+        async function detectAndRecognize() {
+            const video = document.getElementById('camera-video');
+            const oval = document.querySelector('#face-guide .oval');
+            const guideText = document.getElementById('guide-text');
+
+            if (!video || video.readyState !== 4 || !STATE.faceApiReady) return;
+
+            try {
+                // TinyFaceDetector es ~3-5x mas rapido que SsdMobilenetv1
+                const detections = await faceapi
+                    .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 }))
+                    .withFaceLandmarks()
+                    .withFaceDescriptors();
+
+                const canvas = document.getElementById('face-canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (detections.length === 0) {
+                    // Sin rostro detectado
+                    oval.className = 'oval no-face';
+                    guideText.textContent = 'Coloque su rostro aqui';
+                    guideText.classList.remove('hidden');
+                    return;
+                }
+
+                // Rostro detectado - actualizar UI
+                oval.className = 'oval detecting';
+                guideText.textContent = 'Rostro detectado...';
+
+                // Draw detection boxes (opcional, puede ocultarse)
+                const displaySize = { width: video.videoWidth, height: video.videoHeight };
+                const resized = faceapi.resizeResults(detections, displaySize);
+                resized.forEach(d => {
+                    const box = d.detection.box;
+                    ctx.strokeStyle = '#10B981'; ctx.lineWidth = 2;
+                    ctx.strokeRect(box.x, box.y, box.width, box.height);
+                });
+
+                // Process largest face
+                const best = detections.reduce((a, b) => {
+                    const aArea = a.detection.box.width * a.detection.box.height;
+                    const bArea = b.detection.box.width * b.detection.box.height;
+                    return bArea > aArea ? b : a;
+                });
+
+                if (best && best.descriptor) {
+                    oval.className = 'oval detected';
+                    guideText.textContent = 'Verificando identidad...';
+                    await processRecognition(best);
+                }
+
+            } catch (e) { console.error('Detection error:', e); }
+        }
+
+        async function processRecognition(detection) {
+            STATE.isProcessing = true;
+
+            try {
+                const video = document.getElementById('camera-video');
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = video.videoWidth; tempCanvas.height = video.videoHeight;
+                tempCanvas.getContext('2d').drawImage(video, 0, 0);
+
+                const blob = await new Promise(r => tempCanvas.toBlob(r, 'image/jpeg', 0.85));
+
+                const formData = new FormData();
+                formData.append('biometricImage', blob, 'face.jpg');
+                // Multi-tenant: company_id es obligatorio para SSoT
+                formData.append('companyId', STATE.companyId);
+                formData.append('company_id', STATE.companyId); // Alias para compatibilidad
+                formData.append('kioskId', STATE.kioskId);
+                formData.append('kiosk_id', STATE.kioskId); // Alias para compatibilidad
+                formData.append('deviceId', STATE.deviceId);
+                if (STATE.gpsLat) formData.append('gps_lat', STATE.gpsLat);
+                if (STATE.gpsLng) formData.append('gps_lng', STATE.gpsLng);
+
+                const res = await fetch(`${CONFIG.API_V2}/biometric-attendance/verify-real`, {
+                    method: 'POST', body: formData
+                });
+                const result = await res.json();
+
+                if (result.success && result.employee) {
+                    await handleRecognized(result);
+                } else {
+                    handleNotRecognized(result.error || 'No identificado');
+                }
+
+            } catch (e) {
+                console.error('Recognition error:', e);
+                handleError(e.message);
+            } finally {
+                STATE.isProcessing = false;
+            }
+        }
+
+        async function handleRecognized(result) {
+            const emp = result.employee;
+            const isLate = result.lateArrival || result.isLateArrival;
+            const lateMinutes = result.lateMinutes || 0;
+
+            if (isLate && lateMinutes > 0) {
+                // LATE ARRIVAL - Request authorization
+                setTrafficLight('yellow');
+                showRecognitionResult('warning', emp.name || emp.firstName, 'Llegada tardia', `${lateMinutes} min - Solicitando autorizacion...`);
+
+                // Show authorization panel
+                document.getElementById('auth-employee').textContent = emp.name || `${emp.firstName} ${emp.lastName}`;
+                document.getElementById('auth-minutes').textContent = lateMinutes;
+                document.getElementById('auth-time').textContent = new Date().toLocaleTimeString('es-AR');
+                document.getElementById('auth-status').className = 'auth-status pending';
+                document.getElementById('auth-status').innerHTML = '⏳ Esperando respuesta del supervisor...';
+                document.getElementById('authorization-panel').classList.add('show');
+
+                // Request authorization via API
+                const authToken = await requestLateAuthorization(result.attendanceId, emp, lateMinutes);
+                STATE.pendingAuthorization = { token: authToken, employeeId: emp.id, attendanceId: result.attendanceId };
+
+                // Emit via socket
+                if (STATE.socket && STATE.socketConnected) {
+                    STATE.socket.emit('request_late_authorization', {
+                        attendanceId: result.attendanceId, employeeId: emp.id,
+                        employeeName: emp.name || `${emp.firstName} ${emp.lastName}`,
+                        lateMinutes, companyId: STATE.companyId, kioskId: STATE.kioskId
+                    });
+                }
+
+                // Start polling as fallback
+                startAuthorizationPolling(authToken);
+
+                speakMessage(`${emp.firstName || emp.name}, llegada tardia. Se ha solicitado autorizacion.`);
+                setCooldown(60000); // 1 min cooldown during auth
+
+            } else {
+                // Normal check-in
+                setTrafficLight('green');
+                showRecognitionResult('success', emp.name || emp.firstName, formatTime(new Date()), result.type === 'checkout' ? 'Salida registrada' : 'Entrada registrada');
+
+                // Emit check-in event
+                if (STATE.socket && STATE.socketConnected) {
+                    STATE.socket.emit('attendance_checkin', {
+                        employeeId: emp.id, employeeName: emp.name || `${emp.firstName} ${emp.lastName}`,
+                        companyId: STATE.companyId, kioskId: STATE.kioskId, type: result.type || 'checkin'
+                    });
+                }
+
+                speakMessage(`Bienvenido, ${emp.firstName || emp.name}`);
+                setCooldown(CONFIG.COOLDOWN_RECOGNIZED);
+            }
+
+            setTimeout(() => {
+                setTrafficLight('yellow');
+                hideRecognitionResult();
+                resetFaceGuide();
+            }, CONFIG.TRAFFIC_LIGHT_DURATION);
+        }
+
+        async function requestLateAuthorization(attendanceId, employee, lateMinutes) {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE}/authorization/request`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        attendanceId, employeeId: employee.id,
+                        employeeName: employee.name || `${employee.firstName} ${employee.lastName}`,
+                        lateMinutes, kioskId: STATE.kioskId, companyId: STATE.companyId
+                    })
+                });
+                const data = await res.json();
+                return data.token || data.authorizationId;
+            } catch (e) {
+                console.error('Auth request error:', e);
+                return null;
+            }
+        }
+
+        function startAuthorizationPolling(token) {
+            if (!token) return;
+
+            STATE.authPollingInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`${CONFIG.API_BASE}/authorization/${token}/status`);
+                    const data = await res.json();
+
+                    if (data.status && data.status !== 'pending') {
+                        handleAuthorizationResponse(data);
+                    }
+                } catch (e) { console.error('Polling error:', e); }
+            }, CONFIG.AUTHORIZATION_POLL_INTERVAL);
+        }
+
+        function handleNotRecognized(msg) {
+            setTrafficLight('red');
+            showRecognitionResult('error', 'No identificado', msg, '');
+            setCooldown(CONFIG.COOLDOWN_NOT_RECOGNIZED);
+
+            setTimeout(() => {
+                setTrafficLight('yellow');
+                hideRecognitionResult();
+                resetFaceGuide();
+            }, CONFIG.TRAFFIC_LIGHT_DURATION);
+        }
+
+        function handleError(msg) {
+            console.error('Error:', msg);
+            setCooldown(CONFIG.COOLDOWN_ERROR);
+            resetFaceGuide();
+        }
+
+        function resetFaceGuide() {
+            const oval = document.querySelector('#face-guide .oval');
+            const guideText = document.getElementById('guide-text');
+            if (oval) oval.className = 'oval no-face';
+            if (guideText) {
+                guideText.textContent = 'Coloque su rostro aqui';
+                guideText.classList.remove('hidden');
+            }
+        }
+
+        // ============================================
+        // UI HELPERS
+        // ============================================
+        function setTrafficLight(color) {
+            console.log(`🚦 Semaforo: ${color}`);
+            document.querySelectorAll('.traffic-light-bulb').forEach(b => b.classList.remove('active'));
+            const bulb = document.getElementById(`light-${color}`);
+            if (bulb) {
+                bulb.classList.add('active');
+                // Forzar repaint
+                bulb.offsetHeight;
+            } else {
+                console.error(`❌ Bulb not found: light-${color}`);
+            }
+        }
+
+        function showRecognitionResult(type, name, time, sub) {
+            const overlay = document.getElementById('recognition-result');
+            document.getElementById('result-icon').textContent = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+            document.getElementById('result-name').textContent = name;
+            document.getElementById('result-time').textContent = time;
+            document.getElementById('result-sub').textContent = sub || '';
+            overlay.className = 'recognition-result ' + type + ' show';
+        }
+
+        function hideRecognitionResult() {
+            document.getElementById('recognition-result').classList.remove('show');
+        }
+
+        function showToast(type, title, msg) {
+            const container = document.getElementById('toast-container');
+            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.innerHTML = `<div class="toast-icon">${icons[type] || 'ℹ️'}</div><div class="toast-content"><div class="toast-title">${title}</div><div class="toast-message">${msg}</div></div>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'slideIn 0.3s ease reverse'; setTimeout(() => toast.remove(), 300); }, 5000);
+        }
+
+        function updateStatus(status, text) {
+            document.getElementById('status-dot').className = 'status-dot ' + status;
+            document.getElementById('status-text').textContent = text;
+        }
+
+        function formatTime(d) {
+            return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function speakMessage(msg) {
+            if ('speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(msg);
+                u.lang = 'es-ES'; u.rate = 0.9;
+                speechSynthesis.speak(u);
+            }
+        }
+
+        // ============================================
+        // MODALS
+        // ============================================
+        function showSettingsModal() {
+            showModal('Salir del Kiosk', '¿Desea volver a configuracion? Se cerrara el kiosk actual.', () => {
+                cleanup(); clearConfig(); location.reload();
+            });
+        }
+
+        function showModal(title, msg, onConfirm) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = msg;
+            document.getElementById('modal-confirm-btn').onclick = () => { closeModal(); onConfirm(); };
+            document.getElementById('confirm-modal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('confirm-modal').classList.remove('show');
+        }
+
+        function cleanup() {
+            if (STATE.detectionInterval) clearInterval(STATE.detectionInterval);
+            if (STATE.authPollingInterval) clearInterval(STATE.authPollingInterval);
+            if (STATE.cameraStream) STATE.cameraStream.getTracks().forEach(t => t.stop());
+            if (STATE.socket) STATE.socket.disconnect();
+        }
+
+        window.addEventListener('beforeunload', cleanup);
+    </script>
+</body>
+</html>

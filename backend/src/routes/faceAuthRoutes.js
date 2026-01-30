@@ -121,7 +121,7 @@ router.post('/register', faceRegisterLimiter, auth, requireBiometricConsent, asy
         registrationId: biometricRecords[0].id,
         securityLevel: 'ultra-robust',
         validatedBy: req.user.user_id,
-        timestamp: new Date().toIso8601String()
+        timestamp: new Date().toISOString()
       }
     });
 
@@ -370,7 +370,7 @@ router.post('/authenticate', faceAuthLimiter, async (req, res) => {
         scores: bestMatch.scores,
         qualityScore: bestMatch.qualityScore,
         warnings: contextualWarnings,
-        timestamp: new Date().toIso8601String(),
+        timestamp: new Date().toISOString(),
         isHighConfidence: bestMatch.confidence >= 0.95
       }
     });
@@ -436,7 +436,7 @@ router.post('/verify-liveness', async (req, res) => {
       totalChallenges: challengeResults.length,
       sensorScore: sensorScore,
       verdict: isValid ? 'REAL_PERSON' : 'SPOOFING_DETECTED',
-      timestamp: new Date().toIso8601String()
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {

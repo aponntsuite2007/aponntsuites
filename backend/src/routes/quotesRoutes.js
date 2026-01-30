@@ -58,6 +58,11 @@ router.get('/', verifyStaffToken, async (req, res) => {
       replacements.status = status;
     }
 
+    if (req.query.lead_id) {
+      whereClause += ' AND q.lead_id = :lead_id';
+      replacements.lead_id = parseInt(req.query.lead_id);
+    }
+
     if (search) {
       whereClause += ' AND (q.quote_number ILIKE :search OR c.name ILIKE :search)';
       replacements.search = `%${search}%`;
@@ -67,7 +72,15 @@ router.get('/', verifyStaffToken, async (req, res) => {
       SELECT
         q.*,
         c.name as company_name,
-        c.contact_email as company_email
+        c.contact_email as company_email,
+        c.legal_name as company_legal_name,
+        c.tax_id as company_tax_id,
+        c.address as company_address,
+        c.city as company_city,
+        c.province as company_province,
+        c.country as company_country,
+        c.phone as company_phone,
+        c.metadata as company_metadata
       FROM quotes q
       LEFT JOIN companies c ON q.company_id = c.company_id
       WHERE ${whereClause}
@@ -101,6 +114,35 @@ router.get('/', verifyStaffToken, async (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+/**
+ * GET /api/quotes/pipeline-stats
+ * Estadísticas agrupadas por status para funnel visual
+ */
+router.get('/pipeline-stats', verifyStaffToken, async (req, res) => {
+  try {
+    const stats = await sequelize.query(`
+      SELECT
+        status,
+        COUNT(*)::int as count,
+        COALESCE(SUM(total_amount), 0) as total_amount,
+        ROUND(AVG(EXTRACT(EPOCH FROM (updated_at - created_at))/86400)::numeric, 1) as avg_days
+      FROM quotes
+      GROUP BY status
+      ORDER BY
+        CASE status
+          WHEN 'draft' THEN 1 WHEN 'sent' THEN 2 WHEN 'in_trial' THEN 3
+          WHEN 'accepted' THEN 4 WHEN 'active' THEN 5 WHEN 'rejected' THEN 6
+          ELSE 7
+        END
+    `, { type: QueryTypes.SELECT });
+
+    res.json({ success: true, stats });
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error pipeline-stats:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -323,6 +365,143 @@ router.get('/seller/:sellerId/stats', authMiddleware, async (req, res) => {
 // ═══════════════════════════════════════════════════════════
 // ENDPOINTS ADICIONALES PARA CIRCUITO COMPLETO
 // ═══════════════════════════════════════════════════════════
+
+/**
+ * POST /api/quotes/:id/revert-to-sent
+ * Revierte un presupuesto a estado "sent" (solo managers/admin)
+ * Body: { reason: string }
+ */
+router.post('/:id/revert-to-sent', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const staffRole = req.staff?.role;
+    const staffId = req.staff?.id;
+
+    // Solo managers y admins pueden revertir (level <= 1 = gerente o superior)
+    const staffLevel = req.staff?.level;
+    if (staffLevel === undefined || staffLevel === null || staffLevel > 1) {
+      return res.status(403).json({
+        success: false,
+        error: 'Solo gerentes y administradores pueden revertir presupuestos'
+      });
+    }
+
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Debe proporcionar una razón (mínimo 5 caracteres)'
+      });
+    }
+
+    const result = await QuoteManagementService.revertToSent(id, staffId, reason.trim());
+
+    res.json(result);
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error revirtiendo presupuesto:', error);
+    res.status(error.message.includes('No se puede revertir') ? 409 : 500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/quotes/:id/change-status
+ * Cambia el estado de un presupuesto manualmente
+ * Body: { new_status: string }
+ */
+router.post('/:id/change-status', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { new_status } = req.body;
+    const staffId = req.staff?.id;
+
+    const validStatuses = ['draft', 'sent', 'in_trial', 'accepted', 'active', 'rejected'];
+    if (!new_status || !validStatuses.includes(new_status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Estado inválido. Valores permitidos: ' + validStatuses.join(', ')
+      });
+    }
+
+    // Get current quote
+    const [quote] = await sequelize.query(
+      `SELECT id, status, status_history FROM quotes WHERE id = :id`,
+      { replacements: { id }, type: QueryTypes.SELECT }
+    );
+
+    if (!quote) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    const oldStatus = quote.status;
+    const history = quote.status_history || [];
+    history.push({
+      from: oldStatus,
+      to: new_status,
+      changed_by: staffId,
+      changed_at: new Date().toISOString(),
+      reason: 'Cambio manual de estado'
+    });
+
+    // Update status
+    await sequelize.query(`
+      UPDATE quotes
+      SET status = :new_status,
+          status_history = :history,
+          accepted_date = CASE WHEN :new_status = 'accepted' AND accepted_date IS NULL THEN NOW() ELSE accepted_date END,
+          updated_at = NOW()
+      WHERE id = :id
+    `, {
+      replacements: { id, new_status, history: JSON.stringify(history) },
+      type: QueryTypes.UPDATE
+    });
+
+    console.log(`✅ [QUOTES] Estado cambiado: ${id} ${oldStatus} → ${new_status}`);
+
+    res.json({
+      success: true,
+      old_status: oldStatus,
+      new_status: new_status,
+      message: `Estado cambiado de ${oldStatus} a ${new_status}`
+    });
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error cambiando estado:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/quotes/:id/status-history
+ * Obtiene el historial de cambios de estado de un presupuesto
+ */
+router.get('/:id/status-history', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const quotes = await sequelize.query(
+      `SELECT status_history FROM quotes WHERE id = :id`,
+      { replacements: { id }, type: QueryTypes.SELECT }
+    );
+
+    if (quotes.length === 0) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      quote_id: parseInt(id),
+      status_history: quotes[0].status_history || []
+    });
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error obteniendo historial:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 /**
  * POST /api/quotes/:id/send-email
@@ -560,6 +739,433 @@ router.get('/:id/pdf', verifyStaffToken, async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════
+// CIRCUITO: Quote → Factura → Pago → Alta Definitiva
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * POST /api/quotes/:id/generate-invoice
+ * LEGACY: Genera factura inicial desde un quote activo
+ * NOTA: En el nuevo flujo se usa /upload-invoice para cargar facturas ya emitidas
+ */
+router.post('/:id/generate-invoice', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.staff?.id || null;
+
+    const result = await QuoteManagementService.generateInvoiceFromQuote(id, userId);
+
+    res.json(result);
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error generando factura:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// Multer para upload de facturas
+// ═══════════════════════════════════════════════════════════
+const multerInvoice = require('multer');
+const pathInvoice = require('path');
+const fsInvoice = require('fs');
+
+const invoiceStorage = multerInvoice.diskStorage({
+  destination: function(req, file, cb) {
+    const dir = pathInvoice.join(__dirname, '../../public/uploads/invoices');
+    if (!fsInvoice.existsSync(dir)) fsInvoice.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: function(req, file, cb) {
+    const ext = pathInvoice.extname(file.originalname);
+    const safeNumber = (req.body.invoice_number || '').replace(/[^a-zA-Z0-9]/g, '_');
+    cb(null, `invoice_quote_${req.params.id}_${safeNumber}_${Date.now()}${ext}`);
+  }
+});
+
+const uploadInvoiceFile = multerInvoice({
+  storage: invoiceStorage,
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB max
+  fileFilter: function(req, file, cb) {
+    const ext = pathInvoice.extname(file.originalname).toLowerCase();
+    cb(null, ext === '.pdf');
+  }
+});
+
+/**
+ * POST /api/quotes/:id/upload-invoice
+ * Carga una factura ya emitida (CAE/AFIP) para el quote
+ * Body (multipart): invoice_number, total_amount, due_date, notes
+ * File: invoice_pdf
+ */
+router.post('/:id/upload-invoice', verifyStaffToken, uploadInvoiceFile.single('invoice_pdf'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { invoice_number, total_amount, due_date, notes } = req.body;
+
+    if (!invoice_number) {
+      return res.status(400).json({ success: false, error: 'Número de factura requerido' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Archivo PDF de factura requerido' });
+    }
+
+    // Get quote to verify it exists
+    const [quotes] = await sequelize.query(
+      `SELECT q.id, q.company_id, c.name as company_name, q.total_amount
+       FROM quotes q
+       LEFT JOIN companies c ON q.company_id = c.company_id
+       WHERE q.id = :id`,
+      { replacements: { id }, type: QueryTypes.SELECT }
+    );
+
+    if (!quotes) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    const quote = quotes;
+
+    // Check if invoice already exists for this quote
+    const [existingInvoices] = await sequelize.query(
+      `SELECT id FROM invoices WHERE quote_id = :id`,
+      { replacements: { id }, type: QueryTypes.SELECT }
+    );
+
+    const pdfPath = `uploads/invoices/${req.file.filename}`;
+    const invoiceAmount = total_amount ? parseFloat(total_amount) : parseFloat(quote.total_amount || 0);
+    const invoiceDueDate = due_date || new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString();
+    const staffId = req.staff?.id || null;
+
+    let invoiceId;
+    let isUpdate = false;
+
+    if (existingInvoices) {
+      // Update existing invoice
+      isUpdate = true;
+      invoiceId = existingInvoices.id;
+      await sequelize.query(`
+        UPDATE invoices SET
+          invoice_number = :invoice_number,
+          total_amount = :total_amount,
+          due_date = :due_date,
+          invoice_pdf_path = :pdf_path,
+          notes = :notes,
+          status = CASE WHEN status = 'draft' THEN 'pending' ELSE status END,
+          updated_at = NOW()
+        WHERE id = :invoiceId
+      `, {
+        replacements: {
+          invoiceId,
+          invoice_number,
+          total_amount: invoiceAmount,
+          due_date: invoiceDueDate,
+          pdf_path: pdfPath,
+          notes: notes || ''
+        },
+        type: QueryTypes.UPDATE
+      });
+    } else {
+      // Create new invoice
+      const [result] = await sequelize.query(`
+        INSERT INTO invoices (
+          quote_id, company_id, invoice_number, total_amount, due_date,
+          invoice_pdf_path, notes, status, created_by, created_at, updated_at
+        ) VALUES (
+          :quote_id, :company_id, :invoice_number, :total_amount, :due_date,
+          :pdf_path, :notes, 'pending', :created_by, NOW(), NOW()
+        ) RETURNING id
+      `, {
+        replacements: {
+          quote_id: id,
+          company_id: quote.company_id,
+          invoice_number,
+          total_amount: invoiceAmount,
+          due_date: invoiceDueDate,
+          pdf_path: pdfPath,
+          notes: notes || '',
+          created_by: staffId
+        },
+        type: QueryTypes.INSERT
+      });
+      invoiceId = result?.id || result;
+    }
+
+    // Update quote invoice_id if field exists
+    try {
+      await sequelize.query(
+        `UPDATE quotes SET invoice_id = :invoiceId, updated_at = NOW() WHERE id = :id`,
+        { replacements: { invoiceId, id }, type: QueryTypes.UPDATE }
+      );
+    } catch (e) { /* invoice_id column may not exist */ }
+
+    console.log(`✅ [QUOTES] Factura ${isUpdate ? 'actualizada' : 'cargada'}: ${invoice_number} para quote ${id}`);
+
+    res.json({
+      success: true,
+      invoice_id: invoiceId,
+      invoice_number,
+      message: isUpdate ? 'Factura actualizada correctamente' : 'Factura cargada correctamente'
+    });
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error cargando factura:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/quotes/:id/invoice
+ * Obtiene la factura asociada al quote
+ */
+router.get('/:id/invoice', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const invoice = await QuoteManagementService.getQuoteInvoice(id);
+
+    if (!invoice) {
+      return res.json({ success: true, invoice: null, message: 'No hay factura generada para este presupuesto' });
+    }
+
+    res.json({ success: true, invoice });
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error obteniendo factura:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/quotes/:id/billing-status
+ * Obtiene estado completo de facturación: pre-factura + factura
+ */
+router.get('/:id/billing-status', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get quote
+    const [quote] = await sequelize.query(
+      `SELECT id, company_id, total_amount, invoice_id FROM quotes WHERE id = :id`,
+      { replacements: { id }, type: QueryTypes.SELECT }
+    );
+
+    if (!quote) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    // Get pre-invoice if exists (linked via admin_notes containing quote_id:X)
+    let preInvoice = null;
+    try {
+      const [preInv] = await sequelize.query(
+        `SELECT id, pre_invoice_code, status, total as total_amount, created_at
+         FROM aponnt_pre_invoices
+         WHERE company_id = :companyId
+           AND admin_notes LIKE :quoteRef
+         ORDER BY created_at DESC LIMIT 1`,
+        { replacements: { companyId: quote.company_id, quoteRef: `%quote_id:${id}%` }, type: QueryTypes.SELECT }
+      );
+      preInvoice = preInv || null;
+    } catch (e) { /* table may not exist */ }
+
+    // Get invoice
+    let invoice = null;
+    try {
+      const [inv] = await sequelize.query(
+        `SELECT id, invoice_number, status, total_amount, due_date, sent_at, paid_at, invoice_pdf_path
+         FROM invoices WHERE quote_id = :id ORDER BY created_at DESC LIMIT 1`,
+        { replacements: { id }, type: QueryTypes.SELECT }
+      );
+      invoice = inv || null;
+    } catch (e) { /* table may not exist */ }
+
+    res.json({
+      success: true,
+      pre_invoice: preInvoice,
+      invoice: invoice
+    });
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error obteniendo billing status:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/quotes/:id/generate-pre-invoice
+ * Genera una pre-factura inicial desde el quote
+ */
+router.post('/:id/generate-pre-invoice', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const staffId = req.staff?.id || null;
+
+    // Get quote
+    const [quote] = await sequelize.query(
+      `SELECT q.id, q.quote_number, q.company_id, q.total_amount,
+              q.modules_data, q.status,
+              c.name as company_name, c.name as company_legal_name, c.contact_email
+       FROM quotes q
+       LEFT JOIN companies c ON q.company_id = c.company_id
+       WHERE q.id = :id`,
+      { replacements: { id }, type: QueryTypes.SELECT }
+    );
+
+    if (!quote) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    // Check if already has pre-invoice (check by company_id since quote_id column may not exist)
+    try {
+      const [existing] = await sequelize.query(
+        `SELECT id FROM aponnt_pre_invoices WHERE company_id = :companyId AND pre_invoice_code LIKE :pattern LIMIT 1`,
+        { replacements: { companyId: quote.company_id, pattern: `PRE-${new Date().getFullYear()}%` }, type: QueryTypes.SELECT }
+      );
+      // Skip check for now - allow multiple pre-invoices
+    } catch (e) { /* ignore */ }
+
+    // Generate pre-invoice code
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    const [countResult] = await sequelize.query(
+      `SELECT COUNT(*) as count FROM aponnt_pre_invoices WHERE EXTRACT(YEAR FROM created_at) = :year`,
+      { replacements: { year }, type: QueryTypes.SELECT }
+    ).catch(() => [{ count: 0 }]);
+    const count = parseInt(countResult?.count || 0) + 1;
+    const preInvoiceCode = `PRE-${year}${month}-${String(count).padStart(4, '0')}`;
+
+    // Create pre-invoice (using only existing columns in aponnt_pre_invoices)
+    const companyName = quote.company_legal_name || quote.company_name || 'Sin nombre';
+    const today = new Date();
+    const periodoDesde = today.toISOString().split('T')[0];
+    const periodoHasta = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const totalAmount = parseFloat(quote.total_amount || 0);
+
+    const [result] = await sequelize.query(`
+      INSERT INTO aponnt_pre_invoices (
+        pre_invoice_code, company_id,
+        cliente_cuit, cliente_razon_social, cliente_condicion_iva,
+        periodo_desde, periodo_hasta, items,
+        subtotal, neto_gravado, total,
+        status, observations, admin_notes
+      ) VALUES (
+        :code, :company_id,
+        :cuit, :razon_social, :condicion_iva,
+        :periodo_desde, :periodo_hasta, :items,
+        :subtotal, :neto_gravado, :total,
+        'PENDING_REVIEW', :observations, :admin_notes
+      ) RETURNING id, pre_invoice_code
+    `, {
+      replacements: {
+        code: preInvoiceCode,
+        company_id: quote.company_id,
+        cuit: '00-00000000-0',
+        razon_social: companyName,
+        condicion_iva: 'Responsable Inscripto',
+        periodo_desde: periodoDesde,
+        periodo_hasta: periodoHasta,
+        items: JSON.stringify([{
+          description: `Presupuesto ${quote.quote_number}`,
+          quantity: 1,
+          unit_price: totalAmount,
+          subtotal: totalAmount
+        }]),
+        subtotal: totalAmount,
+        neto_gravado: totalAmount,
+        total: totalAmount,
+        observations: `Generada desde presupuesto ${quote.quote_number}`,
+        admin_notes: `quote_id:${quote.id}`
+      },
+      type: QueryTypes.INSERT
+    });
+
+    const preInvoiceId = result?.[0]?.id || result?.id || result;
+
+    console.log(`✅ [QUOTES] Prefactura generada: ${preInvoiceCode} para quote ${id}`);
+
+    res.json({
+      success: true,
+      pre_invoice_id: preInvoiceId,
+      pre_invoice_code: preInvoiceCode,
+      message: 'Prefactura generada correctamente'
+    });
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error generando prefactura:', error);
+    // Check if table doesn't exist
+    if (error.message?.includes('relation') && error.message?.includes('does not exist')) {
+      return res.status(500).json({
+        success: false,
+        error: 'Tabla de prefacturas no existe. Ejecute la migración correspondiente.'
+      });
+    }
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Note: Legacy invoice endpoints have been deprecated in favor of the new billing flow
+
+/**
+ * POST /api/quotes/:id/confirm-payment
+ * Registra pago para la factura del quote (wrapper de PaymentService)
+ * Body: { amount, payment_method, payment_reference, payment_date, notes }
+ * File: receipt (optional, via multipart)
+ */
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const receiptStorage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    const dir = path.join(__dirname, '../../public/uploads/receipts');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: function(req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, `receipt_quote_${req.params.id}_${Date.now()}${ext}`);
+  }
+});
+
+const uploadReceipt = multer({
+  storage: receiptStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: function(req, file, cb) {
+    const allowed = ['.jpg', '.jpeg', '.png', '.pdf'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, allowed.includes(ext));
+  }
+});
+
+router.post('/:id/confirm-payment', verifyStaffToken, uploadReceipt.single('receipt'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, payment_method, payment_reference, payment_date, notes } = req.body;
+
+    const paymentData = {
+      amount: amount ? parseFloat(amount) : undefined,
+      payment_method: payment_method || 'transfer',
+      payment_reference: payment_reference || '',
+      payment_date: payment_date || new Date().toISOString(),
+      notes: notes || '',
+      registered_by: null  // PaymentService expects UUID; staff IDs are integers
+    };
+
+    if (req.file) {
+      paymentData.receipt_file_path = `uploads/receipts/${req.file.filename}`;
+      paymentData.receipt_file_name = req.file.originalname;
+    }
+
+    const result = await QuoteManagementService.confirmPaymentForQuote(id, paymentData);
+
+    res.json(result);
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error confirmando pago:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 /**
  * GET /api/quotes/public/:token
  * Vista pública del presupuesto (sin auth)
@@ -633,7 +1239,13 @@ router.post('/public/:token/accept', async (req, res) => {
       return res.status(401).json({ success: false, error: 'Token inválido o expirado' });
     }
 
-    const result = await QuoteManagementService.acceptQuote(decoded.quote_id);
+    const { company: companyData, admin: adminData, branches: branchesData } = req.body || {};
+    const options = {};
+    if (companyData || adminData || branchesData) {
+      options.onboardingData = { company: companyData, admin: adminData, branches: branchesData };
+    }
+
+    const result = await QuoteManagementService.acceptQuote(decoded.quote_id, options);
 
     res.json(result);
 
@@ -667,6 +1279,806 @@ router.post('/public/:token/reject', async (req, res) => {
 
   } catch (error) {
     console.error('❌ [QUOTES API] Error rechazando (público):', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// CONTRATO EULA - Generación, envío y firma
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * POST /api/quotes/:id/contract/generate
+ * Genera el contrato (pasa a draft)
+ */
+router.post('/:id/contract/generate', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await sequelize.query(`
+      UPDATE quotes SET contract_status = 'draft', updated_at = NOW() WHERE id = :id
+    `, { replacements: { id } });
+    res.json({ success: true, contract_status: 'draft' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/quotes/:id/contract/send
+ * Envia el contrato EULA al cliente por email con link de aceptacion
+ */
+router.post('/:id/contract/send', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const crypto = require('crypto');
+    const nodemailer = require('nodemailer');
+
+    // Obtener datos del quote y company
+    const quotes = await sequelize.query(`
+      SELECT q.*, c.name as company_name, c.contact_email,
+        c.legal_name as company_legal_name
+      FROM quotes q
+      JOIN companies c ON q.company_id = c.company_id
+      WHERE q.id = :id
+    `, { replacements: { id }, type: QueryTypes.SELECT });
+
+    if (quotes.length === 0) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    const quote = quotes[0];
+    const clientEmail = quote.contact_email;
+
+    if (!clientEmail) {
+      return res.status(400).json({ success: false, error: 'La empresa no tiene email de contacto configurado' });
+    }
+
+    // Generar token unico para aceptacion (valido 7 dias)
+    const acceptanceToken = crypto.randomBytes(32).toString('hex');
+    const tokenExpiry = new Date();
+    tokenExpiry.setDate(tokenExpiry.getDate() + 7);
+
+    // Generar link de aceptacion
+    const baseUrl = process.env.BASE_URL || 'http://localhost:9998';
+    const acceptanceLink = `${baseUrl}/accept-eula.html?token=${acceptanceToken}&quote=${id}`;
+
+    // Preparar email
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #1e3a5f; color: white; padding: 20px; text-align: center;">
+          <h1 style="margin: 0;">APONNT 360</h1>
+          <p style="margin: 5px 0 0;">Contrato de Suscripcion de Servicios</p>
+        </div>
+        <div style="padding: 30px; background: #f8f9fa;">
+          <p>Estimado/a cliente de <strong>${quote.company_legal_name || quote.company_name}</strong>,</p>
+          <p>Le enviamos el Contrato Marco de Suscripcion de Servicios (EULA) para su revision y aceptacion.</p>
+          <p><strong>Presupuesto:</strong> ${quote.quote_number}<br>
+          <strong>Monto mensual:</strong> $${parseFloat(quote.total_amount || 0).toLocaleString('es-AR')}</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${acceptanceLink}"
+               style="background: #22c55e; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold;">
+              Ver y Aceptar Contrato
+            </a>
+          </div>
+          <p style="font-size: 12px; color: #666;">
+            Este link es valido por 7 dias. Al hacer click en "Acepto los Terminos",
+            quedara registrada su aceptacion electronica conforme la Ley 25.506.
+          </p>
+        </div>
+        <div style="background: #1e3a5f; color: white; padding: 15px; text-align: center; font-size: 12px;">
+          APONNT S.A.S. - Sistema de Gestion de Asistencia Biometrica
+        </div>
+      </div>
+    `;
+
+    // PRIMERO enviar email, DESPUES actualizar BD
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || '"APONNT 360" <contratos@aponnt.com>',
+      to: clientEmail,
+      subject: `Contrato EULA - ${quote.quote_number} - APONNT 360`,
+      html: emailHtml
+    });
+
+    console.log('✅ [CONTRACT] Email enviado a:', clientEmail);
+
+    // Solo si el email se envio exitosamente, actualizar BD
+    await sequelize.query(`
+      UPDATE quotes
+      SET contract_status = 'sent',
+          contract_sent_at = NOW(),
+          contract_acceptance_data = jsonb_build_object(
+            'acceptance_token', :token,
+            'token_expiry', :expiry,
+            'sent_to_email', :email
+          ),
+          updated_at = NOW()
+      WHERE id = :id
+    `, {
+      replacements: {
+        id,
+        token: acceptanceToken,
+        expiry: tokenExpiry.toISOString(),
+        email: clientEmail
+      }
+    });
+
+    res.json({
+      success: true,
+      contract_status: 'sent',
+      sent_at: new Date(),
+      sent_to: clientEmail,
+      acceptance_link: acceptanceLink
+    });
+
+  } catch (error) {
+    console.error('❌ [CONTRACT] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/quotes/:id/contract/sign
+ * Registra la aceptacion EULA del cliente (pasa a signed)
+ *
+ * EULA funciona diferente a contratos tradicionales:
+ * - No hay firma manuscrita ni nombre/DNI insertados en el documento
+ * - Es un "click-wrap agreement" - el cliente hace click en "Acepto"
+ * - Se registran metadatos de auditoria inmutables:
+ *   - Timestamp exacto (con timezone)
+ *   - IP del cliente
+ *   - User-Agent del navegador
+ *   - Hash del documento (para probar que no cambio)
+ *   - UUID unico de la aceptacion
+ */
+router.post('/:id/contract/sign', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { acceptance_type, user_agent, screen_resolution, timezone } = req.body;
+    const crypto = require('crypto');
+
+    // Obtener IP del cliente
+    const client_ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+      || req.headers['x-real-ip']
+      || req.connection?.remoteAddress
+      || req.socket?.remoteAddress
+      || 'unknown';
+
+    // Generar hash del documento EULA (para probar inmutabilidad)
+    const { CONTRACT_TEMPLATE_ARG_V2 } = require('../templates/contract-eula-arg-v2');
+    const documentHash = crypto.createHash('sha256')
+      .update(JSON.stringify(CONTRACT_TEMPLATE_ARG_V2))
+      .digest('hex');
+
+    // Generar UUID unico para esta aceptacion
+    const acceptanceUUID = crypto.randomUUID();
+
+    // Timestamp con timezone
+    const acceptedAt = new Date();
+    const acceptanceRecord = {
+      acceptance_id: acceptanceUUID,
+      accepted_at: acceptedAt.toISOString(),
+      timezone: timezone || 'UTC',
+      acceptance_type: acceptance_type || 'eula_click',
+      client_ip: client_ip,
+      user_agent: user_agent || req.headers['user-agent'] || 'unknown',
+      screen_resolution: screen_resolution || 'unknown',
+      document_hash: documentHash,
+      document_version: CONTRACT_TEMPLATE_ARG_V2.header?.version || 'v2.0',
+      immutable: true
+    };
+
+    // Guardar en la base de datos - También actualizar status del quote a 'accepted'
+    await sequelize.query(`
+      UPDATE quotes
+      SET contract_status = 'signed',
+          contract_signed_at = :signed_at,
+          contract_signature_ip = :client_ip,
+          contract_acceptance_data = :acceptance_data,
+          status = CASE WHEN status IN ('sent', 'in_trial', 'draft') THEN 'accepted' ELSE status END,
+          accepted_date = CASE WHEN status IN ('sent', 'in_trial', 'draft') THEN NOW() ELSE accepted_date END,
+          updated_at = NOW()
+      WHERE id = :id
+    `, {
+      replacements: {
+        id,
+        signed_at: acceptedAt,
+        client_ip,
+        acceptance_data: JSON.stringify(acceptanceRecord)
+      }
+    });
+
+    console.log('✅ [EULA] Aceptacion registrada:', acceptanceUUID, 'Quote:', id);
+
+    res.json({
+      success: true,
+      contract_status: 'signed',
+      acceptance: {
+        id: acceptanceUUID,
+        signed_at: acceptedAt.toISOString(),
+        document_hash: documentHash,
+        ip: client_ip
+      }
+    });
+  } catch (error) {
+    console.error('❌ [EULA] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/quotes/:id/contract-preview
+ * Genera preview del contrato EULA para este presupuesto
+ */
+router.get('/:id/contract-preview', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { CONTRACT_TEMPLATE_ARG_V2 } = require('../templates/contract-eula-arg-v2');
+
+    const quotes = await sequelize.query(`
+      SELECT q.*, c.name as company_name, c.legal_name as company_legal_name,
+        c.tax_id as company_tax_id, c.address as company_address,
+        c.city as company_city, c.province as company_province,
+        c.country as company_country, c.phone as company_phone
+      FROM quotes q
+      LEFT JOIN companies c ON q.company_id = c.company_id
+      WHERE q.id = :id
+    `, { replacements: { id }, type: QueryTypes.SELECT });
+
+    if (quotes.length === 0) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      template: CONTRACT_TEMPLATE_ARG_V2,
+      quote: quotes[0]
+    });
+  } catch (error) {
+    console.error('Error contract-preview:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/quotes/:id/contract-pdf
+ * Genera y descarga el contrato EULA en PDF
+ */
+router.get('/:id/contract-pdf', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const PDFDocument = require('pdfkit');
+    const { CONTRACT_TEMPLATE_ARG_V2 } = require('../templates/contract-eula-arg-v2');
+
+    // Obtener datos del quote y company
+    const quotes = await sequelize.query(`
+      SELECT q.*, c.name as company_name, c.legal_name as company_legal_name,
+        c.tax_id as company_tax_id, c.address as company_address,
+        c.city as company_city, c.province as company_province,
+        c.country as company_country, c.phone as company_phone
+      FROM quotes q
+      LEFT JOIN companies c ON q.company_id = c.company_id
+      WHERE q.id = :id
+    `, { replacements: { id }, type: QueryTypes.SELECT });
+
+    if (quotes.length === 0) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    const q = quotes[0];
+    const tpl = CONTRACT_TEMPLATE_ARG_V2;
+
+    // Crear PDF
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 50, bottom: 50, left: 50, right: 50 },
+      info: {
+        Title: 'Contrato EULA - ' + (q.quote_number || 'Quote'),
+        Author: 'APONNT S.A.S.',
+        Subject: 'End User License Agreement'
+      }
+    });
+
+    // Configurar respuesta
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="contrato-eula-' + (q.quote_number || id) + '.pdf"');
+    doc.pipe(res);
+
+    // Replacements para el texto
+    const replacements = {
+      '{{APONNT_LEGAL_NAME}}': 'APONNT S.A.S.',
+      '{{APONNT_ADDRESS}}': 'Ciudad Autonoma de Buenos Aires, Argentina',
+      '{{APONNT_CUIT}}': '30-XXXXXXXX-X',
+      '{{COMPANY_LEGAL_NAME}}': q.company_legal_name || q.company_name || 'EMPRESA',
+      '{{COMPANY_ADDRESS}}': [q.company_address, q.company_city, q.company_province].filter(Boolean).join(', ') || '-',
+      '{{COMPANY_CUIT}}': q.company_tax_id || '-'
+    };
+
+    // Header
+    doc.fontSize(16).font('Helvetica-Bold').text(tpl.header.title, { align: 'center' });
+    doc.fontSize(10).font('Helvetica').text(tpl.header.subtitle + ' - ' + tpl.header.version, { align: 'center' });
+    doc.moveDown(2);
+
+    // Secciones
+    tpl.sections.forEach(section => {
+      doc.fontSize(12).font('Helvetica-Bold').text(section.title);
+      doc.moveDown(0.5);
+
+      let content = section.content;
+      Object.keys(replacements).forEach(key => {
+        content = content.split(key).join(replacements[key]);
+      });
+
+      doc.fontSize(10).font('Helvetica').text(content, { align: 'justify' });
+      doc.moveDown(1.5);
+    });
+
+    // Anexo
+    if (tpl.annexA) {
+      doc.addPage();
+      doc.fontSize(14).font('Helvetica-Bold').text('ANEXO A: ORDER FORM', { align: 'center' });
+      doc.moveDown(1);
+
+      doc.fontSize(10).font('Helvetica');
+      doc.text('Razon Social: ' + (q.company_legal_name || q.company_name || '-'));
+      doc.text('CUIT: ' + (q.company_tax_id || '-'));
+      doc.text('Domicilio: ' + replacements['{{COMPANY_ADDRESS}}']);
+      doc.text('Telefono: ' + (q.company_phone || '-'));
+      doc.moveDown(1);
+
+      doc.text('Modulos contratados:');
+      const modules = q.modules_data || [];
+      if (typeof modules === 'string') {
+        try { modules = JSON.parse(modules); } catch(e) {}
+      }
+      if (Array.isArray(modules)) {
+        modules.forEach(mod => {
+          doc.text('  - ' + (mod.module_name || mod.module_key) + ': $' + (mod.price || 0) + '/mes');
+        });
+      }
+      doc.moveDown(1);
+      doc.text('Total mensual: $' + parseFloat(q.total_amount || 0).toLocaleString('es-AR'));
+    }
+
+    // Estado de aceptacion si existe
+    if (q.contract_status === 'signed' && q.contract_acceptance_data) {
+      doc.addPage();
+      doc.fontSize(14).font('Helvetica-Bold').text('REGISTRO DE ACEPTACION EULA', { align: 'center' });
+      doc.moveDown(1);
+
+      let acceptData = q.contract_acceptance_data;
+      if (typeof acceptData === 'string') {
+        try { acceptData = JSON.parse(acceptData); } catch(e) {}
+      }
+
+      doc.fontSize(10).font('Helvetica');
+      doc.text('ID de Aceptacion: ' + (acceptData.acceptance_id || '-'));
+      doc.text('Fecha/Hora: ' + (acceptData.accepted_at || q.contract_signed_at || '-'));
+      doc.text('Timezone: ' + (acceptData.timezone || 'UTC'));
+      doc.text('IP del cliente: ' + (acceptData.client_ip || q.contract_signature_ip || '-'));
+      doc.text('User-Agent: ' + (acceptData.user_agent || '-'));
+      doc.text('Hash del documento: ' + (acceptData.document_hash || '-'));
+      doc.text('Version del documento: ' + (acceptData.document_version || 'v2.0'));
+      doc.moveDown(1);
+      doc.fontSize(8).font('Helvetica-Oblique').text(
+        'Este registro es inmutable y constituye evidencia de la aceptacion de los terminos del contrato EULA.',
+        { align: 'center' }
+      );
+    }
+
+    // Finalizar
+    doc.end();
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error contract-pdf:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// ENDPOINTS PUBLICOS - ACEPTACION EULA POR CLIENTE (sin auth)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * GET /api/quotes/public/contract/:id
+ * Obtiene el contrato para visualizacion publica (requiere token valido)
+ */
+router.get('/public/contract/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ success: false, error: 'Token requerido' });
+    }
+
+    const { CONTRACT_TEMPLATE_ARG_V2 } = require('../templates/contract-eula-arg-v2');
+
+    // Obtener quote y validar token
+    const quotes = await sequelize.query(`
+      SELECT q.*, c.name as company_name, c.legal_name as company_legal_name,
+        c.tax_id as company_tax_id
+      FROM quotes q
+      JOIN companies c ON q.company_id = c.company_id
+      WHERE q.id = :id
+    `, { replacements: { id }, type: QueryTypes.SELECT });
+
+    if (quotes.length === 0) {
+      return res.status(404).json({ success: false, error: 'Contrato no encontrado' });
+    }
+
+    const quote = quotes[0];
+
+    // Verificar que el contrato esta en estado 'sent'
+    if (quote.contract_status === 'signed') {
+      return res.json({ success: false, error: 'already_signed' });
+    }
+
+    if (quote.contract_status !== 'sent') {
+      return res.status(400).json({ success: false, error: 'Contrato no disponible para aceptacion' });
+    }
+
+    // Validar token
+    let acceptData = quote.contract_acceptance_data;
+    if (typeof acceptData === 'string') {
+      try { acceptData = JSON.parse(acceptData); } catch(e) { acceptData = {}; }
+    }
+
+    if (!acceptData || acceptData.acceptance_token !== token) {
+      return res.status(403).json({ success: false, error: 'Token invalido' });
+    }
+
+    // Verificar expiracion
+    if (acceptData.token_expiry && new Date(acceptData.token_expiry) < new Date()) {
+      return res.json({ success: false, error: 'expired' });
+    }
+
+    res.json({
+      success: true,
+      quote: {
+        id: quote.id,
+        quote_number: quote.quote_number,
+        company_name: quote.company_name,
+        company_legal_name: quote.company_legal_name,
+        total_amount: quote.total_amount,
+        modules_data: quote.modules_data
+      },
+      template: CONTRACT_TEMPLATE_ARG_V2
+    });
+
+  } catch (error) {
+    console.error('❌ [PUBLIC CONTRACT] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/quotes/public/contract/:id/accept
+ * Registra la aceptacion EULA del cliente (endpoint publico con token)
+ */
+router.post('/public/contract/:id/accept', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { token, user_agent, screen_resolution, timezone } = req.body;
+    const crypto = require('crypto');
+
+    if (!token) {
+      return res.status(400).json({ success: false, error: 'Token requerido' });
+    }
+
+    // Obtener quote
+    const quotes = await sequelize.query(`
+      SELECT q.*, c.contact_email
+      FROM quotes q
+      JOIN companies c ON q.company_id = c.company_id
+      WHERE q.id = :id
+    `, { replacements: { id }, type: QueryTypes.SELECT });
+
+    if (quotes.length === 0) {
+      return res.status(404).json({ success: false, error: 'Contrato no encontrado' });
+    }
+
+    const quote = quotes[0];
+
+    // Verificar estado
+    if (quote.contract_status === 'signed') {
+      return res.status(400).json({ success: false, error: 'Contrato ya fue aceptado' });
+    }
+
+    if (quote.contract_status !== 'sent') {
+      return res.status(400).json({ success: false, error: 'Contrato no disponible' });
+    }
+
+    // Validar token
+    let acceptData = quote.contract_acceptance_data;
+    if (typeof acceptData === 'string') {
+      try { acceptData = JSON.parse(acceptData); } catch(e) { acceptData = {}; }
+    }
+
+    if (!acceptData || acceptData.acceptance_token !== token) {
+      return res.status(403).json({ success: false, error: 'Token invalido' });
+    }
+
+    if (acceptData.token_expiry && new Date(acceptData.token_expiry) < new Date()) {
+      return res.status(400).json({ success: false, error: 'Token expirado' });
+    }
+
+    // Obtener IP del cliente
+    const client_ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+      || req.headers['x-real-ip']
+      || req.connection?.remoteAddress
+      || 'unknown';
+
+    // Generar hash del documento
+    const { CONTRACT_TEMPLATE_ARG_V2 } = require('../templates/contract-eula-arg-v2');
+    const documentHash = crypto.createHash('sha256')
+      .update(JSON.stringify(CONTRACT_TEMPLATE_ARG_V2))
+      .digest('hex');
+
+    // Generar UUID de aceptacion
+    const acceptanceUUID = crypto.randomUUID();
+    const acceptedAt = new Date();
+
+    // Crear registro de aceptacion
+    const acceptanceRecord = {
+      acceptance_id: acceptanceUUID,
+      accepted_at: acceptedAt.toISOString(),
+      timezone: timezone || 'UTC',
+      acceptance_type: 'eula_click_public',
+      client_ip: client_ip,
+      user_agent: user_agent || req.headers['user-agent'] || 'unknown',
+      screen_resolution: screen_resolution || 'unknown',
+      document_hash: documentHash,
+      document_version: CONTRACT_TEMPLATE_ARG_V2.header?.version || 'v2.0',
+      accepted_by_email: acceptData.sent_to_email,
+      immutable: true
+    };
+
+    // Guardar en BD - También actualizar status del quote a 'accepted' si estaba en trial o sent
+    await sequelize.query(`
+      UPDATE quotes
+      SET contract_status = 'signed',
+          contract_signed_at = :signed_at,
+          contract_signature_ip = :client_ip,
+          contract_acceptance_data = :acceptance_data,
+          status = CASE WHEN status IN ('sent', 'in_trial', 'draft') THEN 'accepted' ELSE status END,
+          accepted_date = CASE WHEN status IN ('sent', 'in_trial', 'draft') THEN NOW() ELSE accepted_date END,
+          updated_at = NOW()
+      WHERE id = :id
+    `, {
+      replacements: {
+        id,
+        signed_at: acceptedAt,
+        client_ip,
+        acceptance_data: JSON.stringify(acceptanceRecord)
+      }
+    });
+
+    console.log('✅ [PUBLIC EULA] Aceptacion registrada:', acceptanceUUID, 'Quote:', id, 'Email:', acceptData.sent_to_email);
+
+    res.json({
+      success: true,
+      message: 'Contrato aceptado exitosamente',
+      acceptance: {
+        id: acceptanceUUID,
+        signed_at: acceptedAt.toISOString(),
+        document_hash: documentHash
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [PUBLIC EULA] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/quotes/:id/full-context
+ * Devuelve quote + contrato + factura + trials + lead + company en una sola llamada
+ */
+router.get('/:id/full-context', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Quote + Company
+    const quotes = await sequelize.query(`
+      SELECT q.*,
+        c.name as company_name, c.contact_email as company_email,
+        c.legal_name as company_legal_name, c.tax_id as company_tax_id,
+        c.address as company_address, c.city as company_city,
+        c.province as company_province, c.country as company_country,
+        c.phone as company_phone, c.metadata as company_metadata,
+        c.is_active as company_is_active
+      FROM quotes q
+      LEFT JOIN companies c ON q.company_id = c.company_id
+      WHERE q.id = :id
+    `, { replacements: { id }, type: QueryTypes.SELECT });
+
+    if (quotes.length === 0) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    const quote = quotes[0];
+
+    // Contract (if exists)
+    let contract = null;
+    try {
+      const contracts = await sequelize.query(`
+        SELECT id, status, signed_date, start_date, end_date, created_at
+        FROM contracts WHERE quote_id = :id ORDER BY created_at DESC LIMIT 1
+      `, { replacements: { id }, type: QueryTypes.SELECT });
+      contract = contracts[0] || null;
+    } catch (e) { /* table may not exist */ }
+
+    // Invoice (most recent for this company)
+    let invoice = null;
+    try {
+      const invoices = await sequelize.query(`
+        SELECT id, invoice_number, status, total_amount, due_date, paid_at, sent_at, created_at
+        FROM invoices WHERE quote_id = :id ORDER BY created_at DESC LIMIT 1
+      `, { replacements: { id }, type: QueryTypes.SELECT });
+      invoice = invoices[0] || null;
+    } catch (e) { /* table may not exist */ }
+
+    // Module trials
+    let trials = [];
+    try {
+      const trialRows = await sequelize.query(`
+        SELECT id, module_key, status, start_date, end_date
+        FROM module_trials WHERE quote_id = :id
+      `, { replacements: { id }, type: QueryTypes.SELECT });
+      trials = trialRows;
+    } catch (e) { /* table may not exist */ }
+
+    // Lead origin
+    let lead = null;
+    if (quote.lead_id) {
+      try {
+        const leads = await sequelize.query(`
+          SELECT id, company_name, contact_name, contact_email, temperature, lifecycle_stage, total_score
+          FROM marketing_leads WHERE id = :lead_id
+        `, { replacements: { lead_id: quote.lead_id }, type: QueryTypes.SELECT });
+        lead = leads[0] || null;
+      } catch (e) { /* table may not exist */ }
+    }
+
+    // Compute onboarding_phase
+    let onboarding_phase = 'Borrador';
+    if (quote.status === 'sent') {
+      onboarding_phase = 'Enviado';
+    } else if (quote.status === 'in_trial') {
+      onboarding_phase = 'En Trial';
+    } else if (quote.status === 'accepted' && !contract) {
+      onboarding_phase = 'Pendiente Contrato';
+    } else if (contract && !invoice) {
+      onboarding_phase = 'Pendiente Factura';
+    } else if (invoice && invoice.status !== 'paid') {
+      onboarding_phase = 'Pendiente Pago';
+    } else if (quote.company_is_active) {
+      onboarding_phase = 'Activo';
+    } else if (quote.status === 'active') {
+      onboarding_phase = 'Activo';
+    } else if (quote.status === 'rejected') {
+      onboarding_phase = 'Rechazado';
+    }
+
+    res.json({
+      success: true,
+      quote,
+      contract,
+      invoice,
+      trials,
+      lead,
+      onboarding_phase
+    });
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error full-context:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/quotes/:id/activate-company
+ * Activa la empresa asociada al quote (después de confirmar pago)
+ * - Cambia companies.is_active = true
+ * - Cambia companies.status = 'active'
+ * - Cambia companies.onboarding_status = 'ACTIVE'
+ * - Crea usuario administrador si no existe
+ * - Cambia quote.status = 'active'
+ */
+router.post('/:id/activate-company', verifyStaffToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const staffId = req.staff?.id || req.user?.id || 1;
+
+    // Get quote with company
+    const [quote] = await sequelize.query(
+      `SELECT q.id, q.company_id, q.status, q.quote_number,
+              c.name as company_name, c.is_active, c.slug
+       FROM quotes q
+       LEFT JOIN companies c ON q.company_id = c.company_id
+       WHERE q.id = :id`,
+      { replacements: { id }, type: QueryTypes.SELECT }
+    );
+
+    if (!quote) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    if (!quote.company_id) {
+      return res.status(400).json({ success: false, error: 'El presupuesto no tiene empresa asociada' });
+    }
+
+    if (quote.is_active) {
+      return res.json({ success: true, message: 'La empresa ya está activa', already_active: true });
+    }
+
+    // Activar empresa
+    await sequelize.query(`
+      UPDATE companies SET
+        is_active = true,
+        status = 'active',
+        onboarding_status = 'ACTIVE',
+        activated_at = NOW(),
+        updated_at = NOW()
+      WHERE company_id = :companyId
+    `, { replacements: { companyId: quote.company_id }, type: QueryTypes.UPDATE });
+
+    // Cambiar quote a active
+    await sequelize.query(`
+      UPDATE quotes SET
+        status = 'active',
+        updated_at = NOW()
+      WHERE id = :id
+    `, { replacements: { id }, type: QueryTypes.UPDATE });
+
+    // Crear usuario administrador si no existe
+    const [existingAdmin] = await sequelize.query(`
+      SELECT id FROM users WHERE company_id = :companyId AND role = 'admin' LIMIT 1
+    `, { replacements: { companyId: quote.company_id }, type: QueryTypes.SELECT });
+
+    let adminCreated = false;
+    if (!existingAdmin) {
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+
+      await sequelize.query(`
+        INSERT INTO users (company_id, username, password, email, first_name, last_name, role, is_active, is_core_user, created_at, updated_at)
+        VALUES (:companyId, 'administrador', :password, :email, 'Administrador', 'Principal', 'admin', true, true, NOW(), NOW())
+      `, {
+        replacements: {
+          companyId: quote.company_id,
+          password: hashedPassword,
+          email: quote.slug ? quote.slug + '@empresa.com' : 'admin' + quote.company_id + '@empresa.com'
+        },
+        type: QueryTypes.INSERT
+      });
+      adminCreated = true;
+    }
+
+    console.log(`✅ [QUOTES] Empresa ${quote.company_name} (ID: ${quote.company_id}) ACTIVADA por staff ${staffId}`);
+
+    res.json({
+      success: true,
+      message: 'Empresa activada correctamente',
+      company_id: quote.company_id,
+      company_name: quote.company_name,
+      admin_created: adminCreated,
+      admin_credentials: adminCreated ? { username: 'administrador', password: 'admin123' } : null
+    });
+
+  } catch (error) {
+    console.error('❌ [QUOTES API] Error activando empresa:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

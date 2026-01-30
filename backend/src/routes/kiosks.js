@@ -348,13 +348,17 @@ module.exports = (db) => {
                     id: kiosk.id,
                     name: kiosk.name,
                     location: kiosk.location,
-                    hardware_profile: kiosk.hardware_profile,
-                    performance_score: kiosk.performance_score,
-                    is_active: kiosk.is_active
+                    is_active: kiosk.is_active,
+                    is_configured: kiosk.is_configured,
+                    device_id: kiosk.device_id,
+                    gps_lat: kiosk.gps_lat,
+                    gps_lng: kiosk.gps_lng,
+                    last_seen: kiosk.last_seen,
+                    apk_version: kiosk.apk_version
                 },
                 stats: {
-                    total_registrations_today: 0, // TODO: implementar
-                    total_registrations_month: 0, // TODO: implementar
+                    total_registrations_today: 0, // TODO: implementar con query a attendances
+                    total_registrations_month: 0, // TODO: implementar con query a attendances
                     avg_response_time: 0 // TODO: implementar
                 }
             });
@@ -365,6 +369,182 @@ module.exports = (db) => {
                 error: 'Error al obtener estadísticas',
                 details: error.message
             });
+        }
+    });
+
+    // ========================================================================
+    // POST /api/kiosks/:id/update-gps - Actualizar GPS del kiosk (desde Flutter APK)
+    // ========================================================================
+    // ⚠️ CRÍTICO: Este endpoint es llamado por Flutter en config_service.dart:413
+
+    router.post('/:id/update-gps', async (req, res) => {
+        try {
+            const kioskId = req.params.id;
+            const { company_id, gps_lat, gps_lng, device_id } = req.body;
+
+            if (!company_id) {
+                return res.status(400).json({ success: false, error: 'company_id es requerido' });
+            }
+
+            if (gps_lat === undefined || gps_lng === undefined) {
+                return res.status(400).json({ success: false, error: 'gps_lat y gps_lng son requeridos' });
+            }
+
+            const lat = parseFloat(gps_lat);
+            const lng = parseFloat(gps_lng);
+
+            if (isNaN(lat) || lat < -90 || lat > 90) {
+                return res.status(400).json({ success: false, error: 'gps_lat debe estar entre -90 y 90' });
+            }
+
+            if (isNaN(lng) || lng < -180 || lng > 180) {
+                return res.status(400).json({ success: false, error: 'gps_lng debe estar entre -180 y 180' });
+            }
+
+            const kiosk = await Kiosk.findOne({
+                where: { id: kioskId, company_id: parseInt(company_id) }
+            });
+
+            if (!kiosk) {
+                return res.status(404).json({ success: false, error: 'Kiosk no encontrado' });
+            }
+
+            const updateData = { gps_lat: lat, gps_lng: lng, is_configured: true };
+            if (device_id) updateData.device_id = device_id.trim();
+
+            await kiosk.update(updateData);
+            console.log(`📍 [KIOSK] GPS actualizado para kiosk ${kioskId}: ${lat}, ${lng}`);
+
+            res.json({
+                success: true,
+                message: 'GPS actualizado correctamente',
+                kiosk: { id: kiosk.id, name: kiosk.name, gps_lat: kiosk.gps_lat, gps_lng: kiosk.gps_lng, is_configured: kiosk.is_configured }
+            });
+
+        } catch (error) {
+            console.error('❌ Error actualizando GPS de kiosk:', error);
+            res.status(500).json({ success: false, error: 'Error al actualizar GPS', details: error.message });
+        }
+    });
+
+    // ========================================================================
+    // POST /api/kiosks/:id/activate - Activar kiosk (desde Flutter APK)
+    // ========================================================================
+
+    router.post('/:id/activate', async (req, res) => {
+        try {
+            const kioskId = req.params.id;
+            const { device_id, company_id, gps_lat, gps_lng } = req.body;
+
+            if (!device_id || !company_id) {
+                return res.status(400).json({ success: false, error: 'device_id y company_id son requeridos' });
+            }
+
+            const kiosk = await Kiosk.findOne({
+                where: { id: kioskId, company_id: parseInt(company_id) }
+            });
+
+            if (!kiosk) {
+                return res.status(404).json({ success: false, error: 'Kiosk no encontrado' });
+            }
+
+            if (kiosk.is_active && kiosk.device_id && kiosk.device_id !== device_id) {
+                return res.status(409).json({ success: false, error: 'Kiosk ya está activado en otro dispositivo', code: 'ALREADY_ACTIVATED' });
+            }
+
+            await kiosk.update({
+                device_id: device_id.trim(),
+                is_active: true,
+                is_configured: true,
+                gps_lat: gps_lat || kiosk.gps_lat,
+                gps_lng: gps_lng || kiosk.gps_lng,
+                last_seen: new Date()
+            });
+
+            console.log(`✅ [KIOSK] Kiosk ${kioskId} activado con device_id: ${device_id}`);
+            res.status(200).json({ success: true, message: 'Kiosk activado correctamente', kiosk: { id: kiosk.id, name: kiosk.name, device_id: kiosk.device_id, is_active: kiosk.is_active } });
+
+        } catch (error) {
+            console.error('❌ Error activando kiosk:', error);
+            res.status(500).json({ success: false, error: 'Error al activar kiosk', details: error.message });
+        }
+    });
+
+    // ========================================================================
+    // POST /api/kiosks/:id/deactivate - Desactivar kiosk (desde Flutter APK)
+    // ========================================================================
+
+    router.post('/:id/deactivate', async (req, res) => {
+        try {
+            const kioskId = req.params.id;
+            const { company_id } = req.body;
+
+            if (!company_id) {
+                return res.status(400).json({ success: false, error: 'company_id es requerido' });
+            }
+
+            const kiosk = await Kiosk.findOne({
+                where: { id: kioskId, company_id: parseInt(company_id) }
+            });
+
+            if (!kiosk) {
+                return res.status(404).json({ success: false, error: 'Kiosk no encontrado' });
+            }
+
+            await kiosk.update({ device_id: null, is_active: false, is_configured: false });
+            console.log(`🔒 [KIOSK] Kiosk ${kioskId} desactivado`);
+
+            res.json({ success: true, message: 'Kiosk desactivado correctamente' });
+
+        } catch (error) {
+            console.error('❌ Error desactivando kiosk:', error);
+            res.status(500).json({ success: false, error: 'Error al desactivar kiosk', details: error.message });
+        }
+    });
+
+    // ========================================================================
+    // GET /api/kiosks/:id/geofence-zones - Obtener zonas de geofencing del kiosk
+    // ========================================================================
+
+    router.get('/:id/geofence-zones', async (req, res) => {
+        try {
+            const kioskId = req.params.id;
+            const company_id = req.query.company_id;
+
+            if (!company_id) {
+                return res.status(400).json({ success: false, error: 'company_id es requerido como query param' });
+            }
+
+            const kiosk = await Kiosk.findOne({
+                where: { id: kioskId, company_id: parseInt(company_id) }
+            });
+
+            if (!kiosk) {
+                return res.status(404).json({ success: false, error: 'Kiosk no encontrado' });
+            }
+
+            const geofenceZones = [];
+            if (kiosk.gps_lat && kiosk.gps_lng) {
+                geofenceZones.push({
+                    id: `kiosk_${kiosk.id}_zone`,
+                    name: `Zona ${kiosk.name}`,
+                    type: 'circle',
+                    center: { lat: parseFloat(kiosk.gps_lat), lng: parseFloat(kiosk.gps_lng) },
+                    radius: 100,
+                    is_active: true
+                });
+            }
+
+            res.json({
+                success: true,
+                kiosk: { id: kiosk.id, name: kiosk.name, gps_lat: kiosk.gps_lat, gps_lng: kiosk.gps_lng },
+                geofenceZones: geofenceZones,
+                defaultRadius: 100
+            });
+
+        } catch (error) {
+            console.error('❌ Error obteniendo geofence zones:', error);
+            res.status(500).json({ success: false, error: 'Error al obtener zonas de geofencing', details: error.message });
         }
     });
 

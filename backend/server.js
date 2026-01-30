@@ -2736,6 +2736,8 @@ app.use('/api/vendors', vendorCommissionsRoutes); // Sistema de Roles y Comision
 app.use('/api/partners/commissions', partnerCommissionRoutes); // 💰 Comisiones Partner-Aponnt (Dic 2025)
 app.use('/api/partners', partnerRoutes); // 🤝 Partners Marketplace (Dic 2025)
 app.use('/api/offboarding', require('./src/routes/offboardingRoutes')); // 🔴 Baja de Empresas (Ene 2026)
+app.use('/api/restore', require('./src/routes/companyRestoreRoutes')); // 🔄 Restauración de Empresas (Ene 2026)
+app.use('/api/system-settings', require('./src/routes/systemSettingsRoutes')); // ⚙️ Settings del Sistema (Ene 2026)
 app.use('/api', pricingRoutes);
 
 // 💼 CIRCUITO COMERCIAL COMPLETO - 6 FASES (Enero 2025)
@@ -2890,6 +2892,15 @@ app.use('/api/attendance-analytics', attendanceAnalyticsRoutes);
 // Media acotada, desviación estándar, zonificación climática, comparativas regionales
 const attendanceAdvancedStatsRoutes = require('./src/routes/attendanceAdvancedStatsRoutes');
 app.use('/api/attendance-stats', attendanceAdvancedStatsRoutes);
+
+// 📊 CONFIGURAR API DE REPORTES (Attendance, User Summary, Daily Summary)
+// Excel exports via ExcelJS
+const reportRoutes = require('./src/routes/reportRoutes');
+app.use('/api/reports', reportRoutes);
+console.log('📊 [REPORTS] API de Reportes ACTIVO:');
+console.log('   📋 GET /api/reports/attendance - Reporte de asistencias (JSON/Excel)');
+console.log('   👥 GET /api/reports/user-summary - Resumen por usuario (JSON/Excel)');
+console.log('   📅 GET /api/reports/daily-summary - Resumen diario');
 
 // 📊 CONFIGURAR API DE CUBO DE HORAS (Analytics Avanzado)
 // Cubo multidimensional, costos de reposición, optimizador de vacaciones
@@ -3869,6 +3880,17 @@ console.log('📢 [MARKETING] Sistema de leads y flyers "Preguntale a tu IA" con
 // 📄 QUOTES - Sistema de presupuestos y onboarding
 const quotesRoutes = require('./src/routes/quotesRoutes');
 app.use('/api/quotes', quotesRoutes);
+
+// 💳 APONNT BILLING - Pre-facturación y facturación de APONNT a empresas
+const aponntBillingRoutes = require('./src/routes/aponntBillingRoutes');
+app.use('/api/aponnt/billing', aponntBillingRoutes);
+console.log('💳 [APONNT-BILLING] Sistema de pre-facturación configurado');
+
+// Página pública para ver/aceptar presupuesto (link del email) → redirige a HTML estático
+app.get('/presupuesto/:token', (req, res) => {
+  res.redirect(`/presupuesto.html?token=${encodeURIComponent(req.params.token)}`);
+});
+
 console.log('📄 [QUOTES] Sistema de presupuestos configurado');
 
 console.log('💼 [SIAC] Rutas de ERP SIAC configuradas:');

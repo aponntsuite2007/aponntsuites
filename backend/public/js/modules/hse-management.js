@@ -1442,6 +1442,7 @@ async function saveCatalogItem(event, itemId) {
     } catch (e) {
         console.error('[HSE] Error guardando EPP:', e);
         showNotification('Error de conexion', 'error');
+        closeModal('hse-catalog-modal');
     }
 }
 
@@ -1608,6 +1609,7 @@ async function saveDelivery(event) {
     } catch (e) {
         console.error('[HSE] Error guardando entrega:', e);
         showNotification('Error de conexion', 'error');
+        closeModal('hse-delivery-modal');
     }
 }
 
@@ -1711,6 +1713,7 @@ async function saveInspection(event) {
     } catch (e) {
         console.error('[HSE] Error guardando inspeccion:', e);
         showNotification('Error de conexion', 'error');
+        closeModal('hse-inspection-modal');
     }
 }
 
@@ -2411,6 +2414,7 @@ async function saveRequirement(event) {
     } catch (e) {
         console.error('[HSE] Error guardando requerimiento:', e);
         showNotification('Error de conexion', 'error');
+        closeModal('hse-requirement-modal');
     }
 }
 
@@ -2475,11 +2479,13 @@ window.Modules['hse-management'] = {
     init: function() {
         // El sistema de carga dinamica llama init() sin parametros
         // Debemos encontrar el container nosotros mismos
-        const container = document.getElementById('mainContent');
+        const container = document.getElementById('mainContent') ||
+                         document.getElementById('module-content') ||
+                         document.getElementById('hse-container');
         if (container) {
             initHseManagement(container);
         } else {
-            console.error('[HSE] No se encontro el container #mainContent');
+            console.error('[HSE] No se encontro container (mainContent/module-content/hse-container)');
         }
     }
 };

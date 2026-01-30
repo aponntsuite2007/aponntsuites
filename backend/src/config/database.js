@@ -210,6 +210,9 @@ const AssistantConversation = require('../models/AssistantConversation')(sequeli
 // ✅ MODELO - Sistema de Offboarding (Baja de Empresas)
 const CompanyOffboardingEvent = require('../models/CompanyOffboardingEvent')(sequelize);
 
+// ✅ MODELO - System Settings (Configuraciones Parametrizables)
+const SystemSetting = require('../models/SystemSetting')(sequelize);
+
 // ✅ MODELO - Process Chain Analytics (Tracking y métricas)
 const ProcessChainAnalytics = require('../models/ProcessChainAnalytics')(sequelize);
 
@@ -1794,8 +1797,8 @@ FinanceAccountBalance.belongsTo(Company, { foreignKey: 'company_id', targetKey: 
 FinanceJournalEntry.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
 
 // FinanceJournalEntry -> FinanceJournalEntryLine
-FinanceJournalEntry.hasMany(FinanceJournalEntryLine, { foreignKey: 'entry_id', as: 'lines' });
-FinanceJournalEntryLine.belongsTo(FinanceJournalEntry, { foreignKey: 'entry_id', as: 'entry' });
+FinanceJournalEntry.hasMany(FinanceJournalEntryLine, { foreignKey: 'journal_entry_id', as: 'lines' });
+FinanceJournalEntryLine.belongsTo(FinanceJournalEntry, { foreignKey: 'journal_entry_id', as: 'entry' });
 
 // FinanceJournalEntryLine -> FinanceChartOfAccounts
 FinanceJournalEntryLine.belongsTo(FinanceChartOfAccounts, { foreignKey: 'account_id', as: 'account' });
@@ -1981,6 +1984,8 @@ module.exports = {
   ProcessChainAnalytics,
   // ✅ EXPORT - Sistema de Offboarding (Baja de Empresas)
   CompanyOffboardingEvent,
+  // ✅ EXPORT - System Settings (Configuraciones Parametrizables)
+  SystemSetting,
   // ✅ EXPORTS - Workflow Alta de Empresa (FASE 1-5)
   // TEMP: Budget,
   // TEMP: ContractOnboarding,

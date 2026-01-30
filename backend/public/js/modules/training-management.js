@@ -348,12 +348,12 @@ const TrainingStatus = {
 
 // Training types
 const TrainingTypes = {
-    PRESENTIAL: 'presential',
-    VIRTUAL: 'virtual',
     VIDEO: 'video',
     PDF: 'pdf',
     EXTERNAL_LINK: 'external_link',
-    MIXED: 'mixed'
+    SCORM: 'scorm',
+    PRESENTATION: 'presentation',
+    INTERACTIVE: 'interactive'
 };
 
 // Evaluation types
@@ -467,12 +467,12 @@ function showTrainingManagementContent() {
                                 <label>Tipo *</label>
                                 <select id="training-type" required onchange="toggleTypeFields()">
                                     <option value="">Seleccionar tipo...</option>
-                                    <option value="presential">🏢 Presencial</option>
-                                    <option value="virtual">💻 Virtual</option>
                                     <option value="video">🎥 Video</option>
                                     <option value="pdf">📄 PDF</option>
                                     <option value="external_link">🔗 Enlace Externo</option>
-                                    <option value="mixed">🔄 Mixto</option>
+                                    <option value="scorm">📦 SCORM</option>
+                                    <option value="presentation">📊 Presentación</option>
+                                    <option value="interactive">🖱️ Interactivo</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -1303,11 +1303,12 @@ function showTrainingsManagement() {
                     <label style="color: #cbd5e1;">📅 Tipo:</label>
                     <select id="type-filter" onchange="filterTrainings()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="">Todos los tipos</option>
-                        <option value="presential">🏢 Presencial</option>
-                        <option value="virtual">💻 Virtual</option>
                         <option value="video">🎥 Video</option>
                         <option value="pdf">📄 PDF</option>
                         <option value="external_link">🔗 Enlace</option>
+                        <option value="scorm">📦 SCORM</option>
+                        <option value="presentation">📊 Presentación</option>
+                        <option value="interactive">🖱️ Interactivo</option>
                     </select>
                 </div>
             </div>
@@ -1353,7 +1354,7 @@ function initializeTrainingDemo() {
             id: 1,
             title: 'Seguridad Industrial Básica',
             category: 'safety',
-            type: 'mixed',
+            type: 'video',
             status: 'active',
             description: 'Capacitación fundamental sobre seguridad en el lugar de trabajo',
             instructor: 'Ing. María González',
@@ -1373,7 +1374,7 @@ function initializeTrainingDemo() {
             id: 2,
             title: 'Liderazgo Efectivo',
             category: 'leadership',
-            type: 'virtual',
+            type: 'external_link',
             status: 'active',
             description: 'Desarrollo de habilidades de liderazgo para supervisores',
             instructor: 'Lic. Carlos Mendez',
@@ -1393,7 +1394,7 @@ function initializeTrainingDemo() {
             id: 3,
             title: 'Primeros Auxilios',
             category: 'safety',
-            type: 'presential',
+            type: 'presentation',
             status: 'completed',
             description: 'Capacitación práctica en primeros auxilios',
             instructor: 'Dr. Ana Ruiz',
@@ -1622,6 +1623,24 @@ function loadCategoryProgress() {
             </div>
         </div>
     `).join('');
+}
+
+// Toggle type-specific fields based on training type selection
+function toggleTypeFields() {
+    const type = document.getElementById('training-type')?.value;
+    const container = document.getElementById('type-specific-fields');
+    if (!container) return;
+
+    const fieldsMap = {
+        video: '<div class="form-group"><label>URL del Video</label><input type="url" id="training-video-url" placeholder="https://..."></div>',
+        pdf: '<div class="form-group"><label>Archivo PDF</label><input type="file" id="training-pdf-file" accept=".pdf"></div>',
+        external_link: '<div class="form-group"><label>URL del Enlace</label><input type="url" id="training-external-url" placeholder="https://..."></div>',
+        scorm: '<div class="form-group"><label>Paquete SCORM</label><input type="file" id="training-scorm-file" accept=".zip"></div>',
+        presentation: '<div class="form-group"><label>Archivo Presentación</label><input type="file" id="training-presentation-file" accept=".pptx,.ppt,.pdf"></div>',
+        interactive: '<div class="form-group"><label>URL del Contenido Interactivo</label><input type="url" id="training-interactive-url" placeholder="https://..."></div>'
+    };
+
+    container.innerHTML = fieldsMap[type] || '';
 }
 
 // Show modal function
@@ -1976,12 +1995,12 @@ function loadTrainingsList() {
         };
         
         const typeIcons = {
-            presential: '🏢',
-            virtual: '💻',
             video: '🎥',
             pdf: '📄',
             external_link: '🔗',
-            mixed: '🔄'
+            scorm: '📦',
+            presentation: '📊',
+            interactive: '🖱️'
         };
         
         const isOverdue = training.status === 'active' && new Date(training.deadline) < new Date();
@@ -2080,12 +2099,12 @@ function viewTrainingDetails(trainingId) {
     
     const category = trainingCategories.find(c => c.id === training.category);
     const typeIcons = {
-        presential: '🏢 Presencial',
-        virtual: '💻 Virtual',
         video: '🎥 Video',
         pdf: '📄 PDF',
         external_link: '🔗 Enlace Externo',
-        mixed: '🔄 Mixto'
+        scorm: '📦 SCORM',
+        presentation: '📊 Presentación',
+        interactive: '🖱️ Interactivo'
     };
     
     const detailsHtml = `

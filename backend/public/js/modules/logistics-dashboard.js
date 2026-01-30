@@ -6646,13 +6646,14 @@
 
             const data = {
                 code: formData.get('code'), name: formData.get('name'), legal_name: formData.get('legal_name'),
-                tax_id: formData.get('tax_id'), type: formData.get('type'),
-                contact_name: formData.get('contact_name'), phone: formData.get('phone'), email: formData.get('email'),
+                tax_id: formData.get('tax_id'),
+                is_own_fleet: formData.get('type') === 'INTERNAL',
+                contact_name: formData.get('contact_name'), contact_phone: formData.get('phone'), contact_email: formData.get('email'),
                 website: formData.get('website'), address: formData.get('address'),
-                services, specialties, coverage_zones: coverageZones, international_coverage: internationalCoverage,
-                weight_rate_per_kg: parseFloat(formData.get('weight_rate_per_kg')) || null,
+                service_types: services, specialties, coverage_zones: coverageZones, international_coverage: internationalCoverage,
+                rate_per_kg: parseFloat(formData.get('weight_rate_per_kg')) || null,
                 volume_rate_per_m3: parseFloat(formData.get('volume_rate_per_m3')) || null,
-                flat_rate: parseFloat(formData.get('flat_rate')) || null,
+                base_rate: parseFloat(formData.get('flat_rate')) || null,
                 min_charge: parseFloat(formData.get('min_charge')) || null,
                 fuel_surcharge_pct: parseFloat(formData.get('fuel_surcharge_pct')) || 0,
                 insurance_pct: parseFloat(formData.get('insurance_pct')) || 0,
@@ -6668,12 +6669,12 @@
                 api_url: formData.get('api_url') || null,
                 api_key: formData.get('api_key') || null,
                 tracking_url_template: formData.get('tracking_url_template') || null,
-                notes: formData.get('notes'), active: formData.get('active') === 'true'
+                notes: formData.get('notes'), is_active: formData.get('active') === 'true'
             };
             try {
                 const response = await fetchAPI('/logistics/carriers', { method: 'POST', body: JSON.stringify(data) });
                 if (response.success) { showSuccess('Transportista creado'); closeModal(); loadTabData('fleet'); }
-            } catch (error) { showError('Error: ' + error.message); }
+            } catch (error) { showError('Error: ' + error.message); closeModal(); }
         });
         setTimeout(() => initModalTabs(), 100);
     };
@@ -7432,6 +7433,7 @@
                 }
             } catch (error) {
                 showError('Error al crear vehículo');
+                closeModal();
             }
         });
     };
@@ -7889,6 +7891,7 @@
                 }
             } catch (error) {
                 showError('Error al crear zona');
+                closeModal();
             }
         });
     };
@@ -7994,6 +7997,7 @@
                 }
             } catch (error) {
                 showError('Error al crear tipo de ubicación');
+                closeModal();
             }
         });
     };
@@ -8121,6 +8125,7 @@
                 }
             } catch (error) {
                 showError('Error al crear ruta');
+                closeModal();
             }
         });
     };
@@ -8322,7 +8327,7 @@
             try {
                 const response = await fetchAPI('/logistics/shipments', { method: 'POST', body: JSON.stringify(data) });
                 if (response.success) { showSuccess('Envío creado: ' + response.data.tracking_number); closeModal(); loadTabData('operations'); }
-            } catch (error) { showError('Error: ' + error.message); }
+            } catch (error) { showError('Error: ' + error.message); closeModal(); }
         });
         setTimeout(() => initModalTabs(), 100);
     };
@@ -8383,6 +8388,7 @@
                 }
             } catch (error) {
                 showError('Error al generar ola');
+                closeModal();
             }
         });
     };
@@ -9037,6 +9043,7 @@
                 }
             } catch (error) {
                 showError('Error al crear conductor');
+                closeModal();
             }
         });
     };
@@ -9403,6 +9410,7 @@
                 }
             } catch (error) {
                 showError('Error al crear transferencia');
+                closeModal();
             }
         });
     };
@@ -9600,6 +9608,7 @@
                 }
             } catch (error) {
                 showError('Error al actualizar estado');
+                closeModal();
             }
         });
     };

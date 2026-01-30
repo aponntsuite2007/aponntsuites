@@ -14,8 +14,8 @@ const CompanyDataPurgeService = require('./CompanyDataPurgeService');
 const GoogleDriveService = require('./GoogleDriveService');
 const OffboardingNotificationService = require('./OffboardingNotificationService');
 
-// Roles que pueden confirmar la baja
-const ALLOWED_ROLES = ['gerente', 'director', 'ceo', 'admin', 'superadmin'];
+// Level máximo permitido para confirmar baja (0=admin/director, 1=gerente)
+const MAX_ALLOWED_LEVEL = 1;
 
 class CompanyOffboardingService {
 
@@ -319,13 +319,17 @@ class CompanyOffboardingService {
   async confirmOffboarding(companyId, staffId, reason, confirmationCode) {
     // Validar rol del staff
     const [staff] = await sequelize.query(
-      `SELECT id, name, role FROM aponnt_staff WHERE id = :staffId`,
+      `SELECT s.staff_id, s.first_name, s.last_name, s.level,
+              r.role_code, r.role_name
+       FROM aponnt_staff s
+       LEFT JOIN aponnt_staff_roles r ON r.role_id = s.role_id
+       WHERE s.staff_id = :staffId`,
       { replacements: { staffId }, type: QueryTypes.SELECT }
     );
 
     if (!staff) throw new Error('Staff no encontrado');
-    if (!ALLOWED_ROLES.includes(staff.role?.toLowerCase())) {
-      throw new Error(`Rol insuficiente. Se requiere: ${ALLOWED_ROLES.join(', ')}. Rol actual: ${staff.role}`);
+    if (staff.level === null || staff.level === undefined || staff.level > MAX_ALLOWED_LEVEL) {
+      throw new Error(`Rol insuficiente. Se requiere nivel gerente o superior (level <= ${MAX_ALLOWED_LEVEL}). Nivel actual: ${staff.level}`);
     }
 
     // Verificar empresa

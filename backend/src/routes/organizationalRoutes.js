@@ -699,6 +699,11 @@ router.post('/roles', async (req, res) => {
 router.put('/roles/:id', async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
+
+        if (!companyId) {
+            return res.status(400).json({ success: false, message: 'company_id requerido' });
+        }
+
         const { role_name, description, category, icon, color,
                 requires_certification, certification_validity_months,
                 scoring_bonus, responsibilities, required_training,
@@ -731,7 +736,7 @@ router.put('/roles/:id', async (req, res) => {
                 category: category || hierarchy_level || null,
                 icon: icon || null,
                 color: color || null,
-                requires_certification: requires_certification === true || requires_certification === 'true',
+                requires_certification: requires_certification !== undefined ? (requires_certification === true || requires_certification === 'true') : null,
                 certification_validity_months: certMonths,
                 scoring_bonus: bonus,
                 responsibilities: responsibilities ? JSON.stringify(responsibilities) : null,
@@ -754,6 +759,10 @@ router.delete('/roles/:id', async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.query.company_id;
         const roleId = req.params.id;
+
+        if (!companyId) {
+            return res.status(400).json({ success: false, message: 'company_id requerido' });
+        }
 
         // Verificar que el rol existe y pertenece a la empresa (o es global null)
         const [existingRoles] = await sequelize.query(`
@@ -1798,6 +1807,10 @@ router.put('/positions/:id', async (req, res) => {
         const companyId = req.user?.company_id || req.body.company_id;
         const { id } = req.params;
 
+        if (!companyId) {
+            return res.status(400).json({ success: false, message: 'company_id requerido' });
+        }
+
         // Verificar que la posición existe y pertenece a la empresa
         const [existing] = await sequelize.query(`
             SELECT id FROM organizational_positions WHERE id = :id AND company_id = :companyId
@@ -1843,26 +1856,26 @@ router.put('/positions/:id', async (req, res) => {
         `, {
             replacements: {
                 id,
-                position_code,
-                position_name,
-                description,
-                parent_position_id,
-                hierarchy_level,
-                branch_code,
-                branch_order,
-                color_hex,
-                is_escalation_point,
-                can_approve_permissions,
-                max_approval_days,
-                work_category,
-                work_environment,
-                physical_demand_level,
-                cognitive_demand_level,
-                risk_exposure_level,
-                salary_category_id,
-                payslip_template_id,
-                payroll_template_id,
-                department_id
+                position_code: position_code !== undefined ? position_code : null,
+                position_name: position_name !== undefined ? position_name : null,
+                description: description !== undefined ? description : null,
+                parent_position_id: parent_position_id !== undefined ? parent_position_id : null,
+                hierarchy_level: hierarchy_level !== undefined ? hierarchy_level : null,
+                branch_code: branch_code !== undefined ? branch_code : null,
+                branch_order: branch_order !== undefined ? branch_order : null,
+                color_hex: color_hex !== undefined ? color_hex : null,
+                is_escalation_point: is_escalation_point !== undefined ? is_escalation_point : null,
+                can_approve_permissions: can_approve_permissions !== undefined ? can_approve_permissions : null,
+                max_approval_days: max_approval_days !== undefined ? max_approval_days : null,
+                work_category: work_category !== undefined ? work_category : null,
+                work_environment: work_environment !== undefined ? work_environment : null,
+                physical_demand_level: physical_demand_level !== undefined ? physical_demand_level : null,
+                cognitive_demand_level: cognitive_demand_level !== undefined ? cognitive_demand_level : null,
+                risk_exposure_level: risk_exposure_level !== undefined ? risk_exposure_level : null,
+                salary_category_id: salary_category_id !== undefined ? salary_category_id : null,
+                payslip_template_id: payslip_template_id !== undefined ? payslip_template_id : null,
+                payroll_template_id: payroll_template_id !== undefined ? payroll_template_id : null,
+                department_id: department_id !== undefined ? department_id : null
             }
         });
 
@@ -1884,6 +1897,10 @@ router.delete('/positions/:id', async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.query.company_id;
         const { id } = req.params;
+
+        if (!companyId) {
+            return res.status(400).json({ success: false, message: 'company_id requerido' });
+        }
 
         // Verificar que la posición existe
         const [existing] = await sequelize.query(`

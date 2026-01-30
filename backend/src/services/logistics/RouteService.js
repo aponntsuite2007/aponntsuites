@@ -141,37 +141,62 @@ class RouteService {
      */
     static async createCarrier(data) {
         const {
-            company_id, code, name, tax_id, contact_name,
-            contact_email, contact_phone, address,
-            is_own_fleet, service_types, insurance_number,
-            insurance_expiry, contract_start, contract_end,
-            rate_type, base_rate, rate_per_km, rate_per_kg,
-            notes, created_by
+            company_id, code, name, type, contact_name,
+            phone, contact_phone, email, contact_email, website,
+            tax_id, legal_name, services, service_types,
+            coverage_zones, has_flat_rate, flat_rate,
+            has_weight_rate, weight_rate_per_kg, rate_per_kg,
+            has_volume_rate, volume_rate_per_m3,
+            min_charge, fuel_surcharge_pct,
+            service_type, is_active
         } = data;
 
         const query = `
             INSERT INTO logistics_carriers (
-                company_id, code, name, tax_id, contact_name,
-                contact_email, contact_phone, address,
-                is_own_fleet, service_types, insurance_number,
-                insurance_expiry, contract_start, contract_end,
-                rate_type, base_rate, rate_per_km, rate_per_kg,
-                is_active, notes, created_by, created_at
+                company_id, code, name, type, contact_name,
+                phone, email, website,
+                tax_id, legal_name, services, coverage_zones,
+                has_flat_rate, flat_rate,
+                has_weight_rate, weight_rate_per_kg,
+                has_volume_rate, volume_rate_per_m3,
+                min_charge, fuel_surcharge_pct,
+                active, created_at
             ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                $11, $12, $13, $14, $15, $16, $17, $18,
-                true, $19, $20, NOW()
+                $1, $2, $3, $4, $5, $6, $7, $8,
+                $9, $10, $11, $12,
+                $13, $14, $15, $16, $17, $18, $19, $20,
+                $21, NOW()
             )
             RETURNING *
         `;
 
+        const resolvedPhone = phone || contact_phone || null;
+        const resolvedEmail = email || contact_email || null;
+        const resolvedServices = services || (service_types ? JSON.stringify(service_types) : (service_type ? JSON.stringify([service_type]) : JSON.stringify(['STANDARD'])));
+        const resolvedServicesStr = typeof resolvedServices === 'string' ? resolvedServices : JSON.stringify(resolvedServices);
+
         const result = await pool.query(query, [
-            company_id, code, name, tax_id, contact_name,
-            contact_email, contact_phone, address,
-            is_own_fleet || false, service_types || ['STANDARD'],
-            insurance_number, insurance_expiry, contract_start, contract_end,
-            rate_type || 'FIXED', base_rate || 0, rate_per_km, rate_per_kg,
-            notes, created_by
+            company_id,
+            code || (name ? name.substring(0, 20).toUpperCase().replace(/\s+/g, '-') : 'CARRIER'),
+            name,
+            type || 'EXTERNAL',
+            contact_name || null,
+            resolvedPhone,
+            resolvedEmail,
+            website || null,
+            tax_id || null,
+            legal_name || null,
+            resolvedServicesStr,
+            coverage_zones ? JSON.stringify(coverage_zones) : null,
+            has_flat_rate || false,
+            flat_rate || null,
+            has_weight_rate !== undefined ? has_weight_rate : true,
+            weight_rate_per_kg || rate_per_kg || null,
+            has_volume_rate || false,
+            volume_rate_per_m3 || null,
+            min_charge || null,
+            fuel_surcharge_pct || 0,
+            is_active !== undefined ? is_active : true
         ]);
 
         return result.rows[0];
@@ -452,39 +477,72 @@ class RouteService {
      */
     static async createDeliveryZone(data) {
         const {
-            company_id, code, name, description, polygon_coordinates,
-            delivery_days, delivery_hours_from, delivery_hours_to,
-            delivery_frequency, min_order_amount, delivery_cost,
-            free_delivery_threshold, lead_time_days,
-            carrier_id, notes, created_by
+            company_id, warehouse_id, code, name, zone_type,
+            country, province, city, localities, postal_codes,
+            polygon_geojson, polygon_coordinates,
+            delivery_days, delivery_time_from, delivery_hours_from,
+            delivery_time_to, delivery_hours_to,
+            frequency, delivery_frequency,
+            default_carrier_id, carrier_id,
+            carrier_service_type,
+            delivery_cost, free_shipping_threshold, free_delivery_threshold,
+            express_surcharge, lead_time_hours, lead_time_days,
+            cutoff_time, min_order_value, min_order_amount,
+            max_weight_kg, max_volume_m3, priority,
+            is_active
         } = data;
 
         const query = `
             INSERT INTO logistics_delivery_zones (
-                company_id, code, name, description, polygon_coordinates,
-                delivery_days, delivery_hours_from, delivery_hours_to,
-                delivery_frequency, min_order_amount, delivery_cost,
-                free_delivery_threshold, lead_time_days,
-                carrier_id, is_active, notes, created_by, created_at
+                company_id, warehouse_id, code, name, zone_type,
+                country, province, city, localities, postal_codes,
+                polygon_geojson, delivery_days,
+                delivery_time_from, delivery_time_to,
+                frequency, default_carrier_id, carrier_service_type,
+                delivery_cost, free_shipping_threshold, express_surcharge,
+                lead_time_hours, cutoff_time,
+                min_order_value, max_weight_kg, max_volume_m3,
+                priority, active, created_at
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                $11, $12, $13, $14, true, $15, $16, NOW()
+                $11, $12, $13, $14, $15, $16, $17,
+                $18, $19, $20, $21, $22, $23, $24, $25,
+                $26, $27, NOW()
             )
             RETURNING *
         `;
 
+        const defaultDays = JSON.stringify({mon: true, tue: true, wed: true, thu: true, fri: true, sat: false, sun: false});
+        const resolvedDays = delivery_days ? (typeof delivery_days === 'string' ? delivery_days : JSON.stringify(delivery_days)) : defaultDays;
+
         const result = await pool.query(query, [
-            company_id, code, name, description,
-            polygon_coordinates ? JSON.stringify(polygon_coordinates) : null,
-            delivery_days || ['LUN', 'MAR', 'MIE', 'JUE', 'VIE'],
-            delivery_hours_from || '08:00',
-            delivery_hours_to || '18:00',
-            delivery_frequency || 'DAILY',
-            min_order_amount || 0,
-            delivery_cost || 0,
-            free_delivery_threshold,
-            lead_time_days || 1,
-            carrier_id, notes, created_by
+            company_id,
+            warehouse_id || null,
+            code || (name ? name.substring(0, 20).toUpperCase().replace(/\s+/g, '-') : 'ZONE'),
+            name,
+            zone_type || 'GEOGRAPHIC',
+            country || 'Argentina',
+            province || null,
+            city || null,
+            localities ? JSON.stringify(localities) : null,
+            postal_codes ? JSON.stringify(postal_codes) : null,
+            polygon_geojson ? JSON.stringify(polygon_geojson) : (polygon_coordinates ? JSON.stringify(polygon_coordinates) : null),
+            resolvedDays,
+            delivery_time_from || delivery_hours_from || '08:00',
+            delivery_time_to || delivery_hours_to || '18:00',
+            frequency || delivery_frequency || 'DAILY',
+            default_carrier_id || carrier_id || null,
+            carrier_service_type || null,
+            delivery_cost || null,
+            free_shipping_threshold || free_delivery_threshold || null,
+            express_surcharge || null,
+            lead_time_hours || (lead_time_days ? lead_time_days * 24 : 24),
+            cutoff_time || '14:00',
+            min_order_value || min_order_amount || null,
+            max_weight_kg || null,
+            max_volume_m3 || null,
+            priority || 10,
+            is_active !== undefined ? is_active : true
         ]);
 
         return result.rows[0];

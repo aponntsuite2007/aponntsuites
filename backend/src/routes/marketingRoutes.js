@@ -398,14 +398,17 @@ router.post('/leads/:id/send-flyer', verifyStaffToken, async (req, res) => {
 
             // Enviar email usando el método correcto
             try {
-                await salesOrchestrationService.sendEmail({
+                const emailResult = await salesOrchestrationService.sendEmail({
                     to: lead.email,
                     subject: lead.language === 'en'
                         ? 'Ask your AI about APONNT'
                         : 'Preguntale a tu IA sobre APONNT',
                     html: flyerHtml
                 });
-                sendResult = { success: true };
+                sendResult = { success: emailResult === true || (emailResult && emailResult.success) };
+                if (!sendResult.success) {
+                    console.error('[MARKETING] Email send returned false for:', lead.email);
+                }
             } catch (emailError) {
                 console.error('[MARKETING] Error enviando email:', emailError.message);
                 sendResult = { success: false, error: emailError.message };

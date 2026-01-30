@@ -979,12 +979,23 @@
 
         async getVendorBudgets(vendorId) {
             try {
-                let url = `${this.baseUrl}/budgets`;
+                // Usar API de quotes en lugar de budgets
+                let url = '/api/quotes';
                 if (vendorId) url += `?vendor_id=${vendorId}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
-                if (!res.ok) throw new Error('Failed to fetch budgets');
+                if (!res.ok) throw new Error('Failed to fetch quotes');
                 const data = await res.json();
-                return data.data || data;
+                // Mapear quotes a formato de budgets para compatibilidad
+                const quotes = data.quotes || data.data || data || [];
+                return quotes.map(q => ({
+                    id: q.id,
+                    budget_code: q.quote_number,
+                    company_name: q.company_name,
+                    created_at: q.created_at,
+                    valid_until: q.valid_until,
+                    total_monthly: q.total_amount,
+                    status: q.status?.toUpperCase()
+                }));
             } catch (e) {
                 console.error('[VENDOR] Error getting budgets:', e);
                 return [];
@@ -1061,11 +1072,21 @@
 
         async getAllBudgets() {
             try {
-                // Sin filtro para obtener todos los presupuestos
-                const res = await fetch(`${this.baseUrl}/budgets`, { headers: this.getHeaders() });
+                // Usar API de quotes en lugar de budgets
+                const res = await fetch('/api/quotes', { headers: this.getHeaders() });
                 if (!res.ok) return [];
                 const data = await res.json();
-                return data.data || data || [];
+                // Mapear quotes a formato de budgets para compatibilidad
+                const quotes = data.quotes || data.data || data || [];
+                return quotes.map(q => ({
+                    id: q.id,
+                    budget_code: q.quote_number,
+                    company_name: q.company_name,
+                    created_at: q.created_at,
+                    valid_until: q.valid_until,
+                    total_monthly: q.total_amount,
+                    status: q.status?.toUpperCase()
+                }));
             } catch (e) {
                 console.error('[VENDOR] Error getting all budgets:', e);
                 return [];

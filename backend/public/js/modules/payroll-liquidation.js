@@ -2936,9 +2936,9 @@ const PayrollEngine = {
                             <div class="pe-form-group">
                                 <label>Tipo de Liquidacion</label>
                                 <select name="pay_frequency">
-                                    <option value="MONTHLY">Mensual</option>
-                                    <option value="BIWEEKLY">Quincenal</option>
-                                    <option value="WEEKLY">Semanal</option>
+                                    <option value="monthly">Mensual</option>
+                                    <option value="biweekly">Quincenal</option>
+                                    <option value="weekly">Semanal</option>
                                 </select>
                             </div>
                             <div class="pe-form-group">
@@ -3070,7 +3070,7 @@ const PayrollEngine = {
             template_code: formData.get('template_code'),
             template_name: formData.get('template_name'),
             description: formData.get('description'),
-            pay_frequency: formData.get('pay_frequency').toLowerCase(),
+            pay_frequency: formData.get('pay_frequency'),
             is_default: formData.get('is_default') === 'on',
             concepts: []
         };
@@ -3103,6 +3103,7 @@ const PayrollEngine = {
             this.renderTemplates();
         } catch (error) {
             this.showNotification('Error: ' + error.message, 'error');
+            document.querySelector('.pe-modal-overlay')?.remove();
         }
     },
 
@@ -3147,9 +3148,9 @@ const PayrollEngine = {
                                 <div class="pe-form-group">
                                     <label>Tipo de Liquidacion</label>
                                     <select name="pay_frequency">
-                                        <option value="MONTHLY" ${template.pay_frequency === 'MONTHLY' ? 'selected' : ''}>Mensual</option>
-                                        <option value="BIWEEKLY" ${template.pay_frequency === 'BIWEEKLY' ? 'selected' : ''}>Quincenal</option>
-                                        <option value="WEEKLY" ${template.pay_frequency === 'WEEKLY' ? 'selected' : ''}>Semanal</option>
+                                        <option value="monthly" ${template.pay_frequency === 'monthly' ? 'selected' : ''}>Mensual</option>
+                                        <option value="biweekly" ${template.pay_frequency === 'biweekly' ? 'selected' : ''}>Quincenal</option>
+                                        <option value="weekly" ${template.pay_frequency === 'weekly' ? 'selected' : ''}>Semanal</option>
                                     </select>
                                 </div>
                                 <div class="pe-form-group">
@@ -3222,7 +3223,7 @@ const PayrollEngine = {
             template_code: formData.get('template_code'),
             template_name: formData.get('template_name'),
             description: formData.get('description'),
-            pay_frequency: formData.get('pay_frequency').toLowerCase(),
+            pay_frequency: formData.get('pay_frequency'),
             is_default: formData.get('is_default') === 'on'
         };
 
@@ -3261,6 +3262,7 @@ const PayrollEngine = {
             this.renderTemplates();
         } catch (error) {
             this.showNotification('Error al guardar: ' + error.message, 'error');
+            document.querySelector('.pe-modal-overlay')?.remove();
         }
     },
 
@@ -3338,6 +3340,7 @@ const PayrollEngine = {
             this.renderTemplates();
         } catch (error) {
             this.showNotification('Error al clonar: ' + error.message, 'error');
+            document.querySelector('.pe-modal-overlay')?.remove();
         }
     },
 
@@ -3358,7 +3361,7 @@ const PayrollEngine = {
                         <div class="pe-template-detail">
                             <div class="pe-detail-meta">
                                 <span><strong>Codigo:</strong> ${template.template_code}</span>
-                                <span><strong>Tipo:</strong> ${template.pay_frequency || 'MONTHLY'}</span>
+                                <span><strong>Tipo:</strong> ${template.pay_frequency || 'monthly'}</span>
                             </div>
 
                             <h4>Conceptos (${template.concepts?.length || 0})</h4>
@@ -3757,6 +3760,7 @@ const PayrollEngine = {
             this.renderEntities();
         } catch (error) {
             this.showNotification('Error: ' + error.message, 'error');
+            document.querySelector('.pe-modal-overlay')?.remove();
         }
     },
 
@@ -3981,6 +3985,7 @@ const PayrollEngine = {
             this.renderEntities();
         } catch (error) {
             this.showNotification('Error: ' + error.message, 'error');
+            document.querySelector('.pe-modal-overlay')?.remove();
         }
     },
 

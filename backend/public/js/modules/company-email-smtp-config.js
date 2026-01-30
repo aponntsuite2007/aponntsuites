@@ -10,7 +10,7 @@
  * ============================================================================
  */
 
-const CompanyEmailSMTPConfigModule = (function() {
+var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (function() {
     'use strict';
 
     // =========================================================================
@@ -159,6 +159,7 @@ const CompanyEmailSMTPConfigModule = (function() {
         } catch (error) {
             console.error('❌ Error guardando configuración:', error);
             state.loading = false;
+            closeConfigModal();
             showNotification(`❌ Error: ${error.message}`, 'error');
         }
     }
