@@ -120,183 +120,64 @@ router.post('/execute', requireCleanupAuth, async (req, res) => {
     });
   }
 
-  const t = await sequelize.transaction();
-
   try {
     console.log(`🧹 [CLEANUP] Iniciando limpieza. Conservar: ${keep}`);
 
     // Obtener empresa a conservar
     const [keepCompany] = await sequelize.query(
       `SELECT company_id, name, slug FROM companies WHERE LOWER(slug) = LOWER($1) OR LOWER(name) LIKE LOWER($2)`,
-      { bind: [keep, `%${keep}%`], type: QueryTypes.SELECT, transaction: t }
+      { bind: [keep, `%${keep}%`], type: QueryTypes.SELECT }
     );
 
     if (!keepCompany) {
-      await t.rollback();
       return res.status(404).json({ error: `Empresa "${keep}" no encontrada` });
     }
 
     const keepId = keepCompany.company_id;
     console.log(`✅ Conservando empresa: ${keepCompany.name} (${keepId})`);
 
-    const results = { deleted: {}, kept: { company: keepCompany.name } };
+    const results = { deleted: {}, kept: { company: keepCompany.name }, errors: [] };
 
-    // ═══════════════════════════════════════════════════════════════════
-    // FASE 1: Eliminar datos dependientes (hijos)
-    // ═══════════════════════════════════════════════════════════════════
+    // Lista de tablas a limpiar con sus queries
+    const cleanupQueries = [
+      // Primero tablas dependientes (hijos)
+      { name: 'biometric_data', sql: `DELETE FROM biometric_data WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'facial_biometric_data', sql: `DELETE FROM facial_biometric_data WHERE company_id != ${keepId}` },
+      { name: 'user_documents', sql: `DELETE FROM user_documents WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'user_shift_assignments', sql: `DELETE FROM user_shift_assignments WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'attendances', sql: `DELETE FROM attendances WHERE company_id != ${keepId}` },
+      { name: 'notifications', sql: `DELETE FROM notifications WHERE company_id != ${keepId}` },
+      { name: 'visitors', sql: `DELETE FROM visitors WHERE company_id != ${keepId}` },
+      { name: 'sanctions', sql: `DELETE FROM sanctions WHERE company_id != ${keepId}` },
+      { name: 'vacation_requests', sql: `DELETE FROM vacation_requests WHERE company_id != ${keepId}` },
+      { name: 'documents', sql: `DELETE FROM documents WHERE company_id != ${keepId}` },
+      { name: 'kiosks', sql: `DELETE FROM kiosks WHERE company_id != ${keepId}` },
+      { name: 'shifts', sql: `DELETE FROM shifts WHERE company_id != ${keepId}` },
+      { name: 'branches', sql: `DELETE FROM branches WHERE company_id != ${keepId}` },
+      // Usuarios
+      { name: 'users', sql: `DELETE FROM users WHERE company_id != ${keepId}` },
+      // Departamentos
+      { name: 'departments', sql: `DELETE FROM departments WHERE company_id != ${keepId}` },
+      // Empresas
+      { name: 'companies', sql: `DELETE FROM companies WHERE company_id != ${keepId}` },
+      // Staff de prueba
+      { name: 'aponnt_staff_test', sql: `DELETE FROM aponnt_staff WHERE email LIKE '%test%' OR email LIKE '%demo%'` },
+    ];
 
-    // Biometric data
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM biometric_data WHERE user_id IN (SELECT user_id FROM users WHERE company_id != $1)`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.biometric_data = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ biometric_data:', e.message); }
-
-    // Facial biometric data
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM facial_biometric_data WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.facial_biometric_data = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ facial_biometric_data:', e.message); }
-
-    // Attendances
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM attendances WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.attendances = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ attendances:', e.message); }
-
-    // Notifications
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM notifications WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.notifications = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ notifications:', e.message); }
-
-    // Visitors
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM visitors WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.visitors = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ visitors:', e.message); }
-
-    // Sanctions
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM sanctions WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.sanctions = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ sanctions:', e.message); }
-
-    // Vacation requests
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM vacation_requests WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.vacation_requests = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ vacation_requests:', e.message); }
-
-    // Documents
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM documents WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.documents = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ documents:', e.message); }
-
-    // Kiosks
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM kiosks WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.kiosks = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ kiosks:', e.message); }
-
-    // Shifts
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM shifts WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.shifts = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ shifts:', e.message); }
-
-    // Branches
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM branches WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.branches = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ branches:', e.message); }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // FASE 2: Eliminar usuarios de otras empresas
-    // ═══════════════════════════════════════════════════════════════════
-
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM users WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.users = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ users:', e.message); }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // FASE 3: Eliminar departamentos de otras empresas
-    // ═══════════════════════════════════════════════════════════════════
-
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM departments WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.departments = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ departments:', e.message); }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // FASE 4: Eliminar otras empresas (mantener ISI)
-    // ═══════════════════════════════════════════════════════════════════
-
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM companies WHERE company_id != $1`,
-        { bind: [keepId], type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.companies = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ companies:', e.message); }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // FASE 5: Limpiar staff de Aponnt de prueba (opcional)
-    // ═══════════════════════════════════════════════════════════════════
-
-    try {
-      const [r] = await sequelize.query(
-        `DELETE FROM aponnt_staff WHERE email LIKE '%test%' OR email LIKE '%demo%'`,
-        { type: QueryTypes.DELETE, transaction: t }
-      );
-      results.deleted.aponnt_staff_test = r?.rowCount || 0;
-    } catch (e) { console.log('  ⚠️ aponnt_staff:', e.message); }
-
-    // Commit transaction
-    await t.commit();
+    // Ejecutar cada query individualmente (sin transacción para evitar locks)
+    for (const q of cleanupQueries) {
+      try {
+        const [, metadata] = await sequelize.query(q.sql);
+        results.deleted[q.name] = metadata?.rowCount || 0;
+        console.log(`  ✅ ${q.name}: ${results.deleted[q.name]} eliminados`);
+      } catch (e) {
+        results.deleted[q.name] = 0;
+        results.errors.push({ table: q.name, error: e.message });
+        console.log(`  ⚠️ ${q.name}: ${e.message}`);
+      }
+    }
 
     console.log('✅ [CLEANUP] Limpieza completada');
-    console.log('   Resultados:', JSON.stringify(results.deleted));
 
     res.json({
       success: true,
@@ -305,9 +186,8 @@ router.post('/execute', requireCleanupAuth, async (req, res) => {
     });
 
   } catch (error) {
-    await t.rollback();
     console.error('❌ [CLEANUP] Error:', error);
-    res.status(500).json({ error: error.message, hint: 'Transaction rolled back' });
+    res.status(500).json({ error: error.message });
   }
 });
 
