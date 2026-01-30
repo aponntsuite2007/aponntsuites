@@ -138,30 +138,42 @@ router.post('/execute', requireCleanupAuth, async (req, res) => {
 
     const results = { deleted: {}, kept: { company: keepCompany.name }, errors: [] };
 
-    // Lista de tablas a limpiar con sus queries
+    // Lista de tablas a limpiar con sus queries (orden crítico por FK)
     const cleanupQueries = [
-      // Primero tablas dependientes (hijos)
+      // FASE 1: Tablas dependientes profundas (sin FK hacia ellas)
+      { name: 'hour_bank_balances', sql: `DELETE FROM hour_bank_balances WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'hour_bank_transactions', sql: `DELETE FROM hour_bank_transactions WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
       { name: 'biometric_data', sql: `DELETE FROM biometric_data WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
       { name: 'facial_biometric_data', sql: `DELETE FROM facial_biometric_data WHERE company_id != ${keepId}` },
+      { name: 'biometric_consents', sql: `DELETE FROM biometric_consents WHERE company_id != ${keepId}` },
       { name: 'user_documents', sql: `DELETE FROM user_documents WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
       { name: 'user_shift_assignments', sql: `DELETE FROM user_shift_assignments WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+
+      // FASE 2: Tablas con company_id directo
       { name: 'attendances', sql: `DELETE FROM attendances WHERE company_id != ${keepId}` },
+      { name: 'attendance_batches', sql: `DELETE FROM attendance_batches WHERE company_id != ${keepId}` },
       { name: 'notifications', sql: `DELETE FROM notifications WHERE company_id != ${keepId}` },
       { name: 'visitors', sql: `DELETE FROM visitors WHERE company_id != ${keepId}` },
       { name: 'sanctions', sql: `DELETE FROM sanctions WHERE company_id != ${keepId}` },
       { name: 'vacation_requests', sql: `DELETE FROM vacation_requests WHERE company_id != ${keepId}` },
-      { name: 'documents', sql: `DELETE FROM documents WHERE company_id != ${keepId}` },
       { name: 'kiosks', sql: `DELETE FROM kiosks WHERE company_id != ${keepId}` },
       { name: 'shifts', sql: `DELETE FROM shifts WHERE company_id != ${keepId}` },
       { name: 'branches', sql: `DELETE FROM branches WHERE company_id != ${keepId}` },
-      // Usuarios
+
+      // FASE 3: Tablas financieras/SIAC que bloquean companies
+      { name: 'siac_facturas', sql: `DELETE FROM siac_facturas WHERE company_id != ${keepId}` },
+      { name: 'siac_remitos', sql: `DELETE FROM siac_remitos WHERE company_id != ${keepId}` },
+      { name: 'invoices', sql: `DELETE FROM invoices WHERE company_id != ${keepId}` },
+      { name: 'finance_payment_orders', sql: `DELETE FROM finance_payment_orders WHERE company_id != ${keepId}` },
+
+      // FASE 4: Usuarios
       { name: 'users', sql: `DELETE FROM users WHERE company_id != ${keepId}` },
-      // Departamentos
+
+      // FASE 5: Departamentos
       { name: 'departments', sql: `DELETE FROM departments WHERE company_id != ${keepId}` },
-      // Empresas
+
+      // FASE 6: Empresas
       { name: 'companies', sql: `DELETE FROM companies WHERE company_id != ${keepId}` },
-      // Staff de prueba
-      { name: 'aponnt_staff_test', sql: `DELETE FROM aponnt_staff WHERE email LIKE '%test%' OR email LIKE '%demo%'` },
     ];
 
     // Ejecutar cada query individualmente (sin transacción para evitar locks)
