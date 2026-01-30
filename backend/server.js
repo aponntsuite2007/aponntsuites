@@ -249,6 +249,23 @@ async function initializeDatabase() {
 
     console.log('ℹ️ Migraciones automáticas: sequelize.sync() ejecutado al iniciar');
 
+    // AUTO-SEED: System Settings (si tabla vacía)
+    try {
+      const { SystemSetting } = database;
+      if (SystemSetting) {
+        const count = await SystemSetting.count();
+        if (count === 0) {
+          console.log('🌱 [SystemSetting] Tabla vacía, ejecutando seed de defaults...');
+          const created = await SystemSetting.seedDefaults();
+          console.log(`✅ [SystemSetting] ${created} settings creados automáticamente`);
+        } else {
+          console.log(`✅ [SystemSetting] ${count} settings existentes (seed no necesario)`);
+        }
+      }
+    } catch (seedError) {
+      console.log('⚠️ [SystemSetting] Error en auto-seed:', seedError.message);
+    }
+
     // AUTO-MIGRATE: Ejecutar migraciones críticas para nuevos módulos
     console.log('🔄 Ejecutando migraciones críticas...');
     try {
