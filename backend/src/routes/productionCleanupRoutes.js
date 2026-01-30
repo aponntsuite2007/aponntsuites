@@ -235,16 +235,17 @@ router.get('/status', requireCleanupAuth, async (req, res) => {
   try {
     const status = {};
 
-    // Contar empresas
-    const [companies] = await sequelize.query(
+    // Contar empresas (retornar todas las filas)
+    const companies = await sequelize.query(
       `SELECT company_id, name, slug, is_active FROM companies ORDER BY name`,
       { type: QueryTypes.SELECT }
     );
     status.companies = companies;
+    status.totalCompanies = companies.length;
 
-    // Contar usuarios por empresa
-    const [userCounts] = await sequelize.query(
-      `SELECT c.name, COUNT(u.user_id) as user_count
+    // Contar usuarios por empresa (retornar todas las filas)
+    const userCounts = await sequelize.query(
+      `SELECT c.name, c.company_id, COUNT(u.user_id) as user_count
        FROM companies c
        LEFT JOIN users u ON u.company_id = c.company_id
        GROUP BY c.company_id, c.name
