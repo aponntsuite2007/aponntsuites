@@ -3510,6 +3510,15 @@ console.log('   📱 GET  /api/deployment/apk/versions - Versiones de APK');
 console.log('   🔨 POST /api/deployment/apk/build - Iniciar build de APK');
 console.log('   ⚠️  Requiere adminKey para operaciones de deploy');
 
+// ✅ CONFIGURAR PRODUCTION CLEANUP - Limpieza de datos de producción
+const productionCleanupRoutes = require('./src/routes/productionCleanupRoutes');
+app.use('/api/cleanup', productionCleanupRoutes);
+console.log('🧹 [CLEANUP] Sistema de Limpieza de Producción ACTIVO:');
+console.log('   👀 GET  /api/cleanup/preview?keep=isi - Vista previa');
+console.log('   🗑️  POST /api/cleanup/execute - Ejecutar limpieza');
+console.log('   📊 GET  /api/cleanup/status - Estado de BD');
+console.log('   ⚠️  Requiere x-cleanup-password header');
+
 // ✅ CONFIGURAR TASK INTELLIGENCE - Sistema Inteligente de Tareas
 const taskIntelligenceRoutes = require('./src/routes/taskIntelligenceRoutes');
 app.use('/api/task-intelligence', taskIntelligenceRoutes);
