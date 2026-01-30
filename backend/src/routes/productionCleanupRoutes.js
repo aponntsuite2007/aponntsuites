@@ -169,14 +169,14 @@ router.post('/execute', requireCleanupAuth, async (req, res) => {
       { name: 'branches', sql: `DELETE FROM branches WHERE company_id != ${keepId}` },
 
       // FASE 3: Tablas que bloquean labor_agreements y support_tickets
+      { name: 'salary_categories_v2', sql: `DELETE FROM salary_categories_v2 WHERE labor_agreement_id IN (SELECT id FROM labor_agreements_v2 WHERE company_id != ${keepId})` },
       { name: 'payroll_templates', sql: `DELETE FROM payroll_templates WHERE company_id != ${keepId}` },
-      { name: 'support_ticket_escalations', sql: `DELETE FROM support_ticket_escalations WHERE ticket_id IN (SELECT id FROM support_tickets WHERE company_id != ${keepId})` },
-      { name: 'support_ticket_comments', sql: `DELETE FROM support_ticket_comments WHERE ticket_id IN (SELECT id FROM support_tickets WHERE company_id != ${keepId})` },
+      { name: 'support_ticket_escalations', sql: `DELETE FROM support_ticket_escalations WHERE company_id != ${keepId}` },
+      { name: 'work_arrangement_history', sql: `DELETE FROM work_arrangement_history WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
 
       // FASE 4: Tablas que bloquean companies (FK directa)
       { name: 'labor_agreements_v2', sql: `DELETE FROM labor_agreements_v2 WHERE company_id != ${keepId}` },
       { name: 'organizational_positions', sql: `DELETE FROM organizational_positions WHERE company_id != ${keepId}` },
-      { name: 'organizational_units', sql: `DELETE FROM organizational_units WHERE company_id != ${keepId}` },
       { name: 'siac_facturas', sql: `DELETE FROM siac_facturas WHERE company_id != ${keepId}` },
       { name: 'siac_remitos', sql: `DELETE FROM siac_remitos WHERE company_id != ${keepId}` },
       { name: 'invoices', sql: `DELETE FROM invoices WHERE company_id != ${keepId}` },
