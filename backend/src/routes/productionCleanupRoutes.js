@@ -168,13 +168,17 @@ router.post('/execute', requireCleanupAuth, async (req, res) => {
       { name: 'shifts', sql: `DELETE FROM shifts WHERE company_id != ${keepId}` },
       { name: 'branches', sql: `DELETE FROM branches WHERE company_id != ${keepId}` },
 
-      // FASE 3: Tablas que bloquean labor_agreements y support_tickets
+      // FASE 3: Tablas que bloquean labor_agreements, support_tickets y salary_categories
+      { name: 'user_payroll_assignment', sql: `DELETE FROM user_payroll_assignment WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
       { name: 'salary_categories_v2', sql: `DELETE FROM salary_categories_v2 WHERE labor_agreement_id IN (SELECT id FROM labor_agreements_v2 WHERE company_id != ${keepId})` },
       { name: 'payroll_templates', sql: `DELETE FROM payroll_templates WHERE company_id != ${keepId}` },
-      { name: 'support_ticket_escalations', sql: `DELETE FROM support_ticket_escalations WHERE company_id != ${keepId}` },
+      { name: 'support_ticket_escalations', sql: `DELETE FROM support_ticket_escalations WHERE ticket_id IN (SELECT id FROM support_tickets WHERE company_id != ${keepId})` },
       { name: 'work_arrangement_history', sql: `DELETE FROM work_arrangement_history WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
 
-      // FASE 4: Tablas que bloquean companies (FK directa)
+      // FASE 4: Limpiar FK de users hacia organizational_positions antes de borrar
+      { name: 'users_clear_position', sql: `UPDATE users SET organizational_position_id = NULL WHERE company_id != ${keepId}` },
+
+      // FASE 5: Tablas que bloquean companies (FK directa)
       { name: 'labor_agreements_v2', sql: `DELETE FROM labor_agreements_v2 WHERE company_id != ${keepId}` },
       { name: 'organizational_positions', sql: `DELETE FROM organizational_positions WHERE company_id != ${keepId}` },
       { name: 'siac_facturas', sql: `DELETE FROM siac_facturas WHERE company_id != ${keepId}` },
@@ -186,13 +190,13 @@ router.post('/execute', requireCleanupAuth, async (req, res) => {
       { name: 'support_tickets', sql: `DELETE FROM support_tickets WHERE company_id != ${keepId}` },
       { name: 'trainings', sql: `DELETE FROM trainings WHERE company_id != ${keepId}` },
 
-      // FASE 5: Usuarios
+      // FASE 6: Usuarios
       { name: 'users', sql: `DELETE FROM users WHERE company_id != ${keepId}` },
 
-      // FASE 6: Departamentos
+      // FASE 7: Departamentos
       { name: 'departments', sql: `DELETE FROM departments WHERE company_id != ${keepId}` },
 
-      // FASE 7: Empresas
+      // FASE 8: Empresas
       { name: 'companies', sql: `DELETE FROM companies WHERE company_id != ${keepId}` },
     ];
 
