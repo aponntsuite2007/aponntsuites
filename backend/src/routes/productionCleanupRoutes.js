@@ -736,44 +736,248 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
       console.log('    ✅ postgis');
     } catch (e) { console.log('    ⚠️ postgis:', e.message); }
 
-    // 6. Recrear esquema en orden de dependencias (múltiples pasadas)
-    console.log('  🔧 Recreando esquema en orden de dependencias...');
+    // 6. Crear tablas base críticas via SQL raw (garantiza existencia)
+    console.log('  🔧 Creando tablas base via SQL...');
+
+    const baseTables = [
+      // SupportSLAPlan - requerido por Company
+      `CREATE TABLE IF NOT EXISTS support_sla_plans (
+        plan_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        plan_name VARCHAR(100) UNIQUE NOT NULL,
+        display_name VARCHAR(200) NOT NULL,
+        first_response_hours INTEGER NOT NULL DEFAULT 24,
+        resolution_hours INTEGER NOT NULL DEFAULT 72,
+        escalation_hours INTEGER NOT NULL DEFAULT 8,
+        price_monthly DECIMAL(10,2) DEFAULT 0.00,
+        has_ai_assistant BOOLEAN DEFAULT false,
+        priority_level INTEGER DEFAULT 3,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // AponntStaffRole - requerido por AponntStaff
+      `CREATE TABLE IF NOT EXISTS aponnt_staff_roles (
+        role_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        role_name VARCHAR(100) NOT NULL,
+        role_code VARCHAR(50) UNIQUE NOT NULL,
+        description TEXT,
+        level INTEGER NOT NULL DEFAULT 4,
+        area VARCHAR(50) NOT NULL DEFAULT 'operativo',
+        permissions JSONB DEFAULT '{}',
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // Companies
+      `CREATE TABLE IF NOT EXISTS companies (
+        company_id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        display_name VARCHAR(255),
+        legal_name VARCHAR(255),
+        description TEXT,
+        email VARCHAR(255),
+        phone VARCHAR(50),
+        contact_phone VARCHAR(50),
+        address TEXT,
+        city VARCHAR(255),
+        state VARCHAR(255),
+        country VARCHAR(255) DEFAULT 'Argentina',
+        tax_id VARCHAR(50),
+        is_active BOOLEAN DEFAULT true,
+        max_employees INTEGER DEFAULT 100,
+        contracted_employees INTEGER DEFAULT 0,
+        modules_data JSONB DEFAULT '{}',
+        modules_pricing JSONB DEFAULT '{}',
+        monthly_total DECIMAL(10,2) DEFAULT 0.00,
+        license_type VARCHAR(50) DEFAULT 'standard',
+        subscription_status VARCHAR(50) DEFAULT 'active',
+        support_sla_plan_id UUID REFERENCES support_sla_plans(plan_id),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // Departments
+      `CREATE TABLE IF NOT EXISTS departments (
+        department_id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        company_id INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
+        manager_id UUID,
+        parent_id INTEGER,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // Users
+      `CREATE TABLE IF NOT EXISTS users (
+        user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        company_id INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
+        department_id INTEGER REFERENCES departments(department_id),
+        nombre VARCHAR(255) NOT NULL,
+        apellido VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        username VARCHAR(255),
+        password VARCHAR(255),
+        role VARCHAR(50) DEFAULT 'employee',
+        legajo VARCHAR(50),
+        dni VARCHAR(20),
+        cuil VARCHAR(20),
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // AponntStaff
+      `CREATE TABLE IF NOT EXISTS aponnt_staff (
+        staff_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID,
+        first_name VARCHAR(100) NOT NULL,
+        last_name VARCHAR(100) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        username VARCHAR(100) UNIQUE,
+        password VARCHAR(255),
+        dni VARCHAR(50),
+        last_login_at TIMESTAMP,
+        first_login BOOLEAN DEFAULT true,
+        biometric_enabled BOOLEAN DEFAULT false,
+        phone VARCHAR(50),
+        profile_photo VARCHAR(500),
+        document_type VARCHAR(20),
+        document_number VARCHAR(50),
+        role_id UUID NOT NULL REFERENCES aponnt_staff_roles(role_id),
+        reports_to_staff_id UUID,
+        country VARCHAR(2) NOT NULL DEFAULT 'AR',
+        nationality VARCHAR(2),
+        level INTEGER NOT NULL DEFAULT 4,
+        area VARCHAR(50) NOT NULL DEFAULT 'operativo',
+        language_preference VARCHAR(2) DEFAULT 'es',
+        contract_type VARCHAR(20),
+        hire_date DATE,
+        termination_date DATE,
+        cbu VARCHAR(50),
+        bank_name VARCHAR(100),
+        bank_account_type VARCHAR(20),
+        accepts_support_packages BOOLEAN DEFAULT false,
+        accepts_auctions BOOLEAN DEFAULT false,
+        whatsapp_number VARCHAR(50),
+        global_rating DECIMAL(3,2) DEFAULT 0.00,
+        is_active BOOLEAN DEFAULT true,
+        created_by UUID,
+        updated_by UUID,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // Branches
+      `CREATE TABLE IF NOT EXISTS branches (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        code VARCHAR(50),
+        company_id INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
+        address TEXT,
+        city VARCHAR(100),
+        state VARCHAR(100),
+        country VARCHAR(100) DEFAULT 'Argentina',
+        phone VARCHAR(50),
+        email VARCHAR(255),
+        is_main BOOLEAN DEFAULT false,
+        is_active BOOLEAN DEFAULT true,
+        latitude DECIMAL(10,8),
+        longitude DECIMAL(11,8),
+        timezone VARCHAR(50) DEFAULT 'America/Argentina/Buenos_Aires',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // Shifts
+      `CREATE TABLE IF NOT EXISTS shifts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        "startTime" TIME NOT NULL,
+        "endTime" TIME NOT NULL,
+        "toleranceMinutes" INTEGER DEFAULT 10,
+        "isActive" BOOLEAN DEFAULT true,
+        description TEXT,
+        days JSONB,
+        "toleranceMinutesEntry" INTEGER DEFAULT 10,
+        "toleranceMinutesExit" INTEGER DEFAULT 15,
+        "toleranceConfig" JSONB,
+        company_id UUID NOT NULL,
+        "shiftType" VARCHAR(20) DEFAULT 'standard',
+        "breakStartTime" TIME,
+        "breakEndTime" TIME,
+        "rotationPattern" VARCHAR(255),
+        "cycleStartDate" DATE,
+        global_cycle_start_date DATE,
+        phases JSONB DEFAULT '[]',
+        "workDays" INTEGER,
+        "restDays" INTEGER,
+        "flashStartDate" DATE,
+        "flashEndDate" DATE,
+        "flashPriority" VARCHAR(20) DEFAULT 'normal',
+        "allowOverride" BOOLEAN DEFAULT false,
+        "permanentPriority" VARCHAR(20) DEFAULT 'normal',
+        "hourlyRates" JSONB,
+        color VARCHAR(7) DEFAULT '#007bff',
+        notes TEXT,
+        branch_id UUID,
+        respect_national_holidays BOOLEAN DEFAULT false,
+        respect_provincial_holidays BOOLEAN DEFAULT false,
+        custom_non_working_days JSONB DEFAULT '[]',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // Kiosks
+      `CREATE TABLE IF NOT EXISTS kiosks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        company_id INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
+        branch_id UUID,
+        location VARCHAR(255),
+        device_id VARCHAR(255),
+        is_active BOOLEAN DEFAULT true,
+        last_sync TIMESTAMP,
+        config JSONB DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // Attendances
+      `CREATE TABLE IF NOT EXISTS attendances (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL,
+        company_id INTEGER NOT NULL,
+        shift_id UUID,
+        check_in TIMESTAMP,
+        check_out TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'pending',
+        check_in_type VARCHAR(50),
+        check_out_type VARCHAR(50),
+        latitude_in DECIMAL(10,8),
+        longitude_in DECIMAL(11,8),
+        latitude_out DECIMAL(10,8),
+        longitude_out DECIMAL(11,8),
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`
+    ];
+
+    let baseCreated = 0;
+    for (const sql of baseTables) {
+      try {
+        await sequelize.query(sql);
+        baseCreated++;
+      } catch (e) {
+        console.log(`    ⚠️ Base table error: ${e.message.substring(0, 80)}`);
+      }
+    }
+    console.log(`    ✅ ${baseCreated}/${baseTables.length} tablas base creadas via SQL`);
+
+    // 7. Sincronizar modelos restantes con múltiples pasadas
+    console.log('  🔧 Sincronizando modelos Sequelize...');
     const models = Object.keys(sequelize.models);
     const synced = new Set();
     const syncErrors = [];
-    const maxPasses = 10;
+    const maxPasses = 15;
 
-    // Tablas base que deben crearse primero
-    const baseModels = ['SystemConfig', 'Holiday', 'AponntStaffRole', 'SupportSLAPlan', 'ConsentDefinition', 'DependencyType', 'EppCategory', 'LaborAgreementsCatalog', 'SalaryCategories', 'ChronicConditionsCatalog', 'SportsCatalog', 'RiskBenchmark', 'PayrollCountry', 'PartnerRole'];
-
-    // Sincronizar tablas base primero
-    for (const modelName of baseModels) {
-      if (sequelize.models[modelName]) {
-        try {
-          await sequelize.models[modelName].sync({ force: true });
-          synced.add(modelName);
-          console.log(`    ✅ [BASE] ${modelName}`);
-        } catch (e) {
-          console.log(`    ⚠️ [BASE] ${modelName}: ${e.message.substring(0, 50)}`);
-        }
-      }
-    }
-
-    // Tablas principales en orden
-    const mainOrder = ['Company', 'AponntStaff', 'Department', 'Branch', 'Shift', 'User', 'Kiosk', 'Partner', 'Notification', 'SupportTicket', 'Quote', 'Invoice', 'Contract'];
-    for (const modelName of mainOrder) {
-      if (sequelize.models[modelName] && !synced.has(modelName)) {
-        try {
-          await sequelize.models[modelName].sync({ force: true });
-          synced.add(modelName);
-          console.log(`    ✅ [MAIN] ${modelName}`);
-        } catch (e) {
-          console.log(`    ⚠️ [MAIN] ${modelName}: ${e.message.substring(0, 50)}`);
-        }
-      }
-    }
-
-    // Múltiples pasadas para el resto
+    // Múltiples pasadas para todos los modelos
     for (let pass = 1; pass <= maxPasses; pass++) {
       const pendingBefore = models.length - synced.size;
       if (pendingBefore === 0) break;
@@ -781,7 +985,8 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
       for (const modelName of models) {
         if (synced.has(modelName)) continue;
         try {
-          await sequelize.models[modelName].sync({ force: true });
+          // Usar alter: true para adaptar tablas existentes sin recrear
+          await sequelize.models[modelName].sync({ alter: true });
           synced.add(modelName);
         } catch (e) {
           // Ignorar, intentar en siguiente pasada
@@ -790,14 +995,14 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
 
       const pendingAfter = models.length - synced.size;
       console.log(`    Pasada ${pass}: ${synced.size}/${models.length} sincronizados`);
-      if (pendingAfter === pendingBefore) break; // No hubo progreso
+      if (pendingAfter === pendingBefore && pass > 3) break; // Sin progreso después de 3 pasadas
     }
 
     // Registrar errores finales
     for (const modelName of models) {
       if (!synced.has(modelName)) {
         try {
-          await sequelize.models[modelName].sync({ force: true });
+          await sequelize.models[modelName].sync({ alter: true });
           synced.add(modelName);
         } catch (e) {
           syncErrors.push({ model: modelName, error: e.message.substring(0, 100) });
