@@ -988,4 +988,161 @@ router.post('/import-local-schema', requireCleanupAuth, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/cleanup/emergency-admin-setup
+ * Endpoint TEMPORAL para crear admin cuando no se puede autenticar
+ * ELIMINAR DESPUÉS DE USAR
+ */
+router.get('/emergency-admin-setup', async (req, res) => {
+  const { key } = req.query;
+
+  // Clave temporal de emergencia
+  if (key !== 'EMERGENCY_SETUP_2024_TEMP') {
+    return res.status(403).json({ error: 'Clave inválida' });
+  }
+
+  try {
+    const bcrypt = require('bcrypt');
+    console.log('🚨 [EMERGENCY] Configurando admin de emergencia...');
+
+    // Ver estructura de la tabla aponnt_staff_roles
+    const [roleColumns] = await sequelize.query(`
+      SELECT column_name, data_type FROM information_schema.columns
+      WHERE table_name = 'aponnt_staff_roles' ORDER BY ordinal_position
+    `);
+    console.log('Columnas de aponnt_staff_roles:', roleColumns);
+
+    // Ver estructura de aponnt_staff
+    const [staffColumns] = await sequelize.query(`
+      SELECT column_name, data_type FROM information_schema.columns
+      WHERE table_name = 'aponnt_staff' ORDER BY ordinal_position
+    `);
+    console.log('Columnas de aponnt_staff:', staffColumns);
+
+    // Buscar rol existente
+    let roleId = null;
+    try {
+      const [roles] = await sequelize.query(
+        `SELECT role_id FROM aponnt_staff_roles LIMIT 1`,
+        { type: QueryTypes.SELECT }
+      );
+      if (roles) roleId = roles.role_id;
+    } catch (e) {
+      console.log('No se pudo buscar roles:', e.message);
+    }
+
+    // Si no hay rol, crear uno básico
+    if (!roleId) {
+      try {
+        // Detectar columnas disponibles
+        const roleColNames = roleColumns.map(c => c.column_name);
+
+        let insertSQL;
+        if (roleColNames.includes('role_area')) {
+          insertSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, permissions, is_active, created_at, updated_at)
+             VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW())
+             ON CONFLICT (role_code) DO NOTHING RETURNING role_id`;
+        } else if (roleColNames.includes('area')) {
+          insertSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, area, permissions, is_active, created_at, updated_at)
+             VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW())
+             ON CONFLICT (role_code) DO NOTHING RETURNING role_id`;
+        } else {
+          insertSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, permissions, is_active, created_at, updated_at)
+             VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, '{"all": true}'::jsonb, true, NOW(), NOW())
+             ON CONFLICT (role_code) DO NOTHING RETURNING role_id`;
+        }
+
+        const [newRole] = await sequelize.query(insertSQL, { type: QueryTypes.SELECT });
+        if (newRole) roleId = newRole.role_id;
+
+        // Si ON CONFLICT no retornó, buscar el existente
+        if (!roleId) {
+          const [existingRole] = await sequelize.query(
+            `SELECT role_id FROM aponnt_staff_roles WHERE role_code = 'SUPERADMIN' LIMIT 1`,
+            { type: QueryTypes.SELECT }
+          );
+          if (existingRole) roleId = existingRole.role_id;
+        }
+      } catch (e) {
+        console.log('Error creando rol:', e.message);
+      }
+    }
+
+    if (!roleId) {
+      return res.status(500).json({ error: 'No se pudo crear/encontrar rol', roleColumns });
+    }
+
+    // Hash del password
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+
+    // Crear o actualizar admin
+    const staffColNames = staffColumns.map(c => c.column_name);
+
+    // Verificar si existe
+    const [existing] = await sequelize.query(
+      `SELECT staff_id FROM aponnt_staff WHERE email = 'admin@aponnt.com' LIMIT 1`,
+      { type: QueryTypes.SELECT }
+    );
+
+    if (existing) {
+      // Update
+      await sequelize.query(
+        `UPDATE aponnt_staff SET
+           password = $1,
+           is_active = true,
+           role_id = $2,
+           updated_at = NOW()
+         WHERE staff_id = $3`,
+        { bind: [hashedPassword, roleId, existing.staff_id] }
+      );
+
+      return res.json({
+        success: true,
+        action: 'updated',
+        admin: {
+          staff_id: existing.staff_id,
+          email: 'admin@aponnt.com',
+          password: 'admin123'
+        },
+        roleId,
+        roleColumns: roleColNames,
+        staffColumns: staffColNames
+      });
+    }
+
+    // Insert nuevo admin
+    let insertStaffSQL;
+    if (staffColNames.includes('area')) {
+      insertStaffSQL = `INSERT INTO aponnt_staff
+        (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, area, created_at, updated_at)
+        VALUES (gen_random_uuid(), 'PABLO', 'RIVAS JORDAN', 'admin@aponnt.com', 'admin', '22062075', $1, true, $2, 'AR', 0, 'direccion', NOW(), NOW())
+        RETURNING staff_id`;
+    } else {
+      insertStaffSQL = `INSERT INTO aponnt_staff
+        (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, created_at, updated_at)
+        VALUES (gen_random_uuid(), 'PABLO', 'RIVAS JORDAN', 'admin@aponnt.com', 'admin', '22062075', $1, true, $2, 'AR', 0, NOW(), NOW())
+        RETURNING staff_id`;
+    }
+
+    const [newAdmin] = await sequelize.query(insertStaffSQL, { bind: [hashedPassword, roleId], type: QueryTypes.SELECT });
+
+    res.json({
+      success: true,
+      action: 'created',
+      admin: {
+        staff_id: newAdmin.staff_id,
+        email: 'admin@aponnt.com',
+        password: 'admin123'
+      },
+      roleId,
+      roleColumns: roleColNames,
+      staffColumns: staffColNames
+    });
+
+  } catch (error) {
+    console.error('❌ [EMERGENCY] Error:', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
 module.exports = router;
