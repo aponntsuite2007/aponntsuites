@@ -736,22 +736,76 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
       console.log('    ✅ postgis');
     } catch (e) { console.log('    ⚠️ postgis:', e.message); }
 
-    // 6. Recrear esquema modelo por modelo (ignorar errores de índices)
-    console.log('  🔧 Recreando esquema modelo por modelo...');
+    // 6. Recrear esquema en orden de dependencias (múltiples pasadas)
+    console.log('  🔧 Recreando esquema en orden de dependencias...');
     const models = Object.keys(sequelize.models);
-    let syncedCount = 0;
+    const synced = new Set();
     const syncErrors = [];
+    const maxPasses = 10;
 
-    for (const modelName of models) {
-      try {
-        const model = sequelize.models[modelName];
-        await model.sync({ force: true });
-        syncedCount++;
-      } catch (e) {
-        syncErrors.push({ model: modelName, error: e.message.substring(0, 100) });
+    // Tablas base que deben crearse primero
+    const baseModels = ['SystemConfig', 'Holiday', 'AponntStaffRole', 'SupportSLAPlan', 'ConsentDefinition', 'DependencyType', 'EppCategory', 'LaborAgreementsCatalog', 'SalaryCategories', 'ChronicConditionsCatalog', 'SportsCatalog', 'RiskBenchmark', 'PayrollCountry', 'PartnerRole'];
+
+    // Sincronizar tablas base primero
+    for (const modelName of baseModels) {
+      if (sequelize.models[modelName]) {
+        try {
+          await sequelize.models[modelName].sync({ force: true });
+          synced.add(modelName);
+          console.log(`    ✅ [BASE] ${modelName}`);
+        } catch (e) {
+          console.log(`    ⚠️ [BASE] ${modelName}: ${e.message.substring(0, 50)}`);
+        }
       }
     }
-    console.log(`    ✅ ${syncedCount}/${models.length} modelos sincronizados`);
+
+    // Tablas principales en orden
+    const mainOrder = ['Company', 'AponntStaff', 'Department', 'Branch', 'Shift', 'User', 'Kiosk', 'Partner', 'Notification', 'SupportTicket', 'Quote', 'Invoice', 'Contract'];
+    for (const modelName of mainOrder) {
+      if (sequelize.models[modelName] && !synced.has(modelName)) {
+        try {
+          await sequelize.models[modelName].sync({ force: true });
+          synced.add(modelName);
+          console.log(`    ✅ [MAIN] ${modelName}`);
+        } catch (e) {
+          console.log(`    ⚠️ [MAIN] ${modelName}: ${e.message.substring(0, 50)}`);
+        }
+      }
+    }
+
+    // Múltiples pasadas para el resto
+    for (let pass = 1; pass <= maxPasses; pass++) {
+      const pendingBefore = models.length - synced.size;
+      if (pendingBefore === 0) break;
+
+      for (const modelName of models) {
+        if (synced.has(modelName)) continue;
+        try {
+          await sequelize.models[modelName].sync({ force: true });
+          synced.add(modelName);
+        } catch (e) {
+          // Ignorar, intentar en siguiente pasada
+        }
+      }
+
+      const pendingAfter = models.length - synced.size;
+      console.log(`    Pasada ${pass}: ${synced.size}/${models.length} sincronizados`);
+      if (pendingAfter === pendingBefore) break; // No hubo progreso
+    }
+
+    // Registrar errores finales
+    for (const modelName of models) {
+      if (!synced.has(modelName)) {
+        try {
+          await sequelize.models[modelName].sync({ force: true });
+          synced.add(modelName);
+        } catch (e) {
+          syncErrors.push({ model: modelName, error: e.message.substring(0, 100) });
+        }
+      }
+    }
+
+    console.log(`    ✅ ${synced.size}/${models.length} modelos sincronizados`);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`✅ [RESET-SCHEMA] Completado en ${duration}s`);
@@ -764,7 +818,7 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
         tablesDropped: droppedCount,
         enumsDropped: enums.length,
         sequencesDropped: sequences.length,
-        modelsSynced: syncedCount,
+        modelsSynced: synced.size,
         modelsTotal: models.length,
         syncErrors: syncErrors.length > 0 ? syncErrors : undefined
       },
