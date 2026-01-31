@@ -725,7 +725,18 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
     }
     console.log(`    ✅ ${sequences.length} secuencias dropeadas`);
 
-    // 5. Recrear esquema con Sequelize
+    // 5. Crear extensiones necesarias
+    console.log('  🔧 Creando extensiones...');
+    try {
+      await sequelize.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+      console.log('    ✅ uuid-ossp');
+    } catch (e) { console.log('    ⚠️ uuid-ossp:', e.message); }
+    try {
+      await sequelize.query(`CREATE EXTENSION IF NOT EXISTS "postgis"`);
+      console.log('    ✅ postgis');
+    } catch (e) { console.log('    ⚠️ postgis:', e.message); }
+
+    // 6. Recrear esquema con Sequelize
     console.log('  🔧 Recreando esquema con sequelize.sync({ force: true })...');
     await sequelize.sync({ force: true });
     console.log('    ✅ Esquema recreado');
