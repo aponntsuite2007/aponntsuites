@@ -109,8 +109,11 @@ router.post('/staff/login', loginLimiter, async (req, res) => {
       id: staff.id,
       type: 'aponnt_staff', // CRITICAL: Identificar tipo de usuario
       role: staff.role,
+      role_name: 'SUPERADMIN', // TODO: obtener de tabla roles
       username: staff.username,
-      email: staff.email
+      email: staff.email,
+      first_name: staff.first_name,
+      last_name: staff.last_name
     };
 
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });

@@ -106,6 +106,8 @@ router.post('/login', loginLimiter, async (req, res) => {
         staff_id: staff.staff_id,
         user_id: staff.user_id,
         email: staff.email,
+        first_name: staff.first_name,
+        last_name: staff.last_name,
         role: staff.role.role_code,
         role_name: staff.role.role_name,
         level: staff.level,
