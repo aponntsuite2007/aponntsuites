@@ -458,4 +458,100 @@ router.post('/sync-schema', requireCleanupAuth, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/cleanup/setup-admin
+ * Crear o actualizar usuario admin principal
+ */
+router.post('/setup-admin', requireCleanupAuth, async (req, res) => {
+  try {
+    console.log('👤 [SETUP-ADMIN] Configurando usuario admin...');
+    const bcrypt = require('bcrypt');
+
+    // Datos del admin
+    const adminData = {
+      first_name: 'PABLO',
+      last_name: 'RIVAS JORDAN',
+      email: 'admin@aponnt.com',
+      username: 'admin',
+      dni: '22062075',
+      password: await bcrypt.hash('admin123', 10),
+      is_active: true,
+      country: 'AR',
+      level: 0, // Nivel más alto (CEO/SuperAdmin)
+      area: 'direccion'
+    };
+
+    // Primero verificar si existe el rol de superadmin
+    let roleId = null;
+    const [roles] = await sequelize.query(
+      `SELECT role_id, role_name, role_code FROM aponnt_staff_roles ORDER BY level ASC LIMIT 5`,
+      { type: QueryTypes.SELECT }
+    );
+
+    if (roles && roles.role_id) {
+      roleId = roles.role_id;
+      console.log(`  ✅ Usando rol existente: ${roles.role_name} (${roles.role_code})`);
+    } else {
+      // Crear rol de superadmin si no existe
+      const [newRole] = await sequelize.query(
+        `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, area, permissions, is_active, created_at, updated_at)
+         VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total del sistema', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW())
+         RETURNING role_id`,
+        { type: QueryTypes.SELECT }
+      );
+      roleId = newRole.role_id;
+      console.log(`  ✅ Rol SUPERADMIN creado: ${roleId}`);
+    }
+
+    // Verificar si ya existe el admin
+    const [existingAdmin] = await sequelize.query(
+      `SELECT staff_id FROM aponnt_staff WHERE email = 'admin@aponnt.com' OR username = 'admin' LIMIT 1`,
+      { type: QueryTypes.SELECT }
+    );
+
+    let result;
+    if (existingAdmin && existingAdmin.staff_id) {
+      // Actualizar admin existente
+      await sequelize.query(
+        `UPDATE aponnt_staff SET
+          first_name = $1, last_name = $2, username = $3, dni = $4,
+          password = $5, is_active = true, role_id = $6, level = 0, area = 'direccion',
+          updated_at = NOW()
+         WHERE staff_id = $7`,
+        { bind: [adminData.first_name, adminData.last_name, adminData.username, adminData.dni, adminData.password, roleId, existingAdmin.staff_id] }
+      );
+      result = { action: 'updated', staff_id: existingAdmin.staff_id };
+      console.log(`  ✅ Admin actualizado: ${existingAdmin.staff_id}`);
+    } else {
+      // Crear nuevo admin
+      const [newAdmin] = await sequelize.query(
+        `INSERT INTO aponnt_staff (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, area, created_at, updated_at)
+         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, true, $7, 'AR', 0, 'direccion', NOW(), NOW())
+         RETURNING staff_id`,
+        { bind: [adminData.first_name, adminData.last_name, adminData.email, adminData.username, adminData.dni, adminData.password, roleId], type: QueryTypes.SELECT }
+      );
+      result = { action: 'created', staff_id: newAdmin.staff_id };
+      console.log(`  ✅ Admin creado: ${newAdmin.staff_id}`);
+    }
+
+    res.json({
+      success: true,
+      message: 'Usuario admin configurado correctamente',
+      admin: {
+        ...result,
+        email: 'admin@aponnt.com',
+        username: 'admin',
+        password: 'admin123 (hasheada en BD)',
+        nombre: 'PABLO RIVAS JORDAN',
+        dni: '22062075',
+        rol: 'Super Administrador (nivel 0)'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [SETUP-ADMIN] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
