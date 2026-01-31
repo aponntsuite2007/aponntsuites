@@ -2482,6 +2482,22 @@ router.get('/fix-email-mapping', async (req, res) => {
     }
 
     try {
+        // Primero, listar triggers en la tabla
+        const [triggers] = await sequelize.query(`
+            SELECT trigger_name, event_manipulation, action_timing
+            FROM information_schema.triggers
+            WHERE event_object_table = 'email_process_mapping'
+        `);
+
+        // Desactivar triggers si hay
+        for (const t of triggers) {
+            try {
+                await sequelize.query(`ALTER TABLE email_process_mapping DISABLE TRIGGER ${t.trigger_name}`);
+            } catch (e) {
+                // Ignore
+            }
+        }
+
         // Mappings esenciales para marketing
         const mappings = [
             { process_key: 'sales.commercial', process_name: 'Ventas - Comunicaciones comerciales', module: 'marketing', email_type: 'commercial', priority: 'normal' },
@@ -2499,7 +2515,7 @@ router.get('/fix-email-mapping', async (req, res) => {
                 // Primero intentar borrar si existe
                 await sequelize.query(`DELETE FROM email_process_mapping WHERE process_key = :process_key`, { replacements: { process_key: m.process_key } });
 
-                // Luego insertar
+                // Luego insertar directamente sin Sequelize model (bypass hooks)
                 await sequelize.query(`
                     INSERT INTO email_process_mapping (process_key, process_name, module, email_type, priority, is_active, created_at, updated_at)
                     VALUES (:process_key, :process_name, :module, :email_type, :priority, true, NOW(), NOW())
@@ -2510,7 +2526,16 @@ router.get('/fix-email-mapping', async (req, res) => {
             }
         }
 
-        res.json({ success: true, results, total: mappings.length });
+        // Reactivar triggers
+        for (const t of triggers) {
+            try {
+                await sequelize.query(`ALTER TABLE email_process_mapping ENABLE TRIGGER ${t.trigger_name}`);
+            } catch (e) {
+                // Ignore
+            }
+        }
+
+        res.json({ success: true, triggers: triggers.map(t => t.trigger_name), results, total: mappings.length });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
