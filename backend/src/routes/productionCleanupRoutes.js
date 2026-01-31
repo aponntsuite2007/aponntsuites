@@ -821,4 +821,171 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/cleanup/apply-schema
+ * Aplicar esquema SQL recibido por chunks
+ */
+router.post('/apply-schema', requireCleanupAuth, async (req, res) => {
+  const { sql, chunk, totalChunks, isFirst, isLast } = req.body;
+
+  if (!sql) {
+    return res.status(400).json({ error: 'SQL requerido' });
+  }
+
+  try {
+    // Si es el primer chunk, primero dropear todo
+    if (isFirst) {
+      console.log('💣 [APPLY-SCHEMA] Dropeando objetos existentes...');
+
+      // Dropear vistas
+      const views = await sequelize.query(`
+        SELECT viewname FROM pg_views WHERE schemaname = 'public'
+      `, { type: QueryTypes.SELECT });
+      for (const v of views) {
+        try { await sequelize.query(`DROP VIEW IF EXISTS "${v.viewname}" CASCADE`); } catch (e) {}
+      }
+
+      // Dropear tablas
+      const tables = await sequelize.query(`
+        SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+      `, { type: QueryTypes.SELECT });
+      for (const t of tables) {
+        try { await sequelize.query(`DROP TABLE IF EXISTS "${t.tablename}" CASCADE`); } catch (e) {}
+      }
+
+      // Dropear tipos
+      const types = await sequelize.query(`
+        SELECT typname FROM pg_type WHERE typtype = 'e'
+      `, { type: QueryTypes.SELECT });
+      for (const t of types) {
+        try { await sequelize.query(`DROP TYPE IF EXISTS "${t.typname}" CASCADE`); } catch (e) {}
+      }
+
+      console.log(`  ✅ Dropeados: ${views.length} vistas, ${tables.length} tablas, ${types.length} tipos`);
+    }
+
+    // Ejecutar el SQL del chunk
+    console.log(`📝 [APPLY-SCHEMA] Ejecutando chunk ${chunk}/${totalChunks}...`);
+
+    // Dividir SQL en statements individuales
+    const statements = sql.split(';').filter(s => s.trim());
+    let executed = 0;
+    let errors = [];
+
+    for (const stmt of statements) {
+      const trimmed = stmt.trim();
+      if (!trimmed || trimmed.startsWith('--') || trimmed.startsWith('\\')) continue;
+
+      try {
+        await sequelize.query(trimmed);
+        executed++;
+      } catch (e) {
+        errors.push({ sql: trimmed.substring(0, 100), error: e.message.substring(0, 100) });
+      }
+    }
+
+    console.log(`  ✅ Chunk ${chunk}: ${executed} statements ejecutados, ${errors.length} errores`);
+
+    res.json({
+      success: true,
+      message: `Chunk ${chunk}/${totalChunks} aplicado`,
+      details: {
+        chunk,
+        totalChunks,
+        statementsExecuted: executed,
+        errors: errors.length,
+        errorDetails: errors.slice(0, 10) // Solo primeros 10 errores
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [APPLY-SCHEMA] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/cleanup/import-local-schema
+ * Descargar e importar esquema desde URL
+ */
+router.post('/import-local-schema', requireCleanupAuth, async (req, res) => {
+  const { schemaUrl } = req.body;
+
+  if (!schemaUrl) {
+    return res.status(400).json({
+      error: 'URL del esquema requerida',
+      hint: 'Subir schema_local.sql a algún lugar accesible (gist, pastebin, etc.)'
+    });
+  }
+
+  try {
+    console.log('📥 [IMPORT-SCHEMA] Descargando esquema desde:', schemaUrl);
+
+    const https = require('https');
+    const http = require('http');
+    const client = schemaUrl.startsWith('https') ? https : http;
+
+    const schemaContent = await new Promise((resolve, reject) => {
+      client.get(schemaUrl, (response) => {
+        let data = '';
+        response.on('data', chunk => data += chunk);
+        response.on('end', () => resolve(data));
+        response.on('error', reject);
+      }).on('error', reject);
+    });
+
+    console.log(`  📄 Esquema descargado: ${schemaContent.length} caracteres`);
+
+    // Dropear todo primero
+    console.log('  💣 Dropeando objetos existentes...');
+
+    const views = await sequelize.query(`SELECT viewname FROM pg_views WHERE schemaname = 'public'`, { type: QueryTypes.SELECT });
+    for (const v of views) { try { await sequelize.query(`DROP VIEW IF EXISTS "${v.viewname}" CASCADE`); } catch (e) {} }
+
+    const tables = await sequelize.query(`SELECT tablename FROM pg_tables WHERE schemaname = 'public'`, { type: QueryTypes.SELECT });
+    for (const t of tables) { try { await sequelize.query(`DROP TABLE IF EXISTS "${t.tablename}" CASCADE`); } catch (e) {} }
+
+    const types = await sequelize.query(`SELECT typname FROM pg_type WHERE typtype = 'e'`, { type: QueryTypes.SELECT });
+    for (const t of types) { try { await sequelize.query(`DROP TYPE IF EXISTS "${t.typname}" CASCADE`); } catch (e) {} }
+
+    console.log(`  ✅ Dropeados: ${views.length} vistas, ${tables.length} tablas, ${types.length} tipos`);
+
+    // Ejecutar esquema
+    console.log('  📝 Aplicando esquema...');
+    const statements = schemaContent.split(';').filter(s => {
+      const t = s.trim();
+      return t && !t.startsWith('--') && !t.startsWith('\\') && t.length > 5;
+    });
+
+    let executed = 0;
+    let errors = [];
+
+    for (const stmt of statements) {
+      try {
+        await sequelize.query(stmt.trim());
+        executed++;
+      } catch (e) {
+        errors.push({ sql: stmt.trim().substring(0, 80), error: e.message.substring(0, 80) });
+      }
+    }
+
+    console.log(`✅ [IMPORT-SCHEMA] Completado: ${executed} statements, ${errors.length} errores`);
+
+    res.json({
+      success: true,
+      message: `Esquema importado: ${executed} statements ejecutados`,
+      details: {
+        totalStatements: statements.length,
+        executed,
+        errors: errors.length,
+        sampleErrors: errors.slice(0, 20)
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [IMPORT-SCHEMA] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
