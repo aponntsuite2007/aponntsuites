@@ -2316,4 +2316,91 @@ router.post('/fix-commercial-email', async (req, res) => {
     }
 });
 
+// POST /api/seed-demo/test-email?key=SECRET - Probar envío de email
+router.post('/test-email', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const { to } = req.body;
+    if (!to) {
+        return res.status(400).json({ error: 'Falta campo "to" con email destino' });
+    }
+
+    try {
+        // Obtener config de email comercial
+        const [emailConfig] = await sequelize.query(`
+            SELECT * FROM aponnt_email_config WHERE email_type = 'commercial' AND is_active = true
+        `);
+
+        if (!emailConfig || emailConfig.length === 0) {
+            return res.json({ success: false, error: 'No hay email commercial configurado' });
+        }
+
+        const config = emailConfig[0];
+
+        // Intentar desencriptar contraseña
+        let smtpPassword = config.smtp_password;
+        if (smtpPassword && smtpPassword.includes(':')) {
+            // Está encriptada, intentar desencriptar
+            try {
+                const crypto = require('crypto');
+                const [iv, encrypted] = smtpPassword.split(':');
+                const key = process.env.EMAIL_ENCRYPTION_KEY || 'aponnt-email-key-2024-secure!!';
+                const keyBuffer = crypto.scryptSync(key, 'salt', 32);
+                const decipher = crypto.createDecipheriv('aes-256-cbc', keyBuffer, Buffer.from(iv, 'hex'));
+                let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+                decrypted += decipher.final('utf8');
+                smtpPassword = decrypted;
+            } catch (decryptError) {
+                return res.json({
+                    success: false,
+                    error: 'Error desencriptando contraseña SMTP',
+                    details: decryptError.message,
+                    hint: 'Verificar EMAIL_ENCRYPTION_KEY en variables de entorno'
+                });
+            }
+        }
+
+        // Intentar enviar email con nodemailer
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({
+            host: config.smtp_host,
+            port: config.smtp_port,
+            secure: config.smtp_secure,
+            auth: {
+                user: config.smtp_user,
+                pass: smtpPassword
+            }
+        });
+
+        const info = await transporter.sendMail({
+            from: `"${config.from_name}" <${config.from_email}>`,
+            to: to,
+            subject: 'Test de email - APONNT',
+            html: '<h1>Test exitoso!</h1><p>Si recibes este email, la configuración SMTP está funcionando correctamente.</p>'
+        });
+
+        res.json({
+            success: true,
+            message: 'Email enviado exitosamente',
+            messageId: info.messageId,
+            config: {
+                from: config.from_email,
+                host: config.smtp_host,
+                port: config.smtp_port
+            }
+        });
+
+    } catch (error) {
+        res.json({
+            success: false,
+            error: error.message,
+            code: error.code,
+            command: error.command
+        });
+    }
+});
+
 module.exports = router;
