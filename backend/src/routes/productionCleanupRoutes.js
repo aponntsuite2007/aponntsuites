@@ -676,36 +676,36 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
 
     // 1. Dropear todas las vistas primero
     console.log('  🔧 Dropeando vistas...');
-    const [views] = await sequelize.query(`
+    const views = await sequelize.query(`
       SELECT viewname FROM pg_views WHERE schemaname = 'public'
-    `);
+    `, { type: QueryTypes.SELECT });
     for (const view of views) {
       try {
         await sequelize.query(`DROP VIEW IF EXISTS "${view.viewname}" CASCADE`);
-        console.log(`    ✅ Vista ${view.viewname} dropeada`);
-      } catch (e) {
-        console.log(`    ⚠️ Vista ${view.viewname}: ${e.message}`);
-      }
+      } catch (e) {}
     }
+    console.log(`    ✅ ${views.length} vistas dropeadas`);
 
-    // 2. Dropear todas las tablas
+    // 2. Dropear tablas una por una (evitar out of memory)
     console.log('  🔧 Dropeando tablas...');
-    await sequelize.query(`
-      DO $$ DECLARE
-        r RECORD;
-      BEGIN
-        FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-          EXECUTE 'DROP TABLE IF EXISTS "' || r.tablename || '" CASCADE';
-        END LOOP;
-      END $$;
-    `);
-    console.log('    ✅ Todas las tablas dropeadas');
+    const tables = await sequelize.query(`
+      SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+    `, { type: QueryTypes.SELECT });
+
+    let droppedCount = 0;
+    for (const table of tables) {
+      try {
+        await sequelize.query(`DROP TABLE IF EXISTS "${table.tablename}" CASCADE`);
+        droppedCount++;
+      } catch (e) {}
+    }
+    console.log(`    ✅ ${droppedCount} tablas dropeadas`);
 
     // 3. Dropear tipos ENUM
     console.log('  🔧 Dropeando tipos ENUM...');
-    const [enums] = await sequelize.query(`
+    const enums = await sequelize.query(`
       SELECT typname FROM pg_type WHERE typtype = 'e'
-    `);
+    `, { type: QueryTypes.SELECT });
     for (const enumType of enums) {
       try {
         await sequelize.query(`DROP TYPE IF EXISTS "${enumType.typname}" CASCADE`);
@@ -713,7 +713,19 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
     }
     console.log(`    ✅ ${enums.length} tipos ENUM dropeados`);
 
-    // 4. Recrear esquema con Sequelize
+    // 4. Dropear secuencias
+    console.log('  🔧 Dropeando secuencias...');
+    const sequences = await sequelize.query(`
+      SELECT sequencename FROM pg_sequences WHERE schemaname = 'public'
+    `, { type: QueryTypes.SELECT });
+    for (const seq of sequences) {
+      try {
+        await sequelize.query(`DROP SEQUENCE IF EXISTS "${seq.sequencename}" CASCADE`);
+      } catch (e) {}
+    }
+    console.log(`    ✅ ${sequences.length} secuencias dropeadas`);
+
+    // 5. Recrear esquema con Sequelize
     console.log('  🔧 Recreando esquema con sequelize.sync({ force: true })...');
     await sequelize.sync({ force: true });
     console.log('    ✅ Esquema recreado');
@@ -724,6 +736,12 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
     res.json({
       success: true,
       message: `Esquema reseteado y recreado en ${duration} segundos`,
+      details: {
+        viewsDropped: views.length,
+        tablesDropped: droppedCount,
+        enumsDropped: enums.length,
+        sequencesDropped: sequences.length
+      },
       warning: 'TODOS los datos fueron eliminados. El esquema ahora es idéntico al local.'
     });
 
