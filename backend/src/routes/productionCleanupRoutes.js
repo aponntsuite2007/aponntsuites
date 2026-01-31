@@ -263,7 +263,7 @@ router.get('/status', requireCleanupAuth, async (req, res) => {
 
 /**
  * POST /api/cleanup/force
- * Limpieza forzada desactivando triggers (⚠️ MUY DESTRUCTIVO)
+ * Limpieza forzada con DROP/RECREATE de FKs (⚠️ MUY DESTRUCTIVO)
  */
 router.post('/force', requireCleanupAuth, async (req, res) => {
   const { keep = 'isi', confirm } = req.body;
@@ -291,73 +291,100 @@ router.post('/force', requireCleanupAuth, async (req, res) => {
     const keepId = keepCompany.company_id;
     console.log(`✅ Conservando empresa: ${keepCompany.name} (${keepId})`);
 
-    const results = { deleted: {}, kept: { company: keepCompany.name }, errors: [], warnings: [] };
+    const results = { deleted: {}, kept: { company: keepCompany.name }, errors: [], droppedFKs: [], warnings: [] };
 
-    // Desactivar triggers temporalmente
-    try {
-      await sequelize.query(`SET session_replication_role = 'replica'`);
-      results.warnings.push('Triggers desactivados temporalmente');
-    } catch (e) {
-      results.warnings.push('No se pudieron desactivar triggers: ' + e.message);
-    }
-
-    // Lista de tablas a limpiar en orden específico (sin dependencias porque triggers están desactivados)
-    const tables = [
-      // Todas las tablas con user_id FK
-      'hour_bank_balances', 'hour_bank_transactions', 'biometric_data', 'user_documents',
-      'user_shift_assignments', 'user_work_arrangements', 'work_arrangement_history',
-      'user_payroll_assignment', 'user_medical_exams', 'user_medical_documents',
-      'user_allergies', 'user_chronic_conditions', 'user_vaccinations',
-      // Tablas con company_id
-      'attendances', 'notifications', 'visitors', 'sanctions', 'vacation_requests',
-      'kiosks', 'shifts', 'branches', 'medical_records', 'facial_biometric_data',
-      'biometric_consents', 'payroll_templates', 'salary_categories_v2', 'labor_agreements_v2',
-      'organizational_positions', 'siac_facturas', 'siac_remitos', 'invoices',
-      'budgets', 'company_modules', 'company_tasks', 'support_ticket_escalations',
-      'support_tickets', 'trainings',
-      // Usuarios
-      'users',
-      // Departamentos
-      'departments',
-      // Empresas
-      'companies'
+    // Obtener lista de FKs a dropear temporalmente
+    const fksToHandle = [
+      { table: 'users', constraint: 'users_organizational_position_id_fkey' },
+      { table: 'user_payroll_assignment', constraint: 'user_payroll_assignment_category_id_fkey' },
+      { table: 'salary_categories_v2', constraint: 'salary_categories_v2_labor_agreement_id_fkey' },
+      { table: 'support_ticket_escalations', constraint: 'support_ticket_escalations_ticket_id_fkey' },
     ];
 
-    // Borrar de cada tabla
-    for (const table of tables) {
+    // Dropear FKs problemáticas
+    for (const fk of fksToHandle) {
       try {
-        let sql;
-        if (table === 'users' || table === 'departments' || table === 'companies') {
-          sql = `DELETE FROM ${table} WHERE company_id != ${keepId}`;
-        } else if (['hour_bank_balances', 'hour_bank_transactions', 'biometric_data', 'user_documents',
-                    'user_shift_assignments', 'user_work_arrangements', 'work_arrangement_history',
-                    'user_payroll_assignment', 'user_allergies', 'user_chronic_conditions',
-                    'user_vaccinations'].includes(table)) {
-          sql = `DELETE FROM ${table} WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})`;
-        } else if (table === 'salary_categories_v2') {
-          sql = `DELETE FROM ${table} WHERE labor_agreement_id IN (SELECT id FROM labor_agreements_v2 WHERE company_id != ${keepId})`;
-        } else if (table === 'support_ticket_escalations') {
-          sql = `DELETE FROM ${table} WHERE ticket_id IN (SELECT id FROM support_tickets WHERE company_id != ${keepId})`;
-        } else {
-          sql = `DELETE FROM ${table} WHERE company_id != ${keepId}`;
-        }
-
-        const [, metadata] = await sequelize.query(sql);
-        results.deleted[table] = metadata?.rowCount || 0;
-        console.log(`  ✅ ${table}: ${results.deleted[table]} eliminados`);
+        await sequelize.query(`ALTER TABLE ${fk.table} DROP CONSTRAINT IF EXISTS ${fk.constraint}`);
+        results.droppedFKs.push(fk.constraint);
+        console.log(`  🔓 FK dropeada: ${fk.constraint}`);
       } catch (e) {
-        results.deleted[table] = 0;
-        results.errors.push({ table, error: e.message });
-        console.log(`  ⚠️ ${table}: ${e.message}`);
+        results.warnings.push(`No se pudo dropear ${fk.constraint}: ${e.message}`);
       }
     }
 
-    // Reactivar triggers
-    try {
-      await sequelize.query(`SET session_replication_role = 'origin'`);
-      results.warnings.push('Triggers reactivados');
-    } catch (e) {
-      results.warnings.push('Error reactivando triggers: ' + e.message);
+    // Lista de tablas a limpiar en orden
+    const deleteQueries = [
+      // Tablas con user_id FK
+      { name: 'user_payroll_assignment', sql: `DELETE FROM user_payroll_assignment WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'hour_bank_balances', sql: `DELETE FROM hour_bank_balances WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'hour_bank_transactions', sql: `DELETE FROM hour_bank_transactions WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'biometric_data', sql: `DELETE FROM biometric_data WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'user_documents', sql: `DELETE FROM user_documents WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'user_shift_assignments', sql: `DELETE FROM user_shift_assignments WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'user_work_arrangements', sql: `DELETE FROM user_work_arrangements WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      { name: 'work_arrangement_history', sql: `DELETE FROM work_arrangement_history WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})` },
+      // Tablas médicas
+      { name: 'user_medical_exams', sql: `DELETE FROM user_medical_exams WHERE company_id != ${keepId}` },
+      { name: 'user_medical_documents', sql: `DELETE FROM user_medical_documents WHERE company_id != ${keepId}` },
+      { name: 'medical_records', sql: `DELETE FROM medical_records WHERE company_id != ${keepId}` },
+      // Tablas con company_id
+      { name: 'salary_categories_v2', sql: `DELETE FROM salary_categories_v2 WHERE labor_agreement_id IN (SELECT id FROM labor_agreements_v2 WHERE company_id != ${keepId})` },
+      { name: 'labor_agreements_v2', sql: `DELETE FROM labor_agreements_v2 WHERE company_id != ${keepId}` },
+      { name: 'payroll_templates', sql: `DELETE FROM payroll_templates WHERE company_id != ${keepId}` },
+      { name: 'organizational_positions', sql: `DELETE FROM organizational_positions WHERE company_id != ${keepId}` },
+      { name: 'support_ticket_escalations', sql: `DELETE FROM support_ticket_escalations WHERE ticket_id IN (SELECT id FROM support_tickets WHERE company_id != ${keepId})` },
+      { name: 'support_tickets', sql: `DELETE FROM support_tickets WHERE company_id != ${keepId}` },
+      { name: 'attendances', sql: `DELETE FROM attendances WHERE company_id != ${keepId}` },
+      { name: 'notifications', sql: `DELETE FROM notifications WHERE company_id != ${keepId}` },
+      { name: 'visitors', sql: `DELETE FROM visitors WHERE company_id != ${keepId}` },
+      { name: 'sanctions', sql: `DELETE FROM sanctions WHERE company_id != ${keepId}` },
+      { name: 'vacation_requests', sql: `DELETE FROM vacation_requests WHERE company_id != ${keepId}` },
+      { name: 'kiosks', sql: `DELETE FROM kiosks WHERE company_id != ${keepId}` },
+      { name: 'shifts', sql: `DELETE FROM shifts WHERE company_id != ${keepId}` },
+      { name: 'branches', sql: `DELETE FROM branches WHERE company_id != ${keepId}` },
+      { name: 'facial_biometric_data', sql: `DELETE FROM facial_biometric_data WHERE company_id != ${keepId}` },
+      { name: 'biometric_consents', sql: `DELETE FROM biometric_consents WHERE company_id != ${keepId}` },
+      { name: 'siac_facturas', sql: `DELETE FROM siac_facturas WHERE company_id != ${keepId}` },
+      { name: 'siac_remitos', sql: `DELETE FROM siac_remitos WHERE company_id != ${keepId}` },
+      { name: 'invoices', sql: `DELETE FROM invoices WHERE company_id != ${keepId}` },
+      { name: 'budgets', sql: `DELETE FROM budgets WHERE company_id != ${keepId}` },
+      { name: 'company_modules', sql: `DELETE FROM company_modules WHERE company_id != ${keepId}` },
+      { name: 'company_tasks', sql: `DELETE FROM company_tasks WHERE company_id != ${keepId}` },
+      { name: 'trainings', sql: `DELETE FROM trainings WHERE company_id != ${keepId}` },
+      // Usuarios, departamentos, empresas
+      { name: 'users', sql: `DELETE FROM users WHERE company_id != ${keepId}` },
+      { name: 'departments', sql: `DELETE FROM departments WHERE company_id != ${keepId}` },
+      { name: 'companies', sql: `DELETE FROM companies WHERE company_id != ${keepId}` },
+    ];
+
+    // Ejecutar deletes
+    for (const q of deleteQueries) {
+      try {
+        const [, metadata] = await sequelize.query(q.sql);
+        results.deleted[q.name] = metadata?.rowCount || 0;
+        console.log(`  ✅ ${q.name}: ${results.deleted[q.name]} eliminados`);
+      } catch (e) {
+        results.deleted[q.name] = 0;
+        results.errors.push({ table: q.name, error: e.message });
+        console.log(`  ⚠️ ${q.name}: ${e.message}`);
+      }
+    }
+
+    // Recrear FKs
+    const fksToRecreate = [
+      { sql: `ALTER TABLE users ADD CONSTRAINT users_organizational_position_id_fkey FOREIGN KEY (organizational_position_id) REFERENCES organizational_positions(id)` },
+      { sql: `ALTER TABLE user_payroll_assignment ADD CONSTRAINT user_payroll_assignment_category_id_fkey FOREIGN KEY (category_id) REFERENCES salary_categories_v2(id)` },
+      { sql: `ALTER TABLE salary_categories_v2 ADD CONSTRAINT salary_categories_v2_labor_agreement_id_fkey FOREIGN KEY (labor_agreement_id) REFERENCES labor_agreements_v2(id)` },
+      { sql: `ALTER TABLE support_ticket_escalations ADD CONSTRAINT support_ticket_escalations_ticket_id_fkey FOREIGN KEY (ticket_id) REFERENCES support_tickets(id)` },
+    ];
+
+    for (const fk of fksToRecreate) {
+      try {
+        await sequelize.query(fk.sql);
+        results.warnings.push(`FK recreada: ${fk.sql.split('ADD CONSTRAINT ')[1]?.split(' ')[0]}`);
+      } catch (e) {
+        results.warnings.push(`No se pudo recrear FK: ${e.message}`);
+      }
     }
 
     console.log('✅ [CLEANUP] Limpieza forzada completada');
@@ -369,11 +396,6 @@ router.post('/force', requireCleanupAuth, async (req, res) => {
     });
 
   } catch (error) {
-    // Intentar reactivar triggers en caso de error
-    try {
-      await sequelize.query(`SET session_replication_role = 'origin'`);
-    } catch (e) {}
-
     console.error('❌ [CLEANUP] Error en limpieza forzada:', error);
     res.status(500).json({ error: error.message });
   }
