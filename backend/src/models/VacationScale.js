@@ -68,11 +68,11 @@ module.exports = (sequelize) => {
     indexes: [
       {
         name: 'idx_vacation_scale_range',
-        fields: ['yearsFrom', 'yearsTo', 'isActive']
+        fields: ['years_from', 'years_to', 'is_active']
       },
       {
         name: 'idx_vacation_scale_priority',
-        fields: ['priority', 'isActive']
+        fields: ['priority', 'is_active']
       }
     ]
   });
