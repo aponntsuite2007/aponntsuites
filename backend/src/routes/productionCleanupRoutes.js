@@ -261,4 +261,122 @@ router.get('/status', requireCleanupAuth, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/cleanup/force
+ * Limpieza forzada desactivando triggers (⚠️ MUY DESTRUCTIVO)
+ */
+router.post('/force', requireCleanupAuth, async (req, res) => {
+  const { keep = 'isi', confirm } = req.body;
+
+  if (confirm !== 'FORCE_CLEANUP_' + keep.toUpperCase()) {
+    return res.status(400).json({
+      error: 'Confirmación requerida',
+      hint: `Enviar body: { "keep": "${keep}", "confirm": "FORCE_CLEANUP_${keep.toUpperCase()}" }`
+    });
+  }
+
+  try {
+    console.log(`🔥 [CLEANUP] Iniciando limpieza FORZADA. Conservar: ${keep}`);
+
+    // Obtener empresa a conservar
+    const [keepCompany] = await sequelize.query(
+      `SELECT company_id, name, slug FROM companies WHERE LOWER(slug) = LOWER($1) OR LOWER(name) LIKE LOWER($2)`,
+      { bind: [keep, `%${keep}%`], type: QueryTypes.SELECT }
+    );
+
+    if (!keepCompany) {
+      return res.status(404).json({ error: `Empresa "${keep}" no encontrada` });
+    }
+
+    const keepId = keepCompany.company_id;
+    console.log(`✅ Conservando empresa: ${keepCompany.name} (${keepId})`);
+
+    const results = { deleted: {}, kept: { company: keepCompany.name }, errors: [], warnings: [] };
+
+    // Desactivar triggers temporalmente
+    try {
+      await sequelize.query(`SET session_replication_role = 'replica'`);
+      results.warnings.push('Triggers desactivados temporalmente');
+    } catch (e) {
+      results.warnings.push('No se pudieron desactivar triggers: ' + e.message);
+    }
+
+    // Lista de tablas a limpiar en orden específico (sin dependencias porque triggers están desactivados)
+    const tables = [
+      // Todas las tablas con user_id FK
+      'hour_bank_balances', 'hour_bank_transactions', 'biometric_data', 'user_documents',
+      'user_shift_assignments', 'user_work_arrangements', 'work_arrangement_history',
+      'user_payroll_assignment', 'user_medical_exams', 'user_medical_documents',
+      'user_allergies', 'user_chronic_conditions', 'user_vaccinations',
+      // Tablas con company_id
+      'attendances', 'notifications', 'visitors', 'sanctions', 'vacation_requests',
+      'kiosks', 'shifts', 'branches', 'medical_records', 'facial_biometric_data',
+      'biometric_consents', 'payroll_templates', 'salary_categories_v2', 'labor_agreements_v2',
+      'organizational_positions', 'siac_facturas', 'siac_remitos', 'invoices',
+      'budgets', 'company_modules', 'company_tasks', 'support_ticket_escalations',
+      'support_tickets', 'trainings',
+      // Usuarios
+      'users',
+      // Departamentos
+      'departments',
+      // Empresas
+      'companies'
+    ];
+
+    // Borrar de cada tabla
+    for (const table of tables) {
+      try {
+        let sql;
+        if (table === 'users' || table === 'departments' || table === 'companies') {
+          sql = `DELETE FROM ${table} WHERE company_id != ${keepId}`;
+        } else if (['hour_bank_balances', 'hour_bank_transactions', 'biometric_data', 'user_documents',
+                    'user_shift_assignments', 'user_work_arrangements', 'work_arrangement_history',
+                    'user_payroll_assignment', 'user_allergies', 'user_chronic_conditions',
+                    'user_vaccinations'].includes(table)) {
+          sql = `DELETE FROM ${table} WHERE user_id IN (SELECT user_id FROM users WHERE company_id != ${keepId})`;
+        } else if (table === 'salary_categories_v2') {
+          sql = `DELETE FROM ${table} WHERE labor_agreement_id IN (SELECT id FROM labor_agreements_v2 WHERE company_id != ${keepId})`;
+        } else if (table === 'support_ticket_escalations') {
+          sql = `DELETE FROM ${table} WHERE ticket_id IN (SELECT id FROM support_tickets WHERE company_id != ${keepId})`;
+        } else {
+          sql = `DELETE FROM ${table} WHERE company_id != ${keepId}`;
+        }
+
+        const [, metadata] = await sequelize.query(sql);
+        results.deleted[table] = metadata?.rowCount || 0;
+        console.log(`  ✅ ${table}: ${results.deleted[table]} eliminados`);
+      } catch (e) {
+        results.deleted[table] = 0;
+        results.errors.push({ table, error: e.message });
+        console.log(`  ⚠️ ${table}: ${e.message}`);
+      }
+    }
+
+    // Reactivar triggers
+    try {
+      await sequelize.query(`SET session_replication_role = 'origin'`);
+      results.warnings.push('Triggers reactivados');
+    } catch (e) {
+      results.warnings.push('Error reactivando triggers: ' + e.message);
+    }
+
+    console.log('✅ [CLEANUP] Limpieza forzada completada');
+
+    res.json({
+      success: true,
+      message: `Limpieza forzada completada. Solo queda empresa: ${keepCompany.name}`,
+      results
+    });
+
+  } catch (error) {
+    // Intentar reactivar triggers en caso de error
+    try {
+      await sequelize.query(`SET session_replication_role = 'origin'`);
+    } catch (e) {}
+
+    console.error('❌ [CLEANUP] Error en limpieza forzada:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
