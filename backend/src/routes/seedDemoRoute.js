@@ -2157,11 +2157,11 @@ router.post('/import-data', async (req, res) => {
             for (const l of marketing_leads) {
                 try {
                     await sequelize.query(`
-                        INSERT INTO marketing_leads (id, company_name, contact_name, contact_email, contact_phone, status, source, notes, created_at, updated_at)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                        INSERT INTO marketing_leads (id, full_name, email, company_name, phone, source, status, notes, created_at, updated_at)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
                         ON CONFLICT (id) DO NOTHING
                     `, {
-                        bind: [l.id, l.company_name, l.contact_name, l.contact_email, l.contact_phone, l.status || 'new', l.source, l.notes, l.created_at, l.updated_at]
+                        bind: [l.id, l.full_name, l.email, l.company_name, l.phone, l.source || 'manual', l.status || 'new', l.notes || '']
                     });
                     results.leads++;
                 } catch (e) {
