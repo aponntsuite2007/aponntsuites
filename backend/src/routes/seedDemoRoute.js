@@ -2130,8 +2130,8 @@ router.post('/import-data', async (req, res) => {
         return res.status(403).json({ error: 'Invalid key' });
     }
 
-    const { marketing_leads, companies } = req.body;
-    const results = { leads: 0, companies: 0, errors: [] };
+    const { marketing_leads, companies, aponnt_email_config, email_process_mapping } = req.body;
+    const results = { leads: 0, companies: 0, email_configs: 0, email_mappings: 0, errors: [] };
 
     try {
         // Importar companies
@@ -2170,9 +2170,79 @@ router.post('/import-data', async (req, res) => {
             }
         }
 
+        // Importar aponnt_email_config (configuración de cuentas de email)
+        if (aponnt_email_config && Array.isArray(aponnt_email_config)) {
+            for (const ec of aponnt_email_config) {
+                try {
+                    await sequelize.query(`
+                        INSERT INTO aponnt_email_config (id, email_type, from_email, from_name, reply_to, smtp_host, smtp_port, smtp_user, smtp_password, smtp_secure, is_active, icon, color, description, created_at, updated_at)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                        ON CONFLICT (id) DO UPDATE SET
+                            email_type = EXCLUDED.email_type,
+                            from_email = EXCLUDED.from_email,
+                            from_name = EXCLUDED.from_name,
+                            reply_to = EXCLUDED.reply_to,
+                            smtp_host = EXCLUDED.smtp_host,
+                            smtp_port = EXCLUDED.smtp_port,
+                            smtp_user = EXCLUDED.smtp_user,
+                            smtp_password = EXCLUDED.smtp_password,
+                            smtp_secure = EXCLUDED.smtp_secure,
+                            is_active = EXCLUDED.is_active,
+                            icon = EXCLUDED.icon,
+                            color = EXCLUDED.color,
+                            description = EXCLUDED.description,
+                            updated_at = NOW()
+                    `, {
+                        bind: [
+                            ec.id, ec.email_type, ec.from_email, ec.from_name, ec.reply_to,
+                            ec.smtp_host, ec.smtp_port, ec.smtp_user, ec.smtp_password, ec.smtp_secure,
+                            ec.is_active, ec.icon, ec.color, ec.description,
+                            ec.created_at || new Date(), ec.updated_at || new Date()
+                        ]
+                    });
+                    results.email_configs++;
+                } catch (e) {
+                    results.errors.push(`email_config ${ec.email_type}: ${e.message.substring(0, 80)}`);
+                }
+            }
+        }
+
+        // Importar email_process_mapping (mapeo de procesos a tipos de email)
+        if (email_process_mapping && Array.isArray(email_process_mapping)) {
+            for (const pm of email_process_mapping) {
+                try {
+                    await sequelize.query(`
+                        INSERT INTO email_process_mapping (id, process_key, process_name, module, description, email_type, priority, is_active, requires_email, metadata, created_at, updated_at)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                        ON CONFLICT (id) DO UPDATE SET
+                            process_key = EXCLUDED.process_key,
+                            process_name = EXCLUDED.process_name,
+                            module = EXCLUDED.module,
+                            description = EXCLUDED.description,
+                            email_type = EXCLUDED.email_type,
+                            priority = EXCLUDED.priority,
+                            is_active = EXCLUDED.is_active,
+                            requires_email = EXCLUDED.requires_email,
+                            metadata = EXCLUDED.metadata,
+                            updated_at = NOW()
+                    `, {
+                        bind: [
+                            pm.id, pm.process_key, pm.process_name, pm.module, pm.description,
+                            pm.email_type, pm.priority, pm.is_active, pm.requires_email,
+                            JSON.stringify(pm.metadata || {}),
+                            pm.created_at || new Date(), pm.updated_at || new Date()
+                        ]
+                    });
+                    results.email_mappings++;
+                } catch (e) {
+                    results.errors.push(`email_mapping ${pm.process_key}: ${e.message.substring(0, 80)}`);
+                }
+            }
+        }
+
         res.json({
             success: true,
-            message: `Importados: ${results.companies} companies, ${results.leads} leads`,
+            message: `Importados: ${results.companies} companies, ${results.leads} leads, ${results.email_configs} email_configs, ${results.email_mappings} email_mappings`,
             results,
             errors: results.errors.length > 0 ? results.errors : 'none'
         });
