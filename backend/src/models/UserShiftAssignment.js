@@ -10,7 +10,7 @@
  * - Juan trabaja cuando el turno global está en fase "Tarde"
  */
 
-const { DataTypes } = require('sequelize');
+const { DataTypes, Op } = require('sequelize');
 
 module.exports = (sequelize) => {
   const UserShiftAssignment = sequelize.define('UserShiftAssignment', {
@@ -202,7 +202,7 @@ module.exports = (sequelize) => {
         fields: ['sector', 'company_id'],
         where: {
           sector: {
-            $ne: null
+            [Op.ne]: null
           }
         }
       },
