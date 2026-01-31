@@ -189,6 +189,110 @@ router.get('/create-module-tables', async (req, res) => {
     }
 });
 
+// GET /api/seed-demo/setup-aponnt-staff - Crear admin Aponnt (TEMP - ELIMINAR)
+router.get('/setup-aponnt-staff', async (req, res) => {
+    const { key } = req.query;
+    if (key !== 'APONNT_STAFF_2024') {
+        return res.status(403).json({ error: 'Clave inválida' });
+    }
+
+    try {
+        const bcryptLib = require('bcrypt');
+
+        // Ver columnas de las tablas
+        const [roleColumns] = await sequelize.query(`
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'aponnt_staff_roles' ORDER BY ordinal_position
+        `);
+        const roleCols = roleColumns.map(c => c.column_name);
+
+        const [staffColumns] = await sequelize.query(`
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'aponnt_staff' ORDER BY ordinal_position
+        `);
+        const staffCols = staffColumns.map(c => c.column_name);
+
+        // Buscar o crear rol
+        let roleId = null;
+        const [existingRole] = await sequelize.query(
+            `SELECT role_id FROM aponnt_staff_roles WHERE role_code = 'SUPERADMIN' OR level = 0 LIMIT 1`,
+            { type: QueryTypes.SELECT }
+        );
+
+        if (existingRole) {
+            roleId = existingRole.role_id;
+        } else {
+            const hasRoleArea = roleCols.includes('role_area');
+            const hasArea = roleCols.includes('area');
+
+            let insertRoleSQL;
+            if (hasRoleArea) {
+                insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, permissions, is_active, created_at, updated_at)
+                    VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW())
+                    RETURNING role_id`;
+            } else if (hasArea) {
+                insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, area, permissions, is_active, created_at, updated_at)
+                    VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW())
+                    RETURNING role_id`;
+            } else {
+                insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, permissions, is_active, created_at, updated_at)
+                    VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, '{"all": true}'::jsonb, true, NOW(), NOW())
+                    RETURNING role_id`;
+            }
+
+            const [newRole] = await sequelize.query(insertRoleSQL, { type: QueryTypes.SELECT });
+            roleId = newRole?.role_id;
+
+            if (!roleId) {
+                const [created] = await sequelize.query(
+                    `SELECT role_id FROM aponnt_staff_roles WHERE role_code = 'SUPERADMIN' LIMIT 1`,
+                    { type: QueryTypes.SELECT }
+                );
+                roleId = created?.role_id;
+            }
+        }
+
+        if (!roleId) {
+            return res.status(500).json({ error: 'No se pudo crear rol', roleCols, staffCols });
+        }
+
+        const hashedPassword = await bcryptLib.hash('admin123', 10);
+
+        // Verificar si existe admin
+        const [existing] = await sequelize.query(
+            `SELECT staff_id FROM aponnt_staff WHERE email = 'admin@aponnt.com' LIMIT 1`,
+            { type: QueryTypes.SELECT }
+        );
+
+        if (existing) {
+            await sequelize.query(
+                `UPDATE aponnt_staff SET password = $1, is_active = true, role_id = $2, updated_at = NOW() WHERE staff_id = $3`,
+                { bind: [hashedPassword, roleId, existing.staff_id] }
+            );
+            return res.json({ success: true, action: 'updated', staff_id: existing.staff_id, login: { email: 'admin@aponnt.com', password: 'admin123' }, roleCols, staffCols });
+        }
+
+        // Crear admin
+        const hasStaffArea = staffCols.includes('area');
+        let insertStaffSQL;
+        if (hasStaffArea) {
+            insertStaffSQL = `INSERT INTO aponnt_staff (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, area, created_at, updated_at)
+                VALUES (gen_random_uuid(), 'PABLO', 'RIVAS JORDAN', 'admin@aponnt.com', 'admin', '22062075', $1, true, $2, 'AR', 0, 'direccion', NOW(), NOW())
+                RETURNING staff_id`;
+        } else {
+            insertStaffSQL = `INSERT INTO aponnt_staff (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, created_at, updated_at)
+                VALUES (gen_random_uuid(), 'PABLO', 'RIVAS JORDAN', 'admin@aponnt.com', 'admin', '22062075', $1, true, $2, 'AR', 0, NOW(), NOW())
+                RETURNING staff_id`;
+        }
+
+        const [newAdmin] = await sequelize.query(insertStaffSQL, { bind: [hashedPassword, roleId], type: QueryTypes.SELECT });
+        res.json({ success: true, action: 'created', staff_id: newAdmin?.staff_id, login: { email: 'admin@aponnt.com', password: 'admin123' }, roleCols, staffCols });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message, stack: error.stack });
+    }
+});
+
 // GET /api/seed-demo/check - Verificar estado de BD
 router.get('/check', async (req, res) => {
     try {
