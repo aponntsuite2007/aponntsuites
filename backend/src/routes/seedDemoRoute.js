@@ -2123,4 +2123,63 @@ router.post('/import-essential', async (req, res) => {
     }
 });
 
+// POST /api/seed-demo/import-data?key=SECRET - Importar datos genéricos
+router.post('/import-data', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const { marketing_leads, companies } = req.body;
+    const results = { leads: 0, companies: 0, errors: [] };
+
+    try {
+        // Importar companies
+        if (companies && Array.isArray(companies)) {
+            for (const c of companies) {
+                try {
+                    await sequelize.query(`
+                        INSERT INTO companies (company_id, name, slug, legal_name, tax_id, address, city, province, country, phone, contact_email, contact_phone, is_active, max_employees, contracted_employees, license_type, created_at, updated_at)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                        ON CONFLICT (company_id) DO NOTHING
+                    `, {
+                        bind: [c.company_id, c.name, c.slug, c.legal_name, c.tax_id, c.address, c.city, c.province, c.country, c.phone, c.contact_email, c.contact_phone, c.is_active, c.max_employees, c.contracted_employees, c.license_type, c.created_at, c.updated_at]
+                    });
+                    results.companies++;
+                } catch (e) {
+                    results.errors.push(`company ${c.name}: ${e.message.substring(0, 50)}`);
+                }
+            }
+        }
+
+        // Importar marketing_leads
+        if (marketing_leads && Array.isArray(marketing_leads)) {
+            for (const l of marketing_leads) {
+                try {
+                    await sequelize.query(`
+                        INSERT INTO marketing_leads (id, company_name, contact_name, contact_email, contact_phone, status, source, notes, created_at, updated_at)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                        ON CONFLICT (id) DO NOTHING
+                    `, {
+                        bind: [l.id, l.company_name, l.contact_name, l.contact_email, l.contact_phone, l.status || 'new', l.source, l.notes, l.created_at, l.updated_at]
+                    });
+                    results.leads++;
+                } catch (e) {
+                    results.errors.push(`lead ${l.company_name}: ${e.message.substring(0, 50)}`);
+                }
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Importados: ${results.companies} companies, ${results.leads} leads`,
+            results,
+            errors: results.errors.length > 0 ? results.errors : 'none'
+        });
+    } catch (error) {
+        console.error('Error importando datos:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
