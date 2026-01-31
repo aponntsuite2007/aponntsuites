@@ -405,7 +405,7 @@ router.post('/force', requireCleanupAuth, async (req, res) => {
 
 /**
  * POST /api/cleanup/sync-schema
- * Sincronizar esquema de BD con modelos Sequelize (⚠️ USAR CON CUIDADO)
+ * Sincronizar esquema de BD con modelos Sequelize (tabla por tabla)
  */
 router.post('/sync-schema', requireCleanupAuth, async (req, res) => {
   const { confirm } = req.body;
@@ -420,18 +420,36 @@ router.post('/sync-schema', requireCleanupAuth, async (req, res) => {
   try {
     console.log('🔄 [SYNC-SCHEMA] Iniciando sincronización de esquema...');
     const startTime = Date.now();
+    const results = { synced: [], errors: [] };
 
-    // Sincronizar todas las tablas con alter: true
-    // Esto agrega columnas faltantes pero NO elimina columnas existentes
-    await sequelize.sync({ alter: true });
+    // Obtener todos los modelos
+    const models = Object.keys(sequelize.models);
+
+    for (const modelName of models) {
+      try {
+        const model = sequelize.models[modelName];
+        await model.sync({ alter: true });
+        results.synced.push(modelName);
+        console.log(`  ✅ ${modelName} sincronizado`);
+      } catch (e) {
+        results.errors.push({ model: modelName, error: e.message });
+        console.log(`  ⚠️ ${modelName}: ${e.message.substring(0, 100)}...`);
+      }
+    }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`✅ [SYNC-SCHEMA] Sincronización completada en ${duration}s`);
 
     res.json({
       success: true,
-      message: `Esquema sincronizado con modelos en ${duration} segundos`,
-      warning: 'Las tablas ahora coinciden con los modelos Sequelize'
+      message: `Esquema sincronizado en ${duration} segundos`,
+      results: {
+        total: models.length,
+        synced: results.synced.length,
+        errors: results.errors.length,
+        syncedModels: results.synced,
+        errorDetails: results.errors
+      }
     });
 
   } catch (error) {
