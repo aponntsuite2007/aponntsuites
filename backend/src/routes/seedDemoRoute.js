@@ -2316,6 +2316,35 @@ router.post('/fix-commercial-email', async (req, res) => {
     }
 });
 
+// GET /api/seed-demo/check-schema?key=SECRET - Verificar esquema de tablas críticas
+router.get('/check-schema', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        const results = {};
+        const tables = ['email_process_mapping', 'aponnt_email_config', 'marketing_leads', 'notification_workflows', 'notifications'];
+
+        for (const table of tables) {
+            try {
+                const [cols] = await sequelize.query(`
+                    SELECT column_name FROM information_schema.columns
+                    WHERE table_name = '${table}' ORDER BY ordinal_position
+                `);
+                results[table] = cols.length > 0 ? cols.map(c => c.column_name) : 'TABLE_NOT_EXISTS';
+            } catch (e) {
+                results[table] = 'ERROR: ' + e.message;
+            }
+        }
+
+        res.json({ success: true, schema: results });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // POST /api/seed-demo/test-email?key=SECRET - Probar envío de email
 router.post('/test-email', async (req, res) => {
     const { key } = req.query;
