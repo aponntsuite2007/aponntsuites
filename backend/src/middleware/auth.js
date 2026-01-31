@@ -74,8 +74,38 @@ const auth = async (req, res, next) => {
 
     // Verificar token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Verificar si el usuario existe y está activo
+
+    // SOPORTE PARA TOKENS DE STAFF APONNT
+    if (decoded.type === 'aponnt_staff') {
+      console.log('🔍 [AUTH] Token de staff Aponnt detectado:', decoded.staff_id);
+
+      // Para staff de Aponnt, crear un objeto user compatible
+      req.user = {
+        id: decoded.staff_id,
+        user_id: decoded.staff_id,
+        staff_id: decoded.staff_id,
+        email: decoded.email,
+        role: 'admin', // Staff Aponnt siempre tiene rol admin para el sistema
+        isActive: true,
+        is_staff: true,
+        is_aponnt_staff: true,
+        company_id: null, // Staff no pertenece a una empresa específica
+        level: decoded.level || 0,
+        area: decoded.area,
+        country: decoded.country,
+        staff_role: decoded.role,
+        staff_role_name: decoded.role_name
+      };
+
+      console.log('✅ [AUTH] Staff Aponnt autenticado:', {
+        staff_id: decoded.staff_id,
+        email: decoded.email,
+        role: decoded.role
+      });
+      return next();
+    }
+
+    // Verificar si el usuario existe y está activo (usuarios de empresa)
     console.log('🔍 [AUTH] Buscando usuario con ID:', decoded.id);
 
     const user = await User.findByPk(decoded.id, {
