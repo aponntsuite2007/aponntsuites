@@ -27,11 +27,12 @@ class AponntLogin {
   }
 
   /**
-   * Obtener tipo de usuario desde URL
+   * Obtener tipo de usuario desde URL o localStorage (para sesiones activas)
    */
   getUserTypeFromURL() {
     const params = new URLSearchParams(window.location.search);
-    return params.get('userType') || null;
+    // Primero buscar en URL, si no hay buscar en localStorage (sesión previa)
+    return params.get('userType') || localStorage.getItem('aponnt_user_type') || null;
   }
 
   /**
