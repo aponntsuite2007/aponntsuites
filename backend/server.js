@@ -4466,14 +4466,26 @@ async function startServer() {
             `SELECT column_name FROM information_schema.columns WHERE table_name = 'aponnt_staff_roles'`
           );
           const hasRoleArea = roleColumns.some(c => c.column_name === 'role_area');
+          const hasPermissions = roleColumns.some(c => c.column_name === 'permissions');
 
-          const insertRoleSQL = hasRoleArea
-            ? `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, permissions, is_active, created_at, updated_at)
+          let insertRoleSQL;
+          if (hasRoleArea && hasPermissions) {
+            insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, permissions, is_active, created_at, updated_at)
                VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW())
-               RETURNING role_id`
-            : `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, permissions, is_active, created_at, updated_at)
+               RETURNING role_id`;
+          } else if (hasRoleArea) {
+            insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, is_active, created_at, updated_at)
+               VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', true, NOW(), NOW())
+               RETURNING role_id`;
+          } else if (hasPermissions) {
+            insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, permissions, is_active, created_at, updated_at)
                VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, '{"all": true}'::jsonb, true, NOW(), NOW())
                RETURNING role_id`;
+          } else {
+            insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, is_active, created_at, updated_at)
+               VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, true, NOW(), NOW())
+               RETURNING role_id`;
+          }
 
           const [newRole] = await database.sequelize.query(insertRoleSQL, { type: QueryTypes.SELECT });
           roleId = newRole?.role_id;

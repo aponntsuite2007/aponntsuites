@@ -313,9 +313,17 @@ router.get('/check', async (req, res) => {
                 roleId = existingRole.role_id;
             } else {
                 const hasRoleArea = roleCols.includes('role_area');
-                let insertRoleSQL = hasRoleArea
-                    ? `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, permissions, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW()) RETURNING role_id`
-                    : `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, permissions, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, '{"all": true}'::jsonb, true, NOW(), NOW()) RETURNING role_id`;
+                const hasPermissions = roleCols.includes('permissions');
+                let insertRoleSQL;
+                if (hasRoleArea && hasPermissions) {
+                    insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, permissions, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW()) RETURNING role_id`;
+                } else if (hasRoleArea) {
+                    insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', true, NOW(), NOW()) RETURNING role_id`;
+                } else if (hasPermissions) {
+                    insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, permissions, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, '{"all": true}'::jsonb, true, NOW(), NOW()) RETURNING role_id`;
+                } else {
+                    insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, true, NOW(), NOW()) RETURNING role_id`;
+                }
                 const [newRole] = await sequelize.query(insertRoleSQL, { type: QueryTypes.SELECT });
                 roleId = newRole?.role_id;
                 if (!roleId) {
