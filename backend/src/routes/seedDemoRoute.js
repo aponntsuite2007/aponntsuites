@@ -2442,11 +2442,17 @@ router.get('/check-data', async (req, res) => {
     try {
         const results = {};
 
-        // 1. email_process_mapping
+        // 1. email_process_mapping - mostrar todos con 'sales' primero
         const [mappings] = await sequelize.query(`
-            SELECT * FROM email_process_mapping ORDER BY id LIMIT 20
+            SELECT * FROM email_process_mapping
+            WHERE process_key LIKE 'sales%' OR process_key LIKE 'auth%' OR process_key LIKE 'notifications%'
+            ORDER BY id LIMIT 50
         `);
         results.email_process_mapping = mappings;
+
+        // 1b. Total de mappings
+        const [countResult] = await sequelize.query(`SELECT COUNT(*) as total FROM email_process_mapping`);
+        results.email_process_mapping_total = countResult[0].total;
 
         // 2. aponnt_email_config
         const [configs] = await sequelize.query(`
@@ -2487,21 +2493,24 @@ router.get('/fix-email-mapping', async (req, res) => {
             { process_key: 'notifications.reminder', process_name: 'Notificaciones - Recordatorios', module: 'notifications', email_type: 'transactional', priority: 'normal' }
         ];
 
-        let inserted = 0;
+        const results = [];
         for (const m of mappings) {
             try {
+                // Primero intentar borrar si existe
+                await sequelize.query(`DELETE FROM email_process_mapping WHERE process_key = :process_key`, { replacements: { process_key: m.process_key } });
+
+                // Luego insertar
                 await sequelize.query(`
                     INSERT INTO email_process_mapping (process_key, process_name, module, email_type, priority, is_active, created_at, updated_at)
                     VALUES (:process_key, :process_name, :module, :email_type, :priority, true, NOW(), NOW())
-                    ON CONFLICT (process_key) DO NOTHING
                 `, { replacements: m });
-                inserted++;
+                results.push({ process_key: m.process_key, status: 'inserted' });
             } catch (e) {
-                // Ignore duplicate
+                results.push({ process_key: m.process_key, status: 'error', error: e.message });
             }
         }
 
-        res.json({ success: true, inserted, total: mappings.length });
+        res.json({ success: true, results, total: mappings.length });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
