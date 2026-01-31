@@ -656,4 +656,81 @@ router.post('/create-missing-tables', requireCleanupAuth, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/cleanup/reset-schema
+ * DROPEAR TODO y recrear esquema desde cero (⚠️ BORRA TODOS LOS DATOS)
+ */
+router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
+  const { confirm } = req.body;
+
+  if (confirm !== 'RESET_ALL_DATA_AND_SCHEMA') {
+    return res.status(400).json({
+      error: 'Confirmación requerida',
+      hint: 'Enviar body: { "confirm": "RESET_ALL_DATA_AND_SCHEMA" }'
+    });
+  }
+
+  try {
+    console.log('💣 [RESET-SCHEMA] Iniciando reset completo...');
+    const startTime = Date.now();
+
+    // 1. Dropear todas las vistas primero
+    console.log('  🔧 Dropeando vistas...');
+    const [views] = await sequelize.query(`
+      SELECT viewname FROM pg_views WHERE schemaname = 'public'
+    `);
+    for (const view of views) {
+      try {
+        await sequelize.query(`DROP VIEW IF EXISTS "${view.viewname}" CASCADE`);
+        console.log(`    ✅ Vista ${view.viewname} dropeada`);
+      } catch (e) {
+        console.log(`    ⚠️ Vista ${view.viewname}: ${e.message}`);
+      }
+    }
+
+    // 2. Dropear todas las tablas
+    console.log('  🔧 Dropeando tablas...');
+    await sequelize.query(`
+      DO $$ DECLARE
+        r RECORD;
+      BEGIN
+        FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+          EXECUTE 'DROP TABLE IF EXISTS "' || r.tablename || '" CASCADE';
+        END LOOP;
+      END $$;
+    `);
+    console.log('    ✅ Todas las tablas dropeadas');
+
+    // 3. Dropear tipos ENUM
+    console.log('  🔧 Dropeando tipos ENUM...');
+    const [enums] = await sequelize.query(`
+      SELECT typname FROM pg_type WHERE typtype = 'e'
+    `);
+    for (const enumType of enums) {
+      try {
+        await sequelize.query(`DROP TYPE IF EXISTS "${enumType.typname}" CASCADE`);
+      } catch (e) {}
+    }
+    console.log(`    ✅ ${enums.length} tipos ENUM dropeados`);
+
+    // 4. Recrear esquema con Sequelize
+    console.log('  🔧 Recreando esquema con sequelize.sync({ force: true })...');
+    await sequelize.sync({ force: true });
+    console.log('    ✅ Esquema recreado');
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`✅ [RESET-SCHEMA] Completado en ${duration}s`);
+
+    res.json({
+      success: true,
+      message: `Esquema reseteado y recreado en ${duration} segundos`,
+      warning: 'TODOS los datos fueron eliminados. El esquema ahora es idéntico al local.'
+    });
+
+  } catch (error) {
+    console.error('❌ [RESET-SCHEMA] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
