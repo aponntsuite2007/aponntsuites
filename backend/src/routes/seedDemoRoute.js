@@ -2432,4 +2432,79 @@ router.post('/test-email', async (req, res) => {
     }
 });
 
+// GET /api/seed-demo/check-data - Ver datos de tablas de email
+router.get('/check-data', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        const results = {};
+
+        // 1. email_process_mapping
+        const [mappings] = await sequelize.query(`
+            SELECT * FROM email_process_mapping ORDER BY id LIMIT 20
+        `);
+        results.email_process_mapping = mappings;
+
+        // 2. aponnt_email_config
+        const [configs] = await sequelize.query(`
+            SELECT id, email_type, from_email, from_name, smtp_host, smtp_port,
+                   is_active, test_status, LENGTH(smtp_password) as pwd_length
+            FROM aponnt_email_config ORDER BY id
+        `);
+        results.aponnt_email_config = configs;
+
+        // 3. marketing_leads count
+        const [leads] = await sequelize.query(`
+            SELECT COUNT(*) as count FROM marketing_leads
+        `);
+        results.marketing_leads_count = leads[0].count;
+
+        res.json({ success: true, data: results });
+    } catch (error) {
+        res.status(500).json({ error: error.message, stack: error.stack });
+    }
+});
+
+// GET /api/seed-demo/fix-email-mapping - Importar email_process_mapping desde local
+router.get('/fix-email-mapping', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        // Mappings esenciales para marketing
+        const mappings = [
+            { process_key: 'sales.commercial', process_name: 'Ventas - Comunicaciones comerciales', module: 'marketing', email_type: 'commercial', priority: 'normal' },
+            { process_key: 'sales.flyer', process_name: 'Ventas - Envío de flyers', module: 'marketing', email_type: 'commercial', priority: 'normal' },
+            { process_key: 'sales.lead_notification', process_name: 'Ventas - Notificación de nuevo lead', module: 'marketing', email_type: 'commercial', priority: 'high' },
+            { process_key: 'auth.password_reset', process_name: 'Autenticación - Reset de contraseña', module: 'auth', email_type: 'transactional', priority: 'high' },
+            { process_key: 'auth.welcome', process_name: 'Autenticación - Bienvenida', module: 'auth', email_type: 'transactional', priority: 'normal' },
+            { process_key: 'notifications.alert', process_name: 'Notificaciones - Alertas', module: 'notifications', email_type: 'transactional', priority: 'high' },
+            { process_key: 'notifications.reminder', process_name: 'Notificaciones - Recordatorios', module: 'notifications', email_type: 'transactional', priority: 'normal' }
+        ];
+
+        let inserted = 0;
+        for (const m of mappings) {
+            try {
+                await sequelize.query(`
+                    INSERT INTO email_process_mapping (process_key, process_name, module, email_type, priority, is_active, created_at, updated_at)
+                    VALUES (:process_key, :process_name, :module, :email_type, :priority, true, NOW(), NOW())
+                    ON CONFLICT (process_key) DO NOTHING
+                `, { replacements: m });
+                inserted++;
+            } catch (e) {
+                // Ignore duplicate
+            }
+        }
+
+        res.json({ success: true, inserted, total: mappings.length });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
