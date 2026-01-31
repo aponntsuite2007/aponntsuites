@@ -404,54 +404,38 @@ router.post('/force', requireCleanupAuth, async (req, res) => {
 });
 
 /**
- * POST /api/cleanup/fix-schema
- * Arreglar columnas faltantes en producción
+ * POST /api/cleanup/sync-schema
+ * Sincronizar esquema de BD con modelos Sequelize (⚠️ USAR CON CUIDADO)
  */
-router.post('/fix-schema', requireCleanupAuth, async (req, res) => {
+router.post('/sync-schema', requireCleanupAuth, async (req, res) => {
+  const { confirm } = req.body;
+
+  if (confirm !== 'SYNC_ALL_TABLES') {
+    return res.status(400).json({
+      error: 'Confirmación requerida',
+      hint: 'Enviar body: { "confirm": "SYNC_ALL_TABLES" }'
+    });
+  }
+
   try {
-    console.log('🔧 [SCHEMA-FIX] Iniciando corrección de esquema...');
-    const results = { fixed: [], errors: [] };
+    console.log('🔄 [SYNC-SCHEMA] Iniciando sincronización de esquema...');
+    const startTime = Date.now();
 
-    // Lista de columnas a verificar/agregar
-    const schemaFixes = [
-      {
-        table: 'aponnt_staff',
-        column: 'username',
-        sql: `ALTER TABLE aponnt_staff ADD COLUMN IF NOT EXISTS username VARCHAR(100) UNIQUE`
-      },
-      {
-        table: 'aponnt_staff',
-        column: 'first_login',
-        sql: `ALTER TABLE aponnt_staff ADD COLUMN IF NOT EXISTS first_login BOOLEAN DEFAULT true`
-      },
-      {
-        table: 'aponnt_staff',
-        column: 'biometric_enabled',
-        sql: `ALTER TABLE aponnt_staff ADD COLUMN IF NOT EXISTS biometric_enabled BOOLEAN DEFAULT false`
-      },
-      {
-        table: 'aponnt_staff',
-        column: 'profile_photo',
-        sql: `ALTER TABLE aponnt_staff ADD COLUMN IF NOT EXISTS profile_photo VARCHAR(500)`
-      }
-    ];
+    // Sincronizar todas las tablas con alter: true
+    // Esto agrega columnas faltantes pero NO elimina columnas existentes
+    await sequelize.sync({ alter: true });
 
-    for (const fix of schemaFixes) {
-      try {
-        await sequelize.query(fix.sql);
-        results.fixed.push(`${fix.table}.${fix.column}`);
-        console.log(`  ✅ ${fix.table}.${fix.column} agregada/verificada`);
-      } catch (e) {
-        results.errors.push({ column: `${fix.table}.${fix.column}`, error: e.message });
-        console.log(`  ⚠️ ${fix.table}.${fix.column}: ${e.message}`);
-      }
-    }
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`✅ [SYNC-SCHEMA] Sincronización completada en ${duration}s`);
 
-    console.log('✅ [SCHEMA-FIX] Corrección completada');
-    res.json({ success: true, results });
+    res.json({
+      success: true,
+      message: `Esquema sincronizado con modelos en ${duration} segundos`,
+      warning: 'Las tablas ahora coinciden con los modelos Sequelize'
+    });
 
   } catch (error) {
-    console.error('❌ [SCHEMA-FIX] Error:', error);
+    console.error('❌ [SYNC-SCHEMA] Error:', error);
     res.status(500).json({ error: error.message });
   }
 });
