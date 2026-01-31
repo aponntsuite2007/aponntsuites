@@ -351,6 +351,8 @@ router.post('/force', requireCleanupAuth, async (req, res) => {
       { name: 'company_modules', sql: `DELETE FROM company_modules WHERE company_id != ${keepId}` },
       { name: 'company_tasks', sql: `DELETE FROM company_tasks WHERE company_id != ${keepId}` },
       { name: 'trainings', sql: `DELETE FROM trainings WHERE company_id != ${keepId}` },
+      { name: 'payroll_run_items', sql: `DELETE FROM payroll_run_items WHERE payroll_run_id IN (SELECT id FROM payroll_runs WHERE company_id != ${keepId})` },
+      { name: 'payroll_runs', sql: `DELETE FROM payroll_runs WHERE company_id != ${keepId}` },
       // Usuarios, departamentos, empresas
       { name: 'users', sql: `DELETE FROM users WHERE company_id != ${keepId}` },
       { name: 'departments', sql: `DELETE FROM departments WHERE company_id != ${keepId}` },
