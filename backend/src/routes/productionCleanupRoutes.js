@@ -736,10 +736,22 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
       console.log('    ✅ postgis');
     } catch (e) { console.log('    ⚠️ postgis:', e.message); }
 
-    // 6. Recrear esquema con Sequelize
-    console.log('  🔧 Recreando esquema con sequelize.sync({ force: true })...');
-    await sequelize.sync({ force: true });
-    console.log('    ✅ Esquema recreado');
+    // 6. Recrear esquema modelo por modelo (ignorar errores de índices)
+    console.log('  🔧 Recreando esquema modelo por modelo...');
+    const models = Object.keys(sequelize.models);
+    let syncedCount = 0;
+    const syncErrors = [];
+
+    for (const modelName of models) {
+      try {
+        const model = sequelize.models[modelName];
+        await model.sync({ force: true });
+        syncedCount++;
+      } catch (e) {
+        syncErrors.push({ model: modelName, error: e.message.substring(0, 100) });
+      }
+    }
+    console.log(`    ✅ ${syncedCount}/${models.length} modelos sincronizados`);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`✅ [RESET-SCHEMA] Completado en ${duration}s`);
@@ -751,7 +763,10 @@ router.post('/reset-schema', requireCleanupAuth, async (req, res) => {
         viewsDropped: views.length,
         tablesDropped: droppedCount,
         enumsDropped: enums.length,
-        sequencesDropped: sequences.length
+        sequencesDropped: sequences.length,
+        modelsSynced: syncedCount,
+        modelsTotal: models.length,
+        syncErrors: syncErrors.length > 0 ? syncErrors : undefined
       },
       warning: 'TODOS los datos fueron eliminados. El esquema ahora es idéntico al local.'
     });
