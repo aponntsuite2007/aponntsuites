@@ -2175,8 +2175,8 @@ router.post('/import-data', async (req, res) => {
             for (const ec of aponnt_email_config) {
                 try {
                     await sequelize.query(`
-                        INSERT INTO aponnt_email_config (id, email_type, from_email, from_name, reply_to, smtp_host, smtp_port, smtp_user, smtp_password, smtp_secure, is_active, icon, color, description, created_at, updated_at)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                        INSERT INTO aponnt_email_config (id, email_type, from_email, from_name, reply_to, smtp_host, smtp_port, smtp_user, smtp_password, smtp_secure, is_active, icon, color, description, test_status, created_at, updated_at)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                         ON CONFLICT (id) DO UPDATE SET
                             email_type = EXCLUDED.email_type,
                             from_email = EXCLUDED.from_email,
@@ -2191,12 +2191,13 @@ router.post('/import-data', async (req, res) => {
                             icon = EXCLUDED.icon,
                             color = EXCLUDED.color,
                             description = EXCLUDED.description,
+                            test_status = EXCLUDED.test_status,
                             updated_at = NOW()
                     `, {
                         bind: [
                             ec.id, ec.email_type, ec.from_email, ec.from_name, ec.reply_to,
                             ec.smtp_host, ec.smtp_port, ec.smtp_user, ec.smtp_password, ec.smtp_secure,
-                            ec.is_active, ec.icon, ec.color, ec.description,
+                            ec.is_active, ec.icon, ec.color, ec.description, ec.test_status || 'success',
                             ec.created_at || new Date(), ec.updated_at || new Date()
                         ]
                     });
