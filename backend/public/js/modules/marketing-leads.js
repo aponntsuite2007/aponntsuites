@@ -18,9 +18,10 @@ const MarketingLeadsModule = {
         view: 'list' // list, form, stats
     },
 
-    // Token de autenticaci\u00f3n
+    // Token de autenticación
     getToken() {
         return localStorage.getItem('aponnt_token_staff') ||
+               localStorage.getItem('token') ||
                sessionStorage.getItem('aponnt_token_staff');
     },
 
