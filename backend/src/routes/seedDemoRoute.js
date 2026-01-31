@@ -2253,4 +2253,67 @@ router.post('/import-data', async (req, res) => {
     }
 });
 
+// GET /api/seed-demo/check-email-config?key=SECRET - Verificar configuración de email
+router.get('/check-email-config', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        const [emailConfigs] = await sequelize.query(`
+            SELECT id, email_type, from_email, is_active, test_status, smtp_user
+            FROM aponnt_email_config
+            WHERE email_type = 'commercial'
+        `);
+
+        const [allConfigs] = await sequelize.query(`
+            SELECT id, email_type, from_email, is_active, test_status
+            FROM aponnt_email_config
+            ORDER BY id
+        `);
+
+        res.json({
+            success: true,
+            commercial_configs: emailConfigs,
+            all_configs_count: allConfigs.length,
+            all_configs: allConfigs
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/seed-demo/fix-commercial-email?key=SECRET - Forzar fix del email commercial
+router.post('/fix-commercial-email', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        // Actualizar directamente el email commercial
+        await sequelize.query(`
+            UPDATE aponnt_email_config
+            SET is_active = true, test_status = 'success'
+            WHERE email_type = 'commercial'
+        `);
+
+        // Verificar
+        const [result] = await sequelize.query(`
+            SELECT id, email_type, from_email, is_active, test_status
+            FROM aponnt_email_config
+            WHERE email_type = 'commercial'
+        `);
+
+        res.json({
+            success: true,
+            message: 'Email commercial actualizado',
+            result: result
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
