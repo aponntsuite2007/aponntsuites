@@ -4437,6 +4437,79 @@ async function startServer() {
       console.warn('⚠️  [NOTIF-CRON] El servidor continuará sin cron jobs de notificaciones.\n');
     }
 
+    // AUTO-INIT: Crear admin de Aponnt si no existe (PRODUCCIÓN)
+    try {
+      const bcryptInit = require('bcrypt');
+      const { QueryTypes } = require('sequelize');
+
+      // Verificar si hay admin
+      const [existingAdmin] = await database.sequelize.query(
+        `SELECT staff_id FROM aponnt_staff WHERE email = 'admin@aponnt.com' LIMIT 1`,
+        { type: QueryTypes.SELECT }
+      );
+
+      if (!existingAdmin) {
+        console.log('🔧 [AUTO-INIT] Creando admin inicial de Aponnt...');
+
+        // Buscar o crear rol
+        let roleId = null;
+        const [existingRole] = await database.sequelize.query(
+          `SELECT role_id FROM aponnt_staff_roles WHERE role_code = 'SUPERADMIN' OR level = 0 LIMIT 1`,
+          { type: QueryTypes.SELECT }
+        );
+
+        if (existingRole) {
+          roleId = existingRole.role_id;
+        } else {
+          // Ver columnas del rol
+          const [roleColumns] = await database.sequelize.query(
+            `SELECT column_name FROM information_schema.columns WHERE table_name = 'aponnt_staff_roles'`
+          );
+          const hasRoleArea = roleColumns.some(c => c.column_name === 'role_area');
+
+          const insertRoleSQL = hasRoleArea
+            ? `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, permissions, is_active, created_at, updated_at)
+               VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW())
+               RETURNING role_id`
+            : `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, permissions, is_active, created_at, updated_at)
+               VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, '{"all": true}'::jsonb, true, NOW(), NOW())
+               RETURNING role_id`;
+
+          const [newRole] = await database.sequelize.query(insertRoleSQL, { type: QueryTypes.SELECT });
+          roleId = newRole?.role_id;
+
+          if (!roleId) {
+            const [created] = await database.sequelize.query(
+              `SELECT role_id FROM aponnt_staff_roles WHERE role_code = 'SUPERADMIN' LIMIT 1`,
+              { type: QueryTypes.SELECT }
+            );
+            roleId = created?.role_id;
+          }
+        }
+
+        if (roleId) {
+          const hashedPassword = await bcryptInit.hash('admin123', 10);
+
+          // Ver columnas del staff
+          const [staffColumns] = await database.sequelize.query(
+            `SELECT column_name FROM information_schema.columns WHERE table_name = 'aponnt_staff'`
+          );
+          const hasArea = staffColumns.some(c => c.column_name === 'area');
+
+          const insertStaffSQL = hasArea
+            ? `INSERT INTO aponnt_staff (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, area, created_at, updated_at)
+               VALUES (gen_random_uuid(), 'PABLO', 'RIVAS JORDAN', 'admin@aponnt.com', 'admin', '22062075', $1, true, $2, 'AR', 0, 'direccion', NOW(), NOW())`
+            : `INSERT INTO aponnt_staff (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, created_at, updated_at)
+               VALUES (gen_random_uuid(), 'PABLO', 'RIVAS JORDAN', 'admin@aponnt.com', 'admin', '22062075', $1, true, $2, 'AR', 0, NOW(), NOW())`;
+
+          await database.sequelize.query(insertStaffSQL, { bind: [hashedPassword, roleId] });
+          console.log('✅ [AUTO-INIT] Admin creado: admin@aponnt.com / admin123');
+        }
+      }
+    } catch (autoInitError) {
+      console.warn('⚠️  [AUTO-INIT] Error creando admin inicial:', autoInitError.message);
+    }
+
     // Iniciar servidor HTTP
     server.listen(PORT, HOST, () => {
       console.log(`
