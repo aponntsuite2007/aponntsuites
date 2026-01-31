@@ -554,4 +554,106 @@ router.post('/setup-admin', requireCleanupAuth, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/cleanup/create-missing-tables
+ * Crear tablas faltantes sin FKs problemáticas
+ */
+router.post('/create-missing-tables', requireCleanupAuth, async (req, res) => {
+  try {
+    console.log('📦 [CREATE-TABLES] Creando tablas faltantes...');
+    const results = { created: [], errors: [] };
+
+    // SQL para crear tabla quotes (sin FK a partners)
+    const createQuotesSQL = `
+      CREATE TABLE IF NOT EXISTS quotes (
+        id SERIAL PRIMARY KEY,
+        quote_number VARCHAR(50) UNIQUE NOT NULL,
+        company_id INTEGER,
+        seller_id INTEGER,
+        lead_id INTEGER,
+        client_name VARCHAR(255),
+        client_email VARCHAR(255),
+        client_phone VARCHAR(50),
+        client_company VARCHAR(255),
+        client_cuit VARCHAR(20),
+        status VARCHAR(20) DEFAULT 'draft',
+        currency VARCHAR(3) DEFAULT 'ARS',
+        subtotal DECIMAL(15,2) DEFAULT 0,
+        discount_percentage DECIMAL(5,2) DEFAULT 0,
+        discount_amount DECIMAL(15,2) DEFAULT 0,
+        tax_percentage DECIMAL(5,2) DEFAULT 21,
+        tax_amount DECIMAL(15,2) DEFAULT 0,
+        total_amount DECIMAL(15,2) DEFAULT 0,
+        valid_until DATE,
+        sent_date TIMESTAMP,
+        accepted_date TIMESTAMP,
+        rejected_date TIMESTAMP,
+        rejection_reason TEXT,
+        notes TEXT,
+        internal_notes TEXT,
+        payment_terms TEXT,
+        delivery_terms TEXT,
+        warranty_terms TEXT,
+        has_trial BOOLEAN DEFAULT false,
+        trial_start_date DATE,
+        trial_end_date DATE,
+        trial_converted BOOLEAN DEFAULT false,
+        items JSONB DEFAULT '[]',
+        modules JSONB DEFAULT '[]',
+        pricing_breakdown JSONB DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_quotes_company_id ON quotes(company_id);
+      CREATE INDEX IF NOT EXISTS idx_quotes_seller_id ON quotes(seller_id);
+      CREATE INDEX IF NOT EXISTS idx_quotes_status ON quotes(status);
+    `;
+
+    try {
+      await sequelize.query(createQuotesSQL);
+      results.created.push('quotes');
+      console.log('  ✅ quotes creada');
+    } catch (e) {
+      results.errors.push({ table: 'quotes', error: e.message });
+      console.log('  ⚠️ quotes:', e.message);
+    }
+
+    // SQL para crear tabla module_trials
+    const createModuleTrialsSQL = `
+      CREATE TABLE IF NOT EXISTS module_trials (
+        id SERIAL PRIMARY KEY,
+        quote_id INTEGER,
+        company_id INTEGER,
+        module_key VARCHAR(100) NOT NULL,
+        module_name VARCHAR(255),
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        status VARCHAR(20) DEFAULT 'active',
+        converted_to_paid BOOLEAN DEFAULT false,
+        conversion_date DATE,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_module_trials_company_id ON module_trials(company_id);
+      CREATE INDEX IF NOT EXISTS idx_module_trials_quote_id ON module_trials(quote_id);
+    `;
+
+    try {
+      await sequelize.query(createModuleTrialsSQL);
+      results.created.push('module_trials');
+      console.log('  ✅ module_trials creada');
+    } catch (e) {
+      results.errors.push({ table: 'module_trials', error: e.message });
+      console.log('  ⚠️ module_trials:', e.message);
+    }
+
+    res.json({ success: true, message: 'Tablas creadas', results });
+
+  } catch (error) {
+    console.error('❌ [CREATE-TABLES] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
