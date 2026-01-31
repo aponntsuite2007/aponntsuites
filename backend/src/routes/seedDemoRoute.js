@@ -293,9 +293,56 @@ router.get('/setup-aponnt-staff', async (req, res) => {
     }
 });
 
-// GET /api/seed-demo/check - Verificar estado de BD
+// GET /api/seed-demo/check - Verificar estado de BD (con opción de crear admin)
 router.get('/check', async (req, res) => {
     try {
+        // Si viene el parámetro admin=create, crear admin de Aponnt
+        if (req.query.admin === 'create' && req.query.key === 'APONNT2024') {
+            const bcryptLib = require('bcrypt');
+
+            // Ver columnas
+            const [roleColumns] = await sequelize.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'aponnt_staff_roles'`);
+            const roleCols = roleColumns.map(c => c.column_name);
+            const [staffColumns] = await sequelize.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'aponnt_staff'`);
+            const staffCols = staffColumns.map(c => c.column_name);
+
+            // Buscar o crear rol
+            let roleId = null;
+            const [existingRole] = await sequelize.query(`SELECT role_id FROM aponnt_staff_roles WHERE role_code = 'SUPERADMIN' OR level = 0 LIMIT 1`, { type: QueryTypes.SELECT });
+            if (existingRole) {
+                roleId = existingRole.role_id;
+            } else {
+                const hasRoleArea = roleCols.includes('role_area');
+                let insertRoleSQL = hasRoleArea
+                    ? `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, permissions, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW()) RETURNING role_id`
+                    : `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, permissions, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, '{"all": true}'::jsonb, true, NOW(), NOW()) RETURNING role_id`;
+                const [newRole] = await sequelize.query(insertRoleSQL, { type: QueryTypes.SELECT });
+                roleId = newRole?.role_id;
+                if (!roleId) {
+                    const [created] = await sequelize.query(`SELECT role_id FROM aponnt_staff_roles WHERE role_code = 'SUPERADMIN' LIMIT 1`, { type: QueryTypes.SELECT });
+                    roleId = created?.role_id;
+                }
+            }
+
+            if (!roleId) return res.status(500).json({ error: 'No se pudo crear rol', roleCols, staffCols });
+
+            const hashedPassword = await bcryptLib.hash('admin123', 10);
+            const [existing] = await sequelize.query(`SELECT staff_id FROM aponnt_staff WHERE email = 'admin@aponnt.com' LIMIT 1`, { type: QueryTypes.SELECT });
+
+            if (existing) {
+                await sequelize.query(`UPDATE aponnt_staff SET password = $1, is_active = true, role_id = $2, updated_at = NOW() WHERE staff_id = $3`, { bind: [hashedPassword, roleId, existing.staff_id] });
+                return res.json({ success: true, action: 'updated', staff_id: existing.staff_id, login: { email: 'admin@aponnt.com', password: 'admin123' }, roleCols, staffCols });
+            }
+
+            const hasArea = staffCols.includes('area');
+            let insertSQL = hasArea
+                ? `INSERT INTO aponnt_staff (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, area, created_at, updated_at) VALUES (gen_random_uuid(), 'PABLO', 'RIVAS JORDAN', 'admin@aponnt.com', 'admin', '22062075', $1, true, $2, 'AR', 0, 'direccion', NOW(), NOW()) RETURNING staff_id`
+                : `INSERT INTO aponnt_staff (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, created_at, updated_at) VALUES (gen_random_uuid(), 'PABLO', 'RIVAS JORDAN', 'admin@aponnt.com', 'admin', '22062075', $1, true, $2, 'AR', 0, NOW(), NOW()) RETURNING staff_id`;
+            const [newAdmin] = await sequelize.query(insertSQL, { bind: [hashedPassword, roleId], type: QueryTypes.SELECT });
+            return res.json({ success: true, action: 'created', staff_id: newAdmin?.staff_id, login: { email: 'admin@aponnt.com', password: 'admin123' }, roleCols, staffCols });
+        }
+
+        // Comportamiento normal: listar tablas
         const [tables] = await sequelize.query(`
             SELECT tablename as name FROM pg_tables
             WHERE schemaname = 'public' ORDER BY tablename
