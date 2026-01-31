@@ -403,4 +403,57 @@ router.post('/force', requireCleanupAuth, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/cleanup/fix-schema
+ * Arreglar columnas faltantes en producción
+ */
+router.post('/fix-schema', requireCleanupAuth, async (req, res) => {
+  try {
+    console.log('🔧 [SCHEMA-FIX] Iniciando corrección de esquema...');
+    const results = { fixed: [], errors: [] };
+
+    // Lista de columnas a verificar/agregar
+    const schemaFixes = [
+      {
+        table: 'aponnt_staff',
+        column: 'username',
+        sql: `ALTER TABLE aponnt_staff ADD COLUMN IF NOT EXISTS username VARCHAR(100) UNIQUE`
+      },
+      {
+        table: 'aponnt_staff',
+        column: 'first_login',
+        sql: `ALTER TABLE aponnt_staff ADD COLUMN IF NOT EXISTS first_login BOOLEAN DEFAULT true`
+      },
+      {
+        table: 'aponnt_staff',
+        column: 'biometric_enabled',
+        sql: `ALTER TABLE aponnt_staff ADD COLUMN IF NOT EXISTS biometric_enabled BOOLEAN DEFAULT false`
+      },
+      {
+        table: 'aponnt_staff',
+        column: 'profile_photo',
+        sql: `ALTER TABLE aponnt_staff ADD COLUMN IF NOT EXISTS profile_photo VARCHAR(500)`
+      }
+    ];
+
+    for (const fix of schemaFixes) {
+      try {
+        await sequelize.query(fix.sql);
+        results.fixed.push(`${fix.table}.${fix.column}`);
+        console.log(`  ✅ ${fix.table}.${fix.column} agregada/verificada`);
+      } catch (e) {
+        results.errors.push({ column: `${fix.table}.${fix.column}`, error: e.message });
+        console.log(`  ⚠️ ${fix.table}.${fix.column}: ${e.message}`);
+      }
+    }
+
+    console.log('✅ [SCHEMA-FIX] Corrección completada');
+    res.json({ success: true, results });
+
+  } catch (error) {
+    console.error('❌ [SCHEMA-FIX] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
