@@ -312,18 +312,18 @@ router.get('/check', async (req, res) => {
             if (existingRole) {
                 roleId = existingRole.role_id;
             } else {
-                const hasRoleArea = roleCols.includes('role_area');
-                const hasPermissions = roleCols.includes('permissions');
-                let insertRoleSQL;
-                if (hasRoleArea && hasPermissions) {
-                    insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, permissions, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', '{"all": true}'::jsonb, true, NOW(), NOW()) RETURNING role_id`;
-                } else if (hasRoleArea) {
-                    insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, role_area, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, 'direccion', true, NOW(), NOW()) RETURNING role_id`;
-                } else if (hasPermissions) {
-                    insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, permissions, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, '{"all": true}'::jsonb, true, NOW(), NOW()) RETURNING role_id`;
-                } else {
-                    insertRoleSQL = `INSERT INTO aponnt_staff_roles (role_id, role_name, role_code, description, level, is_active, created_at, updated_at) VALUES (gen_random_uuid(), 'Super Administrador', 'SUPERADMIN', 'Control total', 0, true, NOW(), NOW()) RETURNING role_id`;
-                }
+                // Construir INSERT dinámico basado en columnas existentes
+                const cols = ['role_id', 'role_name', 'role_code'];
+                const vals = ["gen_random_uuid()", "'Super Administrador'", "'SUPERADMIN'"];
+                if (roleCols.includes('description')) { cols.push('description'); vals.push("'Control total'"); }
+                if (roleCols.includes('level')) { cols.push('level'); vals.push('0'); }
+                if (roleCols.includes('role_area')) { cols.push('role_area'); vals.push("'direccion'"); }
+                if (roleCols.includes('area')) { cols.push('area'); vals.push("'direccion'"); }
+                if (roleCols.includes('permissions')) { cols.push('permissions'); vals.push("'{\"all\": true}'::jsonb"); }
+                if (roleCols.includes('is_active')) { cols.push('is_active'); vals.push('true'); }
+                if (roleCols.includes('created_at')) { cols.push('created_at'); vals.push('NOW()'); }
+                if (roleCols.includes('updated_at')) { cols.push('updated_at'); vals.push('NOW()'); }
+                const insertRoleSQL = `INSERT INTO aponnt_staff_roles (${cols.join(', ')}) VALUES (${vals.join(', ')}) RETURNING role_id`;
                 const [newRole] = await sequelize.query(insertRoleSQL, { type: QueryTypes.SELECT });
                 roleId = newRole?.role_id;
                 if (!roleId) {
@@ -338,14 +338,25 @@ router.get('/check', async (req, res) => {
             const [existing] = await sequelize.query(`SELECT staff_id FROM aponnt_staff WHERE email = 'admin@aponnt.com' LIMIT 1`, { type: QueryTypes.SELECT });
 
             if (existing) {
-                await sequelize.query(`UPDATE aponnt_staff SET password = $1, is_active = true, role_id = $2, updated_at = NOW() WHERE staff_id = $3`, { bind: [hashedPassword, roleId, existing.staff_id] });
+                const updates = ['password = $1', 'role_id = $2'];
+                if (staffCols.includes('is_active')) updates.push('is_active = true');
+                if (staffCols.includes('updated_at')) updates.push('updated_at = NOW()');
+                await sequelize.query(`UPDATE aponnt_staff SET ${updates.join(', ')} WHERE staff_id = $3`, { bind: [hashedPassword, roleId, existing.staff_id] });
                 return res.json({ success: true, action: 'updated', staff_id: existing.staff_id, login: { email: 'admin@aponnt.com', password: 'admin123' }, roleCols, staffCols });
             }
 
-            const hasArea = staffCols.includes('area');
-            let insertSQL = hasArea
-                ? `INSERT INTO aponnt_staff (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, area, created_at, updated_at) VALUES (gen_random_uuid(), 'PABLO', 'RIVAS JORDAN', 'admin@aponnt.com', 'admin', '22062075', $1, true, $2, 'AR', 0, 'direccion', NOW(), NOW()) RETURNING staff_id`
-                : `INSERT INTO aponnt_staff (staff_id, first_name, last_name, email, username, dni, password, is_active, role_id, country, level, created_at, updated_at) VALUES (gen_random_uuid(), 'PABLO', 'RIVAS JORDAN', 'admin@aponnt.com', 'admin', '22062075', $1, true, $2, 'AR', 0, NOW(), NOW()) RETURNING staff_id`;
+            // Construir INSERT dinámico para staff
+            const sCols = ['staff_id', 'first_name', 'last_name', 'email', 'password', 'role_id'];
+            const sVals = ["gen_random_uuid()", "'PABLO'", "'RIVAS JORDAN'", "'admin@aponnt.com'", '$1', '$2'];
+            if (staffCols.includes('username')) { sCols.push('username'); sVals.push("'admin'"); }
+            if (staffCols.includes('dni')) { sCols.push('dni'); sVals.push("'22062075'"); }
+            if (staffCols.includes('is_active')) { sCols.push('is_active'); sVals.push('true'); }
+            if (staffCols.includes('country')) { sCols.push('country'); sVals.push("'AR'"); }
+            if (staffCols.includes('level')) { sCols.push('level'); sVals.push('0'); }
+            if (staffCols.includes('area')) { sCols.push('area'); sVals.push("'direccion'"); }
+            if (staffCols.includes('created_at')) { sCols.push('created_at'); sVals.push('NOW()'); }
+            if (staffCols.includes('updated_at')) { sCols.push('updated_at'); sVals.push('NOW()'); }
+            const insertSQL = `INSERT INTO aponnt_staff (${sCols.join(', ')}) VALUES (${sVals.join(', ')}) RETURNING staff_id`;
             const [newAdmin] = await sequelize.query(insertSQL, { bind: [hashedPassword, roleId], type: QueryTypes.SELECT });
             return res.json({ success: true, action: 'created', staff_id: newAdmin?.staff_id, login: { email: 'admin@aponnt.com', password: 'admin123' }, roleCols, staffCols });
         }
