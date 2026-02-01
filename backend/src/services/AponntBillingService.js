@@ -183,13 +183,12 @@ class AponntBillingService {
             }
         );
 
-        // Actualizar tarea administrativa
+        // Actualizar tarea administrativa (completed_by es TEXT para soportar UUID)
         await sequelize.query(
             `UPDATE aponnt_admin_tasks
              SET status = 'COMPLETED',
                  completed_at = NOW(),
-                 completed_by = $2,
-                 completion_notes = 'Pre-factura aprobada'
+                 completion_notes = 'Pre-factura aprobada por staff ' || $2::TEXT
              WHERE entity_type = 'pre_invoice' AND entity_id = $1 AND status = 'PENDING'`,
             {
                 bind: [preInvoiceId, approvedBy],
@@ -204,12 +203,12 @@ class AponntBillingService {
      * Rechaza una pre-factura
      */
     static async rejectPreInvoice(preInvoiceId, reason, rejectedBy) {
+        // rejected_by es INTEGER pero staff_id es UUID, guardamos en rejection_reason
         await sequelize.query(
             `UPDATE aponnt_pre_invoices
              SET status = 'REJECTED',
-                 rejection_reason = $2,
+                 rejection_reason = $2 || ' (por staff: ' || $3::TEXT || ')',
                  rejected_at = NOW(),
-                 rejected_by = $3,
                  updated_at = NOW()
              WHERE id = $1`,
             {
@@ -223,8 +222,7 @@ class AponntBillingService {
             `UPDATE aponnt_admin_tasks
              SET status = 'COMPLETED',
                  completed_at = NOW(),
-                 completed_by = $3,
-                 completion_notes = 'Pre-factura rechazada: ' || $2
+                 completion_notes = 'Pre-factura rechazada por staff ' || $3::TEXT || ': ' || $2
              WHERE entity_type = 'pre_invoice' AND entity_id = $1`,
             {
                 bind: [preInvoiceId, reason, rejectedBy],
