@@ -53,10 +53,12 @@ const requireAponntStaff = (req, res, next) => {
             lastName: decoded.lastName || decoded.last_name,
             area: decoded.area,
             level: decoded.level || 1,
-            role: decoded.area || 'staff',
-            role_code: decoded.area,
+            role: decoded.role || decoded.area || 'staff',
+            role_code: decoded.role || decoded.area,
             permissions: decoded.permissions || []
         };
+
+        console.log('🔐 [APONNT-BILLING] Staff autenticado:', decoded.email, '- Role:', req.user.role_code, '- Level:', req.user.level);
 
         next();
     } catch (error) {
@@ -79,18 +81,28 @@ const requireRole = (allowedRoles) => {
         const userRole = req.user?.role_code || req.user?.role || req.user?.area || 'viewer';
         const userLevel = req.user?.level || 0;
 
+        console.log('🔐 [REQUIRE-ROLE] Verificando permisos:');
+        console.log('   - User role:', userRole);
+        console.log('   - User level:', userLevel);
+        console.log('   - Required roles:', allowedRoles);
+
         // Level 5+ (admin) tiene todos los permisos
         if (userLevel >= 5 || userRole === 'admin' || userRole === 'GG') {
+            console.log('   ✅ Acceso permitido (nivel 5+ o admin/GG)');
             return next();
         }
 
         if (!allowedRoles.includes(userRole)) {
+            console.log('   ❌ Acceso denegado - rol no permitido');
             return res.status(403).json({
                 success: false,
                 error: 'No tienes permisos para esta acción',
-                requiredRoles: allowedRoles
+                requiredRoles: allowedRoles,
+                yourRole: userRole,
+                yourLevel: userLevel
             });
         }
+        console.log('   ✅ Acceso permitido (rol en lista)');
         next();
     };
 };
