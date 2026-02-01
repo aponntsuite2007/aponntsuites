@@ -393,10 +393,25 @@ class QuoteManagementService {
 
       await transaction.commit();
 
-      // Si se activó directamente (sin trial), disparar onboarding
-      if (!quote.has_trial) {
+      // ═══════════════════════════════════════════════════════════
+      // ACTIVAR EMPRESA AUTOMÁTICAMENTE (trial o no trial)
+      // ═══════════════════════════════════════════════════════════
+      const OnboardingService = require('./OnboardingService');
+      let activationResult = null;
+
+      if (quote.has_trial) {
+        // Con trial: activar empresa en modo trial
         try {
-          await require('./OnboardingService').initiateFromQuote(quote);
+          activationResult = await OnboardingService.activateCompanyForTrial(quote.id);
+          console.log(`🏢 [QUOTE SERVICE] Empresa activada en modo TRIAL para quote ${quote.quote_number}`);
+        } catch (activationErr) {
+          console.warn(`⚠️ [QUOTE SERVICE] Activación trial falló (no bloqueante): ${activationErr.message}`);
+        }
+      } else {
+        // Sin trial: activar empresa directamente
+        try {
+          activationResult = await OnboardingService.initiateFromQuote(quote);
+          console.log(`🏢 [QUOTE SERVICE] Empresa activada directamente para quote ${quote.quote_number}`);
         } catch (onboardingErr) {
           console.warn(`⚠️ [QUOTE SERVICE] Onboarding post-aceptación falló (no bloqueante): ${onboardingErr.message}`);
         }
@@ -409,9 +424,10 @@ class QuoteManagementService {
         success: true,
         quote,
         trials: createdTrials,
+        activation: activationResult,
         message: quote.has_trial
-          ? `Presupuesto aceptado. Contrato generado. Trial de ${quote.trial_days || 30} días iniciado para ${createdTrials.length} módulo(s) con ${quote.trial_bonification_percentage || 100}% de bonificación.`
-          : `Presupuesto aceptado y activado. Contrato generado.`
+          ? `Presupuesto aceptado. Contrato generado. Empresa activada en modo trial (${quote.trial_days || 30} días, ${quote.trial_bonification_percentage || 100}% bonificación).`
+          : `Presupuesto aceptado, contrato generado y empresa activada.`
       };
 
     } catch (error) {
