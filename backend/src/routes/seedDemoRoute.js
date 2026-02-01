@@ -2511,7 +2511,7 @@ router.get('/fix-email-mapping', async (req, res) => {
     }
 });
 
-// GET /api/seed-demo/force-insert-mapping - Insertar sin email_type para bypass trigger
+// GET /api/seed-demo/force-insert-mapping - Insertar workflow en notification_workflows
 router.get('/force-insert-mapping', async (req, res) => {
     const { key } = req.query;
     if (!SECRET_KEY || !key || key !== SECRET_KEY) {
@@ -2519,36 +2519,70 @@ router.get('/force-insert-mapping', async (req, res) => {
     }
 
     try {
-        // Insertar SIN email_type (NULL) para bypass trigger
-        // El trigger solo valida cuando email_type no es NULL
-        const mappings = [
-            { process_key: 'sales.commercial', process_name: 'Ventas - Comunicaciones comerciales', module: 'marketing', priority: 'normal' },
-            { process_key: 'sales.flyer', process_name: 'Ventas - Envío de flyers', module: 'marketing', priority: 'normal' },
-            { process_key: 'sales.lead_notification', process_name: 'Ventas - Notificación de nuevo lead', module: 'marketing', priority: 'high' }
+        // Primero ver qué workflows existen para sales
+        const [salesWorkflows] = await sequelize.query(`
+            SELECT id, process_key, process_name, scope, module, email_type, is_active
+            FROM notification_workflows
+            WHERE process_key LIKE 'sales%'
+            ORDER BY process_key
+        `);
+
+        // Insertar workflows para sales si no existen
+        const workflowsToInsert = [
+            {
+                process_key: 'sales.commercial',
+                process_name: 'Ventas - Comunicaciones comerciales',
+                module: 'marketing',
+                scope: 'aponnt',
+                email_type: 'commercial',
+                priority: 'normal',
+                channels: JSON.stringify(['email'])
+            },
+            {
+                process_key: 'sales.flyer',
+                process_name: 'Ventas - Envío de flyers',
+                module: 'marketing',
+                scope: 'aponnt',
+                email_type: 'commercial',
+                priority: 'normal',
+                channels: JSON.stringify(['email'])
+            }
         ];
 
         const results = [];
-        for (const m of mappings) {
+        for (const w of workflowsToInsert) {
             try {
-                await sequelize.query(`DELETE FROM email_process_mapping WHERE process_key = :process_key`, {
-                    replacements: { process_key: m.process_key }
-                });
+                // Verificar si existe
+                const [existing] = await sequelize.query(`
+                    SELECT id FROM notification_workflows WHERE process_key = :process_key
+                `, { replacements: { process_key: w.process_key } });
 
-                // Insertar sin email_type
-                await sequelize.query(`
-                    INSERT INTO email_process_mapping (process_key, process_name, module, priority, is_active, created_at, updated_at)
-                    VALUES (:process_key, :process_name, :module, :priority, true, NOW(), NOW())
-                `, { replacements: m });
-
-                results.push({ process_key: m.process_key, status: 'inserted_without_email_type' });
+                if (existing.length > 0) {
+                    // Actualizar para asegurar que esté activo con el email_type correcto
+                    await sequelize.query(`
+                        UPDATE notification_workflows
+                        SET is_active = true, email_type = :email_type, channels = :channels::jsonb
+                        WHERE process_key = :process_key
+                    `, { replacements: w });
+                    results.push({ process_key: w.process_key, status: 'updated' });
+                } else {
+                    // Insertar nuevo
+                    await sequelize.query(`
+                        INSERT INTO notification_workflows
+                        (process_key, process_name, module, scope, email_type, priority, channels, is_active, created_at, updated_at)
+                        VALUES
+                        (:process_key, :process_name, :module, :scope, :email_type, :priority, :channels::jsonb, true, NOW(), NOW())
+                    `, { replacements: w });
+                    results.push({ process_key: w.process_key, status: 'inserted' });
+                }
             } catch (e) {
-                results.push({ process_key: m.process_key, status: 'error', error: e.message });
+                results.push({ process_key: w.process_key, status: 'error', error: e.message });
             }
         }
 
-        res.json({ success: true, results });
+        res.json({ success: true, existingSalesWorkflows: salesWorkflows, results });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message, stack: error.stack });
     }
 });
 
