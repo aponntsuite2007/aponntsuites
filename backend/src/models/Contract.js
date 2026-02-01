@@ -72,13 +72,13 @@ module.exports = (sequelize) => {
     },
     seller_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,  // OPCIONAL - puede no haber vendedor asignado
       references: {
         model: 'partners',
         key: 'id'
       },
-      onDelete: 'RESTRICT',
-      comment: 'Vendedor que realizó la venta'
+      onDelete: 'SET NULL',
+      comment: 'Vendedor que realizó la venta (opcional - puede ser venta directa sin comisión)'
     },
     support_partner_id: {
       type: DataTypes.INTEGER,

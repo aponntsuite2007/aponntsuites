@@ -298,34 +298,20 @@ class QuoteManagementService {
       }
 
       // ═══════════════════════════════════════════════════════════
-      // VALIDAR/ASIGNAR seller_id (OBLIGATORIO para crear contrato)
+      // seller_id OPCIONAL - asignar si viene en options
       // ═══════════════════════════════════════════════════════════
-      if (!quote.seller_id) {
-        // Si viene seller_id en options, usarlo
-        if (options.seller_id) {
-          const seller = await Partner.findByPk(options.seller_id, { transaction });
-          if (!seller) {
-            throw new Error(`Vendedor con ID ${options.seller_id} no encontrado`);
-          }
+      if (options.seller_id && !quote.seller_id) {
+        // Si viene seller_id en options y el quote no tiene, asignarlo
+        const seller = await Partner.findByPk(options.seller_id, { transaction });
+        if (seller) {
           quote.seller_id = options.seller_id;
           await quote.save({ transaction });
           console.log(`📝 [QUOTE SERVICE] Asignado seller_id ${options.seller_id} al quote ${quote.id}`);
-        } else {
-          // Intentar buscar un partner por defecto (el primero activo)
-          const defaultSeller = await Partner.findOne({
-            where: { is_active: true },
-            order: [['id', 'ASC']],
-            transaction
-          });
-
-          if (defaultSeller) {
-            quote.seller_id = defaultSeller.id;
-            await quote.save({ transaction });
-            console.log(`📝 [QUOTE SERVICE] Asignado seller_id por defecto ${defaultSeller.id} al quote ${quote.id}`);
-          } else {
-            throw new Error(`El presupuesto ${quote.quote_number} no tiene vendedor asignado (seller_id) y no hay vendedores activos en el sistema. Cree un partner/vendedor primero.`);
-          }
         }
+      }
+
+      if (!quote.seller_id) {
+        console.warn(`⚠️ [QUOTE SERVICE] Quote ${quote.id} sin vendedor asignado - venta directa sin comisión`);
       }
 
       // 1. Aceptar el presupuesto (cambia a 'in_trial' o 'accepted' según has_trial)
@@ -591,11 +577,10 @@ class QuoteManagementService {
    */
   async _createContractFromQuote(quote, transaction) {
     // ═══════════════════════════════════════════════════════════
-    // VALIDAR seller_id OBLIGATORIO
+    // seller_id ES OPCIONAL - solo warning si no existe
     // ═══════════════════════════════════════════════════════════
     if (!quote.seller_id) {
-      console.error(`❌ [QUOTE SERVICE] Quote ${quote.id} no tiene seller_id asignado`);
-      throw new Error(`El presupuesto ${quote.quote_number || quote.id} no tiene un vendedor asignado (seller_id). Asigne un vendedor antes de activar.`);
+      console.warn(`⚠️ [QUOTE SERVICE] Quote ${quote.id} no tiene seller_id - contrato sin vendedor asignado (venta directa)`);
     }
 
     // ═══════════════════════════════════════════════════════════
