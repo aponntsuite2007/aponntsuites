@@ -40,53 +40,89 @@ class AponntBillingService {
 
             // ═══════════════════════════════════════════════════════════════════
             // VALIDACIÓN CRÍTICA: Verificar si está en período TRIAL
-            // Si el quote asociado tiene has_trial = true y trial_end_date > NOW()
-            // NO se debe permitir generar factura hasta que termine el trial
+            // Doble verificación:
+            // 1. Via contract.quote_id → quotes.has_trial
+            // 2. Via module_trials activos para la empresa (fallback si no hay quote_id)
             // ═══════════════════════════════════════════════════════════════════
-            const [trialCheck] = await sequelize.query(
-                `SELECT
-                    c.id AS contract_id,
-                    c.contract_code,
-                    q.id AS quote_id,
-                    q.quote_number,
-                    q.has_trial,
-                    q.trial_start_date,
-                    q.trial_end_date,
-                    q.trial_bonification_percentage,
-                    CASE
-                        WHEN q.has_trial = true AND q.trial_end_date > NOW() THEN true
-                        ELSE false
-                    END AS is_in_trial_period,
-                    CASE
-                        WHEN q.trial_end_date IS NOT NULL THEN
-                            EXTRACT(DAY FROM q.trial_end_date - NOW())
-                        ELSE NULL
-                    END AS trial_days_remaining
-                FROM contracts c
-                LEFT JOIN quotes q ON c.quote_id = q.id
-                WHERE c.id = $1`,
-                {
-                    bind: [contractId],
-                    type: QueryTypes.SELECT
-                }
+
+            // Obtener company_id del contrato
+            const [contractInfo] = await sequelize.query(
+                `SELECT c.id, c.contract_code, c.company_id, c.quote_id, comp.name AS company_name
+                 FROM contracts c
+                 JOIN companies comp ON c.company_id = comp.company_id
+                 WHERE c.id = $1`,
+                { bind: [contractId], type: QueryTypes.SELECT }
             );
 
-            if (trialCheck && trialCheck.is_in_trial_period === true) {
-                const daysRemaining = Math.ceil(trialCheck.trial_days_remaining || 0);
-                console.log(`🚫 [APONNT BILLING] Contrato ${trialCheck.contract_code} está en período TRIAL`);
-                console.log(`   ➜ Trial termina: ${trialCheck.trial_end_date}`);
-                console.log(`   ➜ Días restantes: ${daysRemaining}`);
-                console.log(`   ➜ Bonificación: ${trialCheck.trial_bonification_percentage}%`);
+            if (!contractInfo) {
+                throw new Error('Contrato no encontrado');
+            }
+
+            console.log(`📋 [APONNT BILLING] Contrato ${contractInfo.contract_code} - Empresa: ${contractInfo.company_name}`);
+
+            // VALIDACIÓN 1: Via quote (si existe quote_id)
+            if (contractInfo.quote_id) {
+                const [trialCheck] = await sequelize.query(
+                    `SELECT q.id, q.quote_number, q.has_trial, q.trial_end_date, q.trial_bonification_percentage,
+                            CASE WHEN q.has_trial = true AND q.trial_end_date > NOW() THEN true ELSE false END AS is_in_trial
+                     FROM quotes q WHERE q.id = $1`,
+                    { bind: [contractInfo.quote_id], type: QueryTypes.SELECT }
+                );
+
+                if (trialCheck && trialCheck.is_in_trial === true) {
+                    const daysRemaining = Math.ceil((new Date(trialCheck.trial_end_date) - new Date()) / (1000 * 60 * 60 * 24));
+                    console.log(`🚫 [APONNT BILLING] Quote ${trialCheck.quote_number} está en período TRIAL`);
+                    throw new Error(
+                        `No se puede facturar: La empresa está en período de prueba (trial). ` +
+                        `El trial termina el ${new Date(trialCheck.trial_end_date).toLocaleDateString('es-AR')} ` +
+                        `(faltan ${daysRemaining} días). Bonificación: ${trialCheck.trial_bonification_percentage}%.`
+                    );
+                }
+            }
+
+            // VALIDACIÓN 2: Via module_trials activos (fallback cuando no hay quote_id)
+            const [activeTrials] = await sequelize.query(
+                `SELECT mt.id, mt.module_name, mt.end_date, mt.status,
+                        EXTRACT(DAY FROM mt.end_date - NOW())::INTEGER AS days_remaining
+                 FROM module_trials mt
+                 WHERE mt.company_id = $1
+                   AND mt.status = 'active'
+                   AND mt.end_date > NOW()
+                 ORDER BY mt.end_date ASC
+                 LIMIT 5`,
+                { bind: [contractInfo.company_id], type: QueryTypes.SELECT }
+            );
+
+            if (activeTrials && activeTrials.length > 0) {
+                const trial = activeTrials[0];
+                const moduleNames = activeTrials.map(t => t.module_name).join(', ');
+                console.log(`🚫 [APONNT BILLING] Empresa tiene ${activeTrials.length} módulos en TRIAL activo`);
 
                 throw new Error(
-                    `No se puede facturar: La empresa está en período de prueba (trial). ` +
-                    `El trial termina el ${new Date(trialCheck.trial_end_date).toLocaleDateString('es-AR')} ` +
-                    `(faltan ${daysRemaining} días). ` +
-                    `Durante el trial la bonificación es del ${trialCheck.trial_bonification_percentage}%.`
+                    `No se puede facturar: La empresa tiene ${activeTrials.length} módulo(s) en período de prueba: ${moduleNames}. ` +
+                    `El trial más próximo a vencer es el ${new Date(trial.end_date).toLocaleDateString('es-AR')} ` +
+                    `(faltan ${trial.days_remaining} días). Espere a que termine el trial o cancélelo primero.`
                 );
             }
 
-            // Si pasó la validación de trial, continuar con la facturación
+            // VALIDACIÓN 3: Verificar status del quote si existe (sin trial pero status 'in_trial')
+            const [quoteInTrial] = await sequelize.query(
+                `SELECT q.id, q.quote_number, q.status, q.trial_end_date
+                 FROM quotes q
+                 WHERE q.company_id = $1 AND q.status = 'in_trial'
+                 ORDER BY q.created_at DESC LIMIT 1`,
+                { bind: [contractInfo.company_id], type: QueryTypes.SELECT }
+            );
+
+            if (quoteInTrial) {
+                console.log(`🚫 [APONNT BILLING] Empresa tiene quote ${quoteInTrial.quote_number} en status 'in_trial'`);
+                throw new Error(
+                    `No se puede facturar: Existe un presupuesto en período de prueba (${quoteInTrial.quote_number}). ` +
+                    `Espere a que termine el trial o procéselo manualmente.`
+                );
+            }
+
+            // Si pasó todas las validaciones de trial, continuar con la facturación
             console.log(`✅ [APONNT BILLING] Validación trial OK - Procediendo a generar pre-factura`);
 
             // Usar la función de PostgreSQL
