@@ -2565,38 +2565,53 @@ router.get('/fix-email-password', async (req, res) => {
         // Password de app de Gmail para aponntcomercial@gmail.com
         const plainPassword = 'enlgpjfagfwrobhe';
 
-        // Ver estado actual de aponnt_email_config
-        const [currentConfig] = await sequelize.query(`
-            SELECT id, email_type, email, host, port, password, test_status, is_encrypted
-            FROM aponnt_email_config
-            WHERE email_type = 'commercial'
+        // Primero ver estructura de la tabla
+        const [columns] = await sequelize.query(`
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'aponnt_email_config'
+            ORDER BY ordinal_position
         `);
 
-        // Actualizar password como texto plano y marcar is_encrypted = false
-        await sequelize.query(`
-            UPDATE aponnt_email_config
-            SET password = $1,
-                is_encrypted = false,
-                test_status = 'success',
-                updated_at = NOW()
-            WHERE email_type = 'commercial'
-        `, { bind: [plainPassword] });
+        // Ver estado actual de aponnt_email_config
+        const [currentConfig] = await sequelize.query(`
+            SELECT * FROM aponnt_email_config WHERE email_type = 'commercial'
+        `);
+
+        // Actualizar password como texto plano
+        // is_encrypted puede no existir, así que lo intentamos por separado
+        let updateResult = 'none';
+        try {
+            await sequelize.query(`
+                UPDATE aponnt_email_config
+                SET password = $1, is_encrypted = false, test_status = 'success', updated_at = NOW()
+                WHERE email_type = 'commercial'
+            `, { bind: [plainPassword] });
+            updateResult = 'with_is_encrypted';
+        } catch (e) {
+            // Si is_encrypted no existe, intentar sin él
+            await sequelize.query(`
+                UPDATE aponnt_email_config
+                SET password = $1, test_status = 'success', updated_at = NOW()
+                WHERE email_type = 'commercial'
+            `, { bind: [plainPassword] });
+            updateResult = 'without_is_encrypted';
+        }
 
         // Verificar cambio
         const [updatedConfig] = await sequelize.query(`
-            SELECT id, email_type, email, host, port, test_status, is_encrypted
-            FROM aponnt_email_config
-            WHERE email_type = 'commercial'
+            SELECT * FROM aponnt_email_config WHERE email_type = 'commercial'
         `);
 
         res.json({
             success: true,
+            columns: columns.map(c => c.column_name),
             before: currentConfig,
             after: updatedConfig,
+            updateResult,
             message: 'Password actualizado como texto plano'
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message, stack: error.stack });
     }
 });
 
