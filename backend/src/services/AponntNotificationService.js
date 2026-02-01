@@ -544,7 +544,7 @@ class AponntNotificationService {
                             ⚠️ <strong>Importante:</strong> Por seguridad, te recomendamos cambiar tu contraseña en el primer acceso.
                         </p>
 
-                        <a href="http://localhost:9998/panel-empresa.html" class="button">Acceder al Panel</a>
+                        <a href="${require('../utils/urlHelper').getPanelEmpresaUrl()}" class="button">Acceder al Panel</a>
 
                         <p>Si tienes alguna duda, nuestro equipo de soporte está disponible para ayudarte.</p>
                     </div>
@@ -579,7 +579,7 @@ CREDENCIALES DE ACCESO:
 
 IMPORTANTE: Por seguridad, te recomendamos cambiar tu contraseña en el primer acceso.
 
-Accede al panel: http://localhost:9998/panel-empresa.html
+Accede al panel: ${require('../utils/urlHelper').getPanelEmpresaUrl()}
 
 Si tienes alguna duda, nuestro equipo de soporte está disponible para ayudarte.
 

@@ -509,7 +509,7 @@ class SupportTicketEscalationService {
                         </div>
 
                         <div style="margin-top: 30px; text-align: center;">
-                            <a href="${process.env.APP_URL || 'http://localhost:9998'}/panel-administrativo.html#tickets"
+                            <a href="${require('../utils/urlHelper').getPanelAdminUrl()}#tickets"
                                style="display: inline-block; background: #dc2626; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">
                                 Atender Ticket Urgente
                             </a>
@@ -650,7 +650,7 @@ Por favor atienda este ticket de forma prioritaria.`,
                         </table>
 
                         <div style="margin-top: 20px; text-align: center;">
-                            <a href="${process.env.APP_URL || 'http://localhost:9998'}/panel-administrativo.html#tickets"
+                            <a href="${require('../utils/urlHelper').getPanelAdminUrl()}#tickets"
                                style="display: inline-block; background: #f59e0b; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">
                                 Atender Ticket
                             </a>

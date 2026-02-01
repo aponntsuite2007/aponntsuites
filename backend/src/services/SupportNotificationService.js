@@ -798,7 +798,7 @@ class SupportNotificationService {
             ticketNumber: ticket.ticket_number,
             subject: ticket.subject,
             resolutionNotes: ticket.resolution_notes || 'Sin notas',
-            ratingUrl: `${process.env.BASE_URL || 'http://localhost:9998'}/support/tickets/${ticket.ticket_id}/rate`
+            ratingUrl: `${require('../utils/urlHelper').getBaseUrl()}/support/tickets/${ticket.ticket_id}/rate`
           });
         } catch (error) {
           console.error(`❌ [SUPPORT-NOTIF-MULTI] Error enviando email:`, error.message);

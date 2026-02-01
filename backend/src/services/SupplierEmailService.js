@@ -29,7 +29,8 @@ class SupplierEmailService {
 
         this.transporter = this.createTransporter();
         this.fromEmail = process.env.EMAIL_FROM || 'notificaciones@aponnt.com';
-        this.portalUrl = process.env.SUPPLIER_PORTAL_URL || 'http://localhost:9998/panel-proveedores.html';
+        const { getSupplierPortalUrl } = require('../utils/urlHelper');
+        this.portalUrl = process.env.SUPPLIER_PORTAL_URL || getSupplierPortalUrl();
     }
 
     createTransporter() {

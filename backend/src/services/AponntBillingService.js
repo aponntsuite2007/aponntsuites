@@ -591,7 +591,7 @@ class AponntBillingService {
                     </table>
 
                     <div style="text-align: center; margin-top: 20px;">
-                        <a href="${process.env.APP_URL || 'http://localhost:9998'}/panel-administrativo.html#admin-tasks" class="btn">
+                        <a href="${require('../utils/urlHelper').getPanelAdminUrl()}#admin-tasks" class="btn">
                             Revisar Pre-factura
                         </a>
                     </div>

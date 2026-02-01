@@ -604,7 +604,7 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
     _renderActionButtons(buttons, logId) {
         if (!Array.isArray(buttons) || buttons.length === 0) return '';
 
-        const baseUrl = process.env.BASE_URL || 'http://localhost:9998';
+        const baseUrl = require('../utils/urlHelper').getBaseUrl();
 
         let html = '<div style="margin-top: 20px;">';
 

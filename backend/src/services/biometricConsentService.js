@@ -600,7 +600,7 @@ Al aceptar este consentimiento mediante el enlace recibido por email, usted decl
 
         const fromEmail = company.email || process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@aponnt.com';
         const fromName = `${company.name} - RRHH`;
-        const consentLink = `${process.env.FRONTEND_URL || 'http://localhost:9998'}/biometric-consent?token=${token}`;
+        const consentLink = `${require('../utils/urlHelper').getBaseUrl()}/biometric-consent?token=${token}`;
 
         // Intentar enviar via NCE, con fallback a email directo
         try {

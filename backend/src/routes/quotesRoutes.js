@@ -1413,8 +1413,8 @@ router.post('/:id/contract/send', verifyStaffToken, async (req, res) => {
     tokenExpiry.setDate(tokenExpiry.getDate() + 7);
 
     // Generar link de aceptacion
-    const baseUrl = process.env.BASE_URL || 'http://localhost:9998';
-    const acceptanceLink = `${baseUrl}/accept-eula.html?token=${acceptanceToken}&quote=${id}`;
+    const { getEulaAcceptUrl } = require('../utils/urlHelper');
+    const acceptanceLink = getEulaAcceptUrl(acceptanceToken, id);
 
     // Preparar email
     const transporter = nodemailer.createTransport({

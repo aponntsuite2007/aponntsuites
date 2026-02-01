@@ -36,7 +36,7 @@ const NCE = require('./NotificationCentralExchange');
 class EmailVerificationService {
     constructor() {
         this.TOKEN_EXPIRATION_HOURS = 48; // 48 horas
-        this.BASE_URL = process.env.BASE_URL || 'http://localhost:9998';
+        this.BASE_URL = require('../utils/urlHelper').getBaseUrl();
     }
 
     /**

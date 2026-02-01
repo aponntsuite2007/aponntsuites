@@ -787,7 +787,7 @@ Si no estás seguro de algo, indica que sugieres contactar soporte.`;
                         ` : ''}
 
                         <div style="margin-top: 30px; text-align: center;">
-                            <a href="${process.env.APP_URL || 'http://localhost:9998'}/panel-administrativo.html#tickets"
+                            <a href="${require('../utils/urlHelper').getPanelAdminUrl()}#tickets"
                                style="display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">
                                 Ver Ticket en Panel
                             </a>

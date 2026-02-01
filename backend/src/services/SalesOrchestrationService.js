@@ -472,7 +472,7 @@ class SalesOrchestrationService {
                                 ? 'El pitch está listo con las preferencias de todos los asistentes.'
                                 : 'Puedes ver el pitch con los datos recibidos hasta ahora. Se actualizará cuando respondan los demás.'}
                         </p>
-                        <a href="${process.env.APP_URL || 'http://localhost:9998'}/panel-administrativo.html#sales-orchestration"
+                        <a href="${require('../utils/urlHelper').getPanelAdminUrl()}#sales-orchestration"
                            style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
                             Ver Pitch y Preparar Reunión
                         </a>
@@ -1919,7 +1919,7 @@ Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
         const vendor = await this.getVendorInfo(meeting.assigned_vendor_id);
         console.log(`   Vendedor: ${vendor?.full_name || 'No asignado'}`);
 
-        const surveyUrl = `${process.env.APP_URL || 'http://localhost:9998'}/survey/${attendee.survey_token}`;
+        const surveyUrl = `${require('../utils/urlHelper').getBaseUrl()}/survey/${attendee.survey_token}`;
 
         const modulesList = modules ? modules.map(m => `
             <tr style="border-bottom: 1px solid #eee;">
@@ -2006,7 +2006,7 @@ Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
      * Enviar email de agradecimiento y satisfacción
      */
     async sendSatisfactionEmail(meeting, attendee) {
-        const satisfactionUrl = `${process.env.APP_URL || 'http://localhost:9998'}/satisfaction/${attendee.survey_token}`;
+        const satisfactionUrl = `${require('../utils/urlHelper').getBaseUrl()}/satisfaction/${attendee.survey_token}`;
 
         const html = this.getEmailTemplate('satisfaction', {
             attendeeName: attendee.full_name,

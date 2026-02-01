@@ -447,7 +447,7 @@ class NotificationOrchestrator {
     static renderResponseButtons(options, logId) {
         if (!Array.isArray(options) || options.length === 0) return '';
 
-        const baseUrl = process.env.BASE_URL || 'http://localhost:9998';
+        const baseUrl = require('../utils/urlHelper').getBaseUrl();
 
         let html = '<div style="margin-top: 20px;">';
 
