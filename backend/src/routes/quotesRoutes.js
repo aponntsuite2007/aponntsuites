@@ -1167,6 +1167,51 @@ router.post('/:id/confirm-payment', verifyStaffToken, uploadReceipt.single('rece
 });
 
 /**
+ * GET /api/quotes/public/debug/:token
+ * Debug: Ver contenido del token sin verificar firma (solo para diagnóstico)
+ */
+router.get('/public/debug/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const jwt = require('jsonwebtoken');
+
+    // Decodificar sin verificar para ver contenido
+    const decoded = jwt.decode(token, { complete: true });
+
+    if (!decoded) {
+      return res.json({
+        success: false,
+        error: 'Token malformado - no se puede decodificar',
+        token_preview: token.substring(0, 50) + '...'
+      });
+    }
+
+    // Intentar verificar y capturar error específico
+    let verifyError = null;
+    try {
+      jwt.verify(token, process.env.JWT_SECRET || 'aponnt-secret-key');
+    } catch (e) {
+      verifyError = {
+        name: e.name,
+        message: e.message,
+        expiredAt: e.expiredAt
+      };
+    }
+
+    res.json({
+      success: !verifyError,
+      decoded_header: decoded.header,
+      decoded_payload: decoded.payload,
+      verify_error: verifyError,
+      jwt_secret_preview: (process.env.JWT_SECRET || 'aponnt-secret-key').substring(0, 10) + '...',
+      server_time: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
  * GET /api/quotes/public/:token
  * Vista pública del presupuesto (sin auth)
  */
@@ -1180,7 +1225,13 @@ router.get('/public/:token', async (req, res) => {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET || 'aponnt-secret-key');
     } catch (e) {
-      return res.status(401).json({ success: false, error: 'Token inválido o expirado' });
+      console.error('❌ [QUOTES] Error verificando token público:', e.name, e.message);
+      const errorDetails = e.name === 'TokenExpiredError'
+        ? 'Token expirado'
+        : e.name === 'JsonWebTokenError'
+          ? 'Token inválido o firma incorrecta'
+          : 'Token inválido o expirado';
+      return res.status(401).json({ success: false, error: errorDetails, error_type: e.name });
     }
 
     const { sequelize } = require('../config/database');
@@ -1236,7 +1287,13 @@ router.post('/public/:token/accept', async (req, res) => {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET || 'aponnt-secret-key');
     } catch (e) {
-      return res.status(401).json({ success: false, error: 'Token inválido o expirado' });
+      console.error('❌ [QUOTES] Error verificando token para accept:', e.name, e.message);
+      const errorDetails = e.name === 'TokenExpiredError'
+        ? 'Token expirado'
+        : e.name === 'JsonWebTokenError'
+          ? 'Token inválido o firma incorrecta'
+          : 'Token inválido o expirado';
+      return res.status(401).json({ success: false, error: errorDetails, error_type: e.name });
     }
 
     const { company: companyData, admin: adminData, branches: branchesData } = req.body || {};
@@ -1270,7 +1327,13 @@ router.post('/public/:token/reject', async (req, res) => {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET || 'aponnt-secret-key');
     } catch (e) {
-      return res.status(401).json({ success: false, error: 'Token inválido o expirado' });
+      console.error('❌ [QUOTES] Error verificando token para reject:', e.name, e.message);
+      const errorDetails = e.name === 'TokenExpiredError'
+        ? 'Token expirado'
+        : e.name === 'JsonWebTokenError'
+          ? 'Token inválido o firma incorrecta'
+          : 'Token inválido o expirado';
+      return res.status(401).json({ success: false, error: errorDetails, error_type: e.name });
     }
 
     const result = await QuoteManagementService.rejectQuote(decoded.quote_id, reason);
