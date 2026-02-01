@@ -2554,6 +2554,52 @@ router.get('/fix-email-mapping', async (req, res) => {
     }
 });
 
+// GET /api/seed-demo/fix-email-password - Arreglar password del email comercial
+router.get('/fix-email-password', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        // Password de app de Gmail para aponntcomercial@gmail.com
+        const plainPassword = 'enlgpjfagfwrobhe';
+
+        // Ver estado actual de aponnt_email_config
+        const [currentConfig] = await sequelize.query(`
+            SELECT id, email_type, email, host, port, password, test_status, is_encrypted
+            FROM aponnt_email_config
+            WHERE email_type = 'commercial'
+        `);
+
+        // Actualizar password como texto plano y marcar is_encrypted = false
+        await sequelize.query(`
+            UPDATE aponnt_email_config
+            SET password = $1,
+                is_encrypted = false,
+                test_status = 'success',
+                updated_at = NOW()
+            WHERE email_type = 'commercial'
+        `, { bind: [plainPassword] });
+
+        // Verificar cambio
+        const [updatedConfig] = await sequelize.query(`
+            SELECT id, email_type, email, host, port, test_status, is_encrypted
+            FROM aponnt_email_config
+            WHERE email_type = 'commercial'
+        `);
+
+        res.json({
+            success: true,
+            before: currentConfig,
+            after: updatedConfig,
+            message: 'Password actualizado como texto plano'
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // GET /api/seed-demo/force-insert-mapping - Agregar columnas faltantes y insertar workflows
 router.get('/force-insert-mapping', async (req, res) => {
     const { key } = req.query;
