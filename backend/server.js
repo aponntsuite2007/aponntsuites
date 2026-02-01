@@ -253,12 +253,23 @@ async function initializeDatabase() {
     // HOTFIX: Asegurar que campos opcionales no tengan NOT NULL constraint
     // ═══════════════════════════════════════════════════════════════════════════
     try {
-      await database.sequelize.query(`
-        ALTER TABLE contracts ALTER COLUMN budget_id DROP NOT NULL;
-        ALTER TABLE contracts ALTER COLUMN seller_id DROP NOT NULL;
-        ALTER TABLE contracts ALTER COLUMN contract_code DROP NOT NULL;
-      `);
-      console.log('✅ Constraints nullable aplicados a contracts (budget_id, seller_id, contract_code)');
+      // Hacer TODOS los campos opcionales de contracts nullable (excepto id y contract_number)
+      const contractNullableFields = [
+        'budget_id', 'seller_id', 'contract_code', 'company_id', 'quote_id',
+        'support_partner_id', 'trace_id', 'modules_data', 'monthly_total',
+        'start_date', 'end_date', 'termination_date', 'termination_reason',
+        'status', 'previous_contract_id', 'replaces_contract_id', 'replaced_by_contract_id',
+        'billing_cycle', 'payment_day', 'payment_terms_days', 'late_payment_surcharge_percentage',
+        'suspension_days_threshold', 'termination_days_threshold', 'terms_and_conditions',
+        'signed_at', 'signed_ip', 'signed_user_agent', 'signed_by_user_id',
+        'last_invoice_date', 'next_invoice_date', 'notes', 'internal_notes'
+      ];
+      for (const field of contractNullableFields) {
+        try {
+          await database.sequelize.query(`ALTER TABLE contracts ALTER COLUMN ${field} DROP NOT NULL;`);
+        } catch (e) { /* campo no existe o ya es nullable */ }
+      }
+      console.log('✅ Constraints nullable aplicados a contracts (todos los campos opcionales)');
     } catch (alterErr) {
       // Ignorar si ya están correctos o tabla no existe
       if (!alterErr.message.includes('does not exist')) {
