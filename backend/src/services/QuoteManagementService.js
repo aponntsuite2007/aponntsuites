@@ -332,7 +332,13 @@ class QuoteManagementService {
         }
       }
 
-      // 3. Si NO tiene trial, activar inmediatamente
+      // 3. CREAR CONTRATO SIEMPRE (trial o no trial)
+      // El contrato es un deslinde de responsabilidades y especifica los montos.
+      // Durante el trial, los módulos están bonificados pero el contrato ya existe.
+      await this._createContractFromQuote(quote, transaction);
+      console.log(`📄 [QUOTE SERVICE] Contrato creado para quote ${quote.quote_number} (has_trial: ${quote.has_trial})`);
+
+      // 4. Si NO tiene trial, activar inmediatamente
       if (!quote.has_trial) {
         // Superseder presupuesto anterior si existe
         if (quote.previous_quote_id) {
@@ -347,9 +353,6 @@ class QuoteManagementService {
         quote.status = 'active';
         quote.replaces_quote_id = quote.previous_quote_id;
         await quote.save({ transaction });
-
-        // Crear contrato inmediatamente
-        await this._createContractFromQuote(quote, transaction);
       }
 
       // Aplicar datos de onboarding si vienen del formulario público
@@ -376,7 +379,7 @@ class QuoteManagementService {
         quote,
         trials: createdTrials,
         message: quote.has_trial
-          ? `Presupuesto aceptado. Trial de 30 días iniciado para ${createdTrials.length} módulos.`
+          ? `Presupuesto aceptado. Contrato generado. Trial de ${quote.trial_days || 30} días iniciado para ${createdTrials.length} módulo(s) con ${quote.trial_bonification_percentage || 100}% de bonificación.`
           : `Presupuesto aceptado y activado. Contrato generado.`
       };
 
