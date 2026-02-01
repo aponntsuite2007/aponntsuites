@@ -75,20 +75,29 @@ const requireAponntStaff = (req, res, next) => {
     }
 };
 
+// Roles de alto nivel que siempre tienen acceso completo
+const TOP_LEVEL_ROLES = ['GG', 'DIR', 'admin', 'superadmin', 'SUPERADMIN'];
+
 // Middleware para roles específicos
 const requireRole = (allowedRoles) => {
     return (req, res, next) => {
         const userRole = req.user?.role_code || req.user?.role || req.user?.area || 'viewer';
-        const userLevel = req.user?.level || 0;
+        const userLevel = parseInt(req.user?.level) || 0;
 
         console.log('🔐 [REQUIRE-ROLE] Verificando permisos:');
         console.log('   - User role:', userRole);
         console.log('   - User level:', userLevel);
         console.log('   - Required roles:', allowedRoles);
 
-        // Level 5+ (admin) tiene todos los permisos
-        if (userLevel >= 5 || userRole === 'admin' || userRole === 'GG') {
-            console.log('   ✅ Acceso permitido (nivel 5+ o admin/GG)');
+        // Roles de alto nivel siempre tienen acceso
+        if (TOP_LEVEL_ROLES.includes(userRole)) {
+            console.log('   ✅ Acceso permitido (rol de alto nivel:', userRole, ')');
+            return next();
+        }
+
+        // Level 5+ tiene todos los permisos
+        if (userLevel >= 5) {
+            console.log('   ✅ Acceso permitido (nivel', userLevel, '>= 5)');
             return next();
         }
 

@@ -99,6 +99,20 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     console.log('✅ [STAFF-AUTH] Login exitoso:', staff.email, '- Rol:', staff.role?.role_name);
 
+    // Calcular nivel efectivo: usar staff.level, o si GG/DIR dar nivel 10, sino usar role.level
+    const roleCode = staff.role.role_code;
+    const isTopRole = ['GG', 'DIR', 'admin', 'superadmin'].includes(roleCode);
+    const effectiveLevel = staff.level || (isTopRole ? 10 : staff.role.level) || 1;
+
+    console.log('📊 [STAFF-AUTH] Nivel calculado:', {
+      email: staff.email,
+      roleCode,
+      staffLevel: staff.level,
+      roleLevel: staff.role.level,
+      effectiveLevel,
+      isTopRole
+    });
+
     // Generar JWT
     const token = jwt.sign(
       {
@@ -108,9 +122,9 @@ router.post('/login', loginLimiter, async (req, res) => {
         email: staff.email,
         first_name: staff.first_name,
         last_name: staff.last_name,
-        role: staff.role.role_code,
+        role: roleCode,
         role_name: staff.role.role_name,
-        level: staff.level,
+        level: effectiveLevel,
         area: staff.area,
         country: staff.country,
         language: staff.language_preference
