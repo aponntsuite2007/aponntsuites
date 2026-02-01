@@ -256,8 +256,9 @@ async function initializeDatabase() {
       await database.sequelize.query(`
         ALTER TABLE contracts ALTER COLUMN budget_id DROP NOT NULL;
         ALTER TABLE contracts ALTER COLUMN seller_id DROP NOT NULL;
+        ALTER TABLE contracts ALTER COLUMN contract_code DROP NOT NULL;
       `);
-      console.log('✅ Constraints nullable aplicados a contracts (budget_id, seller_id)');
+      console.log('✅ Constraints nullable aplicados a contracts (budget_id, seller_id, contract_code)');
     } catch (alterErr) {
       // Ignorar si ya están correctos o tabla no existe
       if (!alterErr.message.includes('does not exist')) {
