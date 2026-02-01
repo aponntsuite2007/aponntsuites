@@ -486,4 +486,54 @@ router.get('/master-id', requireAponntStaff, async (req, res) => {
     }
 });
 
+// ============================================
+// TRIAL STATUS
+// ============================================
+
+/**
+ * GET /api/aponnt/billing/trial-status/contract/:contractId
+ * Obtiene el estado del período trial de un contrato
+ * Útil para verificar si se puede facturar o si está en trial
+ */
+router.get('/trial-status/contract/:contractId', requireAponntStaff, async (req, res) => {
+    try {
+        const trialStatus = await AponntBillingService.getContractTrialStatus(req.params.contractId);
+
+        res.json({
+            success: true,
+            data: trialStatus
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo estado de trial:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/aponnt/billing/trial-status/company/:companyId
+ * Obtiene el estado del período trial de una empresa
+ * Busca el contrato activo más reciente
+ */
+router.get('/trial-status/company/:companyId', requireAponntStaff, async (req, res) => {
+    try {
+        const trialStatus = await AponntBillingService.getCompanyTrialStatus(parseInt(req.params.companyId));
+
+        res.json({
+            success: true,
+            data: trialStatus
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo estado de trial de empresa:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

@@ -106,6 +106,27 @@ const Invoice = sequelize.define('Invoice', {
     type: DataTypes.DATE,
     allowNull: true
   },
+  // Referencia al presupuesto/quote que originó esta factura (para circuito de alta)
+  quote_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'quotes',
+      key: 'id'
+    },
+    comment: 'Quote/presupuesto que originó esta factura (circuito alta empresa)'
+  },
+  // Flag para indicar si la empresa está en período trial (no facturar)
+  is_trial_period: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    comment: 'Si true, la factura corresponde a período trial y no debe cobrarse'
+  },
+  trial_expires_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'Fecha de expiración del período trial'
+  },
   created_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
