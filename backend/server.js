@@ -249,6 +249,22 @@ async function initializeDatabase() {
 
     console.log('ℹ️ Migraciones automáticas: sequelize.sync() ejecutado al iniciar');
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // HOTFIX: Asegurar que campos opcionales no tengan NOT NULL constraint
+    // ═══════════════════════════════════════════════════════════════════════════
+    try {
+      await database.sequelize.query(`
+        ALTER TABLE contracts ALTER COLUMN budget_id DROP NOT NULL;
+        ALTER TABLE contracts ALTER COLUMN seller_id DROP NOT NULL;
+      `);
+      console.log('✅ Constraints nullable aplicados a contracts (budget_id, seller_id)');
+    } catch (alterErr) {
+      // Ignorar si ya están correctos o tabla no existe
+      if (!alterErr.message.includes('does not exist')) {
+        console.log('ℹ️ Constraints contracts:', alterErr.message.substring(0, 80));
+      }
+    }
+
     // AUTO-SEED: System Settings (si tabla vacía)
     try {
       const { SystemSetting } = database;
@@ -2966,6 +2982,11 @@ app.use('/api/v1/mobile', mobileRoutes);
 const emotionalAnalysisRoutes = require('./src/routes/emotionalAnalysisRoutes');
 app.use('/api/v1/emotional-analysis', emotionalAnalysisRoutes);
 console.log('🧠 [EMOTIONAL-ANALYSIS] Rutas profesionales configuradas');
+
+// 🎤 VOICE PLATFORM - Experiencias del Empleado (Sugerencias, Problemas, Soluciones)
+const voicePlatformRoutes = require('./src/routes/voicePlatformRoutes');
+app.use('/api/voice-platform', voicePlatformRoutes);
+console.log('🎤 [VOICE-PLATFORM] Sistema de experiencias del empleado configurado');
 
 // 🔐 GESTIÓN DE CONSENTIMIENTOS BIOMÉTRICOS (Análisis Emocional)
 const biometricConsentRoutes = require('./src/routes/biometricConsentRoutes');
