@@ -2623,4 +2623,127 @@ router.get('/force-insert-mapping', async (req, res) => {
     }
 });
 
+// GET /api/seed-demo/test-nce-email - Probar envío de email via NCE
+router.get('/test-nce-email', async (req, res) => {
+    const { key, to } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    if (!to) {
+        return res.status(400).json({ error: 'Missing "to" parameter' });
+    }
+
+    try {
+        // Importar NCE
+        const NCE = require('../services/NotificationCentralExchange');
+
+        console.log('🧪 [TEST-NCE] Iniciando test de email via NCE...');
+        console.log('🧪 [TEST-NCE] Destinatario:', to);
+
+        // Intentar enviar via NCE igual que lo hace SalesOrchestrationService
+        const result = await NCE.send({
+            companyId: null, // Scope aponnt (global)
+            module: 'sales',
+            workflowKey: 'sales.commercial',
+            originType: 'test_email',
+            originId: `test-${Date.now()}`,
+            recipientType: 'external',
+            recipientId: to,
+            title: 'Test de Email via NCE',
+            message: 'Este es un email de prueba enviado via NCE.',
+            data: {
+                recipientEmail: to,
+                recipientName: 'Test User',
+                subject: 'Test NCE - APONNT',
+                html: '<h1>Test NCE</h1><p>Si recibes este email, NCE está funcionando correctamente.</p>'
+            },
+            priority: 'normal',
+            channels: ['email']
+        });
+
+        console.log('🧪 [TEST-NCE] Resultado:', JSON.stringify(result, null, 2));
+
+        res.json({
+            success: true,
+            nceResult: result,
+            message: result?.success ? 'NCE retornó success' : 'NCE retornó error'
+        });
+
+    } catch (error) {
+        console.error('🧪 [TEST-NCE] Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            stack: error.stack
+        });
+    }
+});
+
+// GET /api/seed-demo/test-direct-smtp - Probar SMTP directamente sin NCE
+router.get('/test-direct-smtp', async (req, res) => {
+    const { key, to } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    if (!to) {
+        return res.status(400).json({ error: 'Missing "to" parameter' });
+    }
+
+    try {
+        const nodemailer = require('nodemailer');
+
+        // Obtener config de commercial
+        const [configs] = await sequelize.query(`
+            SELECT * FROM aponnt_email_config WHERE email_type = 'commercial' AND is_active = true
+        `);
+
+        if (configs.length === 0) {
+            return res.status(404).json({ error: 'No commercial email config found' });
+        }
+
+        const config = configs[0];
+        console.log('📧 [DIRECT-SMTP] Config:', config.from_email, 'Host:', config.smtp_host);
+
+        // Usar la contraseña tal cual está en la BD
+        const transporter = nodemailer.createTransport({
+            host: config.smtp_host,
+            port: config.smtp_port,
+            secure: config.smtp_secure || false,
+            auth: {
+                user: config.smtp_user || config.from_email,
+                pass: config.smtp_password
+            }
+        });
+
+        console.log('📧 [DIRECT-SMTP] Enviando a:', to);
+
+        const info = await transporter.sendMail({
+            from: `"${config.from_name}" <${config.from_email}>`,
+            to: to,
+            subject: 'Test SMTP Directo - APONNT',
+            html: '<h1>Test SMTP Directo</h1><p>Si recibes este email, SMTP funciona correctamente.</p><p>Fecha: ' + new Date().toISOString() + '</p>'
+        });
+
+        console.log('📧 [DIRECT-SMTP] Enviado! MessageId:', info.messageId);
+
+        res.json({
+            success: true,
+            messageId: info.messageId,
+            from: config.from_email,
+            to: to
+        });
+
+    } catch (error) {
+        console.error('📧 [DIRECT-SMTP] Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            code: error.code,
+            command: error.command
+        });
+    }
+});
+
 module.exports = router;
