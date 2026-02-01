@@ -2522,9 +2522,11 @@ router.get('/fix-email-mapping', async (req, res) => {
             }
         }
 
-        // Ver estado actual
+        // Ver estado actual - buscar con punto y con underscore
         const [currentMappings] = await sequelize.query(
-            `SELECT process_key, email_type, is_active FROM email_process_mapping WHERE process_key LIKE 'sales%'`
+            `SELECT id, process_key, email_type, is_active FROM email_process_mapping
+             WHERE process_key LIKE '%sales%'
+             ORDER BY id`
         );
 
         res.json({ success: true, results, currentMappings });
@@ -2765,6 +2767,211 @@ router.get('/test-direct-smtp', async (req, res) => {
             code: error.code,
             command: error.command
         });
+    }
+});
+
+// GET /api/seed-demo/diagnose-mapping - Diagnóstico profundo de email_process_mapping
+router.get('/diagnose-mapping', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        const diagnosis = {};
+
+        // 1. Estructura de la tabla (columnas, tipos, constraints)
+        const [columns] = await sequelize.query(`
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns
+            WHERE table_name = 'email_process_mapping'
+            ORDER BY ordinal_position
+        `);
+        diagnosis.columns = columns;
+
+        // 2. Constraints (primary key, unique, foreign keys)
+        const [constraints] = await sequelize.query(`
+            SELECT tc.constraint_name, tc.constraint_type, kcu.column_name
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.key_column_usage kcu
+              ON tc.constraint_name = kcu.constraint_name
+            WHERE tc.table_name = 'email_process_mapping'
+        `);
+        diagnosis.constraints = constraints;
+
+        // 3. Triggers activos
+        const [triggers] = await sequelize.query(`
+            SELECT trigger_name, event_manipulation, action_timing
+            FROM information_schema.triggers
+            WHERE event_object_table = 'email_process_mapping'
+        `);
+        diagnosis.triggers = triggers;
+
+        // 4. Buscar TODOS los registros (incluye case-insensitive para sales)
+        const [allRecords] = await sequelize.query(`
+            SELECT * FROM email_process_mapping ORDER BY id
+        `);
+        diagnosis.total_records = allRecords.length;
+        diagnosis.all_records = allRecords;
+
+        // 5. Buscar específicamente 'sales.commercial' y variantes
+        const [searchResults] = await sequelize.query(`
+            SELECT id, process_key, email_type, is_active
+            FROM email_process_mapping
+            WHERE process_key ILIKE '%sales%' OR process_key ILIKE '%commercial%'
+        `);
+        diagnosis.sales_variants = searchResults;
+
+        // 6. Max ID actual
+        const [maxId] = await sequelize.query(`
+            SELECT MAX(id) as max_id, COUNT(*) as count FROM email_process_mapping
+        `);
+        diagnosis.max_id_info = maxId[0];
+
+        res.json({ success: true, diagnosis });
+    } catch (error) {
+        res.status(500).json({ error: error.message, stack: error.stack });
+    }
+});
+
+// GET /api/seed-demo/upsert-mapping - UPSERT para insertar/actualizar mapeos
+router.get('/upsert-mapping', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        const results = [];
+
+        // Primero, verificar qué constraint única existe
+        const [constraints] = await sequelize.query(`
+            SELECT constraint_name, column_name
+            FROM information_schema.key_column_usage
+            WHERE table_name = 'email_process_mapping'
+            AND constraint_name LIKE '%unique%' OR constraint_name LIKE '%pkey%'
+        `);
+        results.push({ step: 'constraints', data: constraints });
+
+        // Los mapeos que necesitamos
+        const mappings = [
+            { process_key: 'sales.commercial', process_name: 'Ventas - Email comercial', module: 'sales', email_type: 'commercial' },
+            { process_key: 'sales.flyer', process_name: 'Ventas - Envío de flyers', module: 'marketing', email_type: 'commercial' }
+        ];
+
+        for (const m of mappings) {
+            try {
+                // Usar INSERT ... ON CONFLICT (process_key) DO UPDATE
+                // Primero necesitamos saber si hay unique constraint en process_key
+                await sequelize.query(`
+                    INSERT INTO email_process_mapping
+                    (process_key, process_name, module, email_type, priority, is_active, requires_email, created_at, updated_at)
+                    VALUES ($1, $2, $3, $4, 'normal', true, true, NOW(), NOW())
+                    ON CONFLICT (process_key)
+                    DO UPDATE SET
+                        email_type = EXCLUDED.email_type,
+                        is_active = true,
+                        updated_at = NOW()
+                `, { bind: [m.process_key, m.process_name, m.module, m.email_type] });
+                results.push({ process_key: m.process_key, status: 'upserted' });
+            } catch (e) {
+                // Si falla ON CONFLICT, intentar DELETE + INSERT
+                try {
+                    await sequelize.query(`DELETE FROM email_process_mapping WHERE process_key = $1`, { bind: [m.process_key] });
+                    await sequelize.query(`
+                        INSERT INTO email_process_mapping
+                        (process_key, process_name, module, email_type, priority, is_active, requires_email, created_at, updated_at)
+                        VALUES ($1, $2, $3, $4, 'normal', true, true, NOW(), NOW())
+                    `, { bind: [m.process_key, m.process_name, m.module, m.email_type] });
+                    results.push({ process_key: m.process_key, status: 'delete+insert' });
+                } catch (e2) {
+                    results.push({ process_key: m.process_key, status: 'failed', error: e.message, error2: e2.message });
+                }
+            }
+        }
+
+        // Verificar estado final
+        const [finalState] = await sequelize.query(`
+            SELECT id, process_key, email_type, is_active
+            FROM email_process_mapping
+            WHERE process_key LIKE 'sales%'
+            ORDER BY id
+        `);
+        results.push({ step: 'final_state', data: finalState });
+
+        res.json({ success: true, results });
+    } catch (error) {
+        res.status(500).json({ error: error.message, stack: error.stack });
+    }
+});
+
+// GET /api/seed-demo/disable-trigger - Desactivar trigger y volver a intentar
+router.get('/disable-trigger', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        const results = [];
+
+        // 1. Listar triggers
+        const [triggers] = await sequelize.query(`
+            SELECT trigger_name FROM information_schema.triggers
+            WHERE event_object_table = 'email_process_mapping'
+        `);
+        results.push({ step: 'triggers_found', triggers });
+
+        // 2. Desactivar TODOS los triggers en la tabla
+        try {
+            await sequelize.query(`ALTER TABLE email_process_mapping DISABLE TRIGGER ALL`);
+            results.push({ step: 'triggers_disabled', status: 'ok' });
+        } catch (e) {
+            results.push({ step: 'triggers_disabled', status: 'error', error: e.message });
+        }
+
+        // 3. Ahora intentar el INSERT directamente
+        const mappings = [
+            { process_key: 'sales.commercial', process_name: 'Ventas - Email comercial', module: 'sales', email_type: 'commercial' },
+            { process_key: 'sales.flyer', process_name: 'Ventas - Envío de flyers', module: 'marketing', email_type: 'commercial' }
+        ];
+
+        for (const m of mappings) {
+            try {
+                // Borrar si existe
+                await sequelize.query(`DELETE FROM email_process_mapping WHERE process_key = $1`, { bind: [m.process_key] });
+                // Insertar
+                await sequelize.query(`
+                    INSERT INTO email_process_mapping
+                    (process_key, process_name, module, email_type, priority, is_active, requires_email, created_at, updated_at)
+                    VALUES ($1, $2, $3, $4, 'normal', true, true, NOW(), NOW())
+                `, { bind: [m.process_key, m.process_name, m.module, m.email_type] });
+                results.push({ process_key: m.process_key, status: 'inserted' });
+            } catch (e) {
+                results.push({ process_key: m.process_key, status: 'failed', error: e.message });
+            }
+        }
+
+        // 4. Reactivar triggers
+        try {
+            await sequelize.query(`ALTER TABLE email_process_mapping ENABLE TRIGGER ALL`);
+            results.push({ step: 'triggers_enabled', status: 'ok' });
+        } catch (e) {
+            results.push({ step: 'triggers_enabled', status: 'error', error: e.message });
+        }
+
+        // 5. Estado final
+        const [finalState] = await sequelize.query(`
+            SELECT id, process_key, email_type, is_active
+            FROM email_process_mapping
+            WHERE process_key LIKE 'sales%'
+            ORDER BY id
+        `);
+        results.push({ step: 'final_state', data: finalState });
+
+        res.json({ success: true, results });
+    } catch (error) {
+        res.status(500).json({ error: error.message, stack: error.stack });
     }
 });
 
