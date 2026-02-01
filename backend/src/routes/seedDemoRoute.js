@@ -2474,7 +2474,7 @@ router.get('/check-data', async (req, res) => {
     }
 });
 
-// GET /api/seed-demo/fix-email-mapping - Ver trigger y probar insertar
+// GET /api/seed-demo/fix-email-mapping - Insertar mapeos en email_process_mapping (RAW SQL)
 router.get('/fix-email-mapping', async (req, res) => {
     const { key } = req.query;
     if (!SECRET_KEY || !key || key !== SECRET_KEY) {
@@ -2482,30 +2482,52 @@ router.get('/fix-email-mapping', async (req, res) => {
     }
 
     try {
-        // Ver trigger function code
-        const [funcCode] = await sequelize.query(`
-            SELECT p.prosrc as code, p.proname as name
-            FROM pg_trigger t
-            JOIN pg_proc p ON t.tgfoid = p.oid
-            JOIN pg_class c ON t.tgrelid = c.oid
-            WHERE c.relname = 'email_process_mapping'
-            AND t.tgname = 'trg_validate_email_assignment'
-        `);
+        // Los mapeos que necesitamos para que NCE encuentre el email_type
+        const mappings = [
+            { process_key: 'sales.commercial', process_name: 'Ventas - Email comercial', module: 'sales', email_type: 'commercial' },
+            { process_key: 'sales.flyer', process_name: 'Ventas - Envío de flyers', module: 'marketing', email_type: 'commercial' }
+        ];
 
-        // Ver email_type 'commercial' está probado y activo
-        const [commercialConfig] = await sequelize.query(`
-            SELECT id, email_type, test_status, is_active
-            FROM aponnt_email_config
-            WHERE email_type = 'commercial'
-        `);
+        const results = [];
 
-        res.json({
-            success: true,
-            triggerFunc: funcCode.length > 0 ? funcCode[0].code : 'Not found',
-            funcName: funcCode.length > 0 ? funcCode[0].name : 'Unknown',
-            commercialConfig: commercialConfig.length > 0 ? commercialConfig[0] : null,
-            hint: 'El trigger valida que el email_type tenga test_status=success y is_active=true'
-        });
+        for (const m of mappings) {
+            try {
+                // Primero verificar si ya existe
+                const [existing] = await sequelize.query(
+                    `SELECT id FROM email_process_mapping WHERE process_key = $1`,
+                    { bind: [m.process_key], type: sequelize.QueryTypes.SELECT }
+                );
+
+                if (existing) {
+                    // Actualizar
+                    await sequelize.query(
+                        `UPDATE email_process_mapping
+                         SET email_type = $1, is_active = true, updated_at = NOW()
+                         WHERE process_key = $2`,
+                        { bind: [m.email_type, m.process_key] }
+                    );
+                    results.push({ process_key: m.process_key, status: 'updated' });
+                } else {
+                    // Insertar - el trigger validará que commercial tenga test_status=success
+                    await sequelize.query(
+                        `INSERT INTO email_process_mapping
+                         (process_key, process_name, module, email_type, priority, is_active, requires_email, created_at, updated_at)
+                         VALUES ($1, $2, $3, $4, 'normal', true, true, NOW(), NOW())`,
+                        { bind: [m.process_key, m.process_name, m.module, m.email_type] }
+                    );
+                    results.push({ process_key: m.process_key, status: 'inserted' });
+                }
+            } catch (e) {
+                results.push({ process_key: m.process_key, status: 'error', error: e.message, parent: e.parent?.message });
+            }
+        }
+
+        // Ver estado actual
+        const [currentMappings] = await sequelize.query(
+            `SELECT process_key, email_type, is_active FROM email_process_mapping WHERE process_key LIKE 'sales%'`
+        );
+
+        res.json({ success: true, results, currentMappings });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
