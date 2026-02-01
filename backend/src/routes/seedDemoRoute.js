@@ -2482,13 +2482,27 @@ router.get('/fix-email-mapping', async (req, res) => {
     }
 
     try {
+        const results = [];
+
+        // PASO 1: Resetear el sequence de la tabla para evitar conflictos de ID
+        try {
+            await sequelize.query(`
+                SELECT setval(
+                    pg_get_serial_sequence('email_process_mapping', 'id'),
+                    COALESCE((SELECT MAX(id) FROM email_process_mapping), 0) + 1,
+                    false
+                )
+            `);
+            results.push({ step: 'sequence_reset', status: 'ok' });
+        } catch (seqErr) {
+            results.push({ step: 'sequence_reset', status: 'error', error: seqErr.message });
+        }
+
         // Los mapeos que necesitamos para que NCE encuentre el email_type
         const mappings = [
             { process_key: 'sales.commercial', process_name: 'Ventas - Email comercial', module: 'sales', email_type: 'commercial' },
             { process_key: 'sales.flyer', process_name: 'Ventas - Envío de flyers', module: 'marketing', email_type: 'commercial' }
         ];
-
-        const results = [];
 
         for (const m of mappings) {
             try {
@@ -2508,14 +2522,19 @@ router.get('/fix-email-mapping', async (req, res) => {
                     );
                     results.push({ process_key: m.process_key, status: 'updated' });
                 } else {
-                    // Insertar - el trigger validará que commercial tenga test_status=success
+                    // Insertar con ID explícito (MAX+1)
+                    const [maxIdResult] = await sequelize.query(
+                        `SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM email_process_mapping`
+                    );
+                    const nextId = maxIdResult[0].next_id;
+
                     await sequelize.query(
                         `INSERT INTO email_process_mapping
-                         (process_key, process_name, module, email_type, priority, is_active, requires_email, created_at, updated_at)
-                         VALUES ($1, $2, $3, $4, 'normal', true, true, NOW(), NOW())`,
-                        { bind: [m.process_key, m.process_name, m.module, m.email_type] }
+                         (id, process_key, process_name, module, email_type, priority, is_active, requires_email, created_at, updated_at)
+                         VALUES ($1, $2, $3, $4, $5, 'normal', true, true, NOW(), NOW())`,
+                        { bind: [nextId, m.process_key, m.process_name, m.module, m.email_type] }
                     );
-                    results.push({ process_key: m.process_key, status: 'inserted' });
+                    results.push({ process_key: m.process_key, status: 'inserted', id: nextId });
                 }
             } catch (e) {
                 results.push({ process_key: m.process_key, status: 'error', error: e.message, parent: e.parent?.message });
