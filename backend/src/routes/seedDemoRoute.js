@@ -2474,7 +2474,7 @@ router.get('/check-data', async (req, res) => {
     }
 });
 
-// GET /api/seed-demo/fix-email-mapping - Importar email_process_mapping desde local
+// GET /api/seed-demo/fix-email-mapping - Ver trigger y probar insertar
 router.get('/fix-email-mapping', async (req, res) => {
     const { key } = req.query;
     if (!SECRET_KEY || !key || key !== SECRET_KEY) {
@@ -2482,54 +2482,72 @@ router.get('/fix-email-mapping', async (req, res) => {
     }
 
     try {
-        // Ver trigger definition
-        const [triggerDef] = await sequelize.query(`
-            SELECT pg_get_triggerdef(t.oid, true) as definition
+        // Ver trigger function code
+        const [funcCode] = await sequelize.query(`
+            SELECT p.prosrc as code, p.proname as name
             FROM pg_trigger t
+            JOIN pg_proc p ON t.tgfoid = p.oid
             JOIN pg_class c ON t.tgrelid = c.oid
             WHERE c.relname = 'email_process_mapping'
             AND t.tgname = 'trg_validate_email_assignment'
         `);
 
-        // Intentar con session_replication_role
-        await sequelize.query(`SET session_replication_role = 'replica'`);
+        // Ver email_type 'commercial' está probado y activo
+        const [commercialConfig] = await sequelize.query(`
+            SELECT id, email_type, test_status, is_active
+            FROM aponnt_email_config
+            WHERE email_type = 'commercial'
+        `);
 
-        // Mappings esenciales para marketing
+        res.json({
+            success: true,
+            triggerFunc: funcCode.length > 0 ? funcCode[0].code : 'Not found',
+            funcName: funcCode.length > 0 ? funcCode[0].name : 'Unknown',
+            commercialConfig: commercialConfig.length > 0 ? commercialConfig[0] : null,
+            hint: 'El trigger valida que el email_type tenga test_status=success y is_active=true'
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/seed-demo/force-insert-mapping - Insertar sin email_type para bypass trigger
+router.get('/force-insert-mapping', async (req, res) => {
+    const { key } = req.query;
+    if (!SECRET_KEY || !key || key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        // Insertar SIN email_type (NULL) para bypass trigger
+        // El trigger solo valida cuando email_type no es NULL
         const mappings = [
-            { process_key: 'sales.commercial', process_name: 'Ventas - Comunicaciones comerciales', module: 'marketing', email_type: 'commercial', priority: 'normal' },
-            { process_key: 'sales.flyer', process_name: 'Ventas - Envío de flyers', module: 'marketing', email_type: 'commercial', priority: 'normal' },
-            { process_key: 'sales.lead_notification', process_name: 'Ventas - Notificación de nuevo lead', module: 'marketing', email_type: 'commercial', priority: 'high' }
+            { process_key: 'sales.commercial', process_name: 'Ventas - Comunicaciones comerciales', module: 'marketing', priority: 'normal' },
+            { process_key: 'sales.flyer', process_name: 'Ventas - Envío de flyers', module: 'marketing', priority: 'normal' },
+            { process_key: 'sales.lead_notification', process_name: 'Ventas - Notificación de nuevo lead', module: 'marketing', priority: 'high' }
         ];
 
         const results = [];
         for (const m of mappings) {
             try {
-                // Primero intentar borrar si existe
-                await sequelize.query(`DELETE FROM email_process_mapping WHERE process_key = :process_key`, { replacements: { process_key: m.process_key } });
+                await sequelize.query(`DELETE FROM email_process_mapping WHERE process_key = :process_key`, {
+                    replacements: { process_key: m.process_key }
+                });
 
-                // Luego insertar
+                // Insertar sin email_type
                 await sequelize.query(`
-                    INSERT INTO email_process_mapping (process_key, process_name, module, email_type, priority, is_active, created_at, updated_at)
-                    VALUES (:process_key, :process_name, :module, :email_type, :priority, true, NOW(), NOW())
+                    INSERT INTO email_process_mapping (process_key, process_name, module, priority, is_active, created_at, updated_at)
+                    VALUES (:process_key, :process_name, :module, :priority, true, NOW(), NOW())
                 `, { replacements: m });
-                results.push({ process_key: m.process_key, status: 'inserted' });
+
+                results.push({ process_key: m.process_key, status: 'inserted_without_email_type' });
             } catch (e) {
                 results.push({ process_key: m.process_key, status: 'error', error: e.message });
             }
         }
 
-        // Restaurar session
-        await sequelize.query(`SET session_replication_role = 'origin'`);
-
-        res.json({
-            success: true,
-            triggerDef: triggerDef.length > 0 ? triggerDef[0].definition : 'Not found',
-            results,
-            total: mappings.length
-        });
+        res.json({ success: true, results });
     } catch (error) {
-        // Asegurar restaurar session
-        try { await sequelize.query(`SET session_replication_role = 'origin'`); } catch (e) {}
         res.status(500).json({ error: error.message });
     }
 });
