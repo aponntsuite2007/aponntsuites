@@ -2558,6 +2558,7 @@ router.get('/force-insert-mapping', async (req, res) => {
         const workflowsToInsert = [
             {
                 process_key: 'sales.commercial',
+                workflow_key: 'sales.commercial',
                 process_name: 'Ventas - Comunicaciones comerciales',
                 workflow_name: 'Ventas - Comunicaciones comerciales',
                 module: 'marketing',
@@ -2568,6 +2569,7 @@ router.get('/force-insert-mapping', async (req, res) => {
             },
             {
                 process_key: 'sales.flyer',
+                workflow_key: 'sales.flyer',
                 process_name: 'Ventas - Envío de flyers',
                 workflow_name: 'Ventas - Envío de flyers',
                 module: 'marketing',
@@ -2598,7 +2600,7 @@ router.get('/force-insert-mapping', async (req, res) => {
                         INSERT INTO notification_workflows
                         (process_key, process_name, workflow_key, workflow_name, module, scope, email_type, priority, channels, is_active, created_at, updated_at)
                         VALUES
-                        (:process_key, :process_name, :process_key, :workflow_name, :module, :scope, :email_type, :priority, :channels::jsonb, true, NOW(), NOW())
+                        (:process_key, :process_name, :workflow_key, :workflow_name, :module, :scope, :email_type, :priority, :channels::jsonb, true, NOW(), NOW())
                     `, { replacements: w });
                     results.push({ process_key: w.process_key, status: 'inserted' });
                 }
