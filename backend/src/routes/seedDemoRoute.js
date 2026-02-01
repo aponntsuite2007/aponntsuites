@@ -2511,7 +2511,7 @@ router.get('/fix-email-mapping', async (req, res) => {
     }
 });
 
-// GET /api/seed-demo/force-insert-mapping - Insertar workflow en notification_workflows
+// GET /api/seed-demo/force-insert-mapping - Agregar columnas faltantes y insertar workflows
 router.get('/force-insert-mapping', async (req, res) => {
     const { key } = req.query;
     if (!SECRET_KEY || !key || key !== SECRET_KEY) {
@@ -2519,19 +2519,47 @@ router.get('/force-insert-mapping', async (req, res) => {
     }
 
     try {
-        // Primero ver qué workflows existen para sales
-        const [salesWorkflows] = await sequelize.query(`
-            SELECT id, process_key, process_name, scope, module, email_type, is_active
-            FROM notification_workflows
-            WHERE process_key LIKE 'sales%'
-            ORDER BY process_key
-        `);
+        const migrations = [];
 
-        // Insertar workflows para sales si no existen
+        // 1. Agregar columnas faltantes a notification_workflows
+        const columnsToAdd = [
+            { name: 'process_key', type: 'VARCHAR(100)' },
+            { name: 'process_name', type: 'VARCHAR(255)' },
+            { name: 'scope', type: "VARCHAR(20) DEFAULT 'company'" },
+            { name: 'email_type', type: 'VARCHAR(50)' },
+            { name: 'priority', type: "VARCHAR(20) DEFAULT 'normal'" },
+            { name: 'channels', type: "JSONB DEFAULT '[]'" },
+            { name: 'category', type: 'VARCHAR(50)' },
+            { name: 'notification_type', type: 'VARCHAR(50)' }
+        ];
+
+        for (const col of columnsToAdd) {
+            try {
+                await sequelize.query(`ALTER TABLE notification_workflows ADD COLUMN IF NOT EXISTS ${col.name} ${col.type}`);
+                migrations.push({ column: col.name, status: 'added_or_exists' });
+            } catch (e) {
+                migrations.push({ column: col.name, status: 'error', error: e.message });
+            }
+        }
+
+        // 2. Copiar workflow_key a process_key si process_key está vacío
+        try {
+            await sequelize.query(`
+                UPDATE notification_workflows
+                SET process_key = workflow_key
+                WHERE process_key IS NULL AND workflow_key IS NOT NULL
+            `);
+            migrations.push({ action: 'copy_workflow_key_to_process_key', status: 'done' });
+        } catch (e) {
+            migrations.push({ action: 'copy_workflow_key_to_process_key', status: 'error', error: e.message });
+        }
+
+        // 3. Insertar workflows para sales
         const workflowsToInsert = [
             {
                 process_key: 'sales.commercial',
                 process_name: 'Ventas - Comunicaciones comerciales',
+                workflow_name: 'Ventas - Comunicaciones comerciales',
                 module: 'marketing',
                 scope: 'aponnt',
                 email_type: 'commercial',
@@ -2541,6 +2569,7 @@ router.get('/force-insert-mapping', async (req, res) => {
             {
                 process_key: 'sales.flyer',
                 process_name: 'Ventas - Envío de flyers',
+                workflow_name: 'Ventas - Envío de flyers',
                 module: 'marketing',
                 scope: 'aponnt',
                 email_type: 'commercial',
@@ -2558,20 +2587,18 @@ router.get('/force-insert-mapping', async (req, res) => {
                 `, { replacements: { process_key: w.process_key } });
 
                 if (existing.length > 0) {
-                    // Actualizar para asegurar que esté activo con el email_type correcto
                     await sequelize.query(`
                         UPDATE notification_workflows
-                        SET is_active = true, email_type = :email_type, channels = :channels::jsonb
+                        SET is_active = true, email_type = :email_type, channels = :channels::jsonb, scope = :scope
                         WHERE process_key = :process_key
                     `, { replacements: w });
                     results.push({ process_key: w.process_key, status: 'updated' });
                 } else {
-                    // Insertar nuevo
                     await sequelize.query(`
                         INSERT INTO notification_workflows
-                        (process_key, process_name, module, scope, email_type, priority, channels, is_active, created_at, updated_at)
+                        (process_key, process_name, workflow_name, module, scope, email_type, priority, channels, is_active, created_at, updated_at)
                         VALUES
-                        (:process_key, :process_name, :module, :scope, :email_type, :priority, :channels::jsonb, true, NOW(), NOW())
+                        (:process_key, :process_name, :workflow_name, :module, :scope, :email_type, :priority, :channels::jsonb, true, NOW(), NOW())
                     `, { replacements: w });
                     results.push({ process_key: w.process_key, status: 'inserted' });
                 }
@@ -2580,7 +2607,15 @@ router.get('/force-insert-mapping', async (req, res) => {
             }
         }
 
-        res.json({ success: true, existingSalesWorkflows: salesWorkflows, results });
+        // 4. Ver workflows de sales ahora
+        const [salesWorkflows] = await sequelize.query(`
+            SELECT id, process_key, process_name, workflow_key, workflow_name, scope, module, email_type, is_active
+            FROM notification_workflows
+            WHERE process_key LIKE 'sales%' OR workflow_key LIKE 'sales%'
+            ORDER BY id
+        `);
+
+        res.json({ success: true, migrations, results, salesWorkflows });
     } catch (error) {
         res.status(500).json({ error: error.message, stack: error.stack });
     }
