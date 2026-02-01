@@ -1203,28 +1203,48 @@ const MarketingLeadsModule = {
     // CREACIÓN DE PRESUPUESTO DESDE LEAD
     // ═══════════════════════════════════════════════════════════
 
-    // Módulos disponibles con precios (USD)
-    availableModules: [
-        { key: 'attendance', name: 'Control de Asistencia', price: 50, category: 'Core' },
-        { key: 'biometric', name: 'Biométrico Facial', price: 80, category: 'Core' },
-        { key: 'shifts', name: 'Gestión de Turnos', price: 40, category: 'RRHH' },
-        { key: 'payroll', name: 'Liquidación de Sueldos', price: 100, category: 'RRHH' },
-        { key: 'recruitment', name: 'Reclutamiento', price: 60, category: 'RRHH' },
-        { key: 'vacation', name: 'Vacaciones y Licencias', price: 35, category: 'RRHH' },
-        { key: 'medical', name: 'Control Médico', price: 45, category: 'RRHH' },
-        { key: 'notifications', name: 'Notificaciones Push', price: 25, category: 'Comunicación' },
-        { key: 'documents', name: 'Gestión Documental', price: 30, category: 'Documentos' },
-        { key: 'reports', name: 'Reportes Avanzados', price: 40, category: 'Analytics' },
-        { key: 'procurement', name: 'Compras y Proveedores', price: 70, category: 'Finanzas' },
-        { key: 'invoicing', name: 'Facturación', price: 55, category: 'Finanzas' },
-        { key: 'ai-assistant', name: 'Asistente IA', price: 90, category: 'Premium' }
-    ],
+    // Módulos cargados desde API (se llena en loadCommercialModules)
+    coreModules: [],      // Paquete base (siempre incluido)
+    optionalModules: [],  // Módulos opcionales (se pueden agregar)
+    commercialModulesLoaded: false,
+
+    // Precio base del paquete CORE por empleado
+    corePricePerEmployee: 15.00, // USD
 
     // Estado del presupuesto en creación
     quoteState: {
         lead: null,
         selectedModules: [],
-        companyData: {}
+        companyData: {},
+        includeCore: true
+    },
+
+    /**
+     * Carga módulos comerciales desde API (SSOT)
+     */
+    async loadCommercialModules() {
+        if (this.commercialModulesLoaded) return;
+
+        try {
+            console.log('[QUOTE] Cargando catálogo comercial...');
+            const response = await fetch('/api/engineering/commercial-modules');
+            const result = await response.json();
+
+            if (result.success) {
+                this.coreModules = result.data.coreModules || [];
+                this.optionalModules = result.data.optionalModules || [];
+                // Actualizar precio CORE desde API
+                if (result.data.corePricePerEmployee) {
+                    this.corePricePerEmployee = parseFloat(result.data.corePricePerEmployee);
+                }
+                this.commercialModulesLoaded = true;
+                console.log('[QUOTE] Catálogo cargado:', this.coreModules.length, 'CORE,', this.optionalModules.length, 'OPCIONALES, Precio CORE: $' + this.corePricePerEmployee);
+            } else {
+                console.error('[QUOTE] Error cargando catálogo:', result.error);
+            }
+        } catch (error) {
+            console.error('[QUOTE] Error de conexión:', error);
+        }
     },
 
     /**
@@ -1237,10 +1257,14 @@ const MarketingLeadsModule = {
             return;
         }
 
+        // Cargar módulos comerciales si no están cargados
+        await this.loadCommercialModules();
+
         // Inicializar estado del presupuesto
         this.quoteState = {
             lead: lead,
             selectedModules: [],
+            includeCore: true,
             companyData: {
                 name: lead.company_name || '',
                 contact_email: lead.email || '',
@@ -1260,13 +1284,20 @@ const MarketingLeadsModule = {
         const lead = this.quoteState.lead;
         const companyData = this.quoteState.companyData;
 
-        // Agrupar módulos por categoría
+        // Agrupar módulos OPCIONALES por categoría
         const modulesByCategory = {};
-        this.availableModules.forEach(mod => {
-            if (!modulesByCategory[mod.category]) {
-                modulesByCategory[mod.category] = [];
+        this.optionalModules.forEach(mod => {
+            const cat = mod.category || 'general';
+            if (!modulesByCategory[cat]) {
+                modulesByCategory[cat] = [];
             }
-            modulesByCategory[mod.category].push(mod);
+            modulesByCategory[cat].push({
+                key: mod.key,
+                name: mod.name,
+                price: parseFloat(mod.basePrice) || 0,
+                category: cat,
+                icon: mod.icon
+            });
         });
 
         // Generar HTML de industrias
@@ -1282,11 +1313,19 @@ const MarketingLeadsModule = {
             modulesHtml += '</div>';
 
             modules.forEach(mod => {
+                // Detectar si el icono es emoji o clase FontAwesome
+                const iconHtml = mod.icon
+                    ? (mod.icon.startsWith('fa')
+                        ? '<i class="' + mod.icon + '" style="font-size: 20px; color: #10b981; width: 28px; text-align: center;"></i>'
+                        : '<span style="font-size: 20px; width: 28px; text-align: center;">' + mod.icon + '</span>')
+                    : '<span style="font-size: 20px; width: 28px; text-align: center;">📦</span>';
+
                 modulesHtml += '<label class="module-card" style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.2s;">';
                 modulesHtml += '<input type="checkbox" class="module-checkbox" data-key="' + mod.key + '" data-name="' + mod.name + '" data-price="' + mod.price + '" onchange="MarketingLeadsModule.updateQuoteTotal()" style="width: 18px; height: 18px;">';
+                modulesHtml += iconHtml;
                 modulesHtml += '<div style="flex: 1;">';
                 modulesHtml += '<span style="color: white; font-weight: 500;">' + mod.name + '</span>';
-                modulesHtml += '<span style="color: #22c55e; font-size: 13px; display: block;">USD $' + mod.price + '/mes</span>';
+                modulesHtml += '<span style="color: #22c55e; font-size: 13px; display: block;">USD $' + mod.price.toFixed(2) + '/emp</span>';
                 modulesHtml += '</div></label>';
             });
         });
@@ -1331,7 +1370,7 @@ const MarketingLeadsModule = {
                         '<div class="form-row">' +
                             '<div class="form-group">' +
                                 '<label class="form-label">Cantidad de Empleados <span class="required">*</span></label>' +
-                                '<input type="number" class="form-input" name="max_employees" min="1" value="10" required>' +
+                                '<input type="number" class="form-input" name="max_employees" id="quoteEmployees" min="1" value="10" required oninput="MarketingLeadsModule.updateQuoteTotal()" onchange="MarketingLeadsModule.updateQuoteTotal()">' +
                             '</div>' +
                             '<div class="form-group">' +
                                 '<label class="form-label">Rubro</label>' +
@@ -1339,17 +1378,77 @@ const MarketingLeadsModule = {
                             '</div>' +
                         '</div>' +
                     '</form>' +
-                    '<h4 style="color: #f59e0b; margin: 24px 0 12px 0;">📦 Seleccionar Módulos</h4>' +
-                    '<div id="modulesContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">' + modulesHtml + '</div>' +
-                    '<div id="quoteSummary" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 16px; margin-top: 20px;">' +
-                        '<div style="display: flex; justify-content: space-between; align-items: center;">' +
+
+                    // === PAQUETE CORE (siempre incluido) ===
+                    '<div style="background: rgba(59, 130, 246, 0.1); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 16px; margin: 24px 0 16px 0;">' +
+                        '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">' +
                             '<div>' +
-                                '<p style="color: rgba(255,255,255,0.6); margin: 0; font-size: 13px;">Módulos seleccionados: <span id="moduleCount">0</span></p>' +
-                                '<p style="color: white; font-size: 24px; font-weight: 700; margin: 4px 0 0 0;">USD $<span id="quoteTotal">0</span>/mes</p>' +
+                                '<h4 style="color: #3b82f6; margin: 0;">🔵 Paquete Base (CORE)</h4>' +
+                                '<p style="color: rgba(255,255,255,0.6); font-size: 12px; margin: 4px 0 0 0;">Siempre incluido en todas las suscripciones</p>' +
+                            '</div>' +
+                            '<div style="text-align: right;">' +
+                                '<span style="color: #3b82f6; font-size: 20px; font-weight: 700;">$' + this.corePricePerEmployee.toFixed(2) + '</span>' +
+                                '<span style="color: rgba(255,255,255,0.5); font-size: 12px;">/empleado/mes</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div style="display: flex; flex-wrap: wrap; gap: 8px;">' +
+                            this.coreModules.map(m => '<span style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 4px 10px; border-radius: 6px; font-size: 11px;">' + (m.icon || '📦') + ' ' + m.name + '</span>').join('') +
+                        '</div>' +
+                    '</div>' +
+
+                    // === MÓDULOS OPCIONALES ===
+                    '<h4 style="color: #10b981; margin: 24px 0 12px 0;">🟢 Módulos Opcionales</h4>' +
+                    '<p style="color: rgba(255,255,255,0.5); font-size: 12px; margin: 0 0 12px 0;">Selecciona los módulos adicionales que desea contratar</p>' +
+                    '<div id="modulesContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">' + modulesHtml + '</div>' +
+
+                    // === TRIAL OPTIONS ===
+                    '<div style="background: rgba(168, 85, 247, 0.1); border: 2px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 16px; margin-top: 20px;">' +
+                        '<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">' +
+                            '<label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">' +
+                                '<input type="checkbox" id="offerTrial" checked onchange="MarketingLeadsModule.toggleTrialDisplay()" style="width: 20px; height: 20px;">' +
+                                '<span style="color: #a855f7; font-weight: 600; font-size: 16px;">🎁 Ofrecer Período de Prueba (Trial)</span>' +
+                            '</label>' +
+                        '</div>' +
+                        '<div id="trialOptions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">' +
+                            '<div>' +
+                                '<label style="color: rgba(255,255,255,0.7); font-size: 12px; display: block; margin-bottom: 6px;">Duración del Trial</label>' +
+                                '<select id="trialDays" class="form-input" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(168, 85, 247, 0.5); color: white;" onchange="MarketingLeadsModule.updateQuoteTotal()">' +
+                                    '<option value="7">7 días</option>' +
+                                    '<option value="14">14 días</option>' +
+                                    '<option value="30" selected>30 días (1 mes)</option>' +
+                                    '<option value="60">60 días (2 meses)</option>' +
+                                '</select>' +
                             '</div>' +
                             '<div>' +
-                                '<p style="color: rgba(255,255,255,0.5); font-size: 12px; margin: 0;">Trial 30 días</p>' +
-                                '<p style="color: #22c55e; font-weight: 600; margin: 0;">100% bonificado</p>' +
+                                '<label style="color: rgba(255,255,255,0.7); font-size: 12px; display: block; margin-bottom: 6px;">Bonificación</label>' +
+                                '<select id="trialDiscount" class="form-input" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(168, 85, 247, 0.5); color: white;" onchange="MarketingLeadsModule.updateQuoteTotal()">' +
+                                    '<option value="50">50% de descuento</option>' +
+                                    '<option value="75">75% de descuento</option>' +
+                                    '<option value="100" selected>100% gratis</option>' +
+                                '</select>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div id="trialSummary" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(168, 85, 247, 0.3);">' +
+                            '<p style="color: #a855f7; font-weight: 600; margin: 0;">📅 Primer mes: <span id="trialFirstMonth">$0 (100% bonificado)</span></p>' +
+                            '<p style="color: rgba(255,255,255,0.5); font-size: 12px; margin: 4px 0 0 0;">Después del trial: precio regular mensual</p>' +
+                        '</div>' +
+                    '</div>' +
+
+                    // === RESUMEN TOTAL ===
+                    '<div id="quoteSummary" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 16px; margin-top: 16px;">' +
+                        '<div style="display: flex; justify-content: space-between; align-items: center;">' +
+                            '<div>' +
+                                '<p style="color: rgba(255,255,255,0.6); margin: 0; font-size: 13px;">' +
+                                    'Paquete CORE + <span id="moduleCount">0</span> módulos opcionales' +
+                                '</p>' +
+                                '<p style="color: white; font-size: 24px; font-weight: 700; margin: 4px 0 0 0;">USD $<span id="quoteTotal">0</span>/mes</p>' +
+                                '<p style="color: rgba(255,255,255,0.5); font-size: 11px; margin: 4px 0 0 0;">' +
+                                    '($<span id="quotePricePerEmployee">0</span>/empleado × <span id="quoteEmployeeCount">10</span> empleados)' +
+                                '</p>' +
+                            '</div>' +
+                            '<div style="text-align: right;">' +
+                                '<p style="color: rgba(255,255,255,0.5); font-size: 12px; margin: 0;">Precio mensual regular</p>' +
+                                '<p style="color: #22c55e; font-weight: 600; font-size: 18px; margin: 0;" id="regularPriceLabel">después del trial</p>' +
                             '</div>' +
                         '</div>' +
                     '</div>' +
@@ -1369,42 +1468,126 @@ const MarketingLeadsModule = {
             '</style>';
 
         document.body.appendChild(modal);
+
+        // Calcular total inicial (solo CORE, sin opcionales seleccionados)
+        setTimeout(() => MarketingLeadsModule.updateQuoteTotal(), 100);
     },
 
     /**
-     * Actualiza el total del presupuesto
+     * Actualiza el total del presupuesto (CORE + opcionales × empleados)
+     * NOTA: Usa MarketingLeadsModule explícitamente porque cuando se llama desde
+     * event handlers inline (oninput, onchange), 'this' apunta a window, no al módulo.
      */
     updateQuoteTotal() {
         const checkboxes = document.querySelectorAll('.module-checkbox:checked');
-        let total = 0;
+        const employeesInput = document.getElementById('quoteEmployees');
+        const employees = parseInt(employeesInput?.value) || 10;
+
+        // Precio del paquete CORE (siempre incluido)
+        const corePrice = MarketingLeadsModule.corePricePerEmployee || 15.00;
+
+        // Calcular precio de módulos opcionales seleccionados
+        let optionalPricePerEmployee = 0;
         const selectedModules = [];
 
         checkboxes.forEach(cb => {
-            const price = parseFloat(cb.dataset.price);
-            total += price;
+            const price = parseFloat(cb.dataset.price) || 0;
+            optionalPricePerEmployee += price;
             selectedModules.push({
                 module_key: cb.dataset.key,
                 module_name: cb.dataset.name,
-                price: price,
-                quantity: 1
+                price_per_employee: price,
+                price: price * employees,
+                quantity: employees
             });
         });
 
-        this.quoteState.selectedModules = selectedModules;
+        // Total = (CORE + opcionales) × empleados
+        const totalPricePerEmployee = corePrice + optionalPricePerEmployee;
+        const total = totalPricePerEmployee * employees;
 
-        document.getElementById('moduleCount').textContent = selectedModules.length;
-        document.getElementById('quoteTotal').textContent = total.toFixed(2);
+        // Guardar en estado
+        MarketingLeadsModule.quoteState.selectedModules = selectedModules;
+        MarketingLeadsModule.quoteState.employees = employees;
+        MarketingLeadsModule.quoteState.pricePerEmployee = totalPricePerEmployee;
+        MarketingLeadsModule.quoteState.corePrice = corePrice;
+        MarketingLeadsModule.quoteState.optionalPrice = optionalPricePerEmployee;
+
+        // Actualizar elementos del DOM
+        const moduleCountEl = document.getElementById('moduleCount');
+        const quoteTotalEl = document.getElementById('quoteTotal');
+        const pricePerEmpEl = document.getElementById('quotePricePerEmployee');
+        const empCountEl = document.getElementById('quoteEmployeeCount');
+
+        if (moduleCountEl) moduleCountEl.textContent = selectedModules.length;
+        if (quoteTotalEl) quoteTotalEl.textContent = total.toFixed(2);
+        if (pricePerEmpEl) pricePerEmpEl.textContent = totalPricePerEmployee.toFixed(2);
+        if (empCountEl) empCountEl.textContent = employees;
+
+        // === Cálculo del Trial ===
+        const offerTrial = document.getElementById('offerTrial')?.checked ?? true;
+        const trialDaysEl = document.getElementById('trialDays');
+        const trialDiscountEl = document.getElementById('trialDiscount');
+        const trialFirstMonthEl = document.getElementById('trialFirstMonth');
+
+        const trialDays = parseInt(trialDaysEl?.value) || 30;
+        const trialDiscount = parseInt(trialDiscountEl?.value) || 100;
+
+        // Guardar trial en estado
+        MarketingLeadsModule.quoteState.offerTrial = offerTrial;
+        MarketingLeadsModule.quoteState.trialDays = trialDays;
+        MarketingLeadsModule.quoteState.trialDiscount = trialDiscount;
+
+        if (trialFirstMonthEl && offerTrial) {
+            const firstMonthPrice = total * (1 - trialDiscount / 100);
+            const savings = total - firstMonthPrice;
+            if (trialDiscount === 100) {
+                trialFirstMonthEl.innerHTML = '<span style="color: #22c55e; font-weight: 700;">$0 GRATIS</span> <span style="color: rgba(255,255,255,0.5);">(ahorro: $' + savings.toFixed(2) + ')</span>';
+            } else {
+                trialFirstMonthEl.innerHTML = '<span style="color: #22c55e; font-weight: 700;">$' + firstMonthPrice.toFixed(2) + '</span> <span style="color: rgba(255,255,255,0.5);">(' + trialDiscount + '% descuento, ahorro: $' + savings.toFixed(2) + ')</span>';
+            }
+        }
+
+        console.log('[QUOTE] Updated:', {
+            employees,
+            corePrice,
+            optionalPrice: optionalPricePerEmployee,
+            totalPerEmployee: totalPricePerEmployee,
+            total,
+            optionalModules: selectedModules.length,
+            trial: { offerTrial, trialDays, trialDiscount }
+        });
+    },
+
+    /**
+     * Toggle para mostrar/ocultar el label de Trial
+     */
+    toggleTrialDisplay() {
+        const checkbox = document.getElementById('offerTrial');
+        const trialOptions = document.getElementById('trialOptions');
+        const trialSummary = document.getElementById('trialSummary');
+        const regularPriceLabel = document.getElementById('regularPriceLabel');
+
+        if (trialOptions) {
+            trialOptions.style.opacity = checkbox?.checked ? '1' : '0.4';
+            trialOptions.style.pointerEvents = checkbox?.checked ? 'auto' : 'none';
+        }
+        if (trialSummary) {
+            trialSummary.style.display = checkbox?.checked ? 'block' : 'none';
+        }
+        if (regularPriceLabel) {
+            regularPriceLabel.textContent = checkbox?.checked ? 'después del trial' : 'sin trial';
+        }
+
+        // Actualizar cálculos
+        this.updateQuoteTotal();
     },
 
     /**
      * Guarda el presupuesto desde el lead
      */
     async saveQuoteFromLead() {
-        // Validar módulos seleccionados
-        if (this.quoteState.selectedModules.length === 0) {
-            alert('Debes seleccionar al menos un módulo');
-            return;
-        }
+        // Nota: No validamos módulos opcionales porque el paquete CORE siempre está incluido
 
         // Obtener datos del formulario
         const form = document.getElementById('quoteCompanyForm');
@@ -1422,6 +1605,9 @@ const MarketingLeadsModule = {
         }
 
         const notes = document.getElementById('quoteNotes')?.value || '';
+        const offerTrial = document.getElementById('offerTrial')?.checked ?? true;
+        const trialDays = parseInt(document.getElementById('trialDays')?.value) || 30;
+        const trialDiscount = parseInt(document.getElementById('trialDiscount')?.value) || 100;
 
         try {
             // Llamar al endpoint para crear presupuesto desde lead
@@ -1434,7 +1620,14 @@ const MarketingLeadsModule = {
                 body: JSON.stringify({
                     company_data: companyData,
                     modules_data: this.quoteState.selectedModules,
-                    notes: notes
+                    notes: notes,
+                    offer_trial: offerTrial,
+                    trial_days: offerTrial ? trialDays : 0,
+                    trial_discount_percent: offerTrial ? trialDiscount : 0,
+                    employees: this.quoteState.employees || parseInt(companyData.max_employees) || 10,
+                    price_per_employee: this.quoteState.pricePerEmployee || 0,
+                    core_price: this.quoteState.corePrice || this.corePricePerEmployee || 15.00,
+                    optional_price: this.quoteState.optionalPrice || 0
                 })
             });
 

@@ -4886,7 +4886,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     }
 
     try {
-      // Fetch módulos comerciales desde API
+      // Fetch módulos comerciales desde API (nueva estructura CORE + OPCIONALES)
       const response = await fetch('/api/engineering/commercial-modules');
       const result = await response.json();
 
@@ -4894,8 +4894,17 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
         throw new Error(result.error || 'Error cargando módulos comerciales');
       }
 
-      const { modules, bundles, stats, version, lastSync } = result.data;
-      const modulesArray = Object.values(modules);
+      const { coreModules, optionalModules, stats, lastSync, corePricePerEmployee } = result.data;
+
+      // Renderizar vista simplificada CORE vs OPCIONALES
+      container.innerHTML = this.renderCommercialCatalog(coreModules, optionalModules, stats, lastSync, corePricePerEmployee);
+
+      console.log('✅ [COMMERCIAL] Vista renderizada:', stats.totalCore, 'CORE +', stats.totalOptional, 'OPCIONALES');
+      return;
+
+      // === CÓDIGO LEGACY COMENTADO (por si se necesita revertir) ===
+      const modules = result.data.modules || [];
+      const modulesArray = Array.isArray(modules) ? modules : Object.values(modules);
 
             // Mapeo de categorías con iconos y colores
       const categoryConfig = {
@@ -5106,22 +5115,22 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
                       <!-- Precio -->
                       <div style="background: #f9fafb; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-                        <div style="font-size: 24px; font-weight: 800; color: #3b82f6;">$${module.basePrice.toLocaleString()}</div>
+                        <div style="font-size: 24px; font-weight: 800; color: #3b82f6;">$${(module.basePrice || 0).toLocaleString()}</div>
                         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Precio base mensual</div>
                       </div>
 
                       <!-- Estado técnico -->
-                      ${module.technicalModule.hasImplementation ? `
+                      ${module.technicalModule?.hasImplementation ? `
                         <div style="margin-bottom: 15px;">
                           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <span style="font-size: 12px; color: #6b7280; font-weight: 600;">Implementación</span>
-                            <span style="font-size: 12px; font-weight: 700; color: ${module.technicalModule.progress === 100 ? '#10b981' : '#f59e0b'};">${module.technicalModule.progress}%</span>
+                            <span style="font-size: 12px; font-weight: 700; color: ${(module.technicalModule?.progress || 0) === 100 ? '#10b981' : '#f59e0b'};">${module.technicalModule?.progress || 0}%</span>
                           </div>
                           <div style="background: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
-                            <div style="background: ${module.technicalModule.progress === 100 ? '#10b981' : '#f59e0b'}; height: 100%; width: ${module.technicalModule.progress}%;"></div>
+                            <div style="background: ${(module.technicalModule?.progress || 0) === 100 ? '#10b981' : '#f59e0b'}; height: 100%; width: ${module.technicalModule?.progress || 0}%;"></div>
                           </div>
                           <div style="margin-top: 6px;">
-                            <span style="background: ${module.technicalModule.status === 'PRODUCTION' ? '#10b981' : module.technicalModule.status === 'IN_PROGRESS' ? '#f59e0b' : '#6b7280'}; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: 700;">${module.technicalModule.status}</span>
+                            <span style="background: ${module.technicalModule?.status === 'PRODUCTION' ? '#10b981' : module.technicalModule?.status === 'IN_PROGRESS' ? '#f59e0b' : '#6b7280'}; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: 700;">${module.technicalModule?.status || 'UNKNOWN'}</span>
                           </div>
                         </div>
                       ` : `
@@ -5131,11 +5140,11 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
                       `}
 
                       <!-- Dependencies -->
-                      ${module.dependencies.required.length > 0 ? `
+                      ${(module.dependencies?.required?.length || 0) > 0 ? `
                         <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
                           <div style="font-size: 11px; color: #9ca3af; margin-bottom: 6px; font-weight: 600;">DEPENDE DE:</div>
                           <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-                            ${module.dependencies.required.map(dep => `
+                            ${(module.dependencies?.required || []).map(dep => `
                               <span style="background: #e5e7eb; padding: 3px 8px; border-radius: 8px; font-size: 10px; color: #6b7280;">${dep}</span>
                             `).join('')}
                           </div>
@@ -5260,6 +5269,416 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
           </button>
         </div>
       `;
+    }
+  },
+
+  /**
+   * Renderiza el catálogo comercial simplificado (CORE + OPCIONALES)
+   */
+  renderCommercialCatalog(coreModules, optionalModules, stats, lastSync, corePricePerEmployee = 15.00) {
+    // Store modules for pricing editor
+    this._commercialData = { coreModules, optionalModules, stats, corePricePerEmployee };
+
+    const renderModuleCard = (module, isCore) => {
+      const borderColor = isCore ? '#3b82f6' : '#10b981';
+      const badgeColor = isCore ? '#3b82f6' : '#10b981';
+      const badgeText = isCore ? 'CORE' : 'OPCIONAL';
+      const price = parseFloat(module.basePrice) || 0;
+
+      return `
+        <div style="
+          background: white;
+          border: 2px solid ${borderColor}22;
+          border-radius: 12px;
+          padding: 20px;
+          transition: all 0.3s;
+          position: relative;
+        "
+        onmouseover="this.style.borderColor='${borderColor}'; this.style.boxShadow='0 4px 12px ${borderColor}22'"
+        onmouseout="this.style.borderColor='${borderColor}22'; this.style.boxShadow='none'"
+        >
+          <div style="position: absolute; top: 12px; right: 12px;">
+            <span style="background: ${badgeColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 700;">${badgeText}</span>
+          </div>
+
+          <div style="font-size: 36px; margin-bottom: 12px;">${module.icon || '📦'}</div>
+          <h3 style="margin: 0 0 8px 0; font-size: 16px; color: #374151; font-weight: 700;">${module.name}</h3>
+          <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 13px; line-height: 1.5; min-height: 40px;">${module.description || 'Sin descripción'}</p>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+            <span style="background: #f3f4f6; padding: 4px 10px; border-radius: 8px; font-size: 11px; color: #6b7280; text-transform: uppercase;">${module.category || 'general'}</span>
+            <span style="font-size: 18px; font-weight: 700; color: ${price > 0 ? '#10b981' : '#6b7280'};">
+              ${isCore ? 'Incluido' : (price > 0 ? '$' + price.toFixed(2) + '/emp' : 'Sin precio')}
+            </span>
+          </div>
+        </div>
+      `;
+    };
+
+    return `
+      <div style="max-width: 1400px; margin: 0 auto;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h1 style="margin: 0 0 10px 0; font-size: 28px; display: flex; align-items: center; gap: 12px;">
+                💰 Catálogo Comercial
+                <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 16px; font-size: 12px;">SSOT</span>
+              </h1>
+              <p style="margin: 0; opacity: 0.9; font-size: 14px;">Fuente única de verdad: panel-empresa + APKs</p>
+              <p style="margin: 8px 0 0 0; opacity: 0.7; font-size: 12px;">Actualizado: ${new Date(lastSync).toLocaleString('es-AR')}</p>
+            </div>
+            <!-- Botón Editar Precios -->
+            <button
+              onclick="EngineeringDashboard.showPricingEditor()"
+              style="
+                background: white;
+                color: #667eea;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              "
+              onmouseover="this.style.transform='scale(1.05)'"
+              onmouseout="this.style.transform='scale(1)'"
+            >
+              <span style="font-size: 18px;">✏️</span>
+              Editar Precios
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
+          <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <div style="font-size: 32px; font-weight: bold; color: #3b82f6;">${stats.totalCore}</div>
+            <div style="color: #6b7280; font-size: 13px; font-weight: 600;">MÓDULOS CORE</div>
+            <div style="color: #9ca3af; font-size: 11px; margin-top: 4px;">Paquete base incluido</div>
+          </div>
+          <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #10b981; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <div style="font-size: 32px; font-weight: bold; color: #10b981;">${stats.totalOptional}</div>
+            <div style="color: #6b7280; font-size: 13px; font-weight: 600;">MÓDULOS OPCIONALES</div>
+            <div style="color: #9ca3af; font-size: 11px; margin-top: 4px;">Contratación individual</div>
+          </div>
+          <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #8b5cf6; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <div style="font-size: 32px; font-weight: bold; color: #8b5cf6;">${stats.total}</div>
+            <div style="color: #6b7280; font-size: 13px; font-weight: 600;">TOTAL PRODUCTOS</div>
+            <div style="color: #9ca3af; font-size: 11px; margin-top: 4px;">Catálogo completo</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); color: white;">
+            <div style="font-size: 32px; font-weight: bold;">$${corePricePerEmployee.toFixed(2)}</div>
+            <div style="font-size: 13px; font-weight: 600; opacity: 0.9;">PRECIO CORE/EMPLEADO</div>
+            <div style="font-size: 11px; margin-top: 4px; opacity: 0.8;">Paquete base mensual</div>
+          </div>
+        </div>
+
+        <!-- Container para catálogo o editor -->
+        <div id="commercial-content">
+          <!-- CORE Section -->
+          <div style="margin-bottom: 40px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+              <h2 style="margin: 0; font-size: 22px; color: #374151;">🔵 Paquete Base (CORE)</h2>
+              <span style="background: #3b82f6; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">${coreModules.length} módulos</span>
+              <span style="background: #f59e0b; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">$${corePricePerEmployee.toFixed(2)}/empleado</span>
+            </div>
+            <p style="color: #6b7280; margin: 0 0 20px 0; font-size: 14px;">Incluidos en todas las suscripciones. Se comercializan como un único paquete.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+              ${coreModules.map(m => renderModuleCard(m, true)).join('')}
+            </div>
+          </div>
+
+          <!-- OPTIONAL Section -->
+          <div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+              <h2 style="margin: 0; font-size: 22px; color: #374151;">🟢 Módulos Opcionales</h2>
+              <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">${optionalModules.length} módulos</span>
+            </div>
+            <p style="color: #6b7280; margin: 0 0 20px 0; font-size: 14px;">Módulos adicionales que se contratan por separado según las necesidades del cliente.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+              ${optionalModules.map(m => renderModuleCard(m, false)).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Mostrar modal/panel de edición de precios
+   */
+  showPricingEditor() {
+    const container = document.getElementById('commercial-content');
+    if (!container) return;
+
+    const data = this._commercialData;
+    if (!data) {
+      alert('Error: datos comerciales no disponibles');
+      return;
+    }
+
+    const { coreModules, optionalModules, corePricePerEmployee } = data;
+
+    container.innerHTML = `
+      <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <!-- Header con botón volver -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f3f4f6;">
+          <h2 style="margin: 0; color: #374151; display: flex; align-items: center; gap: 12px;">
+            ✏️ Editor de Precios
+          </h2>
+          <button
+            onclick="EngineeringDashboard.loadCommercialModulesView()"
+            style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;"
+          >
+            ← Volver al Catálogo
+          </button>
+        </div>
+
+        <!-- SECCIÓN 1: Precio del Paquete CORE -->
+        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #3b82f6; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+          <h3 style="margin: 0 0 15px 0; color: #1e40af; display: flex; align-items: center; gap: 10px;">
+            🔵 Precio del Paquete CORE
+            <span style="background: #3b82f6; color: white; padding: 2px 8px; border-radius: 8px; font-size: 11px;">${coreModules.length} módulos incluidos</span>
+          </h3>
+          <p style="color: #3b82f6; margin: 0 0 20px 0; font-size: 14px;">
+            Este precio se aplica por empleado/mes e incluye todos los módulos CORE.
+          </p>
+
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="flex: 1; max-width: 300px;">
+              <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">Precio por empleado/mes (USD)</label>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 24px; color: #6b7280;">$</span>
+                <input
+                  type="number"
+                  id="core-price-input"
+                  value="${corePricePerEmployee.toFixed(2)}"
+                  step="0.01"
+                  min="0"
+                  style="flex: 1; padding: 12px 16px; border: 2px solid #3b82f6; border-radius: 8px; font-size: 20px; font-weight: bold; color: #1e40af;"
+                />
+              </div>
+            </div>
+            <button
+              onclick="EngineeringDashboard.saveCorePrice()"
+              style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 14px 28px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);"
+            >
+              💾 Guardar Precio CORE
+            </button>
+          </div>
+
+          <!-- Listado de módulos CORE -->
+          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #93c5fd;">
+            <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: 600; font-size: 13px;">Módulos incluidos en CORE:</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${coreModules.map(m => `
+                <span style="background: white; border: 1px solid #3b82f6; color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                  ${m.icon || '📦'} ${m.name}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: Precios de Módulos Opcionales -->
+        <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 25px;">
+          <h3 style="margin: 0 0 15px 0; color: #065f46; display: flex; align-items: center; gap: 10px;">
+            🟢 Precios de Módulos Opcionales
+            <span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 8px; font-size: 11px;">${optionalModules.length} módulos</span>
+          </h3>
+          <p style="color: #047857; margin: 0 0 20px 0; font-size: 14px;">
+            Cada módulo opcional se cobra adicional al paquete CORE, por empleado/mes.
+          </p>
+
+          <!-- Grid de módulos opcionales -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px;">
+            ${optionalModules.map(m => `
+              <div style="background: white; border: 1px solid #d1fae5; border-radius: 10px; padding: 16px; display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 28px;">${m.icon || '📦'}</div>
+                <div style="flex: 1;">
+                  <div style="font-weight: 600; color: #374151; font-size: 14px;">${m.name}</div>
+                  <div style="color: #6b7280; font-size: 11px; text-transform: uppercase;">${m.category || 'general'}</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="color: #6b7280;">$</span>
+                  <input
+                    type="number"
+                    id="price-${m.key}"
+                    value="${parseFloat(m.basePrice) || 0}"
+                    step="0.01"
+                    min="0"
+                    style="width: 80px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; text-align: right;"
+                    onchange="EngineeringDashboard.markModulePriceChanged('${m.key}')"
+                  />
+                  <button
+                    id="save-btn-${m.key}"
+                    onclick="EngineeringDashboard.saveModulePrice('${m.key}')"
+                    style="background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; opacity: 0.5;"
+                    disabled
+                  >
+                    💾
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Botón guardar todos -->
+          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #a7f3d0; text-align: right;">
+            <button
+              onclick="EngineeringDashboard.saveAllModulePrices()"
+              style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);"
+            >
+              💾 Guardar Todos los Precios Opcionales
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Marcar que un precio de módulo cambió
+   */
+  markModulePriceChanged(moduleKey) {
+    const btn = document.getElementById(`save-btn-${moduleKey}`);
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  },
+
+  /**
+   * Guardar precio del paquete CORE
+   */
+  async saveCorePrice() {
+    const input = document.getElementById('core-price-input');
+    if (!input) return;
+
+    const price = parseFloat(input.value);
+    if (isNaN(price) || price < 0) {
+      alert('Por favor ingrese un precio válido');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/engineering/commercial-modules/core-price', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('Precio CORE guardado correctamente');
+        // Actualizar datos locales
+        if (this._commercialData) {
+          this._commercialData.corePricePerEmployee = price;
+        }
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('Error guardando precio CORE:', error);
+      alert('Error guardando precio: ' + error.message);
+    }
+  },
+
+  /**
+   * Guardar precio de un módulo individual
+   */
+  async saveModulePrice(moduleKey) {
+    const input = document.getElementById(`price-${moduleKey}`);
+    if (!input) return;
+
+    const price = parseFloat(input.value);
+    if (isNaN(price) || price < 0) {
+      alert('Por favor ingrese un precio válido');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/engineering/commercial-modules/${moduleKey}/price`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const btn = document.getElementById(`save-btn-${moduleKey}`);
+        if (btn) {
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+          btn.textContent = '✓';
+          setTimeout(() => btn.textContent = '💾', 2000);
+        }
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('Error guardando precio de módulo:', error);
+      alert('Error guardando precio: ' + error.message);
+    }
+  },
+
+  /**
+   * Guardar todos los precios de módulos opcionales
+   */
+  async saveAllModulePrices() {
+    const data = this._commercialData;
+    if (!data || !data.optionalModules) return;
+
+    let saved = 0;
+    let errors = 0;
+
+    for (const module of data.optionalModules) {
+      const input = document.getElementById(`price-${module.key}`);
+      if (!input) continue;
+
+      const price = parseFloat(input.value);
+      if (isNaN(price) || price < 0) continue;
+
+      // Solo guardar si cambió
+      if (price === parseFloat(module.basePrice)) continue;
+
+      try {
+        const response = await fetch(`/api/engineering/commercial-modules/${module.key}/price`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ price })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          saved++;
+          const btn = document.getElementById(`save-btn-${module.key}`);
+          if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+          }
+        } else {
+          errors++;
+        }
+      } catch (e) {
+        errors++;
+      }
+    }
+
+    if (errors > 0) {
+      alert(`Guardados: ${saved}, Errores: ${errors}`);
+    } else if (saved > 0) {
+      alert(`${saved} precios guardados correctamente`);
+    } else {
+      alert('No hay cambios que guardar');
     }
   },
 

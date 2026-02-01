@@ -76,6 +76,16 @@ router.use((req, res, next) => {
 });
 
 /**
+ * Helper: Asegurar que Brain Service esté inicializado
+ * Se llama en cada endpoint que necesita Brain para datos vivos
+ */
+function ensureBrainService(req) {
+  if (!brainService && req.app.get('database')) {
+    initBrainService(req.app.get('database'));
+  }
+}
+
+/**
  * Función helper para recargar metadata (DEPRECATED - usar Brain)
  */
 function reloadMetadata() {
@@ -234,56 +244,200 @@ router.get('/modules', async (req, res) => {
 
 /**
  * GET /api/engineering/commercial-modules
- * Retorna TODOS los módulos comerciales - AHORA USA BRAIN SERVICE (datos vivos)
- * Esta es la API que deben usar: panel-administrativo, panel-empresa, index.html
+ * Retorna catálogo comercial racionalizado desde v_modules_by_panel + APKs
+ * Esta es la API que deben usar: tab Módulos Comerciales, presupuestos
+ *
+ * Estructura:
+ * - CORE: Módulos base (9 de panel-empresa + 3 APKs) - Se venden como paquete
+ * - OPCIONALES: Módulos adicionales (27 de panel-empresa)
  */
 router.get('/commercial-modules', async (req, res) => {
   try {
-    ensureBrainService(req);
+    const database = req.app.get('database') || require('../config/database');
 
-    if (brainService) {
-      console.log('🧠 [ENGINEERING] Módulos comerciales desde Brain (VIVO)');
-      const commercial = await brainService.getCommercialModules();
+    // 1. Obtener módulos de panel-empresa (tarjetas)
+    const [panelModules] = await database.sequelize.query(`
+      SELECT
+        module_key as key,
+        name,
+        description,
+        icon,
+        category,
+        is_core as "isCore",
+        commercial_type as "commercialType",
+        COALESCE((SELECT base_price FROM system_modules sm WHERE sm.module_key = v.module_key), 0) as "basePrice"
+      FROM v_modules_by_panel v
+      WHERE target_panel = 'panel-empresa'
+        AND show_as_card = true
+      ORDER BY is_core DESC, display_order, name
+    `);
 
-      return res.json({
-        success: true,
-        source: 'LIVE_BRAIN',
-        data: {
-          modules: commercial.modules || [],
-          bundles: metadata.commercialModules?.bundles || {},
-          licensesTiers: metadata.commercialModules?.licensesTiers || [],
-          stats: commercial.stats || {},
-          version: metadata.commercialModules?._version,
-          lastSync: new Date().toISOString()
-        }
+    // 2. Obtener APKs (CORE pero no aparecen como tarjetas)
+    const [apkModules] = await database.sequelize.query(`
+      SELECT
+        module_key as key,
+        name,
+        description,
+        icon,
+        category,
+        is_core as "isCore",
+        'apk-complementaria' as "commercialType",
+        base_price as "basePrice",
+        module_type as "moduleType"
+      FROM system_modules
+      WHERE module_key IN ('apk-kiosk', 'web-kiosk', 'apk-employee')
+        AND is_active = true
+      ORDER BY display_order
+    `);
+
+    // 3. Combinar: CORE = módulos core de panel + APKs
+    const coreModules = [
+      ...panelModules.filter(m => m.isCore),
+      ...apkModules
+    ];
+
+    const optionalModules = panelModules.filter(m => !m.isCore);
+
+    // 4. Agrupar por categoría para el frontend
+    const byCategory = {
+      core: { name: 'Paquete Base (CORE)', modules: coreModules },
+      optional: { name: 'Módulos Opcionales', modules: optionalModules }
+    };
+
+    // 5. Stats
+    const stats = {
+      totalCore: coreModules.length,
+      totalOptional: optionalModules.length,
+      total: coreModules.length + optionalModules.length
+    };
+
+    // 6. Obtener precio del paquete CORE desde system_settings
+    let corePricePerEmployee = 15.00; // Default
+    try {
+      const [settings] = await database.sequelize.query(`
+        SELECT value FROM system_settings WHERE key = 'core_package_price_per_employee'
+      `);
+      if (settings.length > 0) {
+        corePricePerEmployee = parseFloat(settings[0].value) || 15.00;
+      }
+    } catch (e) {
+      console.log('[COMMERCIAL] system_settings no disponible, usando precio default');
+    }
+
+    console.log(`📦 [COMMERCIAL] Catálogo: ${stats.totalCore} CORE + ${stats.totalOptional} OPCIONALES = ${stats.total} total`);
+
+    res.json({
+      success: true,
+      source: 'DATABASE_SSOT',
+      data: {
+        modules: [...coreModules, ...optionalModules],
+        coreModules,
+        optionalModules,
+        byCategory,
+        stats,
+        corePricePerEmployee,
+        bundles: metadata?.commercialModules?.bundles || {},
+        lastSync: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error en GET /commercial-modules:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * PUT /api/engineering/commercial-modules/core-price
+ * Actualiza el precio del paquete CORE por empleado
+ * Body: { price: number }
+ */
+router.put('/commercial-modules/core-price', async (req, res) => {
+  try {
+    const { price } = req.body;
+    const database = req.app.get('database') || require('../config/database');
+
+    if (typeof price !== 'number' || price < 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Precio inválido. Debe ser un número >= 0'
       });
     }
 
-    // Fallback a metadata estático
-    console.log('📦 [ENGINEERING] Módulos comerciales desde metadata (fallback)');
-    const commercialModules = metadata.commercialModules;
+    console.log(`💰 [PRICING] Actualizando precio CORE a: $${price}/empleado`);
 
-    if (!commercialModules) {
+    // Insertar o actualizar en system_settings (incluye category y display_name que son NOT NULL)
+    await database.sequelize.query(`
+      INSERT INTO system_settings (category, key, value, default_value, data_type, display_name, description, sort_order, created_at, updated_at)
+      VALUES ('billing', 'core_package_price_per_employee', $1, '15.00', 'number', 'Precio Paquete CORE', 'Precio del paquete CORE por empleado/mes (USD)', 100, NOW(), NOW())
+      ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()
+    `, {
+      bind: [price.toString()]
+    });
+
+    res.json({
+      success: true,
+      message: `Precio del paquete CORE actualizado a $${price}/empleado`,
+      newPrice: price
+    });
+
+  } catch (error) {
+    console.error('❌ [PRICING] Error actualizando precio CORE:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * PUT /api/engineering/commercial-modules/:moduleKey/price
+ * Actualiza el precio base de un módulo específico
+ * Body: { price: number }
+ */
+router.put('/commercial-modules/:moduleKey/price', async (req, res) => {
+  try {
+    const { moduleKey } = req.params;
+    const { price } = req.body;
+    const database = req.app.get('database') || require('../config/database');
+
+    if (typeof price !== 'number' || price < 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Precio inválido. Debe ser un número >= 0'
+      });
+    }
+
+    console.log(`💰 [PRICING] Actualizando precio de ${moduleKey} a: $${price}`);
+
+    // Actualizar en system_modules
+    const [result] = await database.sequelize.query(`
+      UPDATE system_modules
+      SET base_price = $1, updated_at = NOW()
+      WHERE module_key = $2
+      RETURNING module_key, name, base_price
+    `, {
+      bind: [price, moduleKey]
+    });
+
+    if (result.length === 0) {
       return res.status(404).json({
         success: false,
-        error: 'commercialModules no encontrado en metadata. Ejecutar: node scripts/consolidate-modules-simple.js'
+        error: `Módulo '${moduleKey}' no encontrado`
       });
     }
 
     res.json({
       success: true,
-      source: 'STATIC_FALLBACK',
-      data: {
-        modules: commercialModules.modules,
-        bundles: commercialModules.bundles,
-        licensesTiers: commercialModules.licensesTiers,
-        stats: commercialModules._stats,
-        version: commercialModules._version,
-        lastSync: commercialModules._lastSync
-      }
+      message: `Precio de '${result[0].name}' actualizado a $${price}`,
+      module: result[0]
     });
+
   } catch (error) {
-    console.error('❌ [ENGINEERING] Error en GET /commercial-modules:', error);
+    console.error('❌ [PRICING] Error actualizando precio:', error);
     res.status(500).json({
       success: false,
       error: error.message
