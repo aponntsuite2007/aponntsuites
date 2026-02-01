@@ -1127,6 +1127,234 @@ class OnboardingService {
     const { AdministrativeTask } = require('../config/database');
     return await AdministrativeTask.create(taskData);
   }
+
+  /**
+   * ============================================================================
+   * ACTIVACIÓN PARA TRIAL
+   * ============================================================================
+   */
+
+  /**
+   * Activa empresa cuando tiene período de prueba (trial).
+   * No requiere factura pagada - activa inmediatamente con módulos bonificados.
+   * @param {number} quoteId - ID del quote en estado 'in_trial'
+   */
+  async activateCompanyForTrial(quoteId) {
+    const { Quote, Contract, Company, User, ModuleTrial } = require('../config/database');
+    const bcrypt = require('bcryptjs');
+
+    try {
+      console.log(`🚀 [ONBOARDING] Activando empresa para TRIAL - Quote ID: ${quoteId}`);
+
+      // 1. Obtener quote y validar
+      const quote = await Quote.findByPk(quoteId, {
+        include: [{ model: Company, as: 'company' }]
+      });
+
+      if (!quote) {
+        throw new Error(`Quote ${quoteId} no encontrado`);
+      }
+
+      if (quote.status !== 'in_trial') {
+        throw new Error(`Quote ${quote.quote_number} no está en estado trial (status: ${quote.status})`);
+      }
+
+      if (!quote.has_trial) {
+        throw new Error(`Quote ${quote.quote_number} no tiene trial configurado`);
+      }
+
+      // 2. Verificar que existe contrato
+      const contract = await Contract.findOne({ where: { quote_id: quoteId } });
+      if (!contract) {
+        throw new Error(`No existe contrato para el quote ${quote.quote_number}. El contrato debe existir antes de activar.`);
+      }
+
+      // 3. Obtener o crear empresa
+      let company = quote.company;
+      if (!company) {
+        throw new Error('No hay empresa asociada al quote');
+      }
+
+      // 4. Activar empresa en modo trial
+      await company.update({
+        status: 'trial',
+        is_active: true,
+        is_trial: true,
+        onboarding_status: 'TRIAL_ACTIVE',
+        trial_ends_at: quote.trial_end_date,
+        activated_at: new Date()
+      });
+
+      console.log(`✅ [ONBOARDING] Empresa ${company.name} activada en modo TRIAL`);
+
+      // 5. Crear usuario admin si no existe
+      let adminUser = await User.findOne({
+        where: {
+          company_id: company.company_id,
+          is_core_user: true
+        }
+      });
+
+      if (!adminUser) {
+        adminUser = await User.create({
+          username: 'administrador',
+          password: await bcrypt.hash('admin123', 12),
+          first_name: 'Administrador',
+          last_name: company.name,
+          email: company.contact_email,
+          role: 'admin',
+          company_id: company.company_id,
+          is_core_user: true,
+          force_password_change: true,
+          is_deletable: false
+        });
+        console.log(`✅ [ONBOARDING] Usuario admin creado: administrador`);
+      }
+
+      // 6. Obtener info de trials activos
+      const activeTrials = await ModuleTrial.findAll({
+        where: {
+          company_id: company.company_id,
+          status: 'active'
+        }
+      });
+
+      // 7. Enviar email de bienvenida con credenciales
+      try {
+        await this.sendWelcomeEmail(company, adminUser, {
+          isTrial: true,
+          trialEndDate: quote.trial_end_date,
+          trialModules: activeTrials.map(t => t.module_name)
+        });
+      } catch (emailErr) {
+        console.warn(`⚠️ [ONBOARDING] No se pudo enviar email de bienvenida: ${emailErr.message}`);
+      }
+
+      return {
+        success: true,
+        message: `Empresa ${company.name} activada en modo TRIAL hasta ${new Date(quote.trial_end_date).toLocaleDateString('es-AR')}`,
+        company: {
+          id: company.company_id,
+          name: company.name,
+          slug: company.slug,
+          status: 'trial',
+          is_active: true
+        },
+        admin_user: {
+          username: 'administrador',
+          password: 'admin123',
+          email: adminUser.email,
+          note: 'Contraseña temporal - se solicitará cambio en primer login'
+        },
+        trial_info: {
+          start_date: quote.trial_start_date,
+          end_date: quote.trial_end_date,
+          bonification: quote.trial_bonification_percentage || 100,
+          modules: activeTrials.map(t => ({
+            name: t.module_name,
+            key: t.module_key,
+            end_date: t.end_date
+          }))
+        },
+        contract: {
+          id: contract.id,
+          code: contract.contract_code,
+          status: contract.status
+        },
+        quote: {
+          id: quote.id,
+          number: quote.quote_number,
+          status: quote.status
+        },
+        login_url: `/panel-empresa.html?empresa=${company.slug}`
+      };
+
+    } catch (error) {
+      console.error(`❌ [ONBOARDING] Error en activateCompanyForTrial:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene quotes en estado 'in_trial' que necesitan activación.
+   */
+  async getPendingTrialActivations() {
+    const { Quote, Company, Contract, ModuleTrial } = require('../config/database');
+    const { Op } = require('sequelize');
+
+    try {
+      const quotes = await Quote.findAll({
+        where: {
+          status: 'in_trial',
+          has_trial: true
+        },
+        include: [
+          {
+            model: Company,
+            as: 'company',
+            attributes: ['company_id', 'name', 'slug', 'is_active', 'status', 'contact_email']
+          }
+        ],
+        order: [['created_at', 'DESC']]
+      });
+
+      const results = [];
+
+      for (const quote of quotes) {
+        // Verificar si tiene contrato
+        const contract = await Contract.findOne({ where: { quote_id: quote.id } });
+
+        // Verificar trials activos
+        const trials = await ModuleTrial.findAll({
+          where: {
+            quote_id: quote.id,
+            status: 'active'
+          }
+        });
+
+        const companyIsActive = quote.company?.is_active || false;
+
+        results.push({
+          quote_id: quote.id,
+          quote_number: quote.quote_number,
+          company: quote.company ? {
+            id: quote.company.company_id,
+            name: quote.company.name,
+            slug: quote.company.slug,
+            is_active: quote.company.is_active,
+            status: quote.company.status
+          } : null,
+          trial: {
+            start_date: quote.trial_start_date,
+            end_date: quote.trial_end_date,
+            days_remaining: quote.trial_end_date
+              ? Math.ceil((new Date(quote.trial_end_date) - new Date()) / (1000 * 60 * 60 * 24))
+              : null,
+            modules_count: trials.length
+          },
+          has_contract: !!contract,
+          contract_code: contract?.contract_code || null,
+          needs_activation: !companyIsActive && !!contract,
+          action_required: !companyIsActive && !!contract
+            ? 'ACTIVAR_EMPRESA'
+            : companyIsActive
+              ? 'YA_ACTIVA'
+              : 'FALTA_CONTRATO'
+        });
+      }
+
+      return {
+        success: true,
+        count: results.length,
+        pending_activations: results.filter(r => r.needs_activation),
+        all: results
+      };
+
+    } catch (error) {
+      console.error(`❌ [ONBOARDING] Error en getPendingTrialActivations:`, error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new OnboardingService();

@@ -281,6 +281,62 @@ router.post('/:trace_id/activate', auth, authorize(['admin']), async (req, res) 
 
 /**
  * ============================================
+ * FASE 4B: ALTA PARA TRIAL (sin factura)
+ * ============================================
+ */
+
+/**
+ * POST /api/onboarding/activate-trial/:quoteId
+ * Activar empresa cuando tiene período de prueba (trial).
+ * No requiere factura pagada - la empresa se activa inmediatamente
+ * con los módulos bonificados durante el trial.
+ *
+ * Returns: { success, company_id, admin_user, trial_info }
+ */
+router.post('/activate-trial/:quoteId', auth, async (req, res) => {
+  try {
+    const { quoteId } = req.params;
+
+    if (!quoteId) {
+      return res.status(400).json({
+        success: false,
+        error: 'quoteId es requerido'
+      });
+    }
+
+    const result = await OnboardingService.activateCompanyForTrial(parseInt(quoteId));
+
+    return res.status(200).json(result);
+
+  } catch (error) {
+    console.error('❌ [ONBOARDING API] Error en /activate-trial:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/onboarding/pending-activations
+ * Lista quotes en estado 'in_trial' que necesitan activación de empresa.
+ * Útil para el panel administrativo.
+ */
+router.get('/pending-activations', auth, async (req, res) => {
+  try {
+    const result = await OnboardingService.getPendingTrialActivations();
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('❌ [ONBOARDING API] Error en /pending-activations:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * ============================================
  * FASE 5: LIQUIDACIÓN DE COMISIONES
  * ============================================
  */
