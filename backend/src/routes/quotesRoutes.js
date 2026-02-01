@@ -543,9 +543,20 @@ router.post('/:id/send-email', verifyStaffToken, async (req, res) => {
       { expiresIn: '30d' }
     );
 
-    // Construir URL pública
-    const baseUrl = process.env.BASE_URL || 'http://localhost:9998';
+    // Construir URL pública (detectar producción automáticamente)
+    let baseUrl = process.env.BASE_URL;
+    if (!baseUrl) {
+      // Detectar si está en Render
+      if (process.env.RENDER_EXTERNAL_HOSTNAME) {
+        baseUrl = `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`;
+      } else if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+        baseUrl = 'https://aponnt.onrender.com'; // Fallback hardcoded para producción
+      } else {
+        baseUrl = 'http://localhost:9998';
+      }
+    }
     const publicUrl = `${baseUrl}/presupuesto/${publicToken}`;
+    console.log('📧 [QUOTES] URL pública generada:', publicUrl, '| BASE_URL env:', process.env.BASE_URL || 'no definido');
 
     // Generar HTML del email
     const modulesData = quote.modules_data || [];
