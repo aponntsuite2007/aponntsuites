@@ -2571,31 +2571,33 @@ router.get('/fix-email-password', async (req, res) => {
             WHERE table_name = 'aponnt_email_config'
             ORDER BY ordinal_position
         `);
+        const columnNames = columns.map(c => c.column_name);
 
         // Ver estado actual de aponnt_email_config
         const [currentConfig] = await sequelize.query(`
             SELECT * FROM aponnt_email_config WHERE email_type = 'commercial'
         `);
 
-        // Actualizar password como texto plano
-        // is_encrypted puede no existir, así que lo intentamos por separado
-        let updateResult = 'none';
-        try {
-            await sequelize.query(`
-                UPDATE aponnt_email_config
-                SET password = $1, is_encrypted = false, test_status = 'success', updated_at = NOW()
-                WHERE email_type = 'commercial'
-            `, { bind: [plainPassword] });
-            updateResult = 'with_is_encrypted';
-        } catch (e) {
-            // Si is_encrypted no existe, intentar sin él
-            await sequelize.query(`
-                UPDATE aponnt_email_config
-                SET password = $1, test_status = 'success', updated_at = NOW()
-                WHERE email_type = 'commercial'
-            `, { bind: [plainPassword] });
-            updateResult = 'without_is_encrypted';
+        // Detectar nombre de columna de password
+        const passwordColumn = columnNames.find(c => c.includes('pass') || c.includes('secret') || c.includes('credential'));
+
+        if (!passwordColumn) {
+            return res.json({
+                success: false,
+                columns: columnNames,
+                currentConfig,
+                message: 'No se encontró columna de password. Ver columnas disponibles.'
+            });
         }
+
+        // Actualizar password usando el nombre de columna detectado
+        let updateResult = 'none';
+        await sequelize.query(`
+            UPDATE aponnt_email_config
+            SET "${passwordColumn}" = $1, test_status = 'success', updated_at = NOW()
+            WHERE email_type = 'commercial'
+        `, { bind: [plainPassword] });
+        updateResult = `updated_${passwordColumn}`;
 
         // Verificar cambio
         const [updatedConfig] = await sequelize.query(`
@@ -2604,11 +2606,12 @@ router.get('/fix-email-password', async (req, res) => {
 
         res.json({
             success: true,
-            columns: columns.map(c => c.column_name),
+            columns: columnNames,
+            passwordColumn,
             before: currentConfig,
             after: updatedConfig,
             updateResult,
-            message: 'Password actualizado como texto plano'
+            message: 'Password actualizado'
         });
     } catch (error) {
         res.status(500).json({ error: error.message, stack: error.stack });
