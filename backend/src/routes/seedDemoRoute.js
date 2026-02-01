@@ -2596,9 +2596,9 @@ router.get('/force-insert-mapping', async (req, res) => {
                 } else {
                     await sequelize.query(`
                         INSERT INTO notification_workflows
-                        (process_key, process_name, workflow_name, module, scope, email_type, priority, channels, is_active, created_at, updated_at)
+                        (process_key, process_name, workflow_key, workflow_name, module, scope, email_type, priority, channels, is_active, created_at, updated_at)
                         VALUES
-                        (:process_key, :process_name, :workflow_name, :module, :scope, :email_type, :priority, :channels::jsonb, true, NOW(), NOW())
+                        (:process_key, :process_name, :process_key, :workflow_name, :module, :scope, :email_type, :priority, :channels::jsonb, true, NOW(), NOW())
                     `, { replacements: w });
                     results.push({ process_key: w.process_key, status: 'inserted' });
                 }
