@@ -2554,7 +2554,7 @@ router.get('/fix-email-mapping', async (req, res) => {
     }
 });
 
-// GET /api/seed-demo/fix-email-password - Arreglar password del email comercial
+// GET /api/seed-demo/fix-email-password - Arreglar password del email comercial (ENCRIPTADO)
 router.get('/fix-email-password', async (req, res) => {
     const { key } = req.query;
     if (!SECRET_KEY || !key || key !== SECRET_KEY) {
@@ -2562,42 +2562,32 @@ router.get('/fix-email-password', async (req, res) => {
     }
 
     try {
+        const crypto = require('crypto');
+
         // Password de app de Gmail para aponntcomercial@gmail.com
         const plainPassword = 'enlgpjfagfwrobhe';
 
-        // Primero ver estructura de la tabla
-        const [columns] = await sequelize.query(`
-            SELECT column_name FROM information_schema.columns
-            WHERE table_name = 'aponnt_email_config'
-            ORDER BY ordinal_position
-        `);
-        const columnNames = columns.map(c => c.column_name);
+        // Encriptar password (mismo algoritmo que EmailConfigService)
+        const encryptionKey = process.env.EMAIL_ENCRYPTION_KEY || 'aponnt-email-config-secret-key-2025';
+        const algorithm = 'aes-256-cbc';
+        const keyHash = crypto.createHash('sha256').update(encryptionKey).digest();
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipheriv(algorithm, keyHash, iv);
+        let encrypted = cipher.update(plainPassword, 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        const encryptedPassword = iv.toString('hex') + ':' + encrypted;
 
         // Ver estado actual de aponnt_email_config
         const [currentConfig] = await sequelize.query(`
             SELECT * FROM aponnt_email_config WHERE email_type = 'commercial'
         `);
 
-        // Detectar nombre de columna de password
-        const passwordColumn = columnNames.find(c => c.includes('pass') || c.includes('secret') || c.includes('credential'));
-
-        if (!passwordColumn) {
-            return res.json({
-                success: false,
-                columns: columnNames,
-                currentConfig,
-                message: 'No se encontró columna de password. Ver columnas disponibles.'
-            });
-        }
-
-        // Actualizar password usando el nombre de columna detectado
-        let updateResult = 'none';
+        // Actualizar smtp_password con password encriptado
         await sequelize.query(`
             UPDATE aponnt_email_config
-            SET "${passwordColumn}" = $1, test_status = 'success', updated_at = NOW()
+            SET smtp_password = $1, test_status = 'success', updated_at = NOW()
             WHERE email_type = 'commercial'
-        `, { bind: [plainPassword] });
-        updateResult = `updated_${passwordColumn}`;
+        `, { bind: [encryptedPassword] });
 
         // Verificar cambio
         const [updatedConfig] = await sequelize.query(`
@@ -2606,12 +2596,11 @@ router.get('/fix-email-password', async (req, res) => {
 
         res.json({
             success: true,
-            columns: columnNames,
-            passwordColumn,
+            plainPassword,
+            encryptedPassword,
             before: currentConfig,
             after: updatedConfig,
-            updateResult,
-            message: 'Password actualizado'
+            message: 'Password encriptado y actualizado'
         });
     } catch (error) {
         res.status(500).json({ error: error.message, stack: error.stack });
