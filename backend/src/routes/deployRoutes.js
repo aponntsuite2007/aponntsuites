@@ -228,7 +228,7 @@ router.get('/db-diagnostic', async (req, res) => {
 // ============================================================================
 
 router.post('/emergency-migration', async (req, res) => {
-  const { key } = req.body;
+  const { key, migrations: customMigrations, batchSize = 100 } = req.body;
 
   // Validar con key simple del env
   const validKey = process.env.SEED_DEMO_KEY || 'DEMO_SEED_2024_SECURE';
@@ -236,11 +236,12 @@ router.post('/emergency-migration', async (req, res) => {
     return res.status(403).json({ error: 'Clave inválida' });
   }
 
-  console.log('🚨 [EMERGENCY MIGRATION] Iniciando migración de emergencia...');
+  console.log('🚨 [EMERGENCY MIGRATION] Iniciando migración...');
 
   const { sequelize } = require('../config/database');
 
-  const migrations = [
+  // Si se pasan migraciones custom, usarlas
+  const migrations = customMigrations || [
     // Columnas para tabla quotes
     "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS origin_type VARCHAR(30) DEFAULT 'manual'",
     "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS origin_detail JSONB",
