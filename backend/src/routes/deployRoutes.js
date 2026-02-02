@@ -228,7 +228,7 @@ router.get('/db-diagnostic', async (req, res) => {
 // ============================================================================
 
 router.post('/emergency-migration', async (req, res) => {
-  const { key, migrations: customMigrations, batchSize = 100 } = req.body;
+  const { key, migrations: customMigrations, useFullMigration = false } = req.body;
 
   // Validar con key simple del env
   const validKey = process.env.SEED_DEMO_KEY || 'DEMO_SEED_2024_SECURE';
@@ -240,8 +240,22 @@ router.post('/emergency-migration', async (req, res) => {
 
   const { sequelize } = require('../config/database');
 
-  // Si se pasan migraciones custom, usarlas
-  const migrations = customMigrations || [
+  let migrations;
+
+  // Si pide full migration, leer del archivo
+  if (useFullMigration) {
+    try {
+      const fullMigrationPath = path.join(__dirname, '../../scripts/full-migration-data.json');
+      migrations = JSON.parse(fs.readFileSync(fullMigrationPath, 'utf8'));
+      console.log(`📦 Cargadas ${migrations.length} migraciones del archivo`);
+    } catch (e) {
+      return res.status(500).json({ error: 'No se pudo leer el archivo de migración: ' + e.message });
+    }
+  } else if (customMigrations && customMigrations.length > 0) {
+    migrations = customMigrations;
+  } else {
+    // Default: solo quotes
+    migrations = [
     // Columnas para tabla quotes
     "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS origin_type VARCHAR(30) DEFAULT 'manual'",
     "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS origin_detail JSONB",
