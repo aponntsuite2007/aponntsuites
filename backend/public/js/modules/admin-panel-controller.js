@@ -157,7 +157,8 @@ const AdminPanelController = {
             const content = await this._loadSectionContent(sectionId);
 
             // Renderizar en el área de contenido
-            if (this._contentArea) {
+            // Si content es null/undefined, el módulo ya renderizó directamente
+            if (this._contentArea && content !== null && content !== undefined) {
                 this._contentArea.innerHTML = content;
             }
 
@@ -192,7 +193,7 @@ const AdminPanelController = {
                 // Usar QuotesManagement para el Pipeline de Altas
                 if (window.QuotesManagement) {
                     await QuotesManagement.init();
-                    return '';
+                    return null; // null = módulo ya renderizó, no sobrescribir
                 }
                 return this._loadPresupuestos();
             },
@@ -256,7 +257,7 @@ const AdminPanelController = {
                 // Centro de Notificaciones Admin (global - todas las empresas)
                 if (window.NotificationsAdmin) {
                     await NotificationsAdmin.init('content-area');
-                    return '';
+                    return null; // null = módulo ya renderizó, no sobrescribir
                 }
                 return this._loadNotificacionesAdmin();
             },
