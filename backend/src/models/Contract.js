@@ -179,13 +179,13 @@ module.exports = (sequelize) => {
     // ESTADO DEL CONTRATO
     // ═══════════════════════════════════════════════════════════
     status: {
-      type: DataTypes.STRING(20),
+      type: DataTypes.STRING(50),
       allowNull: false,
-      defaultValue: 'draft',
+      defaultValue: 'DRAFT',
       validate: {
-        isIn: [['draft', 'sent', 'signed', 'active', 'suspended', 'terminated', 'cancelled', 'superseded']]
+        isIn: [['DRAFT', 'SENT', 'VIEWED', 'SIGNED', 'REJECTED', 'EXPIRED', 'CANCELLED', 'ACTIVE', 'GENERATED', 'active', 'suspended', 'terminated', 'cancelled', 'superseded']]
       },
-      comment: 'Estados: draft (borrador), sent (enviado para firma), signed (firmado, empresa aún inactiva), active (activo, empresa activada), suspended (por falta de pago), terminated, cancelled, superseded (reemplazado)'
+      comment: 'Estados: DRAFT, SENT, VIEWED, SIGNED, REJECTED, EXPIRED, CANCELLED, ACTIVE, GENERATED'
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -398,13 +398,13 @@ module.exports = (sequelize) => {
       {
         name: 'idx_one_active_contract_per_company',
         fields: ['company_id', 'status'],
-        where: { status: 'active' },
+        where: { status: 'ACTIVE' },
         comment: 'Solo 1 contrato activo por empresa'
       },
       {
         name: 'idx_active_contracts',
         fields: ['status', 'company_id'],
-        where: { status: 'active' }
+        where: { status: 'ACTIVE' }
       }
     ],
     hooks: {
@@ -640,7 +640,7 @@ module.exports = (sequelize) => {
     return await Contract.findOne({
       where: {
         company_id: companyId,
-        status: 'active'
+        status: 'ACTIVE'
       },
       transaction
     });
@@ -667,7 +667,7 @@ module.exports = (sequelize) => {
 
     return await Contract.findAll({
       where: {
-        status: 'active',
+        status: 'ACTIVE',
         end_date: {
           [sequelize.Sequelize.Op.between]: [now, threshold],
           [sequelize.Sequelize.Op.ne]: null
@@ -764,7 +764,7 @@ module.exports = (sequelize) => {
    */
   Contract.getMRR = async function() {
     const activeContracts = await Contract.findAll({
-      where: { status: 'active' }
+      where: { status: 'ACTIVE' }
     });
 
     return activeContracts.reduce((sum, contract) => {
