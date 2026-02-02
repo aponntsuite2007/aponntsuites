@@ -1074,6 +1074,12 @@ const AponntEmailConfigModule = (() => {
                     <small style="color: #6b7280;">Email donde llegarán las respuestas (dejar vacío para usar el mismo From Email)</small>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">📋 Copia Oculta (BCC) - Opcional</label>
+                    <input type="email" class="form-input" name="bcc_email" value="${currentConfig.bcc_email || ''}" placeholder="copias@aponnt.com">
+                    <small style="color: #6b7280;">Email que recibirá copia oculta de TODOS los emails enviados con esta configuración (para control/archivo)</small>
+                </div>
+
                 <!-- Configuración SMTP -->
                 <h4 style="color: #1f2937; margin: 1.5rem 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb;">🔧 Configuración SMTP</h4>
 

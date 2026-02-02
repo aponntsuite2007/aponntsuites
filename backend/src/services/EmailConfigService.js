@@ -108,6 +108,7 @@ class EmailConfigService {
                     from_name,
                     from_email,
                     reply_to,
+                    bcc_email,
                     smtp_host,
                     smtp_port,
                     smtp_secure,
@@ -164,6 +165,7 @@ class EmailConfigService {
                     from_name,
                     from_email,
                     reply_to,
+                    bcc_email,
                     smtp_host,
                     smtp_port,
                     smtp_secure,
@@ -240,7 +242,7 @@ class EmailConfigService {
             };
 
             const allowedFields = [
-                'from_name', 'from_email', 'reply_to',
+                'from_name', 'from_email', 'reply_to', 'bcc_email',
                 'smtp_host', 'smtp_port', 'smtp_secure', 'smtp_password', 'app_password',
                 'recovery_phone', 'backup_email', 'notes', 'is_active',
                 // Campos visuales para EMAIL_INFO dinámico
