@@ -303,6 +303,7 @@ router.post('/emergency-migration', async (req, res) => {
     "CREATE INDEX IF NOT EXISTS idx_quotes_lead_id ON quotes(lead_id)",
     "CREATE INDEX IF NOT EXISTS idx_quotes_sales_lead_id ON quotes(sales_lead_id)"
   ];
+  }
 
   const results = { success: 0, failed: 0, errors: [] };
 
