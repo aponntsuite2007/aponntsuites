@@ -711,11 +711,14 @@ const NotificationsAdmin = {
 
     renderCompanyFilter() {
         const select = document.getElementById('filter-company');
-        if (!select || !this.companies) return;
+        if (!select) return;
+
+        // Asegurar que companies sea un array
+        const companiesList = Array.isArray(this.companies) ? this.companies : [];
 
         select.innerHTML = `
             <option value="">Todas las empresas</option>
-            ${this.companies.map(c => `
+            ${companiesList.map(c => `
                 <option value="${c.company_id}">${c.name} (${c.total_notifications || 0})</option>
             `).join('')}
         `;

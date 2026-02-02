@@ -245,16 +245,29 @@ const LeadsPipelineDashboard = (function() {
         try {
             const token = localStorage.getItem('aponnt_token_staff');
 
-            // Cargar notificaciones relacionadas con leads desde la inbox
-            const response = await fetch('/api/aponnt/inbox?type=lead&limit=10', {
+            // Cargar emails de quotes (presupuestos) enviados a leads
+            const response = await fetch('/api/admin/notifications/email-tracking/list?category=quote&limit=10', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (response.ok) {
                 const data = await response.json();
-                _leadAlerts = data.messages || [];
+                // Convertir emails a formato de alertas
+                _leadAlerts = (data.emails || []).map(email => ({
+                    id: email.id,
+                    type: email.status === 'opened' ? 'info' : email.status === 'sent' ? 'success' : 'warning',
+                    icon: email.status === 'opened' ? '👁️' : email.status === 'clicked' ? '🔗' : '📧',
+                    title: `Email ${email.status === 'opened' ? 'abierto' : email.status === 'clicked' ? 'click' : 'enviado'}`,
+                    message: `${email.recipient_name || email.recipient_email}: ${email.subject}`,
+                    timestamp: email.sent_at || email.created_at,
+                    lead_id: null // No tenemos el lead_id aquí
+                }));
+
+                // Combinar con alertas locales generadas desde leads
+                const localAlerts = generateLocalAlerts();
+                _leadAlerts = [...localAlerts, ..._leadAlerts].slice(0, 10);
             } else {
-                // Si no hay endpoint, generar alertas locales desde los leads
+                // Si falla, generar alertas locales desde los leads
                 _leadAlerts = generateLocalAlerts();
             }
 
