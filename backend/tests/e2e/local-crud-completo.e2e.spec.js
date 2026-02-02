@@ -9,9 +9,9 @@ const fs = require('fs');
 
 const BASE_URL = 'http://localhost:9998';
 const CREDENTIALS = {
-    email: 'admin@demo.aponnt.com',
+    email: 'admin',  // Usuario admin de ISI
     password: 'admin123',
-    companySlug: 'aponnt-demo'
+    companySlug: 'isi'  // Empresa ISI en local
 };
 
 const SCREENSHOTS_DIR = path.join(__dirname, '../../test-results/local-crud');
