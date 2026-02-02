@@ -613,13 +613,23 @@ router.post('/quotes/:id/convert-to-contract', requireAponntAuth, async (req, re
     const endDate = new Date();
     endDate.setFullYear(endDate.getFullYear() + 1);
 
+    // Template básico del contrato
+    const templateContent = `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h1>CONTRATO DE SERVICIO ${contractNumber}</h1>
+        <p>Fecha: ${startDate.toLocaleDateString('es-AR')}</p>
+        <p>Vigencia: ${startDate.toLocaleDateString('es-AR')} - ${endDate.toLocaleDateString('es-AR')}</p>
+        <p>Monto mensual: USD ${budget.total_monthly}</p>
+      </div>
+    `;
+
     await sequelize.query(`
       INSERT INTO contracts (
         company_id, vendor_id, contract_number, budget_id,
-        monthly_amount, start_date, end_date, status, created_at
+        monthly_amount, start_date, end_date, status, created_at, template_content
       ) VALUES (
         :company_id, :vendor_id, :contract_number, :budget_id,
-        :monthly_amount, :start_date, :end_date, 'active', NOW()
+        :monthly_amount, :start_date, :end_date, 'active', NOW(), :template_content
       )
     `, {
       replacements: {
@@ -629,7 +639,8 @@ router.post('/quotes/:id/convert-to-contract', requireAponntAuth, async (req, re
         budget_id: budget.id,
         monthly_amount: budget.total_monthly,
         start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0]
+        end_date: endDate.toISOString().split('T')[0],
+        template_content: templateContent
       },
       type: QueryTypes.INSERT
     });

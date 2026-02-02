@@ -92,6 +92,37 @@ router.post('/onboarding/generate', authMiddleware, async (req, res) => {
     const expiration_date = new Date();
     expiration_date.setFullYear(expiration_date.getFullYear() + 1);
 
+    // Generar template_content del contrato
+    const templateContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <h1 style="text-align: center; color: #333;">CONTRATO DE LICENCIA DE USO</h1>
+        <h2 style="text-align: center; color: #666;">${contract_code}</h2>
+
+        <p><strong>Fecha:</strong> ${effective_date.toLocaleDateString('es-AR')}</p>
+        <p><strong>Empresa:</strong> ${budget.company_name}</p>
+        <p><strong>CUIT/CUIL:</strong> ${budget.company_tax_id || 'No especificado'}</p>
+        <p><strong>Representante Legal:</strong> ${legal_representative_name}</p>
+        <p><strong>DNI:</strong> ${legal_representative_id}</p>
+
+        <h3>TÉRMINOS Y CONDICIONES</h3>
+        <p>Por medio del presente contrato, APONNT otorga licencia de uso del software
+        de gestión empresarial bajo los términos aquí especificados.</p>
+
+        <h3>VIGENCIA</h3>
+        <p>Desde: ${effective_date.toLocaleDateString('es-AR')}</p>
+        <p>Hasta: ${expiration_date.toLocaleDateString('es-AR')}</p>
+        <p>Renovación automática: Sí</p>
+
+        <h3>VERSIÓN EULA</h3>
+        <p>${eula_version}</p>
+
+        <p style="margin-top: 40px; font-size: 12px; color: #666;">
+          Este contrato fue generado electrónicamente y tiene validez legal según
+          la Ley de Firma Digital N° 25.506.
+        </p>
+      </div>
+    `;
+
     // Insertar contrato
     const contractResult = await client.query(`
       INSERT INTO contracts (
@@ -111,10 +142,11 @@ router.post('/onboarding/generate', authMiddleware, async (req, res) => {
         company_legal_name,
         company_tax_id,
         esignature_provider,
-        created_by
+        created_by,
+        template_content
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, TRUE, 30, 'GENERATED',
-        $9, $10, $11, $12, 'APONNT_INTERNAL', $13
+        $9, $10, $11, $12, 'APONNT_INTERNAL', $13, $14
       )
       RETURNING *
     `, [
@@ -130,7 +162,8 @@ router.post('/onboarding/generate', authMiddleware, async (req, res) => {
       legal_representative_id,
       budget.company_name,
       budget.company_tax_id,
-      req.user?.staff_id || null
+      req.user?.staff_id || null,
+      templateContent
     ]);
 
     // Actualizar empresa
