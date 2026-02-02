@@ -186,6 +186,44 @@ function validateDeployCredentials(req, res, next) {
 }
 
 // ============================================================================
+// ENDPOINT: Diagnóstico de base de datos
+// ============================================================================
+
+router.get('/db-diagnostic', async (req, res) => {
+  const { sequelize } = require('../config/database');
+
+  try {
+    // Info de conexión
+    const dbInfo = await sequelize.query(`
+      SELECT
+        current_database() as database_name,
+        current_user as db_user,
+        inet_server_addr() as server_ip,
+        inet_server_port() as server_port,
+        version() as pg_version,
+        pg_size_pretty(pg_database_size(current_database())) as db_size,
+        (SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public') as table_count
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    res.json({
+      success: true,
+      connection: {
+        host: sequelize.config.host || 'via DATABASE_URL',
+        database: sequelize.config.database || dbInfo[0]?.database_name,
+        dialect: sequelize.options.dialect
+      },
+      dbInfo: dbInfo[0],
+      env: {
+        DATABASE_URL_SET: !!process.env.DATABASE_URL,
+        DATABASE_URL_PREFIX: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET'
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
 // ENDPOINT: Migración de emergencia para columnas faltantes
 // ============================================================================
 
