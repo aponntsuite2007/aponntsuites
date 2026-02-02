@@ -18,6 +18,7 @@ const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const EmailService = require('./EmailService');
 const LeadScoringService = require('./LeadScoringService');
+const { getBaseUrl, getPanelEmpresaUrl, getPanelAdminUrl } = require('../utils/urlHelper');
 
 // 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass)
 const NCE = require('./NotificationCentralExchange');
@@ -1007,7 +1008,7 @@ class SalesOrchestrationService {
                             <table style="width: 100%; max-width: 300px; margin: 0 auto; text-align: left;">
                                 <tr>
                                     <td style="color: #9ca3af; padding: 5px 10px; font-size: 13px;">🔗 URL:</td>
-                                    <td style="color: #3b82f6; padding: 5px 10px; font-size: 13px; font-weight: 600;">aponnt.onrender.com</td>
+                                    <td style="color: #3b82f6; padding: 5px 10px; font-size: 13px; font-weight: 600;">${getBaseUrl().replace('https://', '').replace('http://', '')}</td>
                                 </tr>
                                 <tr>
                                     <td style="color: #9ca3af; padding: 5px 10px; font-size: 13px;">🏢 Empresa:</td>
@@ -1057,9 +1058,11 @@ class SalesOrchestrationService {
         const aponntUrl = trackingToken
             ? `https://www.aponnt.com?ref=${trackingToken}`
             : 'https://www.aponnt.com';
-        // Tracking pixel (invisible 1x1 gif)
+        // Tracking pixel para EMAIL OPEN (invisible 1x1 gif)
+        // Usa /track/:token/open para registrar apertura de email
+        // Diferente al tracking de visita a página que usa /track/:token
         const trackingPixel = trackingToken
-            ? `<img src="https://www.aponnt.com/api/marketing/track/${trackingToken}" width="1" height="1" style="display:none" alt="" />`
+            ? `<img src="https://www.aponnt.com/api/marketing/track/${trackingToken}/open" width="1" height="1" style="display:none" alt="" />`
             : '';
 
         return `
@@ -3115,10 +3118,10 @@ Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
             const attendees = await this.getMeetingAttendees(meetingId);
             const vendor = await this.getVendorInfo(meeting.assigned_vendor_id);
 
-            // Credenciales de la empresa DEMO (hardcodeadas por ahora)
+            // Credenciales de la empresa DEMO (usa urlHelper para detectar entorno)
             const demoCredentials = {
-                url: 'https://www.aponnt.com',
-                panelUrl: 'https://aponnt.onrender.com/panel-empresa.html',
+                url: getBaseUrl(),
+                panelUrl: getPanelEmpresaUrl(),
                 company: 'aponnt-empresa-demo',
                 user: 'demo-viewer',
                 password: 'Demo2025!'

@@ -188,7 +188,7 @@ class PaymentService {
 
       // 1. Cambiar estado de empresa a 'activo'
       await sequelize.query(
-        `UPDATE companies SET status = 'activo', activated_at = CURRENT_TIMESTAMP WHERE company_id = :companyId`,
+        `UPDATE companies SET status = 'active', is_trial = false, activated_at = CURRENT_TIMESTAMP WHERE company_id = :companyId`,
         {
           replacements: { companyId: company.company_id },
           type: sequelize.QueryTypes.UPDATE,

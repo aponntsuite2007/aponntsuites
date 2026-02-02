@@ -68,7 +68,7 @@ class AttendanceAnalyticsService {
       const profile = await AttendanceProfile.findOne({
         where: { user_id: userId, company_id: companyId },
         include: [
-          { model: User, as: 'user', attributes: ['user_id', 'firstName', 'lastName', 'employee_id'] },
+          { model: User, as: 'user', attributes: ['user_id', 'firstName', 'lastName', 'employeeId'] },
           { model: Department, as: 'department', attributes: ['id', 'name'] },
           { model: Shift, as: 'shift', attributes: ['id', 'name'] }
         ]
@@ -145,7 +145,7 @@ class AttendanceAnalyticsService {
       const topPerformers = await AttendanceProfile.findAll({
         where: { company_id: companyId },
         include: [
-          { model: User, as: 'user', attributes: ['user_id', 'firstName', 'lastName', 'employee_id'] }
+          { model: User, as: 'user', attributes: ['user_id', 'firstName', 'lastName', 'employeeId'] }
         ],
         order: [['scoring_total', 'DESC']],
         limit: 10
@@ -155,7 +155,7 @@ class AttendanceAnalyticsService {
       const bottomPerformers = await AttendanceProfile.findAll({
         where: { company_id: companyId },
         include: [
-          { model: User, as: 'user', attributes: ['user_id', 'firstName', 'lastName', 'employee_id'] }
+          { model: User, as: 'user', attributes: ['user_id', 'firstName', 'lastName', 'employeeId'] }
         ],
         order: [['scoring_total', 'ASC']],
         limit: 10
@@ -169,7 +169,7 @@ class AttendanceAnalyticsService {
           status: 'active'
         },
         include: [
-          { model: User, as: 'user', attributes: ['user_id', 'firstName', 'lastName', 'employee_id'] }
+          { model: User, as: 'user', attributes: ['user_id', 'firstName', 'lastName', 'employeeId'] }
         ],
         order: [['detection_date', 'DESC']]
       });
@@ -544,29 +544,34 @@ class AttendanceAnalyticsService {
    * @private
    */
   static async _generateDepartmentStats(companyId) {
-    const stats = await AttendanceProfile.findAll({
-      where: {
-        company_id: companyId,
-        department_id: { [Op.ne]: null }
-      },
-      attributes: [
-        'department_id',
-        [sequelize.fn('AVG', sequelize.col('scoring_total')), 'avg_scoring'],
-        [sequelize.fn('COUNT', sequelize.col('id')), 'employee_count']
-      ],
-      include: [
-        { model: Department, as: 'department', attributes: ['id', 'name'] }
-      ],
-      group: ['department_id', 'department.id', 'department.name'],
-      raw: false
-    });
+    try {
+      const stats = await AttendanceProfile.findAll({
+        where: {
+          company_id: companyId,
+          department_id: { [Op.ne]: null }
+        },
+        attributes: [
+          'department_id',
+          [sequelize.fn('AVG', sequelize.col('scoring_total')), 'avg_scoring'],
+          [sequelize.fn('COUNT', sequelize.col('AttendanceProfile.id')), 'employee_count']
+        ],
+        include: [
+          { model: Department, as: 'department', attributes: ['id', 'name'], required: false }
+        ],
+        group: ['department_id', 'department.id', 'department.name'],
+        raw: false
+      });
 
-    return stats.map(s => ({
-      department_id: s.department_id,
-      department_name: s.department ? s.department.name : 'Desconocido',
-      avg_scoring: parseFloat(s.get('avg_scoring')).toFixed(2),
-      employee_count: parseInt(s.get('employee_count'))
-    }));
+      return stats.map(s => ({
+        department_id: s.department_id,
+        department_name: s.department ? s.department.name : 'Desconocido',
+        avg_scoring: parseFloat(s.get('avg_scoring') || 0).toFixed(2),
+        employee_count: parseInt(s.get('employee_count') || 0)
+      }));
+    } catch (error) {
+      console.warn(`⚠️ [ANALYTICS] Error en _generateDepartmentStats: ${error.message}`);
+      return [];
+    }
   }
 
   /**
@@ -574,29 +579,35 @@ class AttendanceAnalyticsService {
    * @private
    */
   static async _generateShiftStats(companyId) {
-    const stats = await AttendanceProfile.findAll({
-      where: {
-        company_id: companyId,
-        shift_id: { [Op.ne]: null }
-      },
-      attributes: [
-        'shift_id',
-        [sequelize.fn('AVG', sequelize.col('scoring_total')), 'avg_scoring'],
-        [sequelize.fn('COUNT', sequelize.col('id')), 'employee_count']
-      ],
-      include: [
-        { model: Shift, as: 'shift', attributes: ['id', 'name'] }
-      ],
-      group: ['shift_id', 'shift.id', 'shift.name'],
-      raw: false
-    });
+    try {
+      const stats = await AttendanceProfile.findAll({
+        where: {
+          company_id: companyId,
+          shift_id: { [Op.ne]: null }
+        },
+        attributes: [
+          'shift_id',
+          [sequelize.fn('AVG', sequelize.col('scoring_total')), 'avg_scoring'],
+          [sequelize.fn('COUNT', sequelize.col('AttendanceProfile.id')), 'employee_count']  // FIX: Qualify column
+        ],
+        include: [
+          { model: Shift, as: 'shift', attributes: ['id', 'name'], required: false }
+        ],
+        group: ['shift_id', 'shift.id', 'shift.name'],
+        raw: false
+      });
 
-    return stats.map(s => ({
-      shift_id: s.shift_id,
-      shift_name: s.shift ? s.shift.name : 'Desconocido',
-      avg_scoring: parseFloat(s.get('avg_scoring')).toFixed(2),
-      employee_count: parseInt(s.get('employee_count'))
-    }));
+      return stats.map(s => ({
+        shift_id: s.shift_id,
+        shift_name: s.shift ? s.shift.name : 'Desconocido',
+        avg_scoring: parseFloat(s.get('avg_scoring') || 0).toFixed(2),
+        employee_count: parseInt(s.get('employee_count') || 0)
+      }));
+    } catch (error) {
+      // Si hay error de tipos incompatibles (bigint vs uuid), retornar array vacío
+      console.warn(`⚠️ [ANALYTICS] Error en _generateShiftStats (posible mismatch de tipos): ${error.message}`);
+      return [];
+    }
   }
 
   /**

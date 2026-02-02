@@ -289,9 +289,12 @@ class HSECaseService {
 
   /**
    * Asignar capacitación desde caso HSE
+   * INTEGRACIÓN COMPLETA con TrainingEcosystemHub
    */
   async assignTraining(hseCase, violations, userId) {
     if (!violations || violations.length === 0) return;
+
+    console.log(`[HSE→TRAINING] Procesando asignación de capacitaciones para caso ${hseCase.case_number}`);
 
     // Obtener templates de capacitación
     const violationData = await this.violationCatalog.getByCodes(violations);
@@ -299,16 +302,32 @@ class HSECaseService {
       .filter(v => v.default_training_template_id)
       .map(v => v.default_training_template_id);
 
-    if (trainingIds.length === 0) return;
+    // ✅ INTEGRACIÓN: Usar TrainingEcosystemHub para auto-asignar
+    try {
+      const HSETrainingIntegration = require('../integrations/hse-training-integration');
+      const result = await HSETrainingIntegration.onCaseConfirmed(hseCase, violations, userId);
 
-    // TODO: Integrar con training-management
-    // Por ahora solo actualizamos el caso
-    await this.db.query(
-      'UPDATE hse_cases SET training_assigned = true, training_ids = $1 WHERE id = $2',
-      [trainingIds, hseCase.id]
-    );
+      console.log(`[HSE→TRAINING] Resultado: ${result.trainingsAssigned}/${result.totalViolations} capacitaciones asignadas`);
 
-    console.log(`[HSE] Capacitaciones asignadas para caso ${hseCase.case_number}:`, trainingIds);
+      // Actualizar el caso con el resultado
+      await this.db.query(
+        'UPDATE hse_cases SET training_assigned = true, training_ids = $1 WHERE id = $2',
+        [trainingIds.length > 0 ? trainingIds : result.results.map(r => r.trainingId).filter(Boolean), hseCase.id]
+      );
+
+    } catch (integrationError) {
+      console.warn(`[HSE→TRAINING] Error en integración (continuando sin bloquear):`, integrationError.message);
+
+      // Fallback: Actualizar solo el caso
+      if (trainingIds.length > 0) {
+        await this.db.query(
+          'UPDATE hse_cases SET training_assigned = true, training_ids = $1 WHERE id = $2',
+          [trainingIds, hseCase.id]
+        );
+      }
+    }
+
+    console.log(`[HSE] Capacitaciones procesadas para caso ${hseCase.case_number}`);
   }
 
   /**

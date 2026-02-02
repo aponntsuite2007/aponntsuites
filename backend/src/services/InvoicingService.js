@@ -56,6 +56,12 @@ class InvoicingService {
         throw new Error(`Company ID ${invoiceData.company_id} no encontrada`);
       }
 
+      // 1.5. VALIDACIÓN TRIAL - No generar facturas para empresas en período de prueba
+      if (company.status === 'trial' || company.is_trial === true) {
+        console.log(`⚠️ [INVOICE] Empresa ${company.name} está en período TRIAL - No se genera factura`);
+        throw new Error(`Empresa ${company.name} está en período de prueba (trial). No se puede generar factura hasta que finalice el trial.`);
+      }
+
       // 2. Obtener contrato activo
       const contract = await Contract.getActiveContract(invoiceData.company_id, transaction);
       if (!contract) {
@@ -149,13 +155,22 @@ class InvoicingService {
     try {
       console.log(`🔄 [INVOICE] Generando facturas mensuales...`);
 
-      // 1. Obtener todos los contratos activos
+      // 1. Obtener todos los contratos activos (excluyendo empresas en trial)
       const activeContracts = await Contract.findAll({
         where: { status: 'active' },
+        include: [{
+          model: Company,
+          as: 'company',
+          where: {
+            status: 'active',    // Solo empresas activas (no trial, no pending)
+            is_trial: false      // Excluir empresas en período de prueba
+          },
+          required: true
+        }],
         transaction
       });
 
-      console.log(`   - Contratos activos: ${activeContracts.length}`);
+      console.log(`   - Contratos activos (sin trial): ${activeContracts.length}`);
 
       // 2. Generar factura para cada contrato
       const results = {

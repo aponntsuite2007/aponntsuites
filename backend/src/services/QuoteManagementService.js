@@ -298,20 +298,43 @@ class QuoteManagementService {
       }
 
       // ═══════════════════════════════════════════════════════════
-      // seller_id OPCIONAL - asignar si viene en options
+      // seller_id OPCIONAL - herencia de lead o asignar desde options
       // ═══════════════════════════════════════════════════════════
+
+      // 1. Si viene seller_id en options, usarlo
       if (options.seller_id && !quote.seller_id) {
-        // Si viene seller_id en options y el quote no tiene, asignarlo
         const seller = await Partner.findByPk(options.seller_id, { transaction });
         if (seller) {
           quote.seller_id = options.seller_id;
+          quote.seller_assigned_at = new Date();
           await quote.save({ transaction });
-          console.log(`📝 [QUOTE SERVICE] Asignado seller_id ${options.seller_id} al quote ${quote.id}`);
+          console.log(`📝 [QUOTE SERVICE] Asignado seller_id ${options.seller_id} al quote ${quote.id} desde options`);
+        }
+      }
+
+      // 2. Si aún no tiene seller, intentar heredar desde marketing_lead
+      if (!quote.seller_id && quote.lead_id) {
+        const [leadResult] = await sequelize.query(`
+          SELECT assigned_seller_id FROM marketing_leads WHERE id = :leadId
+        `, {
+          replacements: { leadId: quote.lead_id },
+          type: QueryTypes.SELECT,
+          transaction
+        });
+
+        if (leadResult && leadResult.assigned_seller_id) {
+          const seller = await Partner.findByPk(leadResult.assigned_seller_id, { transaction });
+          if (seller) {
+            quote.seller_id = leadResult.assigned_seller_id;
+            quote.seller_assigned_at = new Date();
+            await quote.save({ transaction });
+            console.log(`📝 [QUOTE SERVICE] Heredado seller_id ${leadResult.assigned_seller_id} del marketing_lead ${quote.lead_id}`);
+          }
         }
       }
 
       if (!quote.seller_id) {
-        console.warn(`⚠️ [QUOTE SERVICE] Quote ${quote.id} sin vendedor asignado - venta directa sin comisión`);
+        console.warn(`⚠️ [QUOTE SERVICE] Quote ${quote.id} sin vendedor - venta directa sin comisión (OK)`);
       }
 
       // 1. Aceptar el presupuesto (cambia a 'in_trial' o 'accepted' según has_trial)

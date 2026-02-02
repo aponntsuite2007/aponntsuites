@@ -33,7 +33,7 @@ class InvoiceGenerationService {
 
       // 1. Obtener todas las empresas activas
       const companies = await sequelize.query(
-        `SELECT * FROM companies WHERE status = 'activo' ORDER BY company_id`,
+        `SELECT * FROM companies WHERE status = 'active' AND is_trial = false ORDER BY company_id`,
         {
           type: sequelize.QueryTypes.SELECT,
           transaction

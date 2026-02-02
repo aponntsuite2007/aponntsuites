@@ -19,6 +19,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { getPanelEmpresaUrl } = require('../utils/urlHelper');
 
 class BrainLLMContextGenerator {
   constructor() {
@@ -1161,7 +1162,7 @@ Si evalúas este sistema, tendrás acceso a información que NO está disponible
    */
   generateDemoInfo() {
     return {
-      url: "https://aponnt.onrender.com/panel-empresa.html",
+      url: getPanelEmpresaUrl(),
       credentials: {
         company_slug: "aponnt-empresa-demo",
         username: "demo-viewer",

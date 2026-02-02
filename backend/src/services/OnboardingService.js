@@ -20,6 +20,7 @@ const BudgetService = require('./BudgetService');
 const ContractService = require('./ContractService');
 const InvoicingService = require('./InvoicingService');
 const CommissionService = require('./CommissionService');
+const { getBaseUrl, getPanelEmpresaUrl } = require('../utils/urlHelper');
 
 class OnboardingService {
   constructor() {
@@ -448,7 +449,7 @@ class OnboardingService {
         title: `💰 Factura Aponnt - ${company.name}`,
         body: `Monto: USD ${invoice.amount_usd} - Vence: ${invoice.due_date}`,
         attachment: invoice.invoice_pdf_url,
-        payment_link: `${process.env.APP_URL}/invoices/${invoice.id}/upload-payment`,
+        payment_link: `${getBaseUrl()}/invoices/${invoice.id}/upload-payment`,
         channels: ['email', 'app'],
         metadata: {
           trace_id: invoice.trace_id,
@@ -575,12 +576,15 @@ class OnboardingService {
   }
 
   /**
-   * Crear usuario CORE inmutable (Step 19)
+   * Crear usuarios CORE inmutables (Step 19)
+   * - Usuario "administrador": Admin principal visible para la empresa
+   * - Usuario "soporte": Invisible para la empresa, solo para tests automáticos del sistema
    */
   async createCoreAdminUser(company) {
     const { User } = require('../config/database');
     const bcrypt = require('bcryptjs');
 
+    // 1. Crear usuario ADMINISTRADOR (visible para la empresa)
     const adminUser = await User.create({
       username: 'administrador',
       password: await bcrypt.hash('admin123', 12),
@@ -593,6 +597,31 @@ class OnboardingService {
       force_password_change: true,
       is_deletable: false
     });
+
+    console.log(`✅ [ONBOARDING] Usuario ADMIN creado: administrador`);
+
+    // 2. Crear usuario SOPORTE (invisible para la empresa - solo para tests automáticos)
+    try {
+      const supportUser = await User.create({
+        username: 'soporte',
+        password: await bcrypt.hash('admin123', 12),
+        first_name: 'Soporte',
+        last_name: 'Técnico',
+        email: `soporte+${company.slug}@aponnt.com`,
+        role: 'admin',
+        company_id: company.company_id,
+        is_core_user: true,
+        is_system_user: true,       // Marcado como usuario del sistema
+        is_visible: false,          // Invisible en listados de usuarios
+        force_password_change: false,
+        is_deletable: false,
+        account_status: 'active'
+      });
+      console.log(`✅ [ONBOARDING] Usuario SOPORTE creado (invisible): soporte`);
+    } catch (err) {
+      // Si falla (ej: columnas no existen), solo loguear warning
+      console.warn(`⚠️ [ONBOARDING] No se pudo crear usuario soporte: ${err.message}`);
+    }
 
     return adminUser;
   }
@@ -757,29 +786,93 @@ class OnboardingService {
 
   /**
    * Enviar mensaje de bienvenida (Step 27)
+   * @param {Object} company - Datos de la empresa
+   * @param {Object} adminUser - Usuario admin creado
+   * @param {Object} options - Opciones adicionales (isTrial, trialEndDate, trialModules)
    */
-  async sendWelcomeEmail(company, adminUser) {
+  async sendWelcomeEmail(company, adminUser, options = {}) {
     try {
+      const { isTrial, trialEndDate, trialModules } = options;
+      const baseUrl = getBaseUrl();
+      const loginUrl = getPanelEmpresaUrl(company.slug);
+
+      // Construir mensaje según si es trial o activación definitiva
+      let trialInfo = '';
+      if (isTrial && trialEndDate) {
+        const endDate = new Date(trialEndDate).toLocaleDateString('es-AR', {
+          day: '2-digit', month: 'long', year: 'numeric'
+        });
+        trialInfo = `
+          📅 PERÍODO DE PRUEBA GRATUITO
+          ═══════════════════════════════════════
+          Tu período de prueba finaliza el: ${endDate}
+          Durante este tiempo puedes probar todos los módulos sin costo.
+          ${trialModules?.length ? `Módulos incluidos: ${trialModules.join(', ')}` : ''}
+        `;
+      }
+
+      const emailBody = `
+══════════════════════════════════════════════════════════════
+🎉 ¡BIENVENIDO A APONNT, ${company.name.toUpperCase()}!
+══════════════════════════════════════════════════════════════
+
+Nos alegra tenerte como cliente. Tu cuenta ha sido activada y está
+lista para comenzar a operar.
+
+🔐 CREDENCIALES DE ACCESO
+═══════════════════════════════════════
+  URL de acceso: ${loginUrl}
+
+  👤 Usuario: ${adminUser.username}
+  🔑 Contraseña: admin123
+
+  ⚠️ IMPORTANTE: Por seguridad, deberás cambiar tu contraseña
+  en el primer inicio de sesión.
+
+${trialInfo}
+
+📋 PRIMEROS PASOS RECOMENDADOS
+═══════════════════════════════════════
+  1. Inicia sesión con las credenciales proporcionadas
+  2. Cambia tu contraseña temporal
+  3. Configura la información de tu empresa
+  4. Agrega tus primeros empleados
+  5. Configura tus kioscos biométricos (si aplica)
+
+📚 RECURSOS ÚTILES
+═══════════════════════════════════════
+  • Manual de usuario: ${baseUrl}/docs/manual-usuario.pdf
+  • Videos tutoriales: ${baseUrl}/tutoriales
+  • Centro de ayuda: ${baseUrl}/ayuda
+
+📞 SOPORTE TÉCNICO
+═══════════════════════════════════════
+  Email: soporte@aponnt.com
+  WhatsApp: +54 11 XXXX-XXXX
+  Horario: Lunes a Viernes de 9:00 a 18:00 hs
+
+¡Gracias por confiar en Aponnt!
+
+El equipo de Aponnt
+══════════════════════════════════════════════════════════════
+      `.trim();
+
       await this.notificationService.send({
         to: company.contact_email,
         type: 'BIENVENIDA',
-        title: `🎉 ¡Bienvenido a Aponnt!`,
-        body: `
-          Bienvenido a Aponnt, ${company.name}!
-
-          URL de acceso: ${company.slug}.aponnt.com
-          Usuario: ${adminUser.username}
-          Password temporal: admin123 (DEBES cambiarla al primer ingreso)
-
-          Módulos activos: ${Object.keys(company.activeModules || {}).length}
-
-          Contacto soporte: soporte@aponnt.com
-        `,
-        attachment: 'guia_inicio.pdf',
-        channels: ['email']
+        title: `🎉 ¡Bienvenido a Aponnt, ${company.name}!`,
+        body: emailBody,
+        channels: ['email'],
+        metadata: {
+          company_id: company.company_id,
+          company_slug: company.slug,
+          admin_username: adminUser.username,
+          is_trial: isTrial || false,
+          trial_end_date: trialEndDate || null
+        }
       });
 
-      console.log(`✅ [ONBOARDING] Email de bienvenida enviado a ${company.name}`);
+      console.log(`✅ [ONBOARDING] Email de bienvenida enviado a ${company.name} (${company.contact_email})`);
     } catch (error) {
       console.error(`⚠️ [ONBOARDING] Error enviando email de bienvenida:`, error.message);
     }
@@ -1209,6 +1302,28 @@ class OnboardingService {
           is_deletable: false
         });
         console.log(`✅ [ONBOARDING] Usuario admin creado: administrador`);
+
+        // 5.1 Crear usuario SOPORTE (invisible - para tests automáticos)
+        try {
+          await User.create({
+            username: 'soporte',
+            password: await bcrypt.hash('admin123', 12),
+            first_name: 'Soporte',
+            last_name: 'Técnico',
+            email: `soporte+${company.slug}@aponnt.com`,
+            role: 'admin',
+            company_id: company.company_id,
+            is_core_user: true,
+            is_system_user: true,
+            is_visible: false,
+            force_password_change: false,
+            is_deletable: false,
+            account_status: 'active'
+          });
+          console.log(`✅ [ONBOARDING] Usuario SOPORTE creado (invisible): soporte`);
+        } catch (err) {
+          console.warn(`⚠️ [ONBOARDING] No se pudo crear usuario soporte: ${err.message}`);
+        }
       }
 
       // 6. Obtener info de trials activos

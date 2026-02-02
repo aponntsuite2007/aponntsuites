@@ -21,6 +21,7 @@
 const { sequelize } = require('../config/database');
 const emailService = require('./EmailService');
 const inboxService = require('./inboxService');
+const { getBaseUrl, getPanelAdminUrl } = require('../utils/urlHelper');
 
 // 🔥 NCE: Central Telefónica de Notificaciones (elimina bypass EmailService)
 const NCE = require('./NotificationCentralExchange');
@@ -303,7 +304,7 @@ class ContractRenewalService {
             </div>
 
             <div class="cta">
-                <a href="${process.env.APP_URL || 'https://sistema.aponnt.com'}/panel-administrativo.html#/contracts/${contract.contract_id}">
+                <a href="${getBaseUrl()}/panel-administrativo.html#/contracts/${contract.contract_id}">
                     Gestionar Renovación
                 </a>
             </div>
@@ -346,7 +347,7 @@ ${isGracePeriod
     : 'Por favor, inicie el proceso de renovación para evitar interrupciones en el servicio.'}
 
 Para gestionar la renovación, visite:
-${process.env.APP_URL || 'https://sistema.aponnt.com'}/panel-administrativo.html
+${getBaseUrl()}/panel-administrativo.html
 
 Contacto comercial: ${this.APONNT_COMMERCIAL_EMAIL}
 
@@ -480,7 +481,7 @@ APONNT - Sistema de Asistencia Biométrico
             </p>
 
             <p style="text-align: center; margin-top: 25px;">
-                <a href="${process.env.APP_URL || 'https://sistema.aponnt.com'}/panel-administrativo.html#/contracts/${extension.contract_id}"
+                <a href="${getBaseUrl()}/panel-administrativo.html#/contracts/${extension.contract_id}"
                    style="background: #f59e0b; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px;">
                     Gestionar Renovación
                 </a>

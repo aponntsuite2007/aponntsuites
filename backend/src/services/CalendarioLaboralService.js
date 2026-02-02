@@ -67,10 +67,14 @@ class CalendarioLaboralService {
             // ================================================================
             // PASO 1: Verificar feriados nacionales (por país de la sucursal)
             // ================================================================
+            // Use branch country if available, fallback to 'AR' (Argentina)
+            const countryCode = branch?.country || user?.country || 'AR';
+            const stateProvince = branch?.state_province || user?.province || null;
+
             const holidayCheck = await this.checkHoliday(
                 dateObj,
-                branch.country,
-                branch.state_province
+                countryCode,
+                stateProvince
             );
 
             if (holidayCheck.isHoliday) {
@@ -89,7 +93,7 @@ class CalendarioLaboralService {
                         reasonCode: 'NATIONAL_HOLIDAY',
                         holiday: holidayCheck,
                         date: dateStr,
-                        user: { id: userId, name: user.name },
+                        user: { id: userId, name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Unknown' },
                         processingTime: Date.now() - startTime
                     };
                 }
@@ -101,8 +105,8 @@ class CalendarioLaboralService {
             const companyNonWorking = await this.checkCompanyNonWorkingDay(
                 dateObj,
                 userContext.companyId,
-                branch.id,
-                department.id
+                branch?.id || null,
+                department?.id || null
             );
 
             if (companyNonWorking.isNonWorking) {
@@ -113,7 +117,7 @@ class CalendarioLaboralService {
                     reasonCode: 'COMPANY_NON_WORKING',
                     nonWorkingDay: companyNonWorking,
                     date: dateStr,
-                    user: { id: userId, name: user.name },
+                    user: { id: userId, name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Unknown' },
                     processingTime: Date.now() - startTime
                 };
             }
@@ -133,7 +137,7 @@ class CalendarioLaboralService {
                     reason: shiftResult.reason || 'Sin turno asignado',
                     reasonCode: 'NO_SHIFT_ASSIGNED',
                     date: dateStr,
-                    user: { id: userId, name: user.name },
+                    user: { id: userId, name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Unknown' },
                     processingTime: Date.now() - startTime
                 };
             }
@@ -151,9 +155,9 @@ class CalendarioLaboralService {
                 date: dateStr,
                 user: {
                     id: userId,
-                    name: user.name,
-                    departmentId: department.id,
-                    branchId: branch.id
+                    name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Unknown',
+                    departmentId: department?.id || null,
+                    branchId: branch?.id || null
                 },
                 shift: {
                     id: shiftResult.shift?.id,
@@ -272,7 +276,7 @@ class CalendarioLaboralService {
                         ...result,
                         user: {
                             id: user.user_id,
-                            name: user.name,
+                            name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Unknown',
                             email: user.email,
                             department: user.department_name,
                             branch: user.country
@@ -461,7 +465,8 @@ class CalendarioLaboralService {
                 };
             }
 
-            if (!user.is_active) {
+            // Check both isActive (Sequelize model) and is_active (raw query) for compatibility
+            if (!user.isActive && !user.is_active) {
                 return {
                     success: false,
                     reason: 'Usuario inactivo',
@@ -478,20 +483,14 @@ class CalendarioLaboralService {
                 };
             }
 
-            const branch = department.branch;
-            if (!branch) {
-                return {
-                    success: false,
-                    reason: 'Departamento sin sucursal asignada',
-                    reasonCode: 'NO_BRANCH'
-                };
-            }
+            // Branch is optional - some departments may not have one
+            const branch = department.branch || null;
 
             return {
                 success: true,
                 user,
                 department,
-                branch,
+                branch,  // Can be null, that's OK
                 companyId: user.company_id
             };
 

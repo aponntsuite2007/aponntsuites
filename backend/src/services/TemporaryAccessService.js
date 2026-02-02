@@ -15,6 +15,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
+const { getBaseUrl, getPanelEmpresaUrl } = require('../utils/urlHelper');
 
 class TemporaryAccessService {
     constructor() {
@@ -942,7 +943,7 @@ Password: ${password}
 - Se le solicitará cambiarla en el primer inicio de sesión
 - Este acceso es válido hasta: ${new Date(validUntil).toLocaleDateString('es-AR')}
 
-URL de acceso: ${process.env.APP_URL || 'https://sistema.aponnt.com'}/panel-empresa.html
+URL de acceso: ${getPanelEmpresaUrl()}
 
 Saludos,
 Equipo de Administración

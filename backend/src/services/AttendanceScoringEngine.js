@@ -82,7 +82,7 @@ class AttendanceScoringEngine {
       const profileData = {
         user_id: userId,
         company_id: companyId,
-        employee_id: user.employee_id,
+        employee_id: user.employeeId,
         department_id: user.departmentId || null,
         shift_id: user.shiftId || null,
         branch_id: user.branchId || null,
@@ -378,9 +378,9 @@ class AttendanceScoringEngine {
       const users = await User.findAll({
         where: {
           company_id: companyId,
-          status: 'active'
+          isActive: true  // FIX: User model uses isActive, not status
         },
-        attributes: ['user_id', 'firstName', 'lastName', 'employee_id']
+        attributes: ['user_id', 'firstName', 'lastName', 'employeeId']
       });
 
       console.log(`   👥 Usuarios a procesar: ${users.length}`);

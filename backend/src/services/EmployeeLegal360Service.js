@@ -332,7 +332,7 @@ class EmployeeLegal360Service {
                 (SELECT COUNT(*) FROM legal_communications WHERE employee_id = :employeeId AND company_id = :companyId AND status = 'delivered') as delivered_count,
                 -- Judiciales
                 (SELECT COUNT(*) FROM user_legal_issues WHERE user_id = :employeeId AND company_id = :companyId) as total_judicial,
-                (SELECT COUNT(*) FROM user_legal_issues WHERE user_id = :employeeId AND company_id = :companyId AND status = 'activo') as active_judicial,
+                (SELECT COUNT(*) FROM user_legal_issues WHERE user_id = :employeeId AND company_id = :companyId AND status = 'active') as active_judicial,
                 (SELECT COUNT(*) FROM user_legal_issues WHERE user_id = :employeeId AND company_id = :companyId AND affects_employment = true) as affecting_employment,
                 -- Últimos 12 meses
                 (SELECT COUNT(*) FROM legal_communications WHERE employee_id = :employeeId AND company_id = :companyId AND created_at >= NOW() - INTERVAL '12 months') as disciplinary_last_year,
@@ -462,7 +462,7 @@ class EmployeeLegal360Service {
         }
 
         // Factor: Juicios activos
-        const activeJudicial = judicialRecords.filter(r => r.status === 'activo').length;
+        const activeJudicial = judicialRecords.filter(r => r.status === 'active').length;
         if (activeJudicial > 0) {
             score += activeJudicial * 25;
             factors.push({ name: 'Juicios activos', value: activeJudicial, impact: activeJudicial * 25 });
@@ -545,7 +545,7 @@ class EmployeeLegal360Service {
             total: records.length,
             byType,
             byStatus,
-            activeCount: records.filter(r => r.status === 'activo').length,
+            activeCount: records.filter(r => r.status === 'active').length,
             upcomingHearings: upcomingHearings.slice(0, 3).map(r => ({
                 date: r.nextHearingDate,
                 type: r.typeLabel,

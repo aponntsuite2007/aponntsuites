@@ -583,11 +583,40 @@ class ProceduresService {
 
             console.log(`[PROCEDURES] Publicado ${procedure.code} v${procedure.version_label} a ${targetUsers.length} usuarios`);
 
+            // ✅ INTEGRACIÓN: Si el procedimiento requiere capacitación, auto-asignar
+            let trainingResult = null;
+            try {
+                if (procedure.requires_training) {
+                    console.log(`🔗 [PROCEDURES→TRAINING] Procedimiento requiere capacitación, procesando...`);
+
+                    const ProceduresTrainingIntegration = require('./integrations/procedures-training-integration');
+                    trainingResult = await ProceduresTrainingIntegration.onProcedurePublished({
+                        id: procedureId,
+                        name: procedure.title,
+                        code: procedure.code,
+                        company_id: companyId,
+                        version: procedure.version_label,
+                        criticality: procedure.is_critical ? 'critical' : 'normal',
+                        requires_training: true,
+                        linked_training_id: procedure.linked_training_id || null,
+                        applies_to_all: procedure.scope_type === 'company',
+                        department_ids: procedure.scope_entities || [],
+                        mandatory_completion_date: procedure.effective_date
+                    }, userId);
+
+                    console.log(`✅ [PROCEDURES→TRAINING] ${trainingResult.trainingsAssigned || 0} capacitaciones asignadas`);
+                }
+            } catch (integrationError) {
+                console.warn(`⚠️ [PROCEDURES→TRAINING] Error en integración (no bloquea):`, integrationError.message);
+            }
+
             return {
                 success: true,
                 message: `Procedimiento publicado a ${targetUsers.length} usuarios`,
                 version: newVersion,
-                notified_users: targetUsers.length
+                notified_users: targetUsers.length,
+                notificationsCreated: targetUsers.length,
+                trainingAssignments: trainingResult ? trainingResult.trainingsAssigned : 0
             };
 
         } catch (error) {

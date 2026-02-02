@@ -30,7 +30,7 @@ class ScoringCalculationService {
 
       // 1. Obtener todos los partners activos
       const partners = await sequelize.query(
-        `SELECT * FROM partners WHERE status = 'activo' ORDER BY id`,
+        `SELECT * FROM partners WHERE status = 'active' ORDER BY id`,
         {
           type: sequelize.QueryTypes.SELECT
         }
@@ -505,7 +505,7 @@ class ScoringCalculationService {
         FROM partners p
         LEFT JOIN support_packages sp ON sp.current_support_id = p.id AND sp.status = 'active'
         WHERE p.current_score < :threshold
-        AND p.status = 'activo'
+        AND p.status = 'active'
         GROUP BY p.id
         ORDER BY p.current_score ASC`,
         {
