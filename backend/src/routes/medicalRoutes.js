@@ -7,7 +7,7 @@ const { body, validationResult, param, query } = require('express-validator');
 const { Op } = require('sequelize');
 
 // Middleware de autenticación
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // Importar modelos desde database.js
 const {
@@ -21,11 +21,15 @@ const {
   MedicalHistory,
   User,
   Message,
-  Department
+  Department,
+  CommunicationLog
 } = require('../config/database');
 
 // Importar servicio de notificaciones enterprise
 const NotificationWorkflowService = require('../services/NotificationWorkflowService');
+
+// Importar NCE (NotificationCentralExchange) para notificaciones centralizadas
+const NCE = require('../services/NotificationCentralExchange');
 
 // Importar sistema modular Plug & Play
 const { useModuleIfAvailable } = require('../utils/moduleHelper');
@@ -1746,45 +1750,430 @@ router.post('/test-fehaciente-request',
   }
 );
 
-// Obtener solicitudes fehacientes pendientes de un empleado
+// Obtener solicitudes/comunicaciones fehacientes pendientes de un empleado
 router.get('/pending-requests', auth, async (req, res) => {
   try {
-    // Simular solicitudes fehacientes pendientes
-    // En una implementación real, estas vendrían de la tabla CommunicationLog
-    const mockPendingRequests = [
-      {
-        id: `req-${Date.now()}-1`,
-        documentType: 'certificates',
-        requestDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 días atrás
-        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 días desde ahora
-        description: 'Certificado médico solicitado por el área médica',
-        requestReason: 'Requerido para justificar ausencia del 01/09/2025',
-        status: 'requested',
-        requestedBy: 'Dr. María González',
-        urgency: 'normal',
-        type: 'certificates'
+    const userId = req.user.user_id || req.user.userId;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    // Obtener comunicaciones pendientes de acuse de recibo
+    const pendingCommunications = await CommunicationLog.findAll({
+      where: {
+        user_id: userId,
+        company_id: companyId,
+        status: { [Op.notIn]: ['acknowledged', 'complied', 'failed', 'expired'] },
+        related_entity_type: { [Op.in]: ['certificate', 'study', 'photo', 'exam', 'case', 'medical_request'] }
       },
-      {
-        id: `req-${Date.now()}-2`,
-        documentType: 'studies',
-        requestDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 día atrás
-        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 días desde ahora
-        description: 'Estudios de laboratorio solicitados',
-        requestReason: 'Análisis de sangre completo realizado el 28/08/2025',
-        status: 'requested',
-        requestedBy: 'Dr. Carlos Ruiz',
-        urgency: 'high',
-        type: 'studies'
-      }
-    ];
+      include: [{
+        model: User,
+        as: 'sender',
+        attributes: ['user_id', 'firstName', 'lastName', 'email'],
+        required: false
+      }],
+      order: [
+        [require('sequelize').literal("CASE urgency WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 ELSE 4 END"), 'ASC'],
+        ['sent_at', 'ASC']
+      ]
+    });
+
+    // Transformar al formato esperado por el frontend
+    const formattedRequests = pendingCommunications.map(comm => ({
+      id: comm.id,
+      documentType: comm.related_entity_type,
+      type: comm.related_entity_type,
+      requestDate: comm.sent_at,
+      dueDate: comm.response_deadline,
+      description: comm.subject,
+      requestReason: comm.content,
+      status: comm.status === 'sent' ? 'requested' : comm.status,
+      requestedBy: comm.sender ? `${comm.sender.firstName} ${comm.sender.lastName}` : 'Sistema',
+      urgency: comm.urgency,
+      requiresAction: comm.requires_action,
+      actionType: comm.action_type,
+      isOverdue: comm.response_deadline && new Date() > new Date(comm.response_deadline),
+      acknowledgedAt: comm.acknowledged_at,
+      compliedAt: comm.complied_at
+    }));
 
     res.json({
       success: true,
-      data: mockPendingRequests
+      data: formattedRequests,
+      count: formattedRequests.length
     });
 
   } catch (error) {
     console.error('Error getting pending requests:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// ========================================
+// ENDPOINTS DE COMUNICACIONES FEHACIENTES
+// ========================================
+
+// Confirmar acuse de recibo de una comunicación (CRÍTICO LEGAL)
+router.post('/communications/:id/acknowledge', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.user_id || req.user.userId;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    // Verificar que la comunicación existe y pertenece al usuario
+    const communication = await CommunicationLog.findOne({
+      where: { id, user_id: userId, company_id: companyId }
+    });
+
+    if (!communication) {
+      return res.status(404).json({
+        success: false,
+        error: 'Comunicación no encontrada'
+      });
+    }
+
+    if (communication.acknowledged_at) {
+      return res.status(400).json({
+        success: false,
+        error: 'Esta comunicación ya fue confirmada',
+        acknowledgedAt: communication.acknowledged_at
+      });
+    }
+
+    // Confirmar acuse de recibo
+    const updated = await CommunicationLog.confirmAcknowledgment(id, userId);
+
+    if (updated) {
+      // Enviar notificación al remitente (médico/RRHH) via NCE
+      if (communication.sender_id) {
+        try {
+          await NCE.send({
+            companyId: companyId,
+            module: 'medical',
+            workflowKey: 'medical.acknowledgment_confirmed',
+            recipientType: 'user',
+            recipientId: communication.sender_id,
+            title: 'Acuse de recibo confirmado',
+            message: `El empleado ha confirmado recepción de la comunicación: ${communication.subject}`,
+            metadata: {
+              communicationId: id,
+              userId: userId,
+              acknowledgedAt: new Date().toISOString()
+            },
+            channels: ['email', 'inbox']
+          });
+        } catch (nceError) {
+          console.error('[Medical] Error enviando notificación NCE:', nceError);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: 'Acuse de recibo confirmado exitosamente',
+        acknowledgedAt: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'No se pudo confirmar el acuse de recibo'
+      });
+    }
+
+  } catch (error) {
+    console.error('Error confirming acknowledgment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+});
+
+// Marcar comunicación como cumplida (documento subido, etc.)
+router.post('/communications/:id/comply', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { documentId, documentType, notes } = req.body;
+    const userId = req.user.user_id || req.user.userId;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    // Verificar que la comunicación existe
+    const communication = await CommunicationLog.findOne({
+      where: { id, user_id: userId, company_id: companyId }
+    });
+
+    if (!communication) {
+      return res.status(404).json({
+        success: false,
+        error: 'Comunicación no encontrada'
+      });
+    }
+
+    if (communication.complied_at) {
+      return res.status(400).json({
+        success: false,
+        error: 'Esta comunicación ya fue marcada como cumplida',
+        compliedAt: communication.complied_at
+      });
+    }
+
+    // Marcar como cumplida
+    const metadata = { documentId, documentType, notes, compliedBy: userId };
+    const updated = await CommunicationLog.markComplied(id, userId, metadata);
+
+    if (updated) {
+      // Notificar al remitente que se cumplió la solicitud
+      if (communication.sender_id) {
+        try {
+          await NCE.send({
+            companyId: companyId,
+            module: 'medical',
+            workflowKey: 'medical.document_uploaded',
+            recipientType: 'user',
+            recipientId: communication.sender_id,
+            title: 'Documento médico recibido',
+            message: `El empleado ha subido el documento solicitado: ${communication.subject}`,
+            metadata: {
+              communicationId: id,
+              userId: userId,
+              documentId: documentId,
+              documentType: documentType,
+              compliedAt: new Date().toISOString()
+            },
+            channels: ['email', 'inbox']
+          });
+        } catch (nceError) {
+          console.error('[Medical] Error enviando notificación NCE:', nceError);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: 'Comunicación marcada como cumplida',
+        compliedAt: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'No se pudo marcar como cumplida'
+      });
+    }
+
+  } catch (error) {
+    console.error('Error marking communication as complied:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+});
+
+// Enviar solicitud de documento médico (médico/RRHH -> empleado)
+router.post('/communications/request-document', auth, async (req, res) => {
+  try {
+    const {
+      userId: targetUserId,
+      documentType,
+      subject,
+      message,
+      urgency = 'normal',
+      deadlineHours = 72
+    } = req.body;
+
+    const senderId = req.user.user_id || req.user.userId;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    // Validar que el usuario destino existe
+    const targetUser = await User.findOne({
+      where: { user_id: targetUserId, company_id: companyId }
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuario no encontrado'
+      });
+    }
+
+    // Calcular deadline
+    const responseDeadline = new Date(Date.now() + deadlineHours * 60 * 60 * 1000);
+
+    // Normalizar urgency a valores válidos del CHECK constraint
+    const validUrgencies = ['critical', 'high', 'medium', 'low'];
+    const normalizedUrgency = validUrgencies.includes(urgency) ? urgency : 'medium';
+
+    // Crear registro de comunicación fehaciente
+    const communication = await CommunicationLog.create({
+      company_id: companyId,
+      user_id: targetUserId,
+      sender_id: senderId,
+      sender_type: 'doctor',
+      communication_type: 'email',
+      communication_channel: targetUser.email,
+      subject: subject || `Solicitud de ${documentType}`,
+      content: message,
+      related_entity_type: documentType,
+      urgency: normalizedUrgency,
+      requires_action: true,
+      action_type: 'upload_document',
+      response_deadline: responseDeadline,
+      status: 'sent',
+      created_by: senderId
+    });
+
+    // Enviar notificación via NCE (email + inbox)
+    try {
+      const nceResult = await NCE.send({
+        companyId: companyId,
+        module: 'medical',
+        workflowKey: 'medical.document_requested',
+        recipientType: 'user',
+        recipientId: targetUserId,
+        title: subject || `Solicitud de ${documentType}`,
+        message: message,
+        metadata: {
+          communicationId: communication.id,
+          documentType: documentType,
+          urgency: urgency,
+          deadline: responseDeadline.toISOString(),
+          senderId: senderId
+        },
+        channels: ['email', 'inbox']
+      });
+
+      // Actualizar con el ID de notificación para trazabilidad
+      if (nceResult?.notificationId) {
+        await communication.update({ notification_log_id: nceResult.notificationId });
+      }
+    } catch (nceError) {
+      console.error('[Medical] Error enviando notificación NCE:', nceError);
+      // No fallamos la operación, solo logueamos el error
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Solicitud enviada exitosamente',
+      data: {
+        id: communication.id,
+        sentAt: communication.sent_at,
+        deadline: responseDeadline
+      }
+    });
+
+  } catch (error) {
+    console.error('Error sending document request:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Obtener historial de comunicaciones de un empleado
+router.get('/communications/history', auth, async (req, res) => {
+  try {
+    const userId = req.query.userId || req.user.user_id || req.user.userId;
+    const companyId = req.user.company_id || req.user.companyId;
+    const { status, entityType, page = 1, limit = 20 } = req.query;
+
+    const whereClause = {
+      user_id: userId,
+      company_id: companyId
+    };
+
+    if (status) {
+      whereClause.status = status;
+    }
+
+    if (entityType) {
+      whereClause.related_entity_type = entityType;
+    }
+
+    const { count, rows } = await CommunicationLog.findAndCountAll({
+      where: whereClause,
+      include: [{
+        model: User,
+        as: 'sender',
+        attributes: ['user_id', 'firstName', 'lastName', 'email'],
+        required: false
+      }],
+      order: [['sent_at', 'DESC']],
+      offset: (page - 1) * limit,
+      limit: parseInt(limit)
+    });
+
+    res.json({
+      success: true,
+      data: rows,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(count / limit)
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting communication history:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+});
+
+// Obtener estadísticas de comunicaciones pendientes (para dashboard médico)
+router.get('/communications/stats', auth, async (req, res) => {
+  try {
+    const companyId = req.user.company_id || req.user.companyId;
+    const { departmentId, userId } = req.query;
+
+    const whereClause = {
+      company_id: companyId,
+      status: { [Op.notIn]: ['acknowledged', 'complied', 'failed', 'expired'] }
+    };
+
+    if (userId) {
+      whereClause.user_id = userId;
+    }
+
+    const [pending, overdue, acknowledged, complied] = await Promise.all([
+      CommunicationLog.count({ where: whereClause }),
+      CommunicationLog.count({
+        where: {
+          ...whereClause,
+          response_deadline: { [Op.lt]: new Date() }
+        }
+      }),
+      CommunicationLog.count({
+        where: {
+          company_id: companyId,
+          status: 'acknowledged'
+        }
+      }),
+      CommunicationLog.count({
+        where: {
+          company_id: companyId,
+          status: 'complied'
+        }
+      })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        pending,
+        overdue,
+        acknowledged,
+        complied,
+        total: pending + acknowledged + complied
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting communication stats:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor'

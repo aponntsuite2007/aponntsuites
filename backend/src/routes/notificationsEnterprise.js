@@ -228,20 +228,54 @@ router.get('/unread', async (req, res) => {
 /**
  * GET /api/v1/notifications/stats
  * Obtener estadísticas de notificaciones
+ * Retorna totales agregados + desglose por módulo
  */
 router.get('/stats', async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.query;
 
-    const stats = await Notification.getStatsByModule(
+    // Obtener stats por módulo
+    const statsByModule = await Notification.getStatsByModule(
       req.user.company_id,
       dateFrom ? new Date(dateFrom) : null,
       dateTo ? new Date(dateTo) : null
     );
 
+    // Agregar totales para el dashboard
+    const aggregated = {
+      total: 0,
+      unread: 0,
+      pending_actions: 0,
+      urgent: 0,
+      by_module: statsByModule
+    };
+
+    // Calcular totales agregados
+    if (Array.isArray(statsByModule)) {
+      for (const moduleStat of statsByModule) {
+        aggregated.total += parseInt(moduleStat.total) || 0;
+        aggregated.unread += parseInt(moduleStat.unread) || 0;
+        aggregated.pending_actions += parseInt(moduleStat.requires_action) || parseInt(moduleStat.pending) || 0;
+      }
+    }
+
+    // Obtener conteo de urgentes directamente
+    try {
+      const urgentCount = await Notification.count({
+        where: {
+          company_id: req.user.company_id,
+          priority: 'urgent',
+          is_read: false
+        }
+      });
+      aggregated.urgent = urgentCount;
+    } catch (e) {
+      console.warn('[notificationsEnterprise] Could not count urgent:', e.message);
+    }
+
     res.json({
       success: true,
-      data: stats
+      data: aggregated
     });
 
   } catch (error) {

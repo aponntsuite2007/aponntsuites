@@ -11,7 +11,7 @@ const express = require('express');
 const router = express.Router();
 const { auth: auth } = require('../middleware/auth');
 const UserMedicalExams = require('../models/UserMedicalExams');
-const User = require('../models/User-postgresql');
+const { User } = require('../config/database');
 const { Op } = require('sequelize');
 
 /**
@@ -144,6 +144,50 @@ router.post('/users/:userId/medical-exams', auth, async (req, res) => {
 
         // Refrescar para obtener next_exam_date calculado por trigger
         await exam.reload();
+
+        // ✅ INTEGRACIÓN: Si el examen tiene deficiencias, auto-asignar capacitaciones
+        try {
+            const result = req.body.exam_result || req.body.result;
+            const restrictions = req.body.restrictions;
+
+            // Detectar deficiencias basadas en resultado y restricciones
+            if (result && result !== 'apto' && result !== 'pendiente') {
+                const MedicalTrainingIntegration = require('../services/integrations/medical-training-integration');
+
+                // Mapear restricciones a tipos de deficiencia
+                const deficiencies = [];
+
+                if (restrictions) {
+                    if (restrictions.includes('audit') || restrictions.includes('ruido')) {
+                        deficiencies.push({ type: 'audiometry_moderate', severity: 'moderate' });
+                    }
+                    if (restrictions.includes('visual') || restrictions.includes('pantalla')) {
+                        deficiencies.push({ type: 'visual_mild', severity: 'mild' });
+                    }
+                    if (restrictions.includes('ergon') || restrictions.includes('postura') || restrictions.includes('espalda')) {
+                        deficiencies.push({ type: 'ergonomic_posture', severity: 'moderate' });
+                    }
+                    if (restrictions.includes('respir') || restrictions.includes('pulmon')) {
+                        deficiencies.push({ type: 'respiratory_mild', severity: 'mild' });
+                    }
+                    if (restrictions.includes('estrés') || restrictions.includes('stress') || restrictions.includes('psico')) {
+                        deficiencies.push({ type: 'stress_moderate', severity: 'moderate' });
+                    }
+                }
+
+                // Si no se detectaron por restricciones pero resultado es 'no_apto' o similar
+                if (deficiencies.length === 0 && (result === 'no_apto' || result === 'apto_con_restricciones')) {
+                    deficiencies.push({ type: `${exam.exam_type}_deficient`, severity: 'moderate' });
+                }
+
+                if (deficiencies.length > 0) {
+                    console.log(`🔗 [MEDICAL→TRAINING] Detectadas ${deficiencies.length} deficiencias, auto-asignando capacitaciones...`);
+                    await MedicalTrainingIntegration.onExamCompleted(exam, deficiencies);
+                }
+            }
+        } catch (integrationError) {
+            console.warn(`⚠️ [MEDICAL→TRAINING] Error en integración (no bloquea):`, integrationError.message);
+        }
 
         res.status(201).json(exam);
 

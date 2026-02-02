@@ -227,6 +227,39 @@ router.post('/analyze/:id', authMiddleware, async (req, res) => {
             userId, companyId, 30
         );
 
+        // ✅ INTEGRACIÓN: Si el riesgo es crítico (>=80), disparar auto-asignación de capacitación
+        try {
+            const riskScore = analysis?.employee?.risk_score || 0;
+            const CRITICAL_THRESHOLD = 80;
+
+            if (riskScore >= CRITICAL_THRESHOLD) {
+                const RiskTrainingIntegration = require('../services/integrations/risk-training-integration');
+
+                // Determinar categoría de riesgo dominante
+                const indices = analysis?.employee?.indices || {};
+                let dominantCategory = 'general';
+                let maxIndex = 0;
+                for (const [category, value] of Object.entries(indices)) {
+                    if (value > maxIndex) {
+                        maxIndex = value;
+                        dominantCategory = category;
+                    }
+                }
+
+                console.log(`🔗 [RISK→TRAINING] Riesgo crítico detectado (${riskScore}%) para user ${userId}, categoría: ${dominantCategory}`);
+
+                await RiskTrainingIntegration.onCriticalRiskScore({
+                    userId: parseInt(userId),
+                    companyId,
+                    riskCategory: dominantCategory,
+                    riskScore,
+                    alertId: `RISK-${Date.now()}`
+                });
+            }
+        } catch (integrationError) {
+            console.warn(`⚠️ [RISK→TRAINING] Error en integración (no bloquea):`, integrationError.message);
+        }
+
         res.json({
             success: true,
             message: 'Análisis completado',
@@ -255,10 +288,52 @@ router.post('/analyze-all', authMiddleware, async (req, res) => {
 
         const employees = await RiskIntelligenceService.getEmployeesWithRisk(companyId, period);
 
+        // ✅ INTEGRACIÓN: Para cada empleado con riesgo crítico, disparar auto-asignación
+        let trainingAssignments = 0;
+        try {
+            const CRITICAL_THRESHOLD = 80;
+            const criticalEmployees = employees.filter(e => e.risk_score >= CRITICAL_THRESHOLD);
+
+            if (criticalEmployees.length > 0) {
+                const RiskTrainingIntegration = require('../services/integrations/risk-training-integration');
+
+                console.log(`🔗 [RISK→TRAINING] Detectados ${criticalEmployees.length} empleados con riesgo crítico`);
+
+                for (const emp of criticalEmployees) {
+                    try {
+                        // Determinar categoría de riesgo dominante
+                        const indices = emp.indices || {};
+                        let dominantCategory = 'general';
+                        let maxIndex = 0;
+                        for (const [category, value] of Object.entries(indices)) {
+                            if (value > maxIndex) {
+                                maxIndex = value;
+                                dominantCategory = category;
+                            }
+                        }
+
+                        await RiskTrainingIntegration.onCriticalRiskScore({
+                            userId: emp.id,
+                            companyId,
+                            riskCategory: dominantCategory,
+                            riskScore: emp.risk_score,
+                            alertId: `RISK-BATCH-${Date.now()}-${emp.id}`
+                        });
+                        trainingAssignments++;
+                    } catch (empError) {
+                        console.warn(`⚠️ [RISK→TRAINING] Error para empleado ${emp.id}:`, empError.message);
+                    }
+                }
+            }
+        } catch (integrationError) {
+            console.warn(`⚠️ [RISK→TRAINING] Error en integración batch (no bloquea):`, integrationError.message);
+        }
+
         res.json({
             success: true,
             message: `Análisis completado para ${employees.length} empleados`,
             count: employees.length,
+            trainingAssignments,
             employees
         });
 

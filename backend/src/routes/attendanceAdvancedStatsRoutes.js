@@ -117,11 +117,22 @@ router.get('/branch-comparison/:companyId', async (req, res) => {
  * Útil para el frontend para mostrar leyendas y filtros
  */
 router.get('/climate-zones', (req, res) => {
-    const { CLIMATE_ZONES, SEASONS, WEEKDAY_IMPACT } = require('../services/AttendanceAdvancedStatsService');
+    const { CLIMATE_ZONES_BY_LATITUDE, SEASONS } = require('../services/AttendanceAdvancedStatsService');
+
+    // Fallback para WEEKDAY_IMPACT si no está exportado
+    const WEEKDAY_IMPACT = {
+        0: { name: 'Domingo', expectedImpact: 'bajo', description: 'Día no laboral' },
+        1: { name: 'Lunes', expectedImpact: 'alto', description: 'Inicio de semana' },
+        2: { name: 'Martes', expectedImpact: 'normal', description: 'Día intermedio' },
+        3: { name: 'Miércoles', expectedImpact: 'normal', description: 'Día intermedio' },
+        4: { name: 'Jueves', expectedImpact: 'normal', description: 'Día intermedio' },
+        5: { name: 'Viernes', expectedImpact: 'medio', description: 'Fin de semana laboral' },
+        6: { name: 'Sábado', expectedImpact: 'bajo', description: 'Día no laboral' }
+    };
 
     res.json({
         success: true,
-        climateZones: Object.entries(CLIMATE_ZONES).map(([code, zone]) => ({
+        climateZones: Object.entries(CLIMATE_ZONES_BY_LATITUDE || {}).map(([code, zone]) => ({
             code,
             name: zone.name,
             description: zone.description,
@@ -135,7 +146,7 @@ router.get('/climate-zones', (req, res) => {
                 summerTemp: zone.summerTemp
             }
         })),
-        seasons: Object.entries(SEASONS).map(([code, season]) => ({
+        seasons: Object.entries(SEASONS || {}).map(([code, season]) => ({
             code,
             name: season.name,
             months: season.months

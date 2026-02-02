@@ -550,10 +550,10 @@ router.get('/balances', auth, adminOnly, async (req, res) => {
         const balances = await sequelize.query(`
             SELECT
                 b.*,
-                u.nombre as employee_name,
+                CONCAT(u."firstName", ' ', u."lastName") as employee_name,
                 u.legajo as employee_id,
                 u.email as employee_email,
-                br.name as branch_name
+                br.branch_name
             FROM hour_bank_balances b
             INNER JOIN users u ON b.user_id = u.user_id
             LEFT JOIN company_branches br ON b.branch_id = br.id

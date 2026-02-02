@@ -99,10 +99,13 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     console.log('✅ [STAFF-AUTH] Login exitoso:', staff.email, '- Rol:', staff.role?.role_name);
 
-    // Calcular nivel efectivo: usar staff.level, o si GG/DIR dar nivel 10, sino usar role.level
+    // Calcular nivel efectivo: usar staff.level si está definido (incluyendo 0), sino usar role.level
+    // NOTA: level 0 = máximo poder (Gerente General), NO tratar 0 como falsy
     const roleCode = staff.role.role_code;
     const isTopRole = ['GG', 'DIR', 'admin', 'superadmin'].includes(roleCode);
-    const effectiveLevel = staff.level || (isTopRole ? 10 : staff.role.level) || 1;
+    const effectiveLevel = (staff.level !== null && staff.level !== undefined)
+      ? staff.level
+      : (isTopRole ? 0 : (staff.role?.level ?? 4));
 
     console.log('📊 [STAFF-AUTH] Nivel calculado:', {
       email: staff.email,

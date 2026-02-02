@@ -15,10 +15,13 @@ const salesOrchestrationService = require('../services/SalesOrchestrationService
 const pool = {
     query: async (sql, params = []) => {
         // Convertir placeholders $1, $2, etc. a ?
+        // IMPORTANTE: Usar replaceAll para reemplazar TODAS las ocurrencias
+        // (un mismo $1 puede aparecer múltiples veces en ILIKE OR clauses)
         let convertedSql = sql;
         let paramIndex = 1;
         while (convertedSql.includes(`$${paramIndex}`)) {
-            convertedSql = convertedSql.replace(`$${paramIndex}`, '?');
+            // Usar regex con flag 'g' para reemplazar TODAS las ocurrencias
+            convertedSql = convertedSql.replace(new RegExp(`\\$${paramIndex}\\b`, 'g'), '?');
             paramIndex++;
         }
 
@@ -104,35 +107,100 @@ router.get('/leads', verifyStaffToken, async (req, res) => {
         const params = [];
         let paramIndex = 1;
 
+        // ============================================================
+        // SSOT: Filtrado por rol del usuario
+        // - Vendedor (is_sales_role=true): solo ve sus leads asignados
+        // - Gerente/Admin/SuperAdmin: ven todos los leads
+        // ============================================================
+        let isSalesRole = false;
+        let userPartnerId = null;
+        let userViewScope = 'all'; // 'all' o 'own'
+
+        const isValidUUID = (id) => {
+            if (!id || typeof id !== 'string') return false;
+            return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        };
+
+        if (isValidUUID(req.staff.id)) {
+            try {
+                // Verificar rol del staff
+                const roleCheck = await pool.query(
+                    `SELECT r.is_sales_role, r.role_code, r.level
+                     FROM aponnt_staff s
+                     JOIN aponnt_staff_roles r ON s.role_id = r.role_id
+                     WHERE s.staff_id = $1`,
+                    [req.staff.id]
+                );
+
+                if (roleCheck.rows.length > 0) {
+                    const role = roleCheck.rows[0];
+                    isSalesRole = role.is_sales_role;
+
+                    // Vendedores (level >= 3 y is_sales_role) solo ven sus leads
+                    // Gerentes/Jefes (level <= 2) o roles administrativos ven todo
+                    if (isSalesRole && role.level >= 3) {
+                        // Buscar partner asociado
+                        const partnerCheck = await pool.query(
+                            'SELECT id FROM partners WHERE email = $1 AND is_active = true LIMIT 1',
+                            [req.staff.email]
+                        );
+
+                        if (partnerCheck.rows.length > 0) {
+                            userPartnerId = partnerCheck.rows[0].id;
+                            userViewScope = 'own';
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('[MARKETING] Error checking role, defaulting to all:', e.message);
+            }
+        }
+
+        // Aplicar filtro SSOT si es vendedor
+        // Usamos prefijo ml. porque la query principal hace JOIN con partners
+        if (userViewScope === 'own' && userPartnerId) {
+            // Vendedor solo ve: leads asignados a él O creados por él
+            whereClause += ` AND (ml.assigned_seller_id = $${paramIndex} OR ml.created_by_staff_id = $${paramIndex + 1})`;
+            params.push(userPartnerId, req.staff.id);
+            paramIndex += 2;
+            console.log(`[MARKETING] SSOT: Vendedor ${req.staff.email} - filtrando solo sus leads`);
+        }
+
         if (status) {
-            whereClause += ` AND status = $${paramIndex}`;
+            whereClause += ` AND ml.status = $${paramIndex}`;
             params.push(status);
             paramIndex++;
         }
 
         if (search) {
-            whereClause += ` AND (full_name ILIKE $${paramIndex} OR email ILIKE $${paramIndex} OR company_name ILIKE $${paramIndex})`;
-            params.push(`%${search}%`);
-            paramIndex++;
+            // Nota: Cada placeholder necesita su propio parámetro para Sequelize
+            // Prefijamos con ml. porque hacemos JOIN con partners que también tiene "email"
+            whereClause += ` AND (ml.full_name ILIKE $${paramIndex} OR ml.email ILIKE $${paramIndex + 1} OR ml.company_name ILIKE $${paramIndex + 2})`;
+            const searchPattern = `%${search}%`;
+            params.push(searchPattern, searchPattern, searchPattern);
+            paramIndex += 3;
         }
 
         if (created_by) {
-            whereClause += ` AND created_by_staff_id = $${paramIndex}`;
+            whereClause += ` AND ml.created_by_staff_id = $${paramIndex}`;
             params.push(created_by);
             paramIndex++;
         }
 
-        // Contar total
+        // Contar total (usamos alias ml para consistencia con whereClause)
         const countResult = await pool.query(
-            `SELECT COUNT(*) FROM marketing_leads WHERE ${whereClause}`,
+            `SELECT COUNT(*) FROM marketing_leads ml WHERE ${whereClause}`,
             params
         );
 
-        // Obtener leads
+        // Obtener leads con info del vendedor asignado
         const result = await pool.query(
-            `SELECT * FROM marketing_leads
+            `SELECT ml.*,
+                    (p.first_name || ' ' || p.last_name) AS assigned_seller_name
+             FROM marketing_leads ml
+             LEFT JOIN partners p ON ml.assigned_seller_id = p.id
              WHERE ${whereClause}
-             ORDER BY created_at DESC
+             ORDER BY ml.created_at DESC
              LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
             [...params, limit, offset]
         );
@@ -145,6 +213,10 @@ router.get('/leads', verifyStaffToken, async (req, res) => {
                 limit: parseInt(limit),
                 total: parseInt(countResult.rows[0].count),
                 pages: Math.ceil(countResult.rows[0].count / limit)
+            },
+            _ssot: {
+                viewScope: userViewScope,
+                filteredBy: userPartnerId ? 'seller' : null
             }
         });
 
@@ -242,21 +314,73 @@ router.post('/leads', verifyStaffToken, async (req, res) => {
         };
         const staffId = isValidUUID(req.staff.id) ? req.staff.id : null;
 
-        // Insertar lead
+        // Auto-asignar vendedor si el staff que crea es un vendedor
+        // Reglas:
+        // 1. Si el staff es vendedor (is_sales_role=true) → asignar automáticamente
+        // 2. Si es gerente/admin/superadmin → no asignar (puede asignarse después)
+        // 3. Si no tiene partner asociado → no asignar (venta directa)
+        let assignedSellerId = null;
+        let assignedAt = null;
+
+        if (staffId && req.staff.email) {
+            try {
+                // Verificar si el staff tiene rol de ventas
+                const roleCheck = await pool.query(
+                    `SELECT r.is_sales_role
+                     FROM aponnt_staff s
+                     JOIN aponnt_staff_roles r ON s.role_id = r.role_id
+                     WHERE s.staff_id = $1`,
+                    [staffId]
+                );
+
+                const isSalesRole = roleCheck.rows[0]?.is_sales_role;
+
+                if (isSalesRole) {
+                    // Buscar partner asociado por email
+                    const partnerCheck = await pool.query(
+                        'SELECT id FROM partners WHERE email = $1 AND is_active = true LIMIT 1',
+                        [req.staff.email]
+                    );
+
+                    if (partnerCheck.rows.length > 0) {
+                        assignedSellerId = partnerCheck.rows[0].id;
+                        assignedAt = new Date();
+                        console.log(`[MARKETING] Auto-asignando vendedor ${assignedSellerId} al lead (staff es vendedor)`);
+                    }
+                }
+            } catch (e) {
+                // No hay problema si falla - simplemente no se asigna vendedor
+                console.log('[MARKETING] No se pudo auto-asignar vendedor:', e.message);
+            }
+        }
+
+        // Insertar lead - asegurar que no hay undefined (Sequelize no los maneja bien)
         const result = await pool.query(
             `INSERT INTO marketing_leads
              (full_name, email, language, company_name, industry, phone, whatsapp,
-              source, notes, created_by_staff_id, created_by_staff_name)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+              source, notes, created_by_staff_id, created_by_staff_name,
+              assigned_seller_id, assigned_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
              RETURNING *`,
             [
-                full_name, email, language, company_name, industry,
-                phone, whatsapp, source, notes,
-                staffId, req.staff.full_name || req.staff.email
+                full_name || null,
+                email || null,
+                language || 'es',
+                company_name || null,
+                industry || null,
+                phone || null,
+                whatsapp || null,
+                source || 'manual',
+                notes || null,
+                staffId || null,
+                req.staff.full_name || req.staff.email || null,
+                assignedSellerId || null,
+                assignedAt || null
             ]
         );
 
-        console.log(`[MARKETING] Lead created: ${email} by ${req.staff.email}`);
+        const sellerInfo = assignedSellerId ? ` (vendedor auto-asignado: ${assignedSellerId})` : ' (sin vendedor)';
+        console.log(`[MARKETING] Lead created: ${email} by ${req.staff.email}${sellerInfo}`);
 
         res.status(201).json({
             success: true,
@@ -290,6 +414,12 @@ router.put('/leads/:id', verifyStaffToken, async (req, res) => {
             next_followup_at
         } = req.body;
 
+        // DEBUG: Log recibido
+        console.log('[MARKETING] PUT /leads/:id - ID:', id);
+        console.log('[MARKETING] PUT /leads/:id - Body:', JSON.stringify(req.body, null, 2));
+        console.log('[MARKETING] PUT /leads/:id - full_name:', full_name);
+
+        // Asegurar que no hay undefined (Sequelize no los maneja bien)
         const result = await pool.query(
             `UPDATE marketing_leads SET
                 full_name = COALESCE($1, full_name),
@@ -304,8 +434,19 @@ router.put('/leads/:id', verifyStaffToken, async (req, res) => {
                 next_followup_at = COALESCE($10, next_followup_at)
              WHERE id = $11
              RETURNING *`,
-            [full_name, email, language, company_name, industry,
-             phone, whatsapp, status, notes, next_followup_at, id]
+            [
+                full_name !== undefined ? full_name : null,
+                email !== undefined ? email : null,
+                language !== undefined ? language : null,
+                company_name !== undefined ? company_name : null,
+                industry !== undefined ? industry : null,
+                phone !== undefined ? phone : null,
+                whatsapp !== undefined ? whatsapp : null,
+                status !== undefined ? status : null,
+                notes !== undefined ? notes : null,
+                next_followup_at !== undefined ? next_followup_at : null,
+                id
+            ]
         );
 
         if (result.rows.length === 0) {
@@ -511,47 +652,123 @@ router.get('/flyer-preview', verifyStaffToken, async (req, res) => {
  */
 router.get('/stats', verifyStaffToken, async (req, res) => {
     try {
-        const statsResult = await pool.query('SELECT * FROM marketing_stats');
+        // ============================================================
+        // SSOT: Determinar scope según rol del usuario
+        // ============================================================
+        let whereClause = '1=1';
+        let viewScope = 'all';
+        const params = [];
 
-        // Stats por staff (quién registró más leads)
-        const staffStatsResult = await pool.query(
+        const isValidUUID = (id) => {
+            if (!id || typeof id !== 'string') return false;
+            return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        };
+
+        if (isValidUUID(req.staff.id)) {
+            try {
+                const roleCheck = await pool.query(
+                    `SELECT r.is_sales_role, r.level
+                     FROM aponnt_staff s
+                     JOIN aponnt_staff_roles r ON s.role_id = r.role_id
+                     WHERE s.staff_id = $1`,
+                    [req.staff.id]
+                );
+
+                if (roleCheck.rows.length > 0 && roleCheck.rows[0].is_sales_role && roleCheck.rows[0].level >= 3) {
+                    const partnerCheck = await pool.query(
+                        'SELECT id FROM partners WHERE email = $1 AND is_active = true LIMIT 1',
+                        [req.staff.email]
+                    );
+
+                    if (partnerCheck.rows.length > 0) {
+                        whereClause = `(assigned_seller_id = $1 OR created_by_staff_id = $2)`;
+                        params.push(partnerCheck.rows[0].id, req.staff.id);
+                        viewScope = 'own';
+                    }
+                }
+            } catch (e) {
+                console.log('[MARKETING] Stats: Error checking role, showing all:', e.message);
+            }
+        }
+
+        // Stats generales (filtradas por scope)
+        const generalStats = await pool.query(
             `SELECT
-                created_by_staff_name as staff_name,
-                COUNT(*) as leads_created,
+                COUNT(*) as total_leads,
                 COUNT(*) FILTER (WHERE flyer_sent_at IS NOT NULL) as flyers_sent,
-                COUNT(*) FILTER (WHERE status = 'converted') as conversions
+                COUNT(*) FILTER (WHERE status = 'interested') as interested,
+                COUNT(*) FILTER (WHERE status = 'converted') as converted,
+                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as last_7_days,
+                COUNT(*) FILTER (WHERE page_visited_at IS NOT NULL) as page_visits,
+                COUNT(*) FILTER (WHERE flyer_opened_at IS NOT NULL) as emails_opened
              FROM marketing_leads
-             WHERE created_by_staff_id IS NOT NULL
-             GROUP BY created_by_staff_name, created_by_staff_id
-             ORDER BY leads_created DESC
-             LIMIT 10`
+             WHERE ${whereClause}`,
+            params
         );
 
-        // Stats por idioma
+        // Stats por staff (solo si ve todo)
+        let staffStats = [];
+        if (viewScope === 'all') {
+            const staffStatsResult = await pool.query(
+                `SELECT
+                    created_by_staff_name as staff_name,
+                    COUNT(*) as leads_created,
+                    COUNT(*) FILTER (WHERE flyer_sent_at IS NOT NULL) as flyers_sent,
+                    COUNT(*) FILTER (WHERE status = 'converted') as conversions
+                 FROM marketing_leads
+                 WHERE created_by_staff_id IS NOT NULL
+                 GROUP BY created_by_staff_name, created_by_staff_id
+                 ORDER BY leads_created DESC
+                 LIMIT 10`
+            );
+            staffStats = staffStatsResult.rows;
+        }
+
+        // Stats por idioma (filtradas por scope)
         const languageStatsResult = await pool.query(
             `SELECT language, COUNT(*) as count
              FROM marketing_leads
+             WHERE ${whereClause}
              GROUP BY language
-             ORDER BY count DESC`
+             ORDER BY count DESC`,
+            params
         );
 
-        // Stats por industria/rubro
+        // Stats por industria/rubro (filtradas por scope)
         const industryStatsResult = await pool.query(
             `SELECT industry, COUNT(*) as count
              FROM marketing_leads
-             WHERE industry IS NOT NULL
+             WHERE ${whereClause} AND industry IS NOT NULL
              GROUP BY industry
              ORDER BY count DESC
-             LIMIT 10`
+             LIMIT 10`,
+            params
+        );
+
+        // Stats de engagement (filtradas por scope)
+        const engagementStats = await pool.query(
+            `SELECT
+                COUNT(*) FILTER (WHERE page_visit_count > 0) as leads_with_visits,
+                SUM(COALESCE(page_visit_count, 0)) as total_page_visits,
+                COUNT(*) FILTER (WHERE demo_accessed_at IS NOT NULL) as demo_accessed,
+                COUNT(*) FILTER (WHERE survey_completed_at IS NOT NULL) as surveys_completed,
+                ROUND(AVG(COALESCE(interaction_count, 0)), 1) as avg_interactions
+             FROM marketing_leads
+             WHERE ${whereClause}`,
+            params
         );
 
         res.json({
             success: true,
             data: {
-                general: statsResult.rows[0] || {},
-                byStaff: staffStatsResult.rows,
+                general: generalStats.rows[0] || {},
+                engagement: engagementStats.rows[0] || {},
+                byStaff: staffStats,
                 byLanguage: languageStatsResult.rows,
                 byIndustry: industryStatsResult.rows
+            },
+            _ssot: {
+                viewScope: viewScope
             }
         });
 
@@ -564,6 +781,85 @@ router.get('/stats', verifyStaffToken, async (req, res) => {
 // ============================================================================
 // TRACKING DE VISITAS Y ENCUESTAS
 // ============================================================================
+
+/**
+ * GET /api/marketing/track/:token/open
+ * Email open tracking pixel - Registra cuando el lead ABRE el email
+ * Este pixel se incrusta en el HTML del flyer/email
+ * Diferente al tracking de visita a página
+ */
+router.get('/track/:token/open', async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        // Buscar lead por tracking token
+        const leadResult = await pool.query(
+            'SELECT id, full_name, email, flyer_opened_at FROM marketing_leads WHERE tracking_token = $1',
+            [token]
+        );
+
+        if (leadResult.rows.length > 0) {
+            const lead = leadResult.rows[0];
+            const now = new Date().toISOString();
+
+            // Solo actualizar si es la primera vez que abre
+            if (!lead.flyer_opened_at) {
+                await pool.query(
+                    `UPDATE marketing_leads SET
+                        flyer_opened_at = $1,
+                        last_contact_at = $1,
+                        status = CASE WHEN status = 'new' THEN 'contacted' ELSE status END
+                     WHERE id = $2`,
+                    [now, lead.id]
+                );
+
+                // Registrar evento
+                try {
+                    await pool.query(
+                        `INSERT INTO marketing_lead_events (lead_id, event_type, event_data, ip_address, user_agent)
+                         VALUES ($1, 'email_opened', $2, $3, $4)`,
+                        [
+                            lead.id,
+                            JSON.stringify({ first_open: true }),
+                            req.ip || req.connection?.remoteAddress,
+                            req.headers['user-agent']
+                        ]
+                    );
+                } catch (e) {
+                    // Ignorar si falla el evento
+                }
+
+                console.log(`[MARKETING] 📧 EMAIL ABIERTO: ${lead.email} abrió el flyer por primera vez`);
+            }
+
+            // Actualizar comunicación si existe
+            try {
+                await pool.query(
+                    `UPDATE marketing_lead_communications
+                     SET opened_at = COALESCE(opened_at, NOW())
+                     WHERE lead_id = $1 AND opened_at IS NULL
+                     ORDER BY sent_at DESC LIMIT 1`,
+                    [lead.id]
+                );
+            } catch (e) {
+                // Ignorar si falla
+            }
+        }
+
+        // Siempre retornar pixel transparente de 1x1 (GIF)
+        res.set('Content-Type', 'image/gif');
+        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+        res.send(Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'));
+
+    } catch (error) {
+        console.error('[MARKETING] Error email open tracking:', error);
+        // Siempre retornar el pixel aunque haya error
+        res.set('Content-Type', 'image/gif');
+        res.send(Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'));
+    }
+});
 
 /**
  * GET /api/marketing/track/:token
@@ -928,7 +1224,7 @@ router.post('/leads/:id/create-quote', verifyStaffToken, async (req, res) => {
 
     try {
         const { id } = req.params;
-        const { company_data, modules_data, notes } = req.body;
+        const { company_data, modules_data, notes, seller_id: requestSellerId } = req.body;
 
         // 1. Validar que el lead existe
         const leadResult = await pool.query(
@@ -1014,18 +1310,53 @@ router.post('/leads/:id/create-quote', verifyStaffToken, async (req, res) => {
         const company = companyResult[0][0] || companyResult[0];
         const companyId = company.company_id;
 
-        // 5. Obtener seller_id (usar partner del staff si existe, sino NULL)
-        let sellerId = null; // UUID del partner, null si no existe
-        try {
-            const sellerResult = await pool.query(
-                'SELECT id FROM partners WHERE email = $1 AND is_active = true LIMIT 1',
-                [req.staff.email]
+        // 5. Obtener seller_id con prioridad:
+        //    1. seller_id del request (si el usuario lo especificó)
+        //    2. seller_id del lead (si ya tenía vendedor asignado)
+        //    3. Partner asociado al staff que crea el presupuesto
+        //    4. NULL (venta directa sin comisión)
+        let sellerId = null;
+        let sellerAssignedAt = null;
+
+        if (requestSellerId) {
+            // Validar que el seller existe
+            const sellerCheck = await pool.query(
+                'SELECT id FROM partners WHERE id = $1 AND is_active = true',
+                [requestSellerId]
             );
-            if (sellerResult.rows.length > 0) {
-                sellerId = sellerResult.rows[0].id;
+            if (sellerCheck.rows.length > 0) {
+                sellerId = requestSellerId;
+                sellerAssignedAt = new Date();
+                console.log('[MARKETING] Seller asignado desde request:', sellerId);
             }
-        } catch (e) {
-            console.log('[MARKETING] No se encontró partner para staff, seller_id será NULL');
+        }
+
+        if (!sellerId && lead.assigned_seller_id) {
+            // Heredar del lead
+            sellerId = lead.assigned_seller_id;
+            sellerAssignedAt = lead.assigned_at;
+            console.log('[MARKETING] Seller heredado del lead:', sellerId);
+        }
+
+        if (!sellerId) {
+            // Intentar encontrar partner asociado al staff
+            try {
+                const sellerResult = await pool.query(
+                    'SELECT id FROM partners WHERE email = $1 AND is_active = true LIMIT 1',
+                    [req.staff.email]
+                );
+                if (sellerResult.rows.length > 0) {
+                    sellerId = sellerResult.rows[0].id;
+                    sellerAssignedAt = new Date();
+                    console.log('[MARKETING] Seller encontrado por email del staff:', sellerId);
+                }
+            } catch (e) {
+                // No hay partner, está OK - será venta directa
+            }
+        }
+
+        if (!sellerId) {
+            console.log('[MARKETING] Sin seller asignado - venta directa (sin comisión)');
         }
 
         // 6. Calcular total del presupuesto
@@ -1051,16 +1382,18 @@ router.post('/leads/:id/create-quote', verifyStaffToken, async (req, res) => {
         }
         const quoteNumber = `PRES-${year}-${String(nextNumber).padStart(4, '0')}`;
 
-        // 8. Crear el presupuesto
+        // 8. Crear el presupuesto con origin tracking
         const quoteResult = await sequelize.query(
             `INSERT INTO quotes (
                 quote_number, company_id, seller_id, lead_id,
                 modules_data, total_amount, notes,
-                status, has_trial, trial_modules
+                status, has_trial, trial_modules,
+                origin_type, origin_detail, seller_assigned_at
             ) VALUES (
                 :quote_number, :company_id, :seller_id, :lead_id,
                 :modules_data, :total_amount, :notes,
-                'draft', true, :trial_modules
+                'draft', true, :trial_modules,
+                'marketing_lead', :origin_detail, :seller_assigned_at
             ) RETURNING *`,
             {
                 replacements: {
@@ -1071,7 +1404,16 @@ router.post('/leads/:id/create-quote', verifyStaffToken, async (req, res) => {
                     modules_data: JSON.stringify(modules_data),
                     total_amount: totalAmount,
                     notes: notes || `Creado desde lead: ${lead.full_name} (${lead.email})`,
-                    trial_modules: JSON.stringify(modules_data.map(m => m.module_key))
+                    trial_modules: JSON.stringify(modules_data.map(m => m.module_key)),
+                    origin_detail: JSON.stringify({
+                        lead_email: lead.email,
+                        lead_name: lead.full_name,
+                        lead_company: lead.company_name,
+                        campaign_source: lead.campaign_source || 'unknown',
+                        created_via: 'marketing_leads_module',
+                        created_by_staff: req.staff.email
+                    }),
+                    seller_assigned_at: sellerAssignedAt
                 },
                 type: QueryTypes.INSERT,
                 transaction
@@ -1080,14 +1422,16 @@ router.post('/leads/:id/create-quote', verifyStaffToken, async (req, res) => {
 
         const quote = quoteResult[0][0] || quoteResult[0];
 
-        // 9. Actualizar lead con referencia al quote
+        // 9. Actualizar lead con referencia al quote y tracking de conversión
         await sequelize.query(
             `UPDATE marketing_leads SET
-                status = CASE WHEN status = 'new' THEN 'interested' ELSE status END,
+                status = CASE WHEN status IN ('new', 'contacted') THEN 'interested' ELSE status END,
+                converted_to_quote_id = :quoteId,
+                converted_at = NOW(),
                 notes = COALESCE(notes, '') || E'\n[' || NOW()::date || '] Presupuesto ${quoteNumber} creado'
              WHERE id = :id`,
             {
-                replacements: { id },
+                replacements: { id, quoteId: quote.id },
                 type: QueryTypes.UPDATE,
                 transaction
             }
@@ -1140,6 +1484,289 @@ router.post('/leads/:id/create-quote', verifyStaffToken, async (req, res) => {
     } catch (error) {
         await transaction.rollback();
         console.error('[MARKETING] Error creating quote from lead:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================================
+// NUEVOS ENDPOINTS: SELLER ASSIGNMENT, FOLLOW-UP, INTERACTIONS
+// ============================================================================
+
+/**
+ * POST /api/marketing/leads/:id/assign-seller
+ * Asigna un vendedor/partner a un lead (opcional, para tracking de comisiones)
+ */
+router.post('/leads/:id/assign-seller', verifyStaffToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { seller_id, notes } = req.body;
+
+        // Validar que el lead existe
+        const leadResult = await pool.query(
+            'SELECT id, full_name FROM marketing_leads WHERE id = $1',
+            [id]
+        );
+
+        if (leadResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Lead no encontrado' });
+        }
+
+        if (seller_id) {
+            // Validar que el seller existe
+            const sellerResult = await pool.query(
+                `SELECT id, (first_name || ' ' || last_name) AS seller_name FROM partners WHERE id = $1 AND is_active = true`,
+                [seller_id]
+            );
+
+            if (sellerResult.rows.length === 0) {
+                return res.status(400).json({ success: false, error: 'Vendedor no encontrado o inactivo' });
+            }
+
+            // Asignar vendedor
+            await pool.query(
+                `UPDATE marketing_leads SET
+                    assigned_seller_id = $1,
+                    assigned_at = NOW(),
+                    notes = COALESCE(notes, '') || E'\n[' || NOW()::date || '] Vendedor asignado: ' || $2
+                WHERE id = $3`,
+                [seller_id, sellerResult.rows[0].seller_name, id]
+            );
+
+            console.log(`[MARKETING] Vendedor ${seller_id} asignado al lead ${id} por ${req.staff.email}`);
+
+            res.json({
+                success: true,
+                message: 'Vendedor asignado correctamente',
+                seller: sellerResult.rows[0]
+            });
+        } else {
+            // Quitar vendedor asignado (venta directa)
+            await pool.query(
+                `UPDATE marketing_leads SET
+                    assigned_seller_id = NULL,
+                    assigned_at = NULL,
+                    notes = COALESCE(notes, '') || E'\n[' || NOW()::date || '] Vendedor removido (venta directa)'
+                WHERE id = $1`,
+                [id]
+            );
+
+            res.json({
+                success: true,
+                message: 'Vendedor removido - será venta directa (sin comisión)'
+            });
+        }
+
+    } catch (error) {
+        console.error('[MARKETING] Error assigning seller:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * PATCH /api/marketing/leads/:id/follow-up
+ * Configura un recordatorio de follow-up para un lead
+ */
+router.patch('/leads/:id/follow-up', verifyStaffToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { follow_up_date, follow_up_notes } = req.body;
+
+        // Validar que el lead existe
+        const leadResult = await pool.query(
+            'SELECT id FROM marketing_leads WHERE id = $1',
+            [id]
+        );
+
+        if (leadResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Lead no encontrado' });
+        }
+
+        // Actualizar follow-up
+        await pool.query(
+            `UPDATE marketing_leads SET
+                follow_up_date = $1,
+                follow_up_notes = $2
+            WHERE id = $3`,
+            [follow_up_date || null, follow_up_notes || null, id]
+        );
+
+        console.log(`[MARKETING] Follow-up configurado para lead ${id}: ${follow_up_date}`);
+
+        res.json({
+            success: true,
+            message: follow_up_date ? `Follow-up programado para ${follow_up_date}` : 'Follow-up removido'
+        });
+
+    } catch (error) {
+        console.error('[MARKETING] Error setting follow-up:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/marketing/leads/follow-ups/due
+ * Obtiene leads con follow-ups pendientes
+ */
+router.get('/leads/follow-ups/due', verifyStaffToken, async (req, res) => {
+    try {
+        const { days_ahead = 7 } = req.query;
+
+        const result = await pool.query(
+            `SELECT ml.*, (p.first_name || ' ' || p.last_name) AS seller_name
+             FROM marketing_leads ml
+             LEFT JOIN partners p ON ml.assigned_seller_id = p.id
+             WHERE ml.follow_up_date IS NOT NULL
+               AND ml.follow_up_date <= CURRENT_DATE + INTERVAL '${parseInt(days_ahead)} days'
+               AND ml.status NOT IN ('converted', 'not_interested')
+             ORDER BY ml.follow_up_date ASC`
+        );
+
+        // Agrupar por urgencia
+        const today = new Date().toISOString().split('T')[0];
+        const overdue = result.rows.filter(l => l.follow_up_date < today);
+        const dueToday = result.rows.filter(l => l.follow_up_date === today);
+        const upcoming = result.rows.filter(l => l.follow_up_date > today);
+
+        res.json({
+            success: true,
+            data: {
+                overdue: overdue,
+                due_today: dueToday,
+                upcoming: upcoming,
+                total: result.rows.length
+            }
+        });
+
+    } catch (error) {
+        console.error('[MARKETING] Error getting due follow-ups:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/marketing/leads/:id/interaction
+ * Registra una interacción con el lead
+ */
+router.post('/leads/:id/interaction', verifyStaffToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { interaction_type, notes, channel } = req.body;
+
+        // Validar que el lead existe
+        const leadResult = await pool.query(
+            'SELECT id, interaction_count FROM marketing_leads WHERE id = $1',
+            [id]
+        );
+
+        if (leadResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Lead no encontrado' });
+        }
+
+        // Incrementar contador de interacciones
+        await pool.query(
+            `UPDATE marketing_leads SET
+                interaction_count = COALESCE(interaction_count, 0) + 1,
+                last_interaction_at = NOW()
+            WHERE id = $1`,
+            [id]
+        );
+
+        // Registrar en communications
+        await pool.query(
+            `INSERT INTO marketing_lead_communications
+                (lead_id, comm_type, channel, message, sent_by_staff_id, sent_by_staff_name)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+                id,
+                interaction_type || 'note',
+                channel || 'direct',
+                notes || '',
+                req.staff.id,
+                req.staff.full_name
+            ]
+        );
+
+        const newCount = (leadResult.rows[0].interaction_count || 0) + 1;
+        console.log(`[MARKETING] Interacción registrada para lead ${id}. Total: ${newCount}`);
+
+        res.json({
+            success: true,
+            message: 'Interacción registrada',
+            interaction_count: newCount
+        });
+
+    } catch (error) {
+        console.error('[MARKETING] Error recording interaction:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/marketing/partners/available
+ * Obtiene lista de partners/vendedores disponibles para asignar
+ */
+router.get('/partners/available', verifyStaffToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT id, (first_name || ' ' || last_name) AS name, email, phone
+             FROM partners
+             WHERE is_active = true
+             ORDER BY first_name, last_name ASC`
+        );
+
+        res.json({
+            success: true,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error('[MARKETING] Error getting available partners:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/marketing/pipeline/summary
+ * Obtiene resumen del pipeline unificado
+ */
+router.get('/pipeline/summary', verifyStaffToken, async (req, res) => {
+    try {
+        // Intentar usar la vista si existe
+        let result;
+        try {
+            result = await sequelize.query(
+                `SELECT pipeline_stage, COUNT(*) as count,
+                        SUM(COALESCE(quote_amount, 0)) as total_amount
+                 FROM v_sales_pipeline
+                 GROUP BY pipeline_stage
+                 ORDER BY MAX(stage_order) DESC`,
+                { type: QueryTypes.SELECT }
+            );
+        } catch (viewError) {
+            // Vista no existe, calcular manualmente
+            result = await pool.query(
+                `SELECT
+                    CASE
+                        WHEN ml.converted_to_quote_id IS NOT NULL THEN 'converted'
+                        WHEN ml.status = 'interested' THEN 'interested'
+                        WHEN ml.status = 'contacted' THEN 'contacted'
+                        WHEN ml.status = 'not_interested' THEN 'lost'
+                        ELSE 'new_lead'
+                    END as pipeline_stage,
+                    COUNT(*) as count
+                 FROM marketing_leads ml
+                 GROUP BY pipeline_stage`
+            );
+            result = result.rows;
+        }
+
+        res.json({
+            success: true,
+            data: result
+        });
+
+    } catch (error) {
+        console.error('[MARKETING] Error getting pipeline summary:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

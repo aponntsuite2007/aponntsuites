@@ -337,14 +337,43 @@ router.put('/accidents/:id', auth, async (req, res) => {
             });
         }
 
+        const previousAccident = artAccidents[accidentIndex];
         const updatedAccident = {
-            ...artAccidents[accidentIndex],
+            ...previousAccident,
             ...req.body,
             id: accidentId,
             updated_at: new Date().toISOString()
         };
 
         artAccidents[accidentIndex] = updatedAccident;
+
+        // ✅ INTEGRACIÓN: Si el accidente se cierra (alta médica), auto-asignar capacitaciones
+        try {
+            const wasNotClosed = previousAccident.status !== 'closed' && previousAccident.status !== 'alta_medica';
+            const isNowClosed = req.body.status === 'closed' || req.body.status === 'alta_medica';
+
+            if (wasNotClosed && isNowClosed) {
+                console.log(`🔗 [ART→TRAINING] Accidente ${accidentId} cerrado, procesando capacitaciones...`);
+
+                const ARTTrainingIntegration = require('../services/integrations/art-training-integration');
+                const companyId = req.user?.company_id || updatedAccident.company_id || 1;
+
+                // Preparar datos del accidente para la integración
+                const accidentData = {
+                    id: accidentId,
+                    company_id: companyId,
+                    employee_id: updatedAccident.employee_id || updatedAccident.affected_employee_id,
+                    accident_type: updatedAccident.accident_type || updatedAccident.type || 'general',
+                    denuncia_number: updatedAccident.denuncia_number || `ART-${accidentId}`,
+                    department_id: updatedAccident.department_id || updatedAccident.area_id
+                };
+
+                await ARTTrainingIntegration.onAccidentClosed(accidentData, req.user?.user_id);
+                console.log(`✅ [ART→TRAINING] Capacitaciones post-accidente procesadas`);
+            }
+        } catch (integrationError) {
+            console.warn(`⚠️ [ART→TRAINING] Error en integración (no bloquea):`, integrationError.message);
+        }
 
         res.json({
             success: true,

@@ -908,7 +908,15 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
         }
 
         // Obtener asistencias del empleado
-        const [attendances] = await sequelize.query(`
+        // Convertir fechas a formato string para PostgreSQL
+        const startDateStr = start.toISOString().split('T')[0];
+        const endDateStr = end.toISOString().split('T')[0];
+
+        console.log('📊 [HOURS-CUBE] Querying attendance for:', { userId, startDateStr, endDateStr });
+
+        // Query attendance records
+        // NOTE: Don't destructure - QueryTypes.SELECT returns array directly
+        const attendances = await sequelize.query(`
             SELECT
                 a.id,
                 a.date,
@@ -922,12 +930,14 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
               AND a.date BETWEEN :startDate AND :endDate
             ORDER BY a.date DESC
         `, {
-            replacements: { userId, startDate: start, endDate: end },
-            type: sequelize.QueryTypes?.SELECT || 'SELECT'
+            replacements: { userId, startDate: startDateStr, endDate: endDateStr },
+            type: sequelize.QueryTypes.SELECT
         });
 
-        // Manejar diferentes formatos de respuesta - asegurar que sea iterable
-        const attendancesList = Array.isArray(attendances) ? attendances : [];
+        console.log('📊 [HOURS-CUBE] Found attendance records:', attendances?.length || 0);
+
+        // Asegurar que tenemos un array iterable
+        const attendancesList = Array.isArray(attendances) ? attendances : (attendances ? [attendances] : []);
 
         // Crear objeto shift para el cálculo
         const shift = user.shift_id ? {
@@ -1046,7 +1056,7 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
                 startDate: start.toISOString().split('T')[0],
                 endDate: end.toISOString().split('T')[0],
                 periodType: period || 'month',
-                daysInPeriod: Math.ceil((end - start) / (1000 * 60 * 60 * 1000 * 24))
+                daysInPeriod: Math.ceil((end - start) / (1000 * 60 * 60 * 24))
             },
             metrics,
             dailyBreakdown: dailyBreakdown.slice(0, 31), // Últimos 31 registros

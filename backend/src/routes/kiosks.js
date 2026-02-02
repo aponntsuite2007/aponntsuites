@@ -140,12 +140,22 @@ module.exports = (db) => {
                 gps_lng,
                 is_active,
                 authorized_departments,
-                // Campos adicionales de hardware
+                // Campos adicionales de hardware externo
                 has_external_reader,
                 reader_model,
                 reader_config,
                 ip_address,
-                port
+                port,
+                // Campos de perfiles de hardware (reconocimiento facial/huella)
+                hardware_profile,
+                hardware_category,
+                detection_method_facial,
+                detection_method_fingerprint,
+                performance_score,
+                supports_walkthrough,
+                supports_liveness,
+                biometric_modes,
+                hardware_specs
             } = req.body;
 
             // Validaciones
@@ -179,12 +189,22 @@ module.exports = (db) => {
                 is_configured: false, // Se configura desde la app
                 company_id: req.companyId,
                 authorized_departments: authorized_departments || [],
-                // Campos de hardware
+                // Campos de hardware externo
                 has_external_reader: has_external_reader || false,
                 reader_model: reader_model?.trim() || null,
                 reader_config: reader_config || {},
                 ip_address: ip_address?.trim() || null,
-                port: port || 9998
+                port: port || 9998,
+                // Campos de perfiles de hardware (reconocimiento facial/huella)
+                hardware_profile: hardware_profile?.trim() || null,
+                hardware_category: hardware_category?.trim() || null,
+                detection_method_facial: detection_method_facial?.trim() || null,
+                detection_method_fingerprint: detection_method_fingerprint?.trim() || null,
+                performance_score: performance_score || 0,
+                supports_walkthrough: supports_walkthrough || false,
+                supports_liveness: supports_liveness || false,
+                biometric_modes: biometric_modes || [],
+                hardware_specs: hardware_specs || {}
             });
 
             console.log('✅ Kiosk creado:', newKiosk.id, newKiosk.name);
@@ -229,12 +249,22 @@ module.exports = (db) => {
                 gps_lng,
                 is_active,
                 authorized_departments,
-                // Campos de hardware
+                // Campos de hardware externo
                 has_external_reader,
                 reader_model,
                 reader_config,
                 ip_address,
-                port
+                port,
+                // Campos de perfiles de hardware (reconocimiento facial/huella)
+                hardware_profile,
+                hardware_category,
+                detection_method_facial,
+                detection_method_fingerprint,
+                performance_score,
+                supports_walkthrough,
+                supports_liveness,
+                biometric_modes,
+                hardware_specs
             } = req.body;
 
             // Validar nombre único si se está cambiando
@@ -264,12 +294,22 @@ module.exports = (db) => {
                 gps_lng: gps_lng !== undefined ? gps_lng : kiosk.gps_lng,
                 is_active: is_active !== undefined ? is_active : kiosk.is_active,
                 authorized_departments: authorized_departments !== undefined ? authorized_departments : kiosk.authorized_departments,
-                // Campos de hardware
+                // Campos de hardware externo
                 has_external_reader: has_external_reader !== undefined ? has_external_reader : kiosk.has_external_reader,
                 reader_model: reader_model !== undefined ? reader_model?.trim() : kiosk.reader_model,
                 reader_config: reader_config !== undefined ? reader_config : kiosk.reader_config,
                 ip_address: ip_address !== undefined ? ip_address?.trim() : kiosk.ip_address,
-                port: port !== undefined ? port : kiosk.port
+                port: port !== undefined ? port : kiosk.port,
+                // Campos de perfiles de hardware (reconocimiento facial/huella)
+                hardware_profile: hardware_profile !== undefined ? hardware_profile?.trim() : kiosk.hardware_profile,
+                hardware_category: hardware_category !== undefined ? hardware_category?.trim() : kiosk.hardware_category,
+                detection_method_facial: detection_method_facial !== undefined ? detection_method_facial?.trim() : kiosk.detection_method_facial,
+                detection_method_fingerprint: detection_method_fingerprint !== undefined ? detection_method_fingerprint?.trim() : kiosk.detection_method_fingerprint,
+                performance_score: performance_score !== undefined ? performance_score : kiosk.performance_score,
+                supports_walkthrough: supports_walkthrough !== undefined ? supports_walkthrough : kiosk.supports_walkthrough,
+                supports_liveness: supports_liveness !== undefined ? supports_liveness : kiosk.supports_liveness,
+                biometric_modes: biometric_modes !== undefined ? biometric_modes : kiosk.biometric_modes,
+                hardware_specs: hardware_specs !== undefined ? hardware_specs : kiosk.hardware_specs
             });
 
             console.log('✅ Kiosk actualizado:', kiosk.id, kiosk.name);

@@ -828,7 +828,7 @@ router.post('/issues', auth, async (req, res) => {
             court,
             jurisdiction,
             filing_date,
-            status = 'activo',
+            status = 'active',
             description,
             plaintiff,
             defendant,

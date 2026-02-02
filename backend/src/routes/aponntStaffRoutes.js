@@ -262,10 +262,28 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Obtener datos del rol para level y area si no se proporcionan
+    let level = staffData.level;
+    let area = staffData.area;
+
+    if (level === undefined || level === null || area === undefined || area === null) {
+      const role = await AponntStaffRole.findByPk(staffData.role_id);
+      if (role) {
+        if (level === undefined || level === null) level = role.level || 4;
+        if (area === undefined || area === null) area = role.role_area || 'ventas';
+      } else {
+        level = level ?? 4;
+        area = area ?? 'ventas';
+      }
+    }
+
     // Crear staff
     const newStaff = await AponntStaff.create({
       ...staffData,
-      email: staffData.email.toLowerCase()
+      email: staffData.email.toLowerCase(),
+      level,
+      area,
+      is_active: staffData.is_active !== false // Default true
     });
 
     // Recargar con relaciones

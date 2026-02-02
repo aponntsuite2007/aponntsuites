@@ -145,11 +145,23 @@ router.post('/:userId/permissions', auth, verifyCompanyAccess, async (req, res) 
     try {
         const { userId } = req.params;
         const companyId = req.user.company_id;
+        const { start_date, end_date, total_days, ...otherFields } = req.body;
+
+        // Auto-calculate total_days if not provided
+        let calculatedDays = total_days;
+        if (!calculatedDays && start_date && end_date) {
+            const start = new Date(start_date);
+            const end = new Date(end_date);
+            calculatedDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        }
 
         const permission = await UserPermissionRequests.create({
             user_id: userId,
             company_id: companyId,
-            ...req.body
+            start_date,
+            end_date,
+            total_days: calculatedDays || 1,
+            ...otherFields
         });
 
         res.status(201).json(permission);

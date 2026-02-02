@@ -15,6 +15,7 @@
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
+const { auth } = require('../middleware/auth');
 
 // Importar modelos desde database.js
 const {
@@ -88,7 +89,7 @@ router.get('/sectors', async (req, res) => {
 });
 
 // POST /api/v1/organizational/sectors - Crear sector
-router.post('/sectors', async (req, res) => {
+router.post('/sectors', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
         const { department_id, name, code, description, supervisor_id, max_employees } = req.body;
@@ -123,7 +124,7 @@ router.post('/sectors', async (req, res) => {
 });
 
 // PUT /api/v1/organizational/sectors/:id - Actualizar sector
-router.put('/sectors/:id', async (req, res) => {
+router.put('/sectors/:id', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
         const sector = await Sector.findOne({
@@ -157,7 +158,7 @@ router.put('/sectors/:id', async (req, res) => {
 });
 
 // DELETE /api/v1/organizational/sectors/:id - Eliminar sector (soft delete)
-router.delete('/sectors/:id', async (req, res) => {
+router.delete('/sectors/:id', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.query.company_id;
         const sector = await Sector.findOne({
@@ -237,7 +238,7 @@ router.get('/agreements', async (req, res) => {
 });
 
 // POST /api/v1/organizational/agreements - Crear convenio
-router.post('/agreements', async (req, res) => {
+router.post('/agreements', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
         const {
@@ -282,7 +283,7 @@ router.post('/agreements', async (req, res) => {
 });
 
 // PUT /api/v1/organizational/agreements/:id - Actualizar convenio
-router.put('/agreements/:id', async (req, res) => {
+router.put('/agreements/:id', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
 
@@ -331,10 +332,16 @@ router.put('/agreements/:id', async (req, res) => {
         `, {
             replacements: {
                 id: req.params.id,
-                code, name, short_name, industry, country_id,
-                base_work_hours_weekly, base_work_hours_daily,
-                overtime_50_multiplier, overtime_100_multiplier,
-                night_shift_multiplier
+                code: code || null,
+                name: name || null,
+                short_name: short_name || null,
+                industry: industry || null,
+                country_id: country_id || null,
+                base_work_hours_weekly: base_work_hours_weekly || null,
+                base_work_hours_daily: base_work_hours_daily || null,
+                overtime_50_multiplier: overtime_50_multiplier || null,
+                overtime_100_multiplier: overtime_100_multiplier || null,
+                night_shift_multiplier: night_shift_multiplier || null
             }
         });
 
@@ -349,7 +356,7 @@ router.put('/agreements/:id', async (req, res) => {
 });
 
 // DELETE /api/v1/organizational/agreements/:id - Eliminar convenio (solo de empresa)
-router.delete('/agreements/:id', async (req, res) => {
+router.delete('/agreements/:id', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.query.company_id;
 
@@ -445,7 +452,7 @@ router.get('/categories', async (req, res) => {
 });
 
 // POST /api/v1/organizational/categories - Crear categoría
-router.post('/categories', async (req, res) => {
+router.post('/categories', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
         const {
@@ -513,7 +520,7 @@ router.post('/categories', async (req, res) => {
 });
 
 // PUT /api/v1/organizational/categories/:id - Actualizar categoría
-router.put('/categories/:id', async (req, res) => {
+router.put('/categories/:id', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
         const {
@@ -572,7 +579,7 @@ router.put('/categories/:id', async (req, res) => {
 });
 
 // DELETE /api/v1/organizational/categories/:id - Eliminar categoría
-router.delete('/categories/:id', async (req, res) => {
+router.delete('/categories/:id', auth, async (req, res) => {
     try {
         await sequelize.query(`
             UPDATE salary_categories_v2 SET is_active = false, updated_at = NOW() WHERE id = :id
@@ -634,7 +641,7 @@ router.get('/roles', async (req, res) => {
 });
 
 // POST /api/v1/organizational/roles - Crear rol adicional
-router.post('/roles', async (req, res) => {
+router.post('/roles', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
         const {
@@ -696,7 +703,7 @@ router.post('/roles', async (req, res) => {
 });
 
 // PUT /api/v1/organizational/roles/:id - Actualizar rol
-router.put('/roles/:id', async (req, res) => {
+router.put('/roles/:id', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
 
@@ -755,7 +762,7 @@ router.put('/roles/:id', async (req, res) => {
 });
 
 // DELETE /api/v1/organizational/roles/:id - Eliminar rol (soft delete)
-router.delete('/roles/:id', async (req, res) => {
+router.delete('/roles/:id', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.query.company_id;
         const roleId = req.params.id;
@@ -1723,7 +1730,7 @@ router.get('/positions/:id', async (req, res) => {
 });
 
 // POST /api/v1/organizational/positions - Crear posición
-router.post('/positions', async (req, res) => {
+router.post('/positions', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
         const {
@@ -1802,7 +1809,7 @@ router.post('/positions', async (req, res) => {
 });
 
 // PUT /api/v1/organizational/positions/:id - Actualizar posición
-router.put('/positions/:id', async (req, res) => {
+router.put('/positions/:id', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.body.company_id;
         const { id } = req.params;
@@ -1893,7 +1900,7 @@ router.put('/positions/:id', async (req, res) => {
 });
 
 // DELETE /api/v1/organizational/positions/:id - Eliminar posición (soft delete)
-router.delete('/positions/:id', async (req, res) => {
+router.delete('/positions/:id', auth, async (req, res) => {
     try {
         const companyId = req.user?.company_id || req.query.company_id;
         const { id } = req.params;
