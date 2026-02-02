@@ -1,0 +1,47 @@
+
+VERIFICACIÓN DE MÓDULOS EN RENDER (www.aponnt.com)
+==================================================
+Fecha: 2026-02-02T11:30:27.492Z
+Empresa: APONNT Demo
+Total de Módulos: 35
+
+LISTA DE MÓDULOS:
+--------------------------------------------------
+ 1. Centro de Notificaciones
+ 2. Consentimientos y Privacidad
+ 3. Estructura Organizacional
+ 4. Finanzas
+ 5. Gestión de Almacenes
+ 6. Gestión Documental (DMS)
+ 7. Mi Espacio
+ 8. Mis Procedimientos
+ 9. Soporte / Tickets
+10. Gestión de Usuarios
+11. Control de Asistencia
+12. Gestión Legal
+13. Gestión de Kioscos
+14. Expediente 360°
+15. Gestión Médica
+16. Gestión de Vacaciones
+17. Compras y Proveedores
+18. Banco de Horas
+19. Liquidación de Sueldos
+20. Gestión de ART
+21. Gestión de Capacitaciones
+22. Risk Intelligence Dashboard
+23. Control de Visitantes
+24. Seguridad e Higiene Laboral (HSE)
+25. Análisis Emocional
+26. Mapa de Empleados
+27. Búsquedas Laborales
+28. Gestión de Sanciones
+29. Seguimiento de SLA
+30. Reportes de Auditoría
+31. Beneficios Laborales
+32. Logistica Avanzada
+33. SIAC Comercial Integral
+34. Voice Platform 🎤
+35. Manual de Procedimientos
+--------------------------------------------------
+
+STATUS: ✅ 35 módulos verificados correctamente
