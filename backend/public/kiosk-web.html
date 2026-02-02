@@ -670,7 +670,9 @@
                 kiosks.forEach(k => {
                     const opt = document.createElement('option');
                     opt.value = k.id; opt.dataset.name = k.name; opt.dataset.location = k.location || '';
-                    opt.dataset.lat = k.gps_lat || ''; opt.dataset.lng = k.gps_lng || '';
+                    // FIX: API devuelve gpsLocation.lat/lng, no gps_lat/gps_lng
+                    opt.dataset.lat = k.gps_lat || k.gpsLocation?.lat || '';
+                    opt.dataset.lng = k.gps_lng || k.gpsLocation?.lng || '';
                     opt.textContent = `${k.name}${k.location ? ' - ' + k.location : ''}`;
                     kioskSelect.appendChild(opt);
                 });

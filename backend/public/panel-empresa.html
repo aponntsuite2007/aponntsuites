@@ -3351,6 +3351,28 @@
                         </div>
                     </div>
 
+                    <!-- CARD: Mi Salud (Comunicaciones Médicas) -->
+                    <div id="card-mi-salud-employee" class="employee-module-card" data-module-key="mi-salud" data-module-name="Mi Salud" data-clickable="true" style="
+                        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+                        border-radius: 16px;
+                        padding: 25px;
+                        cursor: pointer;
+                        border: 2px solid transparent;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        transition: all 0.3s ease;
+                        position: relative;
+                    " onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(233, 30, 99, 0.25)'; this.style.borderColor='#e91e63';"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'; this.style.borderColor='transparent';"
+                       onclick="if(window.MiEspacio && window.MiEspacio.openMiSalud) { window.MiEspacio.openMiSalud(); } else { console.log('MiEspacio.openMiSalud no disponible'); }">
+                        <span id="badge-health-pending-employee" style="display: none; position: absolute; top: 10px; right: 10px; background: #e74c3c; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">0</span>
+                        <div style="font-size: 4rem; margin-bottom: 15px;">💊</div>
+                        <h4 style="margin: 0 0 10px; color: #2c3e50; font-size: 1.3rem;">Mi Salud</h4>
+                        <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Gestiona tus documentos médicos: certificados, recetas, estudios y solicitudes pendientes.</p>
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(233, 30, 99, 0.1); border-radius: 8px;">
+                            <span style="color: #e91e63; font-weight: 500; font-size: 0.85rem;">📋 Pendientes • 📤 Subir • 📜 Historial</span>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Accesos rápidos -->
