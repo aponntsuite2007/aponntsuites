@@ -13,29 +13,107 @@ const crypto = require('crypto');
 
 /**
  * Obtener bandeja de entrada del usuario
- * Muestra grupos de notificaciones donde el usuario es:
- * - El iniciador del grupo (initiator_id)
- * - Destinatario de al menos un mensaje
- * - Remitente de al menos un mensaje
+ * Muestra grupos de notificaciones según el rol del usuario:
+ *
+ * FILTRADO POR ROL:
+ * - superadmin: TODAS las notificaciones de TODAS las empresas
+ * - admin, gerente: TODAS las notificaciones de SU empresa
+ * - supervisor, jefe: Propias + subordinados directos
+ * - rrhh: Propias + notificaciones de tipo HR (vacation, leave, medical)
+ * - employee: Solo las propias (initiator, recipient, sender)
  */
 async function getInbox(employeeId, companyId, filters = {}) {
     try {
-        const { status = 'all', priority = 'all', limit = 50, offset = 0 } = filters;
+        const { status = 'all', priority = 'all', limit = 50, offset = 0, userRole = 'employee' } = filters;
 
-        // CRÍTICO: Filtrar por empresa Y por empleado (es participante del grupo)
-        let whereClause = `ng.company_id = $1`;
-        const params = [companyId, employeeId]; // $1 = companyId, $2 = employeeId
-        let paramIndex = 3;
+        // Base WHERE clause según el rol
+        let whereClause = '';
+        const params = [];
+        let paramIndex = 1;
 
-        // Filtro de participación: el empleado debe ser initiator, recipient o sender
-        whereClause += ` AND (
-            ng.initiator_id = $2
-            OR EXISTS (
-                SELECT 1 FROM notification_messages nm2
-                WHERE nm2.group_id = ng.id
-                AND (nm2.recipient_id = $2 OR nm2.sender_id = $2)
-            )
-        )`;
+        // =============== FILTRADO POR ROL ===============
+        const normalizedRole = userRole.toLowerCase();
+
+        if (normalizedRole === 'superadmin') {
+            // Superadmin ve TODO de TODAS las empresas
+            whereClause = '1=1';
+            console.log('🔐 [INBOX] Superadmin: acceso global');
+
+        } else if (['admin', 'administrador', 'gerente', 'gerente_general', 'director'].includes(normalizedRole)) {
+            // Admin/Gerente ve TODAS las notificaciones de SU empresa
+            whereClause = `ng.company_id = $${paramIndex}`;
+            params.push(companyId);
+            paramIndex++;
+            console.log(`🔐 [INBOX] Admin/Gerente: acceso total empresa ${companyId}`);
+
+        } else if (['supervisor', 'jefe', 'lider', 'coordinador'].includes(normalizedRole)) {
+            // Supervisor ve propias + subordinados
+            whereClause = `ng.company_id = $${paramIndex}`;
+            params.push(companyId);
+            paramIndex++;
+
+            // Agregar filtro de participación (propias o de subordinados)
+            whereClause += ` AND (
+                ng.initiator_id = $${paramIndex}
+                OR EXISTS (
+                    SELECT 1 FROM notification_messages nm2
+                    WHERE nm2.group_id = ng.id
+                    AND (nm2.recipient_id = $${paramIndex} OR nm2.sender_id = $${paramIndex})
+                )
+                OR EXISTS (
+                    SELECT 1 FROM users u
+                    WHERE u.supervisor_id = $${paramIndex}
+                    AND (
+                        ng.initiator_id = u.user_id::text
+                        OR EXISTS (
+                            SELECT 1 FROM notification_messages nm3
+                            WHERE nm3.group_id = ng.id
+                            AND (nm3.recipient_id = u.user_id::text OR nm3.sender_id = u.user_id::text)
+                        )
+                    )
+                )
+            )`;
+            params.push(employeeId);
+            paramIndex++;
+            console.log(`🔐 [INBOX] Supervisor: propias + subordinados (${employeeId})`);
+
+        } else if (['rrhh', 'hr', 'recursos_humanos'].includes(normalizedRole)) {
+            // RRHH ve propias + notificaciones de tipo HR
+            whereClause = `ng.company_id = $${paramIndex}`;
+            params.push(companyId);
+            paramIndex++;
+
+            whereClause += ` AND (
+                ng.initiator_id = $${paramIndex}
+                OR EXISTS (
+                    SELECT 1 FROM notification_messages nm2
+                    WHERE nm2.group_id = ng.id
+                    AND (nm2.recipient_id = $${paramIndex} OR nm2.sender_id = $${paramIndex})
+                )
+                OR ng.group_type IN ('vacation_request', 'leave_request', 'medical_notification', 'late_arrival', 'absence_notification', 'overtime_request')
+            )`;
+            params.push(employeeId);
+            paramIndex++;
+            console.log(`🔐 [INBOX] RRHH: propias + tipo HR (${employeeId})`);
+
+        } else {
+            // Employee: solo las propias
+            whereClause = `ng.company_id = $${paramIndex}`;
+            params.push(companyId);
+            paramIndex++;
+
+            whereClause += ` AND (
+                ng.initiator_id = $${paramIndex}
+                OR EXISTS (
+                    SELECT 1 FROM notification_messages nm2
+                    WHERE nm2.group_id = ng.id
+                    AND (nm2.recipient_id = $${paramIndex} OR nm2.sender_id = $${paramIndex})
+                )
+            )`;
+            params.push(employeeId);
+            paramIndex++;
+            console.log(`🔐 [INBOX] Employee: solo propias (${employeeId})`);
+        }
 
         // Filtros de estado
         if (status !== 'all') {
@@ -50,6 +128,11 @@ async function getInbox(employeeId, companyId, filters = {}) {
             params.push(priority);
             paramIndex++;
         }
+
+        // Agregar employeeId para unread_count
+        const employeeIdParamIndex = paramIndex;
+        params.push(employeeId);
+        paramIndex++;
 
         const query = `
             SELECT
@@ -76,7 +159,7 @@ async function getInbox(employeeId, companyId, filters = {}) {
                     FROM notification_messages
                     WHERE group_id = ng.id
                     AND read_at IS NULL
-                    AND recipient_id = $2
+                    AND recipient_id = $${employeeIdParamIndex}
                 ) as unread_count
             FROM notification_groups ng
             LEFT JOIN notification_messages nm ON nm.group_id = ng.id
@@ -92,8 +175,9 @@ async function getInbox(employeeId, companyId, filters = {}) {
             bind: params
         });
 
-        // Contar total (sin limit/offset)
-        const countParams = params.slice(0, paramIndex - 1);
+        // Contar total (sin limit/offset - exclude employeeId param for count and limit/offset)
+        const countParamsEndIndex = employeeIdParamIndex - 1;
+        const countParams = params.slice(0, countParamsEndIndex);
         const [countResult] = await sequelize.query(
             `SELECT COUNT(DISTINCT ng.id) as total FROM notification_groups ng WHERE ${whereClause}`,
             { bind: countParams }

@@ -2889,6 +2889,13 @@ app.use('/api/partners', partnerRoutes); // 🤝 Partners Marketplace (Dic 2025)
 app.use('/api/offboarding', require('./src/routes/offboardingRoutes')); // 🔴 Baja de Empresas (Ene 2026)
 app.use('/api/restore', require('./src/routes/companyRestoreRoutes')); // 🔄 Restauración de Empresas (Ene 2026)
 app.use('/api/system-settings', require('./src/routes/systemSettingsRoutes')); // ⚙️ Settings del Sistema (Ene 2026)
+
+// 📧 EMAIL TRACKING Y ADMIN NOTIFICATIONS (Feb 2026)
+app.use('/api/email', require('./src/routes/emailTrackingRoutes')); // 📊 Tracking de emails (pixel + clicks)
+app.use('/api/admin/notifications', require('./src/routes/adminNotificationsRoutes')); // 📬 Bandeja admin notificaciones
+console.log('📧 [EMAIL-TRACKING] Rutas de tracking de email configuradas');
+console.log('📬 [ADMIN-NOTIFICATIONS] Bandeja de notificaciones admin configurada');
+
 app.use('/api', pricingRoutes);
 
 // 💼 CIRCUITO COMERCIAL COMPLETO - 6 FASES (Enero 2025)

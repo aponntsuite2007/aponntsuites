@@ -252,6 +252,14 @@ const AdminPanelController = {
             // ===== COMUNICACIÓN =====
             'notificaciones': () => this._loadNotificaciones(),
             'mis-notificaciones': () => this._loadMisNotificaciones(),
+            'notificaciones-admin': async () => {
+                // Centro de Notificaciones Admin (global - todas las empresas)
+                if (window.NotificationsAdmin) {
+                    await NotificationsAdmin.init('content-area');
+                    return '';
+                }
+                return this._loadNotificacionesAdmin();
+            },
             'capacitaciones': () => this._loadCapacitaciones(),
             'reportes': () => this._loadReportes(),
 
@@ -3547,6 +3555,20 @@ const AdminPanelController = {
                 </div>
                 <div class="notifications-list" id="mis-notificaciones-list">
                     <p class="empty-state">No tienes notificaciones nuevas</p>
+                </div>
+            </div>
+        `;
+    },
+
+    async _loadNotificacionesAdmin() {
+        return `
+            <div class="section-container">
+                <div class="section-header">
+                    <h2>📬 Centro de Notificaciones</h2>
+                    <p class="section-subtitle">Bandeja de notificaciones global (todas las empresas)</p>
+                </div>
+                <div id="notificaciones-admin-container">
+                    <p class="loading-state">Cargando módulo de notificaciones...</p>
                 </div>
             </div>
         `;

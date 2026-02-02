@@ -36,10 +36,17 @@ router.use(auth, adaptUserForInbox);
 /**
  * GET /api/inbox
  * Obtiene bandeja de entrada con grupos de notificaciones
+ *
+ * Filtrado por rol:
+ * - superadmin: TODAS las notificaciones de TODAS las empresas
+ * - admin, gerente: TODAS las notificaciones de SU empresa
+ * - supervisor, jefe: Propias + subordinados directos
+ * - rrhh: Propias + notificaciones de tipo HR
+ * - employee: Solo las propias
  */
 router.get('/', async (req, res) => {
     try {
-        const { employee_id, company_id } = req.user;
+        const { employee_id, company_id, role } = req.user;
         const {
             status = 'all',
             priority = 'all',
@@ -51,7 +58,8 @@ router.get('/', async (req, res) => {
             status,
             priority,
             limit: parseInt(limit),
-            offset: parseInt(offset)
+            offset: parseInt(offset),
+            userRole: role || 'employee'  // Pasar rol para filtrado
         });
 
         res.json({

@@ -25,6 +25,8 @@ const LeadsPipelineDashboard = (function() {
     let _selectedLead = null;
     let _staffInfo = null;
     let _isManager = false;
+    let _leadAlerts = [];
+    let _alertsCollapsed = false;
 
     // Configuración de colores
     const TEMPERATURE_CONFIG = {
@@ -158,6 +160,10 @@ const LeadsPipelineDashboard = (function() {
                     </div>
                 </div>
 
+                <div class="leads-alerts-panel" id="leads-alerts-panel">
+                    <!-- Panel de alertas de leads - se llena dinámicamente -->
+                </div>
+
                 <div class="leads-summary" id="leads-summary">
                     <!-- Se llena dinámicamente -->
                 </div>
@@ -175,8 +181,8 @@ const LeadsPipelineDashboard = (function() {
         // Agregar estilos
         addStyles();
 
-        // Cargar datos
-        await loadLeads();
+        // Cargar datos y alertas
+        await Promise.all([loadLeads(), loadLeadAlerts()]);
     }
 
     // =========================================================================
@@ -228,6 +234,152 @@ const LeadsPipelineDashboard = (function() {
                     <button onclick="LeadsPipelineDashboard.loadLeads()">Reintentar</button>
                 </div>
             `;
+        }
+    }
+
+    // =========================================================================
+    // ALERTAS DE LEADS
+    // =========================================================================
+
+    async function loadLeadAlerts() {
+        try {
+            const token = localStorage.getItem('aponnt_token_staff');
+
+            // Cargar notificaciones relacionadas con leads desde la inbox
+            const response = await fetch('/api/aponnt/inbox?type=lead&limit=10', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                _leadAlerts = data.messages || [];
+            } else {
+                // Si no hay endpoint, generar alertas locales desde los leads
+                _leadAlerts = generateLocalAlerts();
+            }
+
+            renderAlertsPanel();
+        } catch (error) {
+            console.warn('[LEADS] Error cargando alertas, usando alertas locales:', error);
+            _leadAlerts = generateLocalAlerts();
+            renderAlertsPanel();
+        }
+    }
+
+    function generateLocalAlerts() {
+        const alerts = [];
+        const now = new Date();
+
+        // Alertas de leads HOT sin actividad
+        _leads.filter(l => l.temperature === 'hot' && l.days_since_last_activity > 3).forEach(lead => {
+            alerts.push({
+                id: `hot-${lead.id}`,
+                type: 'warning',
+                icon: '🔥',
+                title: `Lead HOT sin actividad`,
+                message: `${lead.company_name} - ${lead.days_since_last_activity} días sin contacto`,
+                lead_id: lead.id,
+                created_at: now.toISOString(),
+                priority: 'high'
+            });
+        });
+
+        // Alertas de leads a punto de enfriarse (WARM con inactividad)
+        _leads.filter(l => l.temperature === 'warm' && l.days_since_last_activity > 14).forEach(lead => {
+            alerts.push({
+                id: `cooling-${lead.id}`,
+                type: 'info',
+                icon: '❄️',
+                title: `Lead enfriándose`,
+                message: `${lead.company_name} pasará a COLD pronto`,
+                lead_id: lead.id,
+                created_at: now.toISOString(),
+                priority: 'medium'
+            });
+        });
+
+        // Alertas de leads SQL (oportunidad de cierre)
+        _leads.filter(l => l.lifecycle_stage === 'sql' || l.lifecycle_stage === 'opportunity').forEach(lead => {
+            alerts.push({
+                id: `opp-${lead.id}`,
+                type: 'success',
+                icon: '💰',
+                title: `Oportunidad de cierre`,
+                message: `${lead.company_name} en etapa ${lead.lifecycle_stage.toUpperCase()}`,
+                lead_id: lead.id,
+                created_at: now.toISOString(),
+                priority: 'high'
+            });
+        });
+
+        // Ordenar por prioridad
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        alerts.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+        return alerts.slice(0, 10); // Máximo 10 alertas
+    }
+
+    function renderAlertsPanel() {
+        const container = document.getElementById('leads-alerts-panel');
+        if (!container) return;
+
+        const unreadCount = _leadAlerts.length;
+
+        if (unreadCount === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="alerts-header" onclick="LeadsPipelineDashboard.toggleAlerts()">
+                <div class="alerts-title">
+                    <span class="alerts-icon">🔔</span>
+                    <span>Alertas de Leads</span>
+                    <span class="alerts-badge">${unreadCount}</span>
+                </div>
+                <button class="alerts-toggle">
+                    <i class="fas fa-chevron-${_alertsCollapsed ? 'down' : 'up'}"></i>
+                </button>
+            </div>
+            <div class="alerts-content" style="display: ${_alertsCollapsed ? 'none' : 'block'}">
+                <div class="alerts-list">
+                    ${_leadAlerts.map(alert => `
+                        <div class="alert-item alert-${alert.type}" onclick="LeadsPipelineDashboard.handleAlertClick('${alert.id}', '${alert.lead_id || ''}')">
+                            <span class="alert-icon">${alert.icon}</span>
+                            <div class="alert-body">
+                                <div class="alert-title">${alert.title}</div>
+                                <div class="alert-message">${alert.message}</div>
+                            </div>
+                            <span class="alert-priority priority-${alert.priority}"></span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="alerts-footer">
+                    <button class="btn-link" onclick="LeadsPipelineDashboard.goToNotifications()">
+                        Ver todas las notificaciones →
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function toggleAlerts() {
+        _alertsCollapsed = !_alertsCollapsed;
+        renderAlertsPanel();
+    }
+
+    function handleAlertClick(alertId, leadId) {
+        if (leadId) {
+            showLeadDetail(leadId);
+        }
+    }
+
+    function goToNotifications() {
+        // Navegar al módulo de notificaciones
+        if (typeof window.navigateToModule === 'function') {
+            window.navigateToModule('mis-notificaciones');
+        } else if (typeof window.loadModule === 'function') {
+            window.loadModule('mis-notificaciones');
         }
     }
 
@@ -1119,6 +1271,186 @@ const LeadsPipelineDashboard = (function() {
             .card-value { font-size: 28px; font-weight: bold; color: #e6edf3; }
             .card-label { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
 
+            /* Alerts Panel */
+            .leads-alerts-panel {
+                margin-bottom: 20px;
+            }
+
+            .alerts-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%);
+                padding: 12px 16px;
+                border-radius: 12px 12px 0 0;
+                border: 1px solid rgba(245, 158, 11, 0.3);
+                border-bottom: none;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .alerts-header:hover {
+                background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%);
+            }
+
+            .alerts-title {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 600;
+                color: #f59e0b;
+            }
+
+            .alerts-icon {
+                font-size: 18px;
+            }
+
+            .alerts-badge {
+                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                color: white;
+                padding: 2px 8px;
+                border-radius: 10px;
+                font-size: 12px;
+                font-weight: bold;
+                animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+            }
+
+            .alerts-toggle {
+                background: none;
+                border: none;
+                color: rgba(255, 255, 255, 0.6);
+                cursor: pointer;
+                padding: 4px;
+            }
+
+            .alerts-content {
+                background: rgba(30, 41, 59, 0.8);
+                border: 1px solid rgba(245, 158, 11, 0.3);
+                border-top: none;
+                border-radius: 0 0 12px 12px;
+                padding: 10px;
+                max-height: 300px;
+                overflow-y: auto;
+            }
+
+            .alerts-list {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .alert-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s;
+                position: relative;
+            }
+
+            .alert-item:hover {
+                transform: translateX(4px);
+            }
+
+            .alert-item.alert-warning {
+                background: rgba(245, 158, 11, 0.1);
+                border-left: 3px solid #f59e0b;
+            }
+
+            .alert-item.alert-warning:hover {
+                background: rgba(245, 158, 11, 0.2);
+            }
+
+            .alert-item.alert-info {
+                background: rgba(59, 130, 246, 0.1);
+                border-left: 3px solid #3b82f6;
+            }
+
+            .alert-item.alert-info:hover {
+                background: rgba(59, 130, 246, 0.2);
+            }
+
+            .alert-item.alert-success {
+                background: rgba(34, 197, 94, 0.1);
+                border-left: 3px solid #22c55e;
+            }
+
+            .alert-item.alert-success:hover {
+                background: rgba(34, 197, 94, 0.2);
+            }
+
+            .alert-item.alert-danger {
+                background: rgba(239, 68, 68, 0.1);
+                border-left: 3px solid #ef4444;
+            }
+
+            .alert-icon {
+                font-size: 20px;
+            }
+
+            .alert-body {
+                flex: 1;
+            }
+
+            .alert-title {
+                font-weight: 600;
+                font-size: 13px;
+                color: #e6edf3;
+            }
+
+            .alert-message {
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.6);
+            }
+
+            .alert-priority {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+            }
+
+            .alert-priority.priority-high {
+                background: #ef4444;
+                box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+            }
+
+            .alert-priority.priority-medium {
+                background: #f59e0b;
+                box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+            }
+
+            .alert-priority.priority-low {
+                background: #3b82f6;
+            }
+
+            .alerts-footer {
+                text-align: center;
+                padding-top: 10px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                margin-top: 10px;
+            }
+
+            .btn-link {
+                background: none;
+                border: none;
+                color: #f59e0b;
+                cursor: pointer;
+                font-size: 13px;
+                transition: color 0.2s;
+            }
+
+            .btn-link:hover {
+                color: #fbbf24;
+                text-decoration: underline;
+            }
+
             /* Kanban Board */
             .kanban-board {
                 display: grid;
@@ -1803,6 +2135,7 @@ const LeadsPipelineDashboard = (function() {
     return {
         init,
         loadLeads,
+        loadLeadAlerts,
         setView,
         applyFilters,
         filterByLifecycle,
@@ -1814,7 +2147,10 @@ const LeadsPipelineDashboard = (function() {
         confirmDisqualify,
         showHelp,
         closeHelp,
-        goToQuote
+        goToQuote,
+        toggleAlerts,
+        handleAlertClick,
+        goToNotifications
     };
 
 })();

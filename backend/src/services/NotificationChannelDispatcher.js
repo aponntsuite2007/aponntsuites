@@ -303,24 +303,38 @@ class NotificationChannelDispatcher {
                 }
             });
 
-            // PASO 3: Renderizar contenido del email
+            // PASO 3: Generar tracking ID para este email
+            const crypto = require('crypto');
+            const trackingId = metadata?.trackingId || crypto.randomUUID();
+
+            // PASO 4: Renderizar contenido del email (con tracking pixel)
             const emailContent = this._renderEmailTemplate({
                 workflow,
                 title,
                 message,
                 metadata,
                 priority,
-                logId
+                logId,
+                trackingId
             });
 
-            // PASO 4: Enviar email
-            const info = await transporter.sendMail({
+            // PASO 5: Preparar opciones de email
+            const mailOptions = {
                 from: `"${smtpConfig.fromName}" <${smtpConfig.fromEmail}>`,
                 to: recipient.email,
                 subject: emailContent.subject,
                 text: emailContent.text,
                 html: emailContent.html
-            });
+            };
+
+            // Agregar BCC si está configurado
+            if (smtpConfig.bccEmail) {
+                mailOptions.bcc = smtpConfig.bccEmail;
+                console.log(`📧 [EMAIL] BCC configured: ${smtpConfig.bccEmail}`);
+            }
+
+            // PASO 6: Enviar email
+            const info = await transporter.sendMail(mailOptions);
 
             console.log(`✅ [EMAIL] Sent: ${info.messageId}`);
 
@@ -328,7 +342,8 @@ class NotificationChannelDispatcher {
                 provider: 'nodemailer',
                 messageId: info.messageId,
                 smtpHost: smtpConfig.host,
-                fromEmail: smtpConfig.fromEmail
+                fromEmail: smtpConfig.fromEmail,
+                trackingId: trackingId
             };
 
         } catch (error) {
@@ -429,7 +444,8 @@ class NotificationChannelDispatcher {
             password: config.app_password_decrypted || config.smtp_password_decrypted,
             fromEmail: config.from_email || config.email_address,
             fromName: config.from_name || config.display_name || 'Aponnt',
-            requireTls: config.require_tls
+            requireTls: config.require_tls,
+            bccEmail: config.bcc_email || null
         };
     }
 
@@ -479,7 +495,8 @@ class NotificationChannelDispatcher {
                 smtp_password,
                 from_name,
                 require_tls,
-                is_active
+                is_active,
+                bcc_email
             FROM company_email_config
             WHERE id = :emailConfigId
               AND is_active = true
@@ -507,7 +524,8 @@ class NotificationChannelDispatcher {
             password: config.smtp_password,
             fromEmail: config.email,
             fromName: config.from_name || 'Sistema',
-            requireTls: config.require_tls
+            requireTls: config.require_tls,
+            bccEmail: config.bcc_email || null
         };
     }
 
@@ -517,16 +535,31 @@ class NotificationChannelDispatcher {
      * ========================================================================
      */
     _renderEmailTemplate(params) {
-        const { workflow, title, message, metadata, priority, logId } = params;
+        const { workflow, title, message, metadata, priority, logId, trackingId } = params;
+        const { getBaseUrl } = require('../utils/urlHelper');
+        const baseUrl = getBaseUrl();
 
-        // Si viene HTML personalizado en metadata, usarlo directamente
-        // Esto es para emails de marketing/flyers que ya traen su propio diseño
+        // Generar tracking pixel URL si hay trackingId
+        const trackingPixelHtml = trackingId
+            ? `<img src="${baseUrl}/api/email/track/${trackingId}/open" width="1" height="1" style="display:none;border:0;width:1px;height:1px;" alt="" />`
+            : '';
+
+        // Si viene HTML personalizado en metadata, agregar tracking pixel
         if (metadata && metadata.htmlContent) {
             console.log(`📧 [DISPATCHER] Usando HTML personalizado del metadata`);
+            let html = metadata.htmlContent;
+
+            // Insertar tracking pixel antes de </body> si existe
+            if (trackingPixelHtml && html.includes('</body>')) {
+                html = html.replace('</body>', `${trackingPixelHtml}</body>`);
+            } else if (trackingPixelHtml) {
+                html = html + trackingPixelHtml;
+            }
+
             return {
                 subject: title,
                 text: message,
-                html: metadata.htmlContent
+                html
             };
         }
 
@@ -589,6 +622,7 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
             <small>Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Aponnt.</small>
         </div>
     </div>
+    ${trackingPixelHtml}
 </body>
 </html>
         `.trim();

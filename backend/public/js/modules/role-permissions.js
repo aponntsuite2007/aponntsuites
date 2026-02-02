@@ -227,6 +227,16 @@ const RolePermissions = (function() {
             permission: []  // Acceso público para todos los roles
         },
 
+        // ========== CENTRO DE NOTIFICACIONES ADMIN ==========
+        'notificaciones-admin': {
+            id: 'notificaciones-admin',
+            icon: '📬',
+            label: 'Centro Notificaciones',
+            description: 'Bandeja de notificaciones global (todas las empresas)',
+            badge: 'global_notifications',
+            component: 'NotificationsAdmin'
+        },
+
         // ========== GERENCIA ==========
         'gestion-staff': {
             id: 'gestion-staff',
@@ -360,6 +370,10 @@ const RolePermissions = (function() {
                     sections: ['marketing', 'quotes', 'pipeline-ventas']
                 },
                 {
+                    title: '📬 Comunicaciones',
+                    sections: ['mis-notificaciones']
+                },
+                {
                     title: '🎫 Soporte',
                     sections: ['mis-tickets']
                 },
@@ -389,6 +403,10 @@ const RolePermissions = (function() {
                 {
                     title: '📢 Marketing',
                     sections: ['marketing', 'quotes', 'pipeline-ventas']
+                },
+                {
+                    title: '📬 Comunicaciones',
+                    sections: ['mis-notificaciones']
                 },
                 {
                     title: '🎫 Soporte',
@@ -496,6 +514,10 @@ const RolePermissions = (function() {
                     sections: ['mi-dashboard']
                 },
                 {
+                    title: '📬 Comunicaciones',
+                    sections: ['notificaciones-admin']
+                },
+                {
                     title: '💰 Facturación',
                     sections: ['aponnt-billing']
                 },
@@ -542,6 +564,10 @@ const RolePermissions = (function() {
                     sections: ['mi-dashboard']
                 },
                 {
+                    title: '📬 Comunicaciones',
+                    sections: ['notificaciones-admin']
+                },
+                {
                     title: '💰 Facturación',
                     sections: ['aponnt-billing']
                 },
@@ -585,6 +611,10 @@ const RolePermissions = (function() {
                 {
                     title: '📊 Mi Dashboard',
                     sections: ['mi-dashboard']
+                },
+                {
+                    title: '📬 Comunicaciones',
+                    sections: ['notificaciones-admin']
                 },
                 {
                     title: '💰 Administración',

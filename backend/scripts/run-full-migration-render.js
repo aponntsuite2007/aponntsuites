@@ -115,8 +115,6 @@ async function main() {
     }
 }
 
-// Esperar a que el deploy esté listo
-console.log('Esperando 90s para que el deploy esté listo...\n');
-setTimeout(() => {
-    main().catch(console.error);
-}, 90000);
+// Ejecutar inmediatamente
+console.log('Iniciando migración...\n');
+main().catch(console.error);
