@@ -224,6 +224,48 @@ router.get('/db-diagnostic', async (req, res) => {
 });
 
 // ============================================================================
+// ENDPOINT: Schema completo para comparación
+// ============================================================================
+
+router.get('/schema-export', async (req, res) => {
+  const { key } = req.query;
+  const validKey = process.env.SEED_DEMO_KEY || 'DEMO_SEED_2024_SECURE';
+
+  if (key !== validKey) {
+    return res.status(403).json({ error: 'Clave inválida' });
+  }
+
+  const { sequelize } = require('../config/database');
+
+  try {
+    const tables = await sequelize.query(`
+      SELECT
+        t.table_name,
+        COUNT(c.column_name) as column_count,
+        string_agg(c.column_name || ':' || c.data_type, ',' ORDER BY c.ordinal_position) as columns
+      FROM information_schema.tables t
+      JOIN information_schema.columns c ON t.table_name = c.table_name AND t.table_schema = c.table_schema
+      WHERE t.table_schema = 'public'
+      AND t.table_type = 'BASE TABLE'
+      GROUP BY t.table_name
+      ORDER BY t.table_name
+    `, { type: sequelize.QueryTypes.SELECT });
+
+    res.json({
+      success: true,
+      tableCount: tables.length,
+      tables: tables.map(t => ({
+        name: t.table_name,
+        columnCount: parseInt(t.column_count),
+        columns: t.columns
+      }))
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
 // ENDPOINT: Migración de emergencia para columnas faltantes
 // ============================================================================
 
