@@ -35,13 +35,39 @@ module.exports = (sequelize) => {
     },
     seller_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,  // OPCIONAL - NULL = venta directa sin comisión
       references: {
         model: 'partners',
         key: 'id'
       },
-      onDelete: 'RESTRICT',
-      comment: 'Vendedor que generó el presupuesto'
+      onDelete: 'SET NULL',
+      comment: 'Vendedor (OPCIONAL - NULL = venta directa por admin/gerente, sin comisión)'
+    },
+    seller_assigned_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Fecha en que se asignó el vendedor'
+    },
+    origin_type: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      defaultValue: 'manual',
+      comment: 'Origen: marketing_lead, sales_lead, direct, referral, partner, manual'
+    },
+    origin_detail: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      comment: 'Metadata del origen (campaign, lead_email, etc.)'
+    },
+    sales_lead_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'sales_leads',
+        key: 'id'
+      },
+      onDelete: 'SET NULL',
+      comment: 'Sales lead de origen (si aplica)'
     },
     lead_id: {
       type: DataTypes.UUID,

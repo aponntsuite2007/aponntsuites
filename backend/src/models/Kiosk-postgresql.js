@@ -112,6 +112,59 @@ module.exports = (sequelize) => {
       allowNull: true,
       comment: 'Versión de la APK instalada en el kiosko'
     },
+    // ========================================================================
+    // CAMPOS DE PERFILES DE HARDWARE (Migración: 20260201)
+    // ========================================================================
+    hardware_profile: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'ID del perfil de hardware facial seleccionado (ej: ipad_pro_12, galaxy_tab_s9)'
+    },
+    hardware_category: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: 'Categoría del hardware (enterprise, tablet_ios, tablet_android, phone_ios, phone_android)'
+    },
+    detection_method_facial: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Tecnología de detección facial (TrueDepth, ML Kit, etc.)'
+    },
+    detection_method_fingerprint: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'ID del perfil de lector de huella (opcional)'
+    },
+    performance_score: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      comment: 'Score de rendimiento del hardware (0-100)'
+    },
+    supports_walkthrough: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: false,
+      comment: 'Si el hardware soporta detección walk-through'
+    },
+    supports_liveness: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: false,
+      comment: 'Si el hardware soporta detección de vida (anti-spoofing)'
+    },
+    biometric_modes: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+      comment: 'Array de modos biométricos habilitados (facial, fingerprint)'
+    },
+    hardware_specs: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: {},
+      comment: 'Especificaciones técnicas del hardware seleccionado'
+    },
   }, {
     tableName: 'kiosks',
     timestamps: true,

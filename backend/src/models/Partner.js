@@ -125,7 +125,11 @@ module.exports = (sequelize) => {
     },
     status: {
       type: DataTypes.STRING(20),
-      defaultValue: 'pending'
+      defaultValue: 'pending',
+      validate: {
+        isIn: [['pending', 'active', 'suspended', 'inactive', 'rejected']]
+      },
+      comment: 'Partner status: pending, active, suspended, inactive, rejected (SIEMPRE en inglés)'
     },
     is_active: {
       type: DataTypes.BOOLEAN,
