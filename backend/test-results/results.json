@@ -10,7 +10,9 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {},
+    "metadata": {
+      "actualWorkers": 1
+    },
     "preserveOutput": "always",
     "reporter": [
       [
@@ -41,37 +43,193 @@
         "outputDir": "C:/Bio/sistema_asistencia_biometrico/backend/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "chromium",
         "name": "chromium",
         "testDir": "C:/Bio/sistema_asistencia_biometrico/backend/tests/e2e",
         "testIgnore": [],
         "testMatch": [
-          "modules/**/*.spec.js",
-          "levels/**/*.spec.js"
+          "/\\.spec\\.js$/"
         ],
-        "timeout": 60000
+        "timeout": 180000
       }
     ],
     "shard": null,
-    "tags": [],
     "updateSnapshots": "missing",
     "updateSourceMethod": "patch",
-    "version": "1.57.0",
+    "version": "1.56.1",
     "workers": 3,
     "webServer": null
   },
-  "suites": [],
-  "errors": [
+  "suites": [
     {
-      "message": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments.",
-      "stack": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments."
+      "title": "modules\\visual-mi-salud-crud.e2e.spec.js",
+      "file": "modules/visual-mi-salud-crud.e2e.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "🏥 Visual CRUD - Mi Salud",
+          "file": "modules/visual-mi-salud-crud.e2e.spec.js",
+          "line": 24,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Capturar flujo completo Mi Salud con screenshots",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 23172,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🔐 Paso 1: Login via UI...\n"
+                        },
+                        {
+                          "text": "   Empresa: 🏢 APONNT Suite\n"
+                        },
+                        {
+                          "text": "   ✅ Login exitoso - User: admin@aponnt-empresa-demo.com\n"
+                        },
+                        {
+                          "text": "   User ID: f3518284-8585-454b-853a-60b689ef03be\n"
+                        },
+                        {
+                          "text": "   Token: ✅ OK\n"
+                        },
+                        {
+                          "text": "   📸 mi-salud-01-login.png\n"
+                        },
+                        {
+                          "text": "👤 Paso 2: Navegar a Mi Espacio...\n"
+                        },
+                        {
+                          "text": "   Método: showEmployeeDashboard direct - ✅\n"
+                        },
+                        {
+                          "text": "   Dashboard rendered: {\"forced\":false,\"hasEmployeeDashboard\":true,\"mainContentVisible\":true,\"moduleGridHidden\":true}\n"
+                        },
+                        {
+                          "text": "   📸 mi-salud-02-mi-espacio.png\n"
+                        },
+                        {
+                          "text": "💊 Paso 3: Buscar y abrir Mi Salud...\n"
+                        },
+                        {
+                          "text": "   📸 mi-salud-02b-scroll-down.png (con scroll)\n"
+                        },
+                        {
+                          "text": "   Card Mi Salud: ✅ encontrado via id-employee\n"
+                        },
+                        {
+                          "text": "   Card ID: card-mi-salud-employee\n"
+                        },
+                        {
+                          "text": "🏥 Paso 4: Abrir Modal Mi Salud...\n"
+                        },
+                        {
+                          "text": "   Modal abierto via: card-mi-salud-employee click - ✅\n"
+                        },
+                        {
+                          "text": "   Modal Mi Salud existe: ❌\n"
+                        },
+                        {
+                          "text": "   📸 mi-salud-03-modal-abierto.png\n"
+                        },
+                        {
+                          "text": "📑 Paso 5: Capturar tabs...\n"
+                        },
+                        {
+                          "text": "   ⚠️ Modal no disponible - saltando capturas de tabs\n"
+                        },
+                        {
+                          "text": "📝 Paso 6: Crear solicitud médica via API...\n"
+                        },
+                        {
+                          "text": "   ✅ Solicitud creada: 400c9eea-aaa4-4fad-8d70-91120fab679b\n"
+                        },
+                        {
+                          "text": "🔄 Paso 7: Verificar solicitud en pendientes...\n"
+                        },
+                        {
+                          "text": "   📸 mi-salud-07-pendiente-creado.png\n"
+                        },
+                        {
+                          "text": "\n═══════════════════════════════════════════════════════════════\n"
+                        },
+                        {
+                          "text": "📸 SCREENSHOTS GENERADOS:\n"
+                        },
+                        {
+                          "text": "   1. mi-salud-01-login.png           - Formulario de login\n"
+                        },
+                        {
+                          "text": "   2. mi-salud-02-mi-espacio.png      - Dashboard Mi Espacio\n"
+                        },
+                        {
+                          "text": "   2b. mi-salud-02b-scroll-down.png   - Mi Espacio (scroll)\n"
+                        },
+                        {
+                          "text": "   3. mi-salud-03-modal-abierto.png   - Modal Mi Salud\n"
+                        },
+                        {
+                          "text": "   4. mi-salud-04-tab-pendientes.png  - Tab Pendientes\n"
+                        },
+                        {
+                          "text": "   5. mi-salud-05-tab-subir.png       - Tab Subir Documento\n"
+                        },
+                        {
+                          "text": "   6. mi-salud-06-tab-historial.png   - Tab Historial\n"
+                        },
+                        {
+                          "text": "   7. mi-salud-07-pendiente-creado.png - Verificación final\n"
+                        },
+                        {
+                          "text": "═══════════════════════════════════════════════════════════════\n"
+                        },
+                        {
+                          "text": "✅ Visual CRUD Testing Mi Salud completado\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-02T04:26:09.539Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "00b4b7e7848c3dc3a26f-151eff7c26bbc778253c",
+              "file": "modules/visual-mi-salud-crud.e2e.spec.js",
+              "line": 26,
+              "column": 5
+            }
+          ]
+        }
+      ]
     }
   ],
+  "errors": [],
   "stats": {
-    "startTime": "2026-01-02T14:46:44.122Z",
-    "duration": 230.529,
-    "expected": 0,
+    "startTime": "2026-02-02T04:26:08.101Z",
+    "duration": 24942.43,
+    "expected": 1,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
