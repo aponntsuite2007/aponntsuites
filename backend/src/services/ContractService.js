@@ -101,8 +101,13 @@ class ContractService {
         support_partner_id: contractData.support_partner_id || budget.vendor_id, // Default: mismo vendedor
         modules_data: modulesData,
         selected_modules: modulesData, // Duplicado para compatibilidad con esquema BD
+        contracted_employees: budget.contracted_employees || 1,
         monthly_total: budget.total_monthly,
+        total_monthly: budget.total_monthly, // Alias para BD legacy
         start_date: startDate,
+        contract_date: startDate,
+        contract_type: 'EULA',
+        template_version: '1.0',
         end_date: contractData.end_date || null, // null = indefinido
         status: contractData.status || 'active', // ⚠️ workflow espera 'PENDING_SIGNATURE'
         billing_cycle: budget.payment_terms === 'ANUAL' ? 'yearly' : 'monthly',

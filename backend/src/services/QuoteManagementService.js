@@ -656,13 +656,19 @@ class QuoteManagementService {
 
     const contract = await Contract.create({
       contract_number: contractNumber,
+      contract_code: contractNumber, // Alias para BD legacy
       company_id: quote.company_id,
       quote_id: quote.id,
       seller_id: quote.seller_id,
       modules_data: quote.modules_data,
       selected_modules: quote.modules_data, // Duplicado para compatibilidad con esquema BD
+      contracted_employees: quote.contracted_employees || quote.employee_count || 1,
       monthly_total: quote.total_amount,
+      total_monthly: quote.total_amount, // Alias para BD legacy
       start_date: startDate,
+      contract_date: startDate,
+      contract_type: 'EULA',
+      template_version: '1.0',
       status: 'active',
       billing_cycle: 'monthly',
       payment_day: 10,

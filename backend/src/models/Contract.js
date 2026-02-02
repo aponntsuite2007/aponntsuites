@@ -106,6 +106,12 @@ module.exports = (sequelize) => {
       defaultValue: [],
       comment: 'Array de módulos seleccionados (legacy, igual que modules_data)'
     },
+    contracted_employees: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
+      comment: 'Cantidad de empleados contratados'
+    },
     monthly_total: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
@@ -114,6 +120,35 @@ module.exports = (sequelize) => {
         min: 0
       },
       comment: 'Total mensual del contrato'
+    },
+    total_monthly: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false,
+      defaultValue: 0.00,
+      comment: 'Total mensual (alias para compatibilidad con BD)'
+    },
+    contract_code: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: 'Código de contrato (alias de contract_number para BD legacy)'
+    },
+    contract_type: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: 'EULA',
+      comment: 'Tipo de contrato: EULA, SERVICE, etc.'
+    },
+    contract_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      comment: 'Fecha del contrato'
+    },
+    template_version: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: '1.0',
+      comment: 'Versión del template EULA'
     },
 
     // ═══════════════════════════════════════════════════════════
