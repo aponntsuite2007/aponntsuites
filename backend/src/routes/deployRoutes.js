@@ -224,6 +224,37 @@ router.get('/db-diagnostic', async (req, res) => {
 });
 
 // ============================================================================
+// ENDPOINT: Query con resultados (para diagnóstico)
+// ============================================================================
+
+router.post('/query', async (req, res) => {
+  const { key, sql } = req.body;
+  const validKey = process.env.SEED_DEMO_KEY || 'DEMO_SEED_2024_SECURE';
+
+  if (key !== validKey) {
+    return res.status(403).json({ error: 'Clave inválida' });
+  }
+
+  if (!sql || typeof sql !== 'string') {
+    return res.status(400).json({ error: 'SQL query requerido' });
+  }
+
+  // Solo permitir SELECT
+  if (!sql.trim().toUpperCase().startsWith('SELECT')) {
+    return res.status(400).json({ error: 'Solo consultas SELECT permitidas' });
+  }
+
+  const { sequelize } = require('../config/database');
+
+  try {
+    const results = await sequelize.query(sql, { type: sequelize.QueryTypes.SELECT });
+    res.json({ success: true, count: results.length, data: results });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
 // ENDPOINT: Schema completo para comparación
 // ============================================================================
 
