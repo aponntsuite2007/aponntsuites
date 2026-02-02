@@ -1448,25 +1448,596 @@ const AdminPanelController = {
     },
 
     async _loadGestionStaff() {
+        setTimeout(() => this._loadGestionStaffTable(), 100);
         return `
-            <div class="section-container">
+            <div class="section-container gestion-staff-module">
+                <style>
+                    .gestion-staff-module .section-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+                    .gestion-staff-module h2 { margin: 0 0 8px 0; display: flex; align-items: center; gap: 12px; }
+                    .gestion-staff-module .section-subtitle { color: rgba(255,255,255,0.6); margin: 0; }
+                    .staff-filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+                    .staff-filter { padding: 8px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: rgba(255,255,255,0.8); font-size: 0.9rem; }
+                    .staff-filter:focus { outline: none; border-color: #4a9eff; }
+                    .staff-table { width: 100%; border-collapse: collapse; }
+                    .staff-table th { text-align: left; padding: 12px 16px; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.5); font-size: 0.8rem; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); }
+                    .staff-table td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+                    .staff-table tr:hover { background: rgba(255,255,255,0.02); }
+                    .staff-avatar-sm { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.8rem; }
+                    .staff-name-cell { display: flex; align-items: center; gap: 12px; }
+                    .staff-name-info h4 { margin: 0 0 2px 0; font-size: 0.95rem; }
+                    .staff-name-info p { margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+                    .staff-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+                    .staff-badge.active { background: rgba(34,197,94,0.2); color: #22c55e; }
+                    .staff-badge.inactive { background: rgba(239,68,68,0.2); color: #ef4444; }
+                    .staff-actions { display: flex; gap: 8px; }
+                    .staff-actions button { background: rgba(255,255,255,0.05); border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; color: rgba(255,255,255,0.7); transition: all 0.2s; }
+                    .staff-actions button:hover { background: rgba(74,158,255,0.2); color: #4a9eff; }
+                    .btn-nuevo-staff { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+                    .btn-nuevo-staff:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+                </style>
                 <div class="section-header">
-                    <h2>Gestión de Staff</h2>
-                    <p class="section-subtitle">Administración del equipo APONNT</p>
-                    <div class="section-actions">
-                        <button class="btn btn-primary" onclick="AdminPanelController.showNewStaffModal()">
-                            <i class="fas fa-user-plus"></i> Nuevo Staff
-                        </button>
+                    <div>
+                        <h2><span>👥</span> Gestión de Staff</h2>
+                        <p class="section-subtitle">CRUD completo del personal APONNT</p>
                     </div>
+                    <button class="btn-nuevo-staff" onclick="AdminPanelController.showNewStaffModal()">
+                        <span>➕</span> Nuevo Staff
+                    </button>
+                </div>
+                <div class="staff-filters">
+                    <select class="staff-filter" id="filter-staff-area" onchange="AdminPanelController.filterGestionStaff()">
+                        <option value="">Todas las áreas</option>
+                        <option value="direccion">Dirección</option>
+                        <option value="admin">Administración</option>
+                        <option value="ventas">Ventas</option>
+                        <option value="desarrollo">Desarrollo</option>
+                        <option value="soporte">Soporte</option>
+                    </select>
+                    <select class="staff-filter" id="filter-staff-status" onchange="AdminPanelController.filterGestionStaff()">
+                        <option value="">Todos los estados</option>
+                        <option value="true">Activos</option>
+                        <option value="false">Inactivos</option>
+                    </select>
+                    <input type="text" class="staff-filter" id="filter-staff-search" placeholder="🔍 Buscar por nombre o email..." style="flex: 1; min-width: 200px;" oninput="AdminPanelController.filterGestionStaff()">
                 </div>
                 <div class="table-container" id="staff-table-container">
-                    <div class="loading-placeholder">
+                    <div style="text-align: center; padding: 40px;">
                         <div class="spinner-small"></div>
-                        <span>Cargando staff...</span>
+                        <span style="color: rgba(255,255,255,0.6);">Cargando staff...</span>
                     </div>
                 </div>
             </div>
         `;
+    },
+
+    async _loadGestionStaffTable() {
+        const container = document.getElementById('staff-table-container');
+        if (!container) return;
+
+        // Colores por área
+        const areaColors = {
+            direccion: '#dc2626', admin: '#0891b2', ventas: '#f59e0b', desarrollo: '#7c3aed', soporte: '#059669', externo: '#6b7280'
+        };
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/staff-data/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.error || 'Error al cargar staff');
+            }
+
+            // Guardar para filtrado
+            this._gestionStaffData = result.data || [];
+
+            this._renderGestionStaffTable(this._gestionStaffData, areaColors);
+
+        } catch (error) {
+            console.error('[GESTION-STAFF] Error:', error);
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px; color: #ef4444;">
+                    <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+                    <div>Error al cargar el staff</div>
+                    <div style="font-size: 0.85rem; margin-top: 8px;">${error.message}</div>
+                </div>
+            `;
+        }
+    },
+
+    _renderGestionStaffTable(staff, areaColors) {
+        const container = document.getElementById('staff-table-container');
+        if (!container) return;
+
+        if (!staff || staff.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px; color: rgba(255,255,255,0.5);">
+                    <div style="font-size: 3rem; margin-bottom: 16px;">👥</div>
+                    <div>No hay personal registrado</div>
+                    <div style="font-size: 0.85rem; margin-top: 8px;">Haga clic en "Nuevo Staff" para agregar</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <table class="staff-table">
+                <thead>
+                    <tr>
+                        <th>Personal</th>
+                        <th>Rol</th>
+                        <th>Área</th>
+                        <th>País</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${staff.map(s => {
+                        const area = s.role?.role_area || s.area || 'externo';
+                        const color = areaColors[area] || areaColors.externo;
+                        const code = s.role?.role_code || '??';
+                        const name = `${s.first_name || ''} ${s.last_name || ''}`.trim() || 'Sin nombre';
+                        const roleName = s.role?.role_name || s.position || 'Sin rol';
+
+                        return `
+                            <tr data-staff-id="${s.staff_id}" data-area="${area}" data-active="${s.is_active}">
+                                <td>
+                                    <div class="staff-name-cell">
+                                        <div class="staff-avatar-sm" style="background: ${color};">${code}</div>
+                                        <div class="staff-name-info">
+                                            <h4>${name}</h4>
+                                            <p>${s.email || 'Sin email'}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${roleName}</td>
+                                <td>${area.charAt(0).toUpperCase() + area.slice(1)}</td>
+                                <td>${s.country || '-'}</td>
+                                <td><span class="staff-badge ${s.is_active ? 'active' : 'inactive'}">${s.is_active ? 'Activo' : 'Inactivo'}</span></td>
+                                <td>
+                                    <div class="staff-actions">
+                                        <button onclick="AdminPanelController.editStaff('${s.staff_id}')" title="Editar">✏️</button>
+                                        <button onclick="AdminPanelController.viewStaffDetail('${s.staff_id}')" title="Ver detalle">👁️</button>
+                                        ${s.is_active ? `<button onclick="AdminPanelController.deactivateStaff('${s.staff_id}')" title="Desactivar">🚫</button>` : `<button onclick="AdminPanelController.activateStaff('${s.staff_id}')" title="Activar">✅</button>`}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    },
+
+    filterGestionStaff() {
+        const areaFilter = document.getElementById('filter-staff-area')?.value || '';
+        const statusFilter = document.getElementById('filter-staff-status')?.value || '';
+        const searchFilter = (document.getElementById('filter-staff-search')?.value || '').toLowerCase();
+
+        const areaColors = {
+            direccion: '#dc2626', admin: '#0891b2', ventas: '#f59e0b', desarrollo: '#7c3aed', soporte: '#059669', externo: '#6b7280'
+        };
+
+        let filtered = this._gestionStaffData || [];
+
+        if (areaFilter) {
+            filtered = filtered.filter(s => (s.role?.role_area || s.area || 'externo') === areaFilter);
+        }
+
+        if (statusFilter !== '') {
+            const isActive = statusFilter === 'true';
+            filtered = filtered.filter(s => s.is_active === isActive);
+        }
+
+        if (searchFilter) {
+            filtered = filtered.filter(s => {
+                const name = `${s.first_name || ''} ${s.last_name || ''}`.toLowerCase();
+                const email = (s.email || '').toLowerCase();
+                return name.includes(searchFilter) || email.includes(searchFilter);
+            });
+        }
+
+        this._renderGestionStaffTable(filtered, areaColors);
+    },
+
+    async showNewStaffModal() {
+        // Cargar roles disponibles
+        const roles = await this._loadRolesForSelect();
+
+        const modalHtml = `
+            <div class="modal-overlay" id="staff-modal-overlay" onclick="AdminPanelController.closeStaffModal(event)">
+                <div class="modal-content staff-modal" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3>➕ Nuevo Personal</h3>
+                        <button class="modal-close" onclick="AdminPanelController.closeStaffModal()">&times;</button>
+                    </div>
+                    <form id="staff-form" onsubmit="AdminPanelController.saveNewStaff(event)">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nombre *</label>
+                                    <input type="text" name="first_name" required placeholder="Nombre">
+                                </div>
+                                <div class="form-group">
+                                    <label>Apellido *</label>
+                                    <input type="text" name="last_name" required placeholder="Apellido">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" name="email" required placeholder="email@aponnt.com">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Rol *</label>
+                                    <select name="role_id" required>
+                                        <option value="">Seleccionar rol...</option>
+                                        ${roles.map(r => `<option value="${r.role_id}">${r.role_name} (${r.role_code})</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>País *</label>
+                                    <select name="country" required>
+                                        <option value="">Seleccionar país...</option>
+                                        <option value="AR">Argentina</option>
+                                        <option value="CL">Chile</option>
+                                        <option value="UY">Uruguay</option>
+                                        <option value="PY">Paraguay</option>
+                                        <option value="BO">Bolivia</option>
+                                        <option value="PE">Perú</option>
+                                        <option value="CO">Colombia</option>
+                                        <option value="MX">México</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono</label>
+                                <input type="tel" name="phone" placeholder="+54 11 1234-5678">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-cancel" onclick="AdminPanelController.closeStaffModal()">Cancelar</button>
+                            <button type="submit" class="btn-save">💾 Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <style>
+                .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 99999; }
+                .staff-modal { background: #1e293b; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+                .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+                .modal-header h3 { margin: 0; font-size: 1.2rem; }
+                .modal-close { background: none; border: none; font-size: 1.5rem; color: rgba(255,255,255,0.5); cursor: pointer; }
+                .modal-close:hover { color: #ef4444; }
+                .modal-body { padding: 24px; }
+                .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+                .form-group { margin-bottom: 16px; }
+                .form-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: rgba(255,255,255,0.7); }
+                .form-group input, .form-group select { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: white; font-size: 0.95rem; }
+                .form-group input:focus, .form-group select:focus { outline: none; border-color: #4a9eff; }
+                .modal-footer { display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.1); }
+                .btn-cancel { padding: 10px 20px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; color: rgba(255,255,255,0.7); cursor: pointer; }
+                .btn-save { padding: 10px 20px; background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 500; }
+                .btn-save:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+            </style>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    },
+
+    async _loadRolesForSelect() {
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/staff-data/roles', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+            return result.success ? result.data : [];
+        } catch (error) {
+            console.error('[STAFF] Error cargando roles:', error);
+            return [];
+        }
+    },
+
+    closeStaffModal(event) {
+        if (event && event.target.id !== 'staff-modal-overlay') return;
+        const modal = document.getElementById('staff-modal-overlay');
+        if (modal) modal.remove();
+    },
+
+    async saveNewStaff(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const staffData = {
+            first_name: formData.get('first_name'),
+            last_name: formData.get('last_name'),
+            email: formData.get('email'),
+            role_id: formData.get('role_id'), // UUID string
+            country: formData.get('country'),
+            phone: formData.get('phone') || null
+        };
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/staff-data/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(staffData)
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Error al crear personal');
+            }
+
+            this.closeStaffModal();
+            this._showSuccessToast('Personal creado exitosamente');
+
+            // Recargar tabla
+            this._loadGestionStaffTable();
+
+        } catch (error) {
+            console.error('[STAFF] Error guardando:', error);
+            this._showErrorToast(error.message);
+        }
+    },
+
+    _showSuccessToast(message) {
+        this._showToast(message, '#22c55e');
+    },
+
+    _showErrorToast(message) {
+        this._showToast(message, '#ef4444');
+    },
+
+    _showToast(message, color) {
+        const existing = document.querySelector('.staff-toast');
+        if (existing) existing.remove();
+        const toast = document.createElement('div');
+        toast.className = 'staff-toast';
+        toast.style.cssText = `position:fixed;bottom:20px;right:20px;background:${color};color:white;padding:12px 20px;border-radius:8px;z-index:99999;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    },
+
+    async editStaff(staffId) {
+        // Cargar datos del staff y roles
+        const [staffData, roles] = await Promise.all([
+            this._loadStaffById(staffId),
+            this._loadRolesForSelect()
+        ]);
+
+        if (!staffData) {
+            this._showErrorToast('Error cargando datos del personal');
+            return;
+        }
+
+        const modalHtml = `
+            <div class="modal-overlay" id="staff-modal-overlay" onclick="AdminPanelController.closeStaffModal(event)">
+                <div class="modal-content staff-modal" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3>✏️ Editar Personal</h3>
+                        <button class="modal-close" onclick="AdminPanelController.closeStaffModal()">&times;</button>
+                    </div>
+                    <form id="staff-form" onsubmit="AdminPanelController.updateStaff(event, '${staffId}')">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nombre *</label>
+                                    <input type="text" name="first_name" required value="${staffData.first_name || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label>Apellido *</label>
+                                    <input type="text" name="last_name" required value="${staffData.last_name || ''}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" name="email" required value="${staffData.email || ''}">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Rol *</label>
+                                    <select name="role_id" required>
+                                        ${roles.map(r => `<option value="${r.role_id}" ${r.role_id === staffData.role_id ? 'selected' : ''}>${r.role_name} (${r.role_code})</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>País *</label>
+                                    <select name="country" required>
+                                        <option value="AR" ${staffData.country === 'AR' ? 'selected' : ''}>Argentina</option>
+                                        <option value="CL" ${staffData.country === 'CL' ? 'selected' : ''}>Chile</option>
+                                        <option value="UY" ${staffData.country === 'UY' ? 'selected' : ''}>Uruguay</option>
+                                        <option value="PY" ${staffData.country === 'PY' ? 'selected' : ''}>Paraguay</option>
+                                        <option value="BO" ${staffData.country === 'BO' ? 'selected' : ''}>Bolivia</option>
+                                        <option value="PE" ${staffData.country === 'PE' ? 'selected' : ''}>Perú</option>
+                                        <option value="CO" ${staffData.country === 'CO' ? 'selected' : ''}>Colombia</option>
+                                        <option value="MX" ${staffData.country === 'MX' ? 'selected' : ''}>México</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono</label>
+                                <input type="tel" name="phone" value="${staffData.phone || ''}">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-cancel" onclick="AdminPanelController.closeStaffModal()">Cancelar</button>
+                            <button type="submit" class="btn-save">💾 Actualizar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    },
+
+    async _loadStaffById(staffId) {
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+            return result.success ? result.data : null;
+        } catch (error) {
+            console.error('[STAFF] Error cargando staff:', error);
+            return null;
+        }
+    },
+
+    async updateStaff(event, staffId) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const staffData = {
+            first_name: formData.get('first_name'),
+            last_name: formData.get('last_name'),
+            email: formData.get('email'),
+            role_id: formData.get('role_id'), // UUID string
+            country: formData.get('country'),
+            phone: formData.get('phone') || null
+        };
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(staffData)
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Error al actualizar personal');
+            }
+
+            this.closeStaffModal();
+            this._showSuccessToast('Personal actualizado exitosamente');
+            this._loadGestionStaffTable();
+
+        } catch (error) {
+            console.error('[STAFF] Error actualizando:', error);
+            this._showErrorToast(error.message);
+        }
+    },
+
+    async viewStaffDetail(staffId) {
+        const staffData = await this._loadStaffById(staffId);
+        if (!staffData) {
+            this._showErrorToast('Error cargando datos del personal');
+            return;
+        }
+
+        const modalHtml = `
+            <div class="modal-overlay" id="staff-modal-overlay" onclick="AdminPanelController.closeStaffModal(event)">
+                <div class="modal-content staff-modal" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3>👤 Detalle del Personal</h3>
+                        <button class="modal-close" onclick="AdminPanelController.closeStaffModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="staff-detail-card">
+                            <div class="staff-detail-avatar">${(staffData.role?.role_code || '??')}</div>
+                            <h4>${staffData.first_name} ${staffData.last_name}</h4>
+                            <p class="staff-detail-role">${staffData.role?.role_name || 'Sin rol'}</p>
+                        </div>
+                        <div class="staff-detail-info">
+                            <div class="staff-detail-row"><span>📧 Email:</span> ${staffData.email || '-'}</div>
+                            <div class="staff-detail-row"><span>📱 Teléfono:</span> ${staffData.phone || '-'}</div>
+                            <div class="staff-detail-row"><span>🌎 País:</span> ${staffData.country || '-'}</div>
+                            <div class="staff-detail-row"><span>🏢 Área:</span> ${staffData.role?.role_area || '-'}</div>
+                            <div class="staff-detail-row"><span>📊 Nivel:</span> ${staffData.role?.level ?? '-'}</div>
+                            <div class="staff-detail-row"><span>📅 Creado:</span> ${staffData.created_at ? new Date(staffData.created_at).toLocaleDateString() : '-'}</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="AdminPanelController.closeStaffModal()">Cerrar</button>
+                        <button type="button" class="btn-save" onclick="AdminPanelController.closeStaffModal(); AdminPanelController.editStaff('${staffId}')">✏️ Editar</button>
+                    </div>
+                </div>
+            </div>
+            <style>
+                .staff-detail-card { text-align: center; padding: 20px; margin-bottom: 20px; }
+                .staff-detail-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #4a9eff, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 600; margin: 0 auto 12px; }
+                .staff-detail-card h4 { margin: 0 0 4px 0; font-size: 1.3rem; }
+                .staff-detail-role { margin: 0; color: #4a9eff; }
+                .staff-detail-info { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 16px; }
+                .staff-detail-row { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; }
+                .staff-detail-row:last-child { border-bottom: none; }
+                .staff-detail-row span { color: rgba(255,255,255,0.5); }
+            </style>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    },
+
+    async deactivateStaff(staffId) {
+        if (!confirm('¿Está seguro de desactivar este personal?')) return;
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Error al desactivar personal');
+            }
+
+            this._showSuccessToast('Personal desactivado');
+            this._loadGestionStaffTable();
+
+        } catch (error) {
+            console.error('[STAFF] Error desactivando:', error);
+            this._showErrorToast(error.message);
+        }
+    },
+
+    async activateStaff(staffId) {
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_active: true })
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Error al activar personal');
+            }
+
+            this._showSuccessToast('Personal activado');
+            this._loadGestionStaffTable();
+
+        } catch (error) {
+            console.error('[STAFF] Error activando:', error);
+            this._showErrorToast(error.message);
+        }
     },
 
     // ==================== VENDEDORES ====================
@@ -1559,13 +2130,20 @@ const AdminPanelController = {
             });
             const result = await response.json();
 
-            // Si no hay API aún, mostrar datos de ejemplo
-            const vendedores = result.success ? result.data : [
-                { id: 1, name: 'Juan Pérez', email: 'jperez@aponnt.com', region: 'Buenos Aires', empresas: 12, comision_pendiente: 45000, status: 'active' },
-                { id: 2, name: 'María García', email: 'mgarcia@aponnt.com', region: 'Córdoba', empresas: 8, comision_pendiente: 32000, status: 'active' },
-                { id: 3, name: 'Carlos López', email: 'clopez@aponnt.com', region: 'Santa Fe', empresas: 15, comision_pendiente: 67000, status: 'active' },
-                { id: 4, name: 'Ana Rodríguez', email: 'arodriguez@aponnt.com', region: 'Mendoza', empresas: 6, comision_pendiente: 18000, status: 'active' }
-            ];
+            // SSOT: Solo datos reales de la API, sin fallback a datos mock
+            if (!result.success) {
+                throw new Error(result.error || 'Error al cargar vendedores');
+            }
+
+            const vendedores = (result.data || []).map(v => ({
+                id: v.staff_id,
+                name: `${v.first_name || ''} ${v.last_name || ''}`.trim(),
+                email: v.email,
+                region: v.country || v.region || '-',
+                empresas: v.companies_count || 0,
+                comision_pendiente: v.pending_commission || 0,
+                status: v.is_active ? 'active' : 'inactive'
+            }));
 
             // Stats
             const total = vendedores.length;
@@ -1582,6 +2160,7 @@ const AdminPanelController = {
                 container.innerHTML = `<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
                     <div style="font-size: 3rem; margin-bottom: 12px;">👥</div>
                     <div>No hay vendedores registrados</div>
+                    <div style="font-size: 0.85rem; margin-top: 8px;">Use "Gestión Staff" para agregar vendedores con rol comercial</div>
                 </div>`;
                 return;
             }
@@ -1608,16 +2187,129 @@ const AdminPanelController = {
         }
     },
 
-    showNuevoVendedorModal() {
-        this._showComingSoonToast('Alta de vendedor');
+    async showNuevoVendedorModal() {
+        // Cargar roles de ventas
+        const allRoles = await this._loadRolesForSelect();
+        const salesRoles = allRoles.filter(r => r.role_area === 'ventas');
+
+        if (salesRoles.length === 0) {
+            this._showErrorToast('No hay roles de ventas definidos');
+            return;
+        }
+
+        const modalHtml = `
+            <div class="modal-overlay" id="staff-modal-overlay" onclick="AdminPanelController.closeStaffModal(event)">
+                <div class="modal-content staff-modal" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3>➕ Nuevo Vendedor</h3>
+                        <button class="modal-close" onclick="AdminPanelController.closeStaffModal()">&times;</button>
+                    </div>
+                    <form id="staff-form" onsubmit="AdminPanelController.saveNewVendedor(event)">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nombre *</label>
+                                    <input type="text" name="first_name" required placeholder="Nombre">
+                                </div>
+                                <div class="form-group">
+                                    <label>Apellido *</label>
+                                    <input type="text" name="last_name" required placeholder="Apellido">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" name="email" required placeholder="vendedor@aponnt.com">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Rol Comercial *</label>
+                                    <select name="role_id" required>
+                                        ${salesRoles.map(r => `<option value="${r.role_id}">${r.role_name} (${r.role_code})</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Región/País *</label>
+                                    <select name="country" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="AR">Argentina</option>
+                                        <option value="CL">Chile</option>
+                                        <option value="UY">Uruguay</option>
+                                        <option value="PY">Paraguay</option>
+                                        <option value="BO">Bolivia</option>
+                                        <option value="PE">Perú</option>
+                                        <option value="CO">Colombia</option>
+                                        <option value="MX">México</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono</label>
+                                <input type="tel" name="phone" placeholder="+54 11 1234-5678">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-cancel" onclick="AdminPanelController.closeStaffModal()">Cancelar</button>
+                            <button type="submit" class="btn-save" style="background: linear-gradient(135deg, #4a9eff, #3b82f6);">💾 Guardar Vendedor</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
     },
 
-    editVendedor(id) {
-        this._showComingSoonToast('Edicion de vendedor');
+    async saveNewVendedor(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const staffData = {
+            first_name: formData.get('first_name'),
+            last_name: formData.get('last_name'),
+            email: formData.get('email'),
+            role_id: formData.get('role_id'), // UUID string
+            country: formData.get('country'),
+            phone: formData.get('phone') || null
+        };
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/staff-data/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(staffData)
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Error al crear vendedor');
+            }
+
+            this.closeStaffModal();
+            this._showSuccessToast('Vendedor creado exitosamente');
+
+            // Recargar lista de vendedores
+            this._loadVendedoresList();
+
+        } catch (error) {
+            console.error('[VENDEDOR] Error guardando:', error);
+            this._showErrorToast(error.message);
+        }
     },
 
-    viewVendedorDetail(id) {
-        this._showComingSoonToast('Detalle de vendedor');
+    async editVendedor(id) {
+        // Reutilizar el editor de staff
+        await this.editStaff(id);
+    },
+
+    async viewVendedorDetail(id) {
+        // Reutilizar el visor de staff
+        await this.viewStaffDetail(id);
     },
 
     _showComingSoonToast(feature) {
@@ -1677,36 +2369,74 @@ const AdminPanelController = {
         const container = document.getElementById('staff-aponnt-grid');
         if (!container) return;
 
-        // Datos de ejemplo basados en la estructura organizacional
-        const staffMembers = [
-            { id: 1, name: 'Director General', email: 'director@aponnt.com', area: 'direccion', role: 'Gerente General', code: 'GG', level: 0, color: '#dc2626' },
-            { id: 2, name: 'Gerente Administrativo', email: 'admin@aponnt.com', area: 'admin', role: 'Gerente Administrativo', code: 'GA', level: 1, color: '#0891b2' },
-            { id: 3, name: 'Gerente de Desarrollo', email: 'dev@aponnt.com', area: 'dev', role: 'Gerente de Desarrollo', code: 'GD', level: 1, color: '#7c3aed' },
-            { id: 4, name: 'Jefe de Administración', email: 'jefe.admin@aponnt.com', area: 'admin', role: 'Jefe de Administración', code: 'JA', level: 2, color: '#0891b2' },
-            { id: 5, name: 'Jefe de Ingeniería', email: 'jefe.ing@aponnt.com', area: 'dev', role: 'Jefe de Ingeniería', code: 'JI', level: 2, color: '#7c3aed' },
-            { id: 6, name: 'Soporte Nivel 1', email: 'soporte1@aponnt.com', area: 'soporte', role: 'Técnico Soporte', code: 'TS', level: 4, color: '#059669' },
-            { id: 7, name: 'Soporte Nivel 2', email: 'soporte2@aponnt.com', area: 'soporte', role: 'Técnico Soporte Sr', code: 'TSS', level: 3, color: '#059669' },
-            { id: 8, name: 'Desarrollador Frontend', email: 'frontend@aponnt.com', area: 'dev', role: 'Desarrollador Frontend', code: 'DEV-FE', level: 4, color: '#7c3aed' },
-            { id: 9, name: 'Desarrollador Backend', email: 'backend@aponnt.com', area: 'dev', role: 'Desarrollador Backend', code: 'DEV-BE', level: 4, color: '#7c3aed' },
-            { id: 10, name: 'Administrativo', email: 'administrativo@aponnt.com', area: 'admin', role: 'Administrativo', code: 'ADM', level: 4, color: '#0891b2' }
-        ];
+        // Colores por área
+        const areaColors = {
+            direccion: '#dc2626',
+            admin: '#0891b2',
+            ventas: '#f59e0b',
+            desarrollo: '#7c3aed',
+            soporte: '#059669',
+            externo: '#6b7280'
+        };
 
-        container.innerHTML = staffMembers.map(s => `
-            <div class="staff-card" data-area="${s.area}">
-                <div class="staff-card-header">
-                    <div class="staff-card-avatar" style="background: ${s.color};">${s.code}</div>
-                    <div class="staff-card-info">
-                        <h4>${s.name}</h4>
-                        <p>${s.email}</p>
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/staff-data/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+
+            if (!result.success || !result.data || result.data.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: rgba(255,255,255,0.5);">
+                        <div style="font-size: 3rem; margin-bottom: 16px;">👥</div>
+                        <div>No hay personal registrado</div>
+                        <div style="font-size: 0.85rem; margin-top: 8px;">Use "Gestión Staff" para agregar personal</div>
                     </div>
+                `;
+                return;
+            }
+
+            // Guardar datos para filtrado
+            this._staffAponntData = result.data;
+
+            container.innerHTML = result.data.map(s => {
+                const area = s.role?.role_area || s.area || 'externo';
+                const color = areaColors[area] || areaColors.externo;
+                const code = s.role?.role_code || '??';
+                const name = `${s.first_name || ''} ${s.last_name || ''}`.trim() || 'Sin nombre';
+                const roleName = s.role?.role_name || s.position || 'Sin rol';
+                const level = s.role?.level ?? '-';
+
+                return `
+                    <div class="staff-card" data-area="${area}" data-staff-id="${s.staff_id}">
+                        <div class="staff-card-header">
+                            <div class="staff-card-avatar" style="background: ${color};">${code}</div>
+                            <div class="staff-card-info">
+                                <h4>${name}</h4>
+                                <p>${s.email || 'Sin email'}</p>
+                            </div>
+                        </div>
+                        <div class="staff-card-role">${roleName}</div>
+                        <div class="staff-card-details">
+                            <div>📊 Nivel: ${level}</div>
+                            <div>🏢 Área: ${area.charAt(0).toUpperCase() + area.slice(1)}</div>
+                            ${s.country ? `<div>🌎 País: ${s.country}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('[STAFF-APONNT] Error cargando staff:', error);
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #ef4444;">
+                    <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+                    <div>Error al cargar el personal</div>
+                    <div style="font-size: 0.85rem; margin-top: 8px;">${error.message}</div>
                 </div>
-                <div class="staff-card-role">${s.role}</div>
-                <div class="staff-card-details">
-                    <div>📊 Nivel: ${s.level}</div>
-                    <div>🏢 Área: ${s.area.charAt(0).toUpperCase() + s.area.slice(1)}</div>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }
     },
 
     filterStaffByArea(area) {
@@ -1724,105 +2454,114 @@ const AdminPanelController = {
 
     // ==================== STAFF ROLES ====================
     async _loadStaffRoles() {
+        setTimeout(() => this._loadStaffRolesList(), 100);
         return `
             <div class="section-container staff-roles-module">
                 <style>
                     .staff-roles-module .section-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
                     .staff-roles-module h2 { margin: 0 0 8px 0; display: flex; align-items: center; gap: 12px; }
                     .roles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-                    .role-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; }
+                    .role-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; transition: all 0.2s; }
+                    .role-card:hover { background: rgba(255,255,255,0.05); transform: translateY(-2px); }
                     .role-card h4 { margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px; }
                     .role-card .role-code { background: rgba(74,158,255,0.2); color: #4a9eff; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
                     .role-card .role-level { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 12px; }
-                    .role-card .role-permisos { font-size: 0.85rem; color: rgba(255,255,255,0.7); }
-                    .role-card .role-permisos span { display: inline-block; background: rgba(34,197,94,0.2); color: #22c55e; padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 0.75rem; }
+                    .role-card .role-area { display: inline-block; background: rgba(139,92,246,0.2); color: #a78bfa; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px; }
+                    .role-card .role-description { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 8px; font-style: italic; }
+                    .role-card .role-reports { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 8px; }
+                    .role-stats { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+                    .role-stat { background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
+                    .role-stat-value { font-size: 1.5rem; font-weight: 600; }
+                    .role-stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
                 </style>
                 <div class="section-header">
                     <h2><span>🎭</span> Roles de Staff</h2>
-                    <p class="section-subtitle" style="color: rgba(255,255,255,0.6);">Gestión de roles y permisos del personal</p>
+                    <p class="section-subtitle" style="color: rgba(255,255,255,0.6);">Roles y niveles jerárquicos del personal APONNT</p>
                 </div>
-                <div class="roles-grid">
-                    <div class="role-card">
-                        <h4>👔 Gerente General <span class="role-code">GG</span></h4>
-                        <div class="role-level">Nivel 0 - Dirección</div>
-                        <div class="role-permisos">
-                            <span>Full Access</span>
-                            <span>Aprobar Pagos</span>
-                            <span>Gestionar Staff</span>
-                        </div>
-                    </div>
-                    <div class="role-card">
-                        <h4>💼 Gerente Regional <span class="role-code">GR</span></h4>
-                        <div class="role-level">Nivel 1 - Gerencia</div>
-                        <div class="role-permisos">
-                            <span>Ver Empresas</span>
-                            <span>Aprobar Presupuestos</span>
-                            <span>Gestionar Vendedores</span>
-                        </div>
-                    </div>
-                    <div class="role-card">
-                        <h4>📊 Gerente Administrativo <span class="role-code">GA</span></h4>
-                        <div class="role-level">Nivel 1 - Gerencia</div>
-                        <div class="role-permisos">
-                            <span>Facturación</span>
-                            <span>Cobranzas</span>
-                            <span>Reportes</span>
-                        </div>
-                    </div>
-                    <div class="role-card">
-                        <h4>💻 Gerente Desarrollo <span class="role-code">GD</span></h4>
-                        <div class="role-level">Nivel 1 - Gerencia</div>
-                        <div class="role-permisos">
-                            <span>Engineering</span>
-                            <span>Releases</span>
-                            <span>Debug</span>
-                        </div>
-                    </div>
-                    <div class="role-card">
-                        <h4>👤 Jefe Administración <span class="role-code">JA</span></h4>
-                        <div class="role-level">Nivel 2 - Jefatura</div>
-                        <div class="role-permisos">
-                            <span>Procesar Facturas</span>
-                            <span>Gestión Documental</span>
-                        </div>
-                    </div>
-                    <div class="role-card">
-                        <h4>🔧 Jefe Ingeniería <span class="role-code">JI</span></h4>
-                        <div class="role-level">Nivel 2 - Jefatura</div>
-                        <div class="role-permisos">
-                            <span>Code Review</span>
-                            <span>Deploy</span>
-                            <span>Arquitectura</span>
-                        </div>
-                    </div>
-                    <div class="role-card">
-                        <h4>🤝 Líder de Equipo <span class="role-code">LE</span></h4>
-                        <div class="role-level">Nivel 3 - Supervisión</div>
-                        <div class="role-permisos">
-                            <span>Gestionar Vendedores</span>
-                            <span>Ver Comisiones</span>
-                        </div>
-                    </div>
-                    <div class="role-card">
-                        <h4>💰 Vendedor <span class="role-code">VE</span></h4>
-                        <div class="role-level">Nivel 4 - Operativo</div>
-                        <div class="role-permisos">
-                            <span>Mis Empresas</span>
-                            <span>Presupuestos</span>
-                            <span>Mis Comisiones</span>
-                        </div>
-                    </div>
-                    <div class="role-card">
-                        <h4>🎫 Soporte <span class="role-code">SP</span></h4>
-                        <div class="role-level">Nivel 4 - Operativo</div>
-                        <div class="role-permisos">
-                            <span>Tickets</span>
-                            <span>Empresas (Solo Lectura)</span>
-                        </div>
+                <div class="role-stats" id="roles-stats">
+                    <div class="role-stat"><div class="role-stat-value" id="stat-total-roles">-</div><div class="role-stat-label">Total Roles</div></div>
+                    <div class="role-stat"><div class="role-stat-value" id="stat-niveles">-</div><div class="role-stat-label">Niveles</div></div>
+                    <div class="role-stat"><div class="role-stat-value" id="stat-areas">-</div><div class="role-stat-label">Áreas</div></div>
+                </div>
+                <div class="roles-grid" id="roles-grid">
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                        <div class="spinner-small"></div>
+                        <span style="color: rgba(255,255,255,0.6);">Cargando roles...</span>
                     </div>
                 </div>
             </div>
         `;
+    },
+
+    async _loadStaffRolesList() {
+        const container = document.getElementById('roles-grid');
+        if (!container) return;
+
+        // Iconos por área
+        const areaIcons = {
+            direccion: '👔', admin: '📊', ventas: '💼', desarrollo: '💻', soporte: '🎫', externo: '🌐'
+        };
+
+        // Nombres de niveles
+        const levelNames = ['Dirección', 'Gerencia', 'Jefatura', 'Supervisión', 'Operativo'];
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/aponnt/staff-data/roles', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+
+            if (!result.success || !result.data || result.data.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: rgba(255,255,255,0.5);">
+                        <div style="font-size: 3rem; margin-bottom: 16px;">🎭</div>
+                        <div>No hay roles definidos</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const roles = result.data;
+
+            // Actualizar stats
+            const niveles = new Set(roles.map(r => r.level));
+            const areas = new Set(roles.map(r => r.role_area));
+            document.getElementById('stat-total-roles').textContent = roles.length;
+            document.getElementById('stat-niveles').textContent = niveles.size;
+            document.getElementById('stat-areas').textContent = areas.size;
+
+            // Ordenar por nivel
+            roles.sort((a, b) => (a.level || 99) - (b.level || 99));
+
+            container.innerHTML = roles.map(role => {
+                const icon = areaIcons[role.role_area] || '👤';
+                const levelName = levelNames[role.level] || `Nivel ${role.level}`;
+
+                return `
+                    <div class="role-card" data-role-id="${role.role_id}">
+                        <h4>
+                            ${icon} ${role.role_name}
+                            <span class="role-code">${role.role_code}</span>
+                            <span class="role-area">${role.role_area || 'general'}</span>
+                        </h4>
+                        <div class="role-level">Nivel ${role.level ?? '-'} - ${levelName}</div>
+                        ${role.description ? `<div class="role-description">${role.description}</div>` : ''}
+                        ${role.reports_to_role_code ? `<div class="role-reports">📋 Reporta a: ${role.reports_to_role_code}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('[STAFF-ROLES] Error cargando roles:', error);
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #ef4444;">
+                    <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+                    <div>Error al cargar los roles</div>
+                    <div style="font-size: 0.85rem; margin-top: 8px;">${error.message}</div>
+                </div>
+            `;
+        }
     },
 
     // ==================== ORGANIGRAMA ====================
@@ -3602,157 +4341,6 @@ const AdminPanelController = {
             console.error('Error creando factura:', error);
             this.showNotification(error.message, 'error');
             submitBtn.textContent = 'Crear Factura';
-        }
-    },
-
-    // ============================
-    // MODAL: NUEVO STAFF
-    // ============================
-    showNewStaffModal() {
-        console.log('[AdminPanel] Abriendo modal nuevo staff');
-
-        const modalOverlay = document.createElement('div');
-        modalOverlay.id = 'new-staff-modal-overlay';
-        modalOverlay.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); display: flex; justify-content: center;
-            align-items: center; z-index: 10000;
-        `;
-
-        modalOverlay.innerHTML = `
-            <div style="background: #1e2432; padding: 30px; border-radius: 12px; width: 95%; max-width: 700px; max-height: 90vh; overflow-y: auto; color: white;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
-                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 1.5rem;">👔</span> Nuevo Staff Aponnt
-                    </h3>
-                    <button onclick="AdminPanelController.closeNewStaffModal()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">✕</button>
-                </div>
-
-                <form id="new-staff-form" onsubmit="AdminPanelController.submitNewStaff(event)">
-                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">👤 Datos Personales</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Nombre *</label>
-                                <input type="text" id="staff-first-name" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Juan">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Apellido *</label>
-                                <input type="text" id="staff-last-name" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Pérez">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Email *</label>
-                                <input type="email" id="staff-email" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="juan.perez@aponnt.com">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Teléfono</label>
-                                <input type="tel" id="staff-phone" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="+54 11 1234-5678">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 15px 0; color: #4a9eff;">🏢 Datos Laborales</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Área *</label>
-                                <select id="staff-area" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
-                                    <option value="comercial">Comercial</option>
-                                    <option value="soporte">Soporte</option>
-                                    <option value="desarrollo">Desarrollo</option>
-                                    <option value="administracion">Administración</option>
-                                    <option value="direccion">Dirección</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Nivel *</label>
-                                <select id="staff-level" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
-                                    <option value="1">1 - Vendedor Directo</option>
-                                    <option value="2">2 - Líder de Equipo</option>
-                                    <option value="3">3 - Coordinador</option>
-                                    <option value="4">4 - Supervisor</option>
-                                    <option value="5">5 - Gerente</option>
-                                    <option value="6">6 - Director</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Contraseña Inicial *</label>
-                                <input type="password" id="staff-password" required minlength="6" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;" placeholder="Mínimo 6 caracteres">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Activo</label>
-                                <select id="staff-active" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">
-                                    <option value="true">Sí</option>
-                                    <option value="false">No</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                        <button type="button" onclick="AdminPanelController.closeNewStaffModal()" style="padding: 12px 24px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer;">Cancelar</button>
-                        <button type="submit" style="padding: 12px 24px; border-radius: 6px; border: none; background: linear-gradient(135deg, #4a9eff 0%, #6366f1 100%); color: white; cursor: pointer; font-weight: 600;">
-                            <span id="submit-staff-text">Crear Staff</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        `;
-
-        document.body.appendChild(modalOverlay);
-        document.body.style.overflow = 'hidden';
-        setTimeout(() => document.getElementById('staff-first-name')?.focus(), 100);
-    },
-
-    closeNewStaffModal() {
-        const modal = document.getElementById('new-staff-modal-overlay');
-        if (modal) {
-            modal.remove();
-            document.body.style.overflow = '';
-        }
-    },
-
-    async submitNewStaff(event) {
-        event.preventDefault();
-
-        const submitBtn = document.getElementById('submit-staff-text');
-        submitBtn.textContent = 'Creando...';
-
-        try {
-            const data = {
-                first_name: document.getElementById('staff-first-name').value.trim(),
-                last_name: document.getElementById('staff-last-name').value.trim(),
-                email: document.getElementById('staff-email').value.trim(),
-                phone: document.getElementById('staff-phone').value.trim() || undefined,
-                area: document.getElementById('staff-area').value,
-                level: parseInt(document.getElementById('staff-level').value),
-                password: document.getElementById('staff-password').value,
-                is_active: document.getElementById('staff-active').value === 'true'
-            };
-
-            const token = localStorage.getItem('aponnt_token_staff');
-            const response = await fetch('/api/aponnt/dashboard/staff', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                this.closeNewStaffModal();
-                this.showNotification('Staff creado exitosamente', 'success');
-                await this.loadSection('staff-aponnt');
-            } else {
-                throw new Error(result.error || 'Error al crear staff');
-            }
-        } catch (error) {
-            console.error('Error creando staff:', error);
-            this.showNotification(error.message, 'error');
-            submitBtn.textContent = 'Crear Staff';
         }
     },
 

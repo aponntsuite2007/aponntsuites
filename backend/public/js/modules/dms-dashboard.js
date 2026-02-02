@@ -677,6 +677,8 @@
       max-width: 800px;
       width: 95%;
       max-height: 90vh;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
       transform: scale(0.9);
       transition: transform 0.3s ease;
@@ -717,7 +719,9 @@
 
     .dms-modal-body {
       padding: 25px;
-      max-height: 60vh;
+      flex: 1;
+      min-height: 0;
+      max-height: calc(90vh - 140px); /* 90vh - header(~60px) - footer(~80px) */
       overflow-y: auto;
     }
 
@@ -1059,14 +1063,30 @@
   // ============================================================
 
   function getToken() {
-    return localStorage.getItem('token') || sessionStorage.getItem('token');
+    // FIX: Buscar en múltiples claves para compatibilidad con diferentes paneles
+    // El login guarda en 'authToken', algunos módulos usan 'token'
+    return localStorage.getItem('authToken') ||
+           localStorage.getItem('token') ||
+           sessionStorage.getItem('authToken') ||
+           sessionStorage.getItem('token') ||
+           window.authToken; // Variable global como fallback
   }
 
   function getCurrentUser() {
     try {
-      const userData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
-      return userData ? JSON.parse(userData) : null;
+      // FIX: Buscar en múltiples claves para compatibilidad con diferentes paneles
+      const userData = localStorage.getItem('currentUser') ||
+                       localStorage.getItem('userData') ||
+                       sessionStorage.getItem('currentUser') ||
+                       sessionStorage.getItem('userData') ||
+                       (window.currentUser ? JSON.stringify(window.currentUser) : null);
+      const user = userData ? JSON.parse(userData) : null;
+      if (user) {
+        console.log('👤 [DMS] Usuario detectado:', user.username || user.email, '- Rol:', user.role);
+      }
+      return user;
     } catch (e) {
+      console.error('❌ [DMS] Error obteniendo usuario:', e);
       return null;
     }
   }
@@ -1130,21 +1150,65 @@
   // ============================================================
 
   function initPermissions() {
-    const user = getCurrentUser();
-    if (!user) return;
+    // DEBUG: Ver qué hay en localStorage
+    console.log('🔍 [DMS] DEBUG localStorage.currentUser:', localStorage.getItem('currentUser'));
+    console.log('🔍 [DMS] DEBUG window.currentUser:', window.currentUser);
+
+    let user = getCurrentUser();
+
+    // FIX: Retry si no encuentra usuario (timing issue con login)
+    if (!user) {
+      console.warn('⚠️ [DMS] getCurrentUser() retornó null, intentando fallbacks...');
+      // Intentar window.currentUser, window.userData como fallbacks
+      user = window.currentUser || window.userData;
+
+      // Intentar leer directamente de storage
+      if (!user) {
+        try {
+          const storedUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+          if (storedUser) {
+            user = JSON.parse(storedUser);
+            console.log('✅ [DMS] Usuario recuperado de storage:', user?.name || user?.username);
+          }
+        } catch (e) {
+          console.error('❌ [DMS] Error parseando usuario de storage:', e);
+        }
+      }
+    }
+
+    // FIX: Si aún no hay usuario, establecer permisos mínimos (no bloquear UI)
+    if (!user) {
+      console.warn('⚠️ [DMS] Sin usuario - Estableciendo permisos mínimos de empleado');
+      state.permissions = {
+        canValidate: false,
+        canRequest: false,
+        canUpload: true,
+        canDelete: false,
+        canManageFolders: false,
+        canSeeAllDocuments: false,
+        canExport: false
+      };
+      state.currentView = 'my-docs';
+      return;
+    }
 
     state.user = user;
-    const role = user.role || 'employee';
+    const role = (user.role || 'employee').toLowerCase();
 
-    // Definir permisos según rol
+    // FIX: Incluir todos los roles de administrador posibles (agregados gerente, manager)
+    const adminRoles = ['admin', 'administrador', 'company_admin', 'hr', 'supervisor', 'rrhh', 'gerente', 'manager'];
+    const isAdmin = adminRoles.includes(role);
+    console.log('🔐 [DMS] Rol detectado:', role, '- Es admin:', isAdmin);
+
+    // Definir permisos según rol (FIX: usar isAdmin para todos)
     state.permissions = {
-      canValidate: ['admin', 'hr', 'supervisor'].includes(role),
-      canRequest: ['admin', 'hr', 'supervisor'].includes(role),
+      canValidate: isAdmin,
+      canRequest: isAdmin,
       canUpload: true, // Todos pueden subir (cuando se les solicita)
-      canDelete: ['admin'].includes(role),
-      canManageFolders: ['admin', 'hr'].includes(role),
-      canSeeAllDocuments: ['admin', 'hr', 'supervisor'].includes(role),
-      canExport: ['admin', 'hr', 'supervisor'].includes(role)
+      canDelete: ['admin', 'administrador', 'company_admin'].includes(role),
+      canManageFolders: isAdmin,
+      canSeeAllDocuments: isAdmin,
+      canExport: isAdmin
     };
 
     // ═══════════════════════════════════════════════════════════════
@@ -1797,8 +1861,9 @@
             <label class="dms-doc-field-label">Prioridad</label>
             <select class="dms-filter-select" style="width: 100%;" id="request-priority">
               <option value="low">🟢 Baja</option>
-              <option value="medium" selected>🟡 Media</option>
-              <option value="high">🔴 Alta</option>
+              <option value="normal" selected>🟡 Normal</option>
+              <option value="high">🟠 Alta</option>
+              <option value="urgent">🔴 Urgente</option>
             </select>
           </div>
 
@@ -1995,6 +2060,57 @@
   function switchTab(tabId) {
     state.currentView = tabId;
     render();
+
+    // Cargar empleados cuando se va al tab de nueva solicitud
+    if (tabId === 'new-request') {
+      loadEmployeesForSelect();
+    }
+  }
+
+  // ============================================================
+  // CARGAR EMPLEADOS PARA SELECT DE SOLICITUD
+  // ============================================================
+  async function loadEmployeesForSelect() {
+    try {
+      const token = getToken();
+      const response = await fetch('/api/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.error('[DMS] Error cargando empleados:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      const employees = data.data || data.users || data || [];
+
+      const select = document.getElementById('request-employee');
+      if (!select) {
+        console.error('[DMS] Select de empleados no encontrado');
+        return;
+      }
+
+      // Limpiar opciones existentes excepto placeholder
+      select.innerHTML = '<option value="">Seleccionar empleado...</option>';
+
+      // Agregar empleados
+      employees.forEach(emp => {
+        const option = document.createElement('option');
+        option.value = emp.id;
+        const name = emp.full_name || emp.name || `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || emp.email;
+        const dept = emp.department_name || emp.department || '';
+        option.textContent = dept ? `${name} (${dept})` : name;
+        select.appendChild(option);
+      });
+
+      console.log(`[DMS] ✅ ${employees.length} empleados cargados en select`);
+    } catch (error) {
+      console.error('[DMS] Error cargando empleados:', error);
+    }
   }
 
   function navigateTo(folderId) {
@@ -2204,20 +2320,176 @@
     openUpload();
   }
 
-  function submitRequest() {
-    showNotification('Enviando solicitud...', 'info');
-    // Implementar envío de solicitud
+  async function submitRequest() {
+    console.log('📬 [DMS] submitRequest() llamada');
+    try {
+      // Obtener valores del formulario
+      const employeeSelect = document.getElementById('request-employee');
+      const typeSelect = document.getElementById('request-type');
+      const prioritySelect = document.getElementById('request-priority');
+      const descriptionTextarea = document.querySelector('#dms-dashboard-container textarea[placeholder*="descripción"]');
+      const dueDateInput = document.querySelector('#dms-dashboard-container input[type="date"]');
+
+      console.log('📬 [DMS] Campos encontrados:', {
+        employeeSelect: !!employeeSelect,
+        typeSelect: !!typeSelect,
+        prioritySelect: !!prioritySelect,
+        descriptionTextarea: !!descriptionTextarea,
+        dueDateInput: !!dueDateInput
+      });
+
+      if (!employeeSelect || !typeSelect) {
+        showNotification('Error: Formulario incompleto', 'error');
+        console.error('📬 [DMS] Formulario incompleto:', { employeeSelect, typeSelect });
+        return;
+      }
+
+      const employee_id = employeeSelect.value;
+      const employee_name = employeeSelect.options[employeeSelect.selectedIndex]?.text || '';
+      const document_type = typeSelect.value;
+      const priority = prioritySelect?.value || 'media';
+      const description = descriptionTextarea?.value || '';
+      const due_date = dueDateInput?.value || null;
+
+      console.log('📬 [DMS] Valores del formulario:', {
+        employee_id,
+        employee_name,
+        document_type,
+        priority,
+        description: description?.substring(0, 50),
+        due_date
+      });
+
+      if (!employee_id || !document_type) {
+        showNotification('Por favor selecciona empleado y tipo de documento', 'warning');
+        console.warn('📬 [DMS] Validación fallida: employee_id o document_type vacío');
+        return;
+      }
+
+      showNotification('Enviando solicitud...', 'info');
+      console.log('📬 [DMS] Enviando a /api/dms/hr/request...');
+
+      const requestBody = {
+        employee_id,
+        employee_name,
+        document_type,
+        description,
+        due_date,
+        priority,
+        notify_channels: ['email', 'push']
+      };
+      console.log('📬 [DMS] Request body:', JSON.stringify(requestBody));
+
+      const response = await fetch(`${API_BASE}/hr/request`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('📬 [DMS] Response status:', response.status, response.statusText);
+      const result = await response.json();
+      console.log('📬 [DMS] Response body:', JSON.stringify(result));
+
+      if (response.ok && result.success) {
+        showNotification('✅ Solicitud enviada correctamente', 'success');
+        // Refrescar datos
+        await loadMyRequests();
+        // Volver a explorador
+        switchTab('explorador');
+        render();
+      } else {
+        showNotification(`Error: ${result.message || 'No se pudo enviar la solicitud'}`, 'error');
+      }
+    } catch (error) {
+      console.error('[DMS] Error enviando solicitud:', error);
+      showNotification('Error al enviar solicitud', 'error');
+    }
   }
 
-  function submitUpload() {
-    showNotification('Subiendo documento...', 'info');
-    // Implementar upload
+  async function submitUpload() {
+    try {
+      const fileInput = document.getElementById('file-input');
+      const categorySelect = document.getElementById('upload-category');
+
+      if (!fileInput || !fileInput.files.length) {
+        showNotification('Por favor selecciona un archivo', 'warning');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const category = categorySelect?.value || 'general';
+
+      // Validar tamaño (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showNotification('El archivo es demasiado grande (máximo 10MB)', 'error');
+        return;
+      }
+
+      showNotification('Subiendo documento...', 'info');
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', category);
+      formData.append('folder_id', state.currentFolder || 'root');
+
+      const response = await fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        showNotification('✅ Documento subido correctamente', 'success');
+        closeModal('upload-modal');
+        // Refrescar documentos
+        await loadDocuments();
+        render();
+      } else {
+        showNotification(`Error: ${result.message || 'No se pudo subir el documento'}`, 'error');
+      }
+    } catch (error) {
+      console.error('[DMS] Error subiendo documento:', error);
+      showNotification('Error al subir documento', 'error');
+    }
   }
 
-  function deleteDocument(docId) {
-    if (!confirm('¿Estás seguro de eliminar este documento?')) return;
-    showNotification('Documento eliminado', 'success');
-    // Implementar eliminación
+  async function deleteDocument(docId) {
+    if (!confirm('¿Estás seguro de eliminar este documento? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    try {
+      showNotification('Eliminando documento...', 'info');
+
+      const response = await fetch(`${API_BASE}/${docId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        showNotification('✅ Documento eliminado', 'success');
+        // Refrescar documentos
+        await loadDocuments();
+        render();
+      } else {
+        showNotification(`Error: ${result.message || 'No se pudo eliminar'}`, 'error');
+      }
+    } catch (error) {
+      console.error('[DMS] Error eliminando documento:', error);
+      showNotification('Error al eliminar documento', 'error');
+    }
   }
 
   // ============================================================

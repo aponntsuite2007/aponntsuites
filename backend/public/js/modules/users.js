@@ -8401,14 +8401,21 @@ function addChild(userId) {
                 throw new Error(error.error || 'Hijo/a agregado/a Error al procesar solicitud');
             }
 
-            closeModal('childModal');
+            // FIX BUG-FAMILY-001/002: Primero refrescar lista, LUEGO cerrar modal
             showUserMessage('✅ Hijo/a agregado/a exitosamente', 'success');
 
-            if (typeof loadChildren === 'function') { loadChildren(userId); }
-        } catch (error) {
-            console.error('❌ Error:', error);
+            // Refrescar lista de hijos ANTES de cerrar modal
+            if (typeof loadChildren === 'function') {
+                await loadChildren(userId);
+                console.log('✅ Lista de hijos refrescada');
+            }
+
+            // Cerrar modal DESPUÉS de refrescar
             closeModal('childModal');
+        } catch (error) {
+            console.error('❌ Error al agregar hijo:', error);
             showUserMessage(`❌ Error: ${error.message}`, 'error');
+            closeModal('childModal');
         }
     };
 }

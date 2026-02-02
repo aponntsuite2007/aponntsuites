@@ -354,6 +354,9 @@
         // Cargar estadísticas del usuario después de renderizar
         loadUserStats();
 
+        // Cargar badge de solicitudes médicas pendientes
+        loadHealthBadge();
+
         state.initialized = true;
 
         console.log('✅ [MI-ESPACIO] Módulo inicializado');
@@ -463,9 +466,49 @@
         window.miEspacioSelfView = true;
 
         // Guardar ID del usuario actual para que los módulos lo usen
+        // FIX: Usar múltiples fuentes de datos para obtener userId
         const currentUser = window.currentUser || {};
-        window.miEspacioUserId = currentUser.id || currentUser.user_id || null;
-        window.miEspacioEmployeeId = currentUser.employeeId || currentUser.employee_id || null;
+        let userId = currentUser.id || currentUser.user_id;
+        let employeeId = currentUser.employeeId || currentUser.employee_id;
+
+        // Fallback 1: localStorage currentUser
+        if (!userId) {
+            try {
+                const storedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                userId = storedUser.id || storedUser.user_id;
+                employeeId = employeeId || storedUser.employeeId || storedUser.employee_id;
+            } catch (e) { /* ignore */ }
+        }
+
+        // Fallback 2: sessionStorage currentUser
+        if (!userId) {
+            try {
+                const sessionUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                userId = sessionUser.id || sessionUser.user_id;
+                employeeId = employeeId || sessionUser.employeeId || sessionUser.employee_id;
+            } catch (e) { /* ignore */ }
+        }
+
+        // Fallback 3: Decodificar JWT token
+        if (!userId) {
+            try {
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    userId = payload.id || payload.userId || payload.user_id;
+                    employeeId = employeeId || payload.employeeId || payload.employee_id;
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        // Fallback 4: window.userData
+        if (!userId && window.userData) {
+            userId = window.userData.id || window.userData.user_id;
+            employeeId = employeeId || window.userData.employeeId || window.userData.employee_id;
+        }
+
+        window.miEspacioUserId = userId || null;
+        window.miEspacioEmployeeId = employeeId || null;
 
         console.log('🔒 [MI-ESPACIO] Self-view mode activado para usuario:', window.miEspacioUserId);
 
@@ -1214,6 +1257,604 @@
     }
 
     /**
+     * Abrir modal de Mi Salud - Gestión de documentos médicos
+     * Solicitudes pendientes, certificados, recetas, estudios, fotos
+     */
+    async function openMiSalud() {
+        console.log('🏥 [MI-ESPACIO] Abriendo Mi Salud');
+
+        const currentUser = window.currentUser || {};
+        const userId = currentUser.id || currentUser.user_id;
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+
+        if (!userId) {
+            alert('Error: No se pudo identificar el usuario');
+            return;
+        }
+
+        // Estado del modal
+        let activeTab = 'pending';
+        let pendingRequests = [];
+        let history = [];
+
+        // Crear modal
+        const modal = document.createElement('div');
+        modal.id = 'miSaludModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        `;
+
+        modal.innerHTML = `
+            <div style="
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                border-radius: 16px;
+                max-width: 1000px;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+                border: 1px solid rgba(255,255,255,0.1);
+            ">
+                <div style="
+                    background: linear-gradient(135deg, #e91e63 0%, #c2185b 50%, #880e4f 100%);
+                    color: white;
+                    padding: 20px 25px;
+                    border-radius: 16px 16px 0 0;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                ">
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.4rem;"><i class="fas fa-heartbeat"></i> Mi Salud</h3>
+                        <p style="margin: 5px 0 0; opacity: 0.9; font-size: 0.9rem;">Documentos médicos · Certificados · Recetas · Estudios</p>
+                    </div>
+                    <button onclick="document.getElementById('miSaludModal').remove()" style="
+                        background: rgba(255,255,255,0.2);
+                        border: none;
+                        color: white;
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        font-size: 1.2rem;
+                    ">&times;</button>
+                </div>
+
+                <!-- Tabs -->
+                <div id="saludTabs" style="display: flex; gap: 5px; padding: 15px 25px 0; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <button class="salud-tab active" data-tab="pending" style="background: rgba(233,30,99,0.2); color: #ff4081; border: none; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-tasks"></i> Pendientes
+                    </button>
+                    <button class="salud-tab" data-tab="upload" style="background: transparent; color: #888; border: none; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer;">
+                        <i class="fas fa-upload"></i> Subir Documento
+                    </button>
+                    <button class="salud-tab" data-tab="history" style="background: transparent; color: #888; border: none; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer;">
+                        <i class="fas fa-history"></i> Historial
+                    </button>
+                </div>
+
+                <div id="saludContent" style="padding: 25px;">
+                    <div style="text-align: center; padding: 40px;">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p style="margin-top: 15px; color: #888;">Cargando datos...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Cerrar al hacer click fuera
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+
+        // Setup tabs
+        const tabs = modal.querySelectorAll('.salud-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.style.background = 'transparent';
+                    t.style.color = '#888';
+                    t.classList.remove('active');
+                });
+                tab.style.background = 'rgba(233,30,99,0.2)';
+                tab.style.color = '#ff4081';
+                tab.classList.add('active');
+                activeTab = tab.dataset.tab;
+                renderSaludContent();
+            });
+        });
+
+        // Funciones de renderizado
+        async function renderSaludContent() {
+            const content = document.getElementById('saludContent');
+
+            if (activeTab === 'pending') {
+                await renderPendingTab(content);
+            } else if (activeTab === 'upload') {
+                renderUploadTab(content);
+            } else if (activeTab === 'history') {
+                await renderHistoryTab(content);
+            }
+        }
+
+        // TAB: Solicitudes Pendientes
+        async function renderPendingTab(content) {
+            try {
+                const response = await fetch('/api/medical/pending-requests', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Error al cargar solicitudes');
+
+                const data = await response.json();
+                pendingRequests = data.data || [];
+
+                if (pendingRequests.length === 0) {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <i class="fas fa-check-circle" style="font-size: 4rem; color: #4caf50; margin-bottom: 20px;"></i>
+                            <h4 style="color: #fff; margin-bottom: 10px;">¡Todo al día!</h4>
+                            <p style="color: #888;">No tienes solicitudes de documentos médicos pendientes.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                content.innerHTML = `
+                    <div style="margin-bottom: 15px;">
+                        <span style="background: #e74c3c; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem;">
+                            ${pendingRequests.length} solicitud${pendingRequests.length > 1 ? 'es' : ''} pendiente${pendingRequests.length > 1 ? 's' : ''}
+                        </span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        ${pendingRequests.map(req => `
+                            <div style="
+                                background: rgba(255,255,255,0.05);
+                                border: 1px solid ${req.urgency === 'high' || req.urgency === 'critical' ? 'rgba(231,76,60,0.5)' : 'rgba(255,255,255,0.1)'};
+                                border-radius: 12px;
+                                padding: 20px;
+                                ${req.isOverdue ? 'border-left: 4px solid #e74c3c;' : ''}
+                            ">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                    <div>
+                                        <h4 style="margin: 0 0 5px; color: #fff; font-size: 1.1rem;">
+                                            <i class="fas fa-file-medical" style="color: #e91e63; margin-right: 8px;"></i>
+                                            ${req.description || 'Documento Médico Solicitado'}
+                                        </h4>
+                                        <p style="margin: 0; color: #888; font-size: 0.9rem;">
+                                            Solicitado por: <strong>${req.requestedBy || 'Área Médica'}</strong>
+                                        </p>
+                                    </div>
+                                    <span style="
+                                        background: ${req.urgency === 'critical' ? '#d32f2f' : req.urgency === 'high' ? '#f57c00' : '#757575'};
+                                        color: white;
+                                        padding: 4px 10px;
+                                        border-radius: 6px;
+                                        font-size: 0.75rem;
+                                        text-transform: uppercase;
+                                    ">
+                                        ${req.urgency === 'critical' ? 'URGENTE' : req.urgency === 'high' ? 'ALTA' : 'NORMAL'}
+                                    </span>
+                                </div>
+
+                                <p style="color: #b0b0b0; margin: 10px 0; font-size: 0.9rem;">
+                                    ${req.requestReason || 'Sin descripción adicional'}
+                                </p>
+
+                                <div style="display: flex; gap: 15px; margin-top: 12px; font-size: 0.85rem; color: #888;">
+                                    <span><i class="fas fa-calendar"></i> Solicitado: ${new Date(req.requestDate).toLocaleDateString('es-AR')}</span>
+                                    ${req.dueDate ? `<span style="${req.isOverdue ? 'color: #e74c3c; font-weight: 600;' : ''}">
+                                        <i class="fas fa-clock"></i> Vence: ${new Date(req.dueDate).toLocaleDateString('es-AR')}
+                                        ${req.isOverdue ? ' (VENCIDO)' : ''}
+                                    </span>` : ''}
+                                </div>
+
+                                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                    ${!req.acknowledgedAt ? `
+                                        <button onclick="window.MiEspacio.acknowledgeRequest('${req.id}')" style="
+                                            background: linear-gradient(135deg, #667eea, #764ba2);
+                                            color: white;
+                                            border: none;
+                                            padding: 8px 16px;
+                                            border-radius: 8px;
+                                            cursor: pointer;
+                                            font-size: 0.85rem;
+                                        ">
+                                            <i class="fas fa-check"></i> Confirmar Recepción
+                                        </button>
+                                    ` : `
+                                        <span style="color: #4caf50; font-size: 0.85rem;">
+                                            <i class="fas fa-check-circle"></i> Recibido ${new Date(req.acknowledgedAt).toLocaleDateString('es-AR')}
+                                        </span>
+                                    `}
+                                    <button onclick="window.MiEspacio.uploadForRequest('${req.id}', '${req.type || req.documentType}')" style="
+                                        background: linear-gradient(135deg, #e91e63, #c2185b);
+                                        color: white;
+                                        border: none;
+                                        padding: 8px 16px;
+                                        border-radius: 8px;
+                                        cursor: pointer;
+                                        font-size: 0.85rem;
+                                    ">
+                                        <i class="fas fa-upload"></i> Subir Documento
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #e74c3c;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>Error al cargar solicitudes: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // TAB: Subir Documento
+        function renderUploadTab(content) {
+            content.innerHTML = `
+                <div style="max-width: 600px; margin: 0 auto;">
+                    <h4 style="color: #fff; margin-bottom: 20px;">
+                        <i class="fas fa-upload" style="color: #e91e63;"></i> Subir Documento Médico
+                    </h4>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="color: #b0b0b0; display: block; margin-bottom: 8px;">Tipo de Documento</label>
+                        <select id="docType" style="
+                            width: 100%;
+                            padding: 12px;
+                            background: rgba(255,255,255,0.05);
+                            border: 1px solid rgba(255,255,255,0.2);
+                            border-radius: 8px;
+                            color: #fff;
+                            font-size: 1rem;
+                        ">
+                            <option value="certificate">Certificado Médico</option>
+                            <option value="prescription">Receta</option>
+                            <option value="study">Estudio / Análisis</option>
+                            <option value="photo">Foto Médica</option>
+                            <option value="other">Otro Documento</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="color: #b0b0b0; display: block; margin-bottom: 8px;">Descripción</label>
+                        <input type="text" id="docDescription" placeholder="Ej: Certificado reposo 3 días" style="
+                            width: 100%;
+                            padding: 12px;
+                            background: rgba(255,255,255,0.05);
+                            border: 1px solid rgba(255,255,255,0.2);
+                            border-radius: 8px;
+                            color: #fff;
+                            font-size: 1rem;
+                        "/>
+                    </div>
+
+                    <div style="
+                        border: 2px dashed rgba(233,30,99,0.5);
+                        border-radius: 12px;
+                        padding: 40px;
+                        text-align: center;
+                        margin-bottom: 20px;
+                        cursor: pointer;
+                    " onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #e91e63; margin-bottom: 15px;"></i>
+                        <p style="color: #fff; margin-bottom: 5px;">Arrastra tu archivo aquí o haz clic para seleccionar</p>
+                        <p style="color: #888; font-size: 0.85rem;">PDF, JPG, PNG (máx. 10MB)</p>
+                        <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="window.MiEspacio.handleFileSelect(event)"/>
+                    </div>
+
+                    <div id="filePreview" style="display: none; margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    </div>
+
+                    <button id="btnUpload" onclick="window.MiEspacio.uploadMedicalDocument()" disabled style="
+                        width: 100%;
+                        background: linear-gradient(135deg, #e91e63, #c2185b);
+                        color: white;
+                        border: none;
+                        padding: 14px;
+                        border-radius: 8px;
+                        font-size: 1rem;
+                        cursor: pointer;
+                        opacity: 0.5;
+                    ">
+                        <i class="fas fa-upload"></i> Subir Documento
+                    </button>
+                </div>
+            `;
+        }
+
+        // TAB: Historial
+        async function renderHistoryTab(content) {
+            try {
+                const response = await fetch('/api/medical/communications/history?limit=20', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Error al cargar historial');
+
+                const data = await response.json();
+                history = data.data || [];
+
+                if (history.length === 0) {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <i class="fas fa-inbox" style="font-size: 4rem; color: #555; margin-bottom: 20px;"></i>
+                            <h4 style="color: #fff; margin-bottom: 10px;">Sin historial</h4>
+                            <p style="color: #888;">No tienes comunicaciones médicas registradas.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                content.innerHTML = `
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        ${history.map(item => `
+                            <div style="
+                                background: rgba(255,255,255,0.03);
+                                border: 1px solid rgba(255,255,255,0.08);
+                                border-radius: 10px;
+                                padding: 15px;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                            ">
+                                <div>
+                                    <p style="margin: 0 0 5px; color: #fff;">
+                                        <i class="fas fa-${item.related_entity_type === 'certificate' ? 'file-medical' : item.related_entity_type === 'study' ? 'flask' : 'file'}" style="color: #e91e63; margin-right: 8px;"></i>
+                                        ${item.subject || 'Comunicación médica'}
+                                    </p>
+                                    <p style="margin: 0; color: #888; font-size: 0.85rem;">
+                                        ${new Date(item.sent_at).toLocaleDateString('es-AR')} ·
+                                        ${item.sender ? `De: ${item.sender.firstName} ${item.sender.lastName}` : 'Sistema'}
+                                    </p>
+                                </div>
+                                <span style="
+                                    background: ${item.status === 'complied' ? '#4caf50' : item.status === 'acknowledged' ? '#2196f3' : '#ff9800'};
+                                    color: white;
+                                    padding: 4px 10px;
+                                    border-radius: 6px;
+                                    font-size: 0.75rem;
+                                ">
+                                    ${item.status === 'complied' ? 'COMPLETADO' : item.status === 'acknowledged' ? 'RECIBIDO' : 'PENDIENTE'}
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #e74c3c;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>Error al cargar historial: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Cargar contenido inicial
+        renderSaludContent();
+    }
+
+    // Funciones auxiliares para Mi Salud
+    let selectedFile = null;
+    let currentRequestId = null;
+
+    async function acknowledgeRequest(requestId) {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        try {
+            const response = await fetch(`/api/medical/communications/${requestId}/acknowledge`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('✅ Acuse de recibo confirmado');
+                openMiSalud(); // Refresh
+            } else {
+                alert('Error: ' + (data.error || 'No se pudo confirmar'));
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+
+    function uploadForRequest(requestId, docType) {
+        currentRequestId = requestId;
+        // Cambiar a tab de upload
+        const tabs = document.querySelectorAll('.salud-tab');
+        tabs.forEach(t => {
+            t.style.background = 'transparent';
+            t.style.color = '#888';
+            t.classList.remove('active');
+            if (t.dataset.tab === 'upload') {
+                t.style.background = 'rgba(233,30,99,0.2)';
+                t.style.color = '#ff4081';
+                t.classList.add('active');
+            }
+        });
+        const content = document.getElementById('saludContent');
+        if (content) {
+            content.innerHTML = `
+                <div style="max-width: 600px; margin: 0 auto;">
+                    <div style="background: rgba(233,30,99,0.1); border: 1px solid rgba(233,30,99,0.3); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                        <p style="margin: 0; color: #ff4081;">
+                            <i class="fas fa-info-circle"></i> Subiendo documento para solicitud pendiente
+                        </p>
+                    </div>
+                    <h4 style="color: #fff; margin-bottom: 20px;">
+                        <i class="fas fa-upload" style="color: #e91e63;"></i> Subir ${docType === 'certificate' ? 'Certificado' : docType === 'study' ? 'Estudio' : 'Documento'}
+                    </h4>
+
+                    <div style="
+                        border: 2px dashed rgba(233,30,99,0.5);
+                        border-radius: 12px;
+                        padding: 40px;
+                        text-align: center;
+                        margin-bottom: 20px;
+                        cursor: pointer;
+                    " onclick="document.getElementById('fileInputReq').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #e91e63; margin-bottom: 15px;"></i>
+                        <p style="color: #fff;">Selecciona el archivo</p>
+                        <input type="file" id="fileInputReq" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="window.MiEspacio.handleFileSelectForRequest(event, '${requestId}', '${docType}')"/>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            selectedFile = file;
+            const preview = document.getElementById('filePreview');
+            const btn = document.getElementById('btnUpload');
+            if (preview) {
+                preview.style.display = 'block';
+                preview.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-file" style="font-size: 1.5rem; color: #e91e63;"></i>
+                        <div>
+                            <p style="margin: 0; color: #fff;">${file.name}</p>
+                            <p style="margin: 0; color: #888; font-size: 0.85rem;">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                    </div>
+                `;
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
+    }
+
+    async function handleFileSelectForRequest(event, requestId, docType) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('documentType', docType);
+        formData.append('category', 'medical');
+        formData.append('description', `Documento médico - ${docType}`);
+
+        try {
+            // Subir a DMS
+            const uploadRes = await fetch('/api/dms/documents/upload', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+
+            if (!uploadRes.ok) throw new Error('Error al subir archivo');
+
+            const uploadData = await uploadRes.json();
+            const documentId = uploadData.data?.id || uploadData.id;
+
+            // Marcar comunicación como cumplida
+            const complyRes = await fetch(`/api/medical/communications/${requestId}/comply`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    documentId: documentId,
+                    documentType: docType,
+                    notes: `Documento subido: ${file.name}`
+                })
+            });
+
+            const complyData = await complyRes.json();
+            if (complyData.success) {
+                alert('✅ Documento subido exitosamente');
+                currentRequestId = null;
+                openMiSalud(); // Refresh
+            } else {
+                alert('Documento subido pero hubo un error al marcar como completado');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+
+    async function uploadMedicalDocument() {
+        if (!selectedFile) {
+            alert('Selecciona un archivo primero');
+            return;
+        }
+
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const docType = document.getElementById('docType')?.value || 'other';
+        const description = document.getElementById('docDescription')?.value || '';
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('documentType', docType);
+        formData.append('category', 'medical');
+        formData.append('description', description || `Documento médico - ${docType}`);
+
+        try {
+            const response = await fetch('/api/dms/documents/upload', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+
+            if (!response.ok) throw new Error('Error al subir archivo');
+
+            alert('✅ Documento subido exitosamente');
+            selectedFile = null;
+            openMiSalud(); // Refresh
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+
+    // Cargar badge de pendientes al iniciar
+    async function loadHealthBadge() {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+            const response = await fetch('/api/medical/communications/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const pending = data.data?.pending || 0;
+                const badge = document.getElementById('badge-health-pending');
+                if (badge) {
+                    if (pending > 0) {
+                        badge.textContent = pending;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+        } catch (e) {
+            console.log('Error loading health badge:', e);
+        }
+    }
+
+    /**
      * Renderizar el dashboard
      */
     function render() {
@@ -1378,6 +2019,21 @@
                         </div>
                     </div>
 
+                    <!-- Card: Mi Salud -->
+                    <div class="mi-espacio-module-card" id="card-mi-salud"
+                         style="--card-accent: #e91e63; --card-glow: rgba(233, 30, 99, 0.3);"
+                         onclick="window.MiEspacio.openMiSalud()">
+                        <span class="badge-pending-health" id="badge-health-pending" style="display: none; position: absolute; top: 10px; right: 10px; background: #e74c3c; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">0</span>
+                        <div class="module-icon"><i class="fas fa-heartbeat"></i></div>
+                        <h4>Mi Salud</h4>
+                        <p>Gestiona tus documentos médicos: certificados, recetas, estudios y fotos solicitadas por el área médica.</p>
+                        <div class="module-actions">
+                            <span class="action-tag"><i class="fas fa-file-medical"></i> Certificados</span>
+                            <span class="action-tag"><i class="fas fa-upload"></i> Subir</span>
+                            <span class="action-tag"><i class="fas fa-tasks"></i> Pendientes</span>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Accesos Rápidos -->
@@ -1419,11 +2075,11 @@
 
     // Registrar módulo
     if (!window.Modules) window.Modules = {};
-    window.Modules[MODULE_ID] = { init, render, openSubmodule, openHourBank, cancelRedemption };
+    window.Modules[MODULE_ID] = { init, render, openSubmodule, openHourBank, cancelRedemption, openMiSalud, acknowledgeRequest, uploadForRequest, handleFileSelect, handleFileSelectForRequest, uploadMedicalDocument };
 
     // Exponer globalmente
     window.showMiEspacioContent = showMiEspacioContent;
-    window.MiEspacio = { init, render, openSubmodule, openHourBank, cancelRedemption };
+    window.MiEspacio = { init, render, openSubmodule, openHourBank, cancelRedemption, openMiSalud, acknowledgeRequest, uploadForRequest, handleFileSelect, handleFileSelectForRequest, uploadMedicalDocument };
 
     console.log('📦 [MI-ESPACIO] Módulo dark theme registrado');
 })();

@@ -3166,51 +3166,51 @@ async function showAddKioskModal(kioskId = null) {
         const modalHTML = `
             <div class="modal fade" id="kioskModal" tabindex="-1" style="z-index: 1056 !important;">
                 <div class="modal-dialog modal-xl modal-dialog-scrollable" style="z-index: 1058 !important;">
-                    <div class="modal-content" style="position: relative; z-index: 1059 !important; pointer-events: auto !important;">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title">
+                    <div class="modal-content" style="position: relative; z-index: 1059 !important; pointer-events: auto !important; background: #1a1a2e; color: #e8e8e8;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%); border-bottom: 1px solid #2d2d44;">
+                            <h5 class="modal-title" style="color: #ffffff;">
                                 <i class="fas fa-desktop"></i>
                                 ${isEdit ? 'Editar Kiosco' : 'Crear Nuevo Kiosco'}
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body" style="background: #1a1a2e;">
                             <form id="kioskForm">
                                 <!-- Información Básica -->
-                                <div class="card mb-4">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">📋 Información Básica</h6>
+                                <div class="card mb-4" style="background: #0f0f23; border: 1px solid #2d2d44;">
+                                    <div class="card-header" style="background: #16213e; border-bottom: 1px solid #2d2d44;">
+                                        <h6 class="mb-0" style="color: #e8e8e8;">📋 Información Básica</h6>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="card-body" style="background: #0f0f23;">
                                         <div class="row g-3">
                                             <div class="col-md-6">
-                                                <label class="form-label">Nombre del Kiosco *</label>
+                                                <label class="form-label" style="color: #b8b8d0;">Nombre del Kiosco *</label>
                                                 <input type="text"
-                                                       class="form-control"
+                                                       class="form-control" style="background: #252542; border: 1px solid #3d3d5c; color: #e8e8e8;"
                                                        id="kiosk-name"
                                                        value="${kioskData?.name || ''}"
                                                        placeholder="Ej: Kiosco Recepción Principal"
                                                        required>
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label">Ubicación</label>
+                                                <label class="form-label" style="color: #b8b8d0;">Ubicación</label>
                                                 <input type="text"
-                                                       class="form-control"
+                                                       class="form-control" style="background: #252542; border: 1px solid #3d3d5c; color: #e8e8e8;"
                                                        id="kiosk-location"
                                                        value="${kioskData?.location || ''}"
                                                        placeholder="Ej: Edificio A - Planta Baja">
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label">Device ID</label>
+                                                <label class="form-label" style="color: #b8b8d0;">Device ID</label>
                                                 <input type="text"
-                                                       class="form-control"
+                                                       class="form-control" style="background: #252542; border: 1px solid #3d3d5c; color: #e8e8e8;"
                                                        id="kiosk-device-id"
                                                        value="${kioskData?.device_id || ''}"
                                                        placeholder="Auto-generado desde la app">
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label">Estado</label>
-                                                <select class="form-select" id="kiosk-active">
+                                                <label class="form-label" style="color: #b8b8d0;">Estado</label>
+                                                <select class="form-select" style="background: #252542; border: 1px solid #3d3d5c; color: #e8e8e8;" id="kiosk-active">
                                                     <option value="1" ${kioskData?.is_active ? 'selected' : ''}>Activo</option>
                                                     <option value="0" ${!kioskData?.is_active ? 'selected' : ''}>Inactivo</option>
                                                 </select>
@@ -3220,33 +3220,33 @@ async function showAddKioskModal(kioskId = null) {
                                 </div>
 
                                 <!-- Ubicación GPS -->
-                                <div class="card mb-4">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">📍 Ubicación GPS (Geofencing)</h6>
+                                <div class="card mb-4" style="background: #0f0f23; border: 1px solid #2d2d44;">
+                                    <div class="card-header" style="background: #16213e; border-bottom: 1px solid #2d2d44;">
+                                        <h6 class="mb-0" style="color: #e8e8e8;">📍 Ubicación GPS (Geofencing)</h6>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="card-body" style="background: #0f0f23;">
                                         <div class="row g-3">
                                             <div class="col-md-5">
-                                                <label class="form-label">Latitud</label>
+                                                <label class="form-label" style="color: #b8b8d0;">Latitud</label>
                                                 <input type="number"
-                                                       class="form-control"
+                                                       class="form-control" style="background: #252542; border: 1px solid #3d3d5c; color: #e8e8e8;"
                                                        id="kiosk-gps-lat"
                                                        value="${kioskData?.gps_lat || ''}"
                                                        placeholder="-34.6037"
                                                        step="0.000001"
                                                        min="-90" max="90">
-                                                <small class="text-muted">Entre -90 y 90</small>
+                                                <small style="color: #8888aa;">Entre -90 y 90</small>
                                             </div>
                                             <div class="col-md-5">
-                                                <label class="form-label">Longitud</label>
+                                                <label class="form-label" style="color: #b8b8d0;">Longitud</label>
                                                 <input type="number"
-                                                       class="form-control"
+                                                       class="form-control" style="background: #252542; border: 1px solid #3d3d5c; color: #e8e8e8;"
                                                        id="kiosk-gps-lng"
                                                        value="${kioskData?.gps_lng || ''}"
                                                        placeholder="-58.3816"
                                                        step="0.000001"
                                                        min="-180" max="180">
-                                                <small class="text-muted">Entre -180 y 180</small>
+                                                <small style="color: #8888aa;">Entre -180 y 180</small>
                                             </div>
                                             <div class="col-md-2 d-flex align-items-end">
                                                 <button type="button" class="btn btn-outline-primary w-100" onclick="getMyLocation()">
@@ -3254,7 +3254,7 @@ async function showAddKioskModal(kioskId = null) {
                                                 </button>
                                             </div>
                                             <div class="col-12">
-                                                <small class="text-muted">
+                                                <small style="color: #8888aa;">
                                                     <i class="fas fa-info-circle"></i>
                                                     Las coordenadas GPS se usan para validar que los fichajes se realicen dentro del área del kiosco.
                                                     También pueden configurarse desde la APK al momento de la instalación.
@@ -3265,18 +3265,18 @@ async function showAddKioskModal(kioskId = null) {
                                 </div>
 
                                 <!-- Departamentos Autorizados -->
-                                <div class="card mb-4">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">🏢 Departamentos Autorizados</h6>
+                                <div class="card mb-4" style="background: #0f0f23; border: 1px solid #2d2d44;">
+                                    <div class="card-header" style="background: #16213e; border-bottom: 1px solid #2d2d44;">
+                                        <h6 class="mb-0" style="color: #e8e8e8;">🏢 Departamentos Autorizados</h6>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="card-body" style="background: #0f0f23;">
                                         <div class="row g-3">
                                             <div class="col-12">
-                                                <label class="form-label">Departamentos que pueden fichar en este kiosco</label>
-                                                <select class="form-select" id="kiosk-departments" multiple size="5">
+                                                <label class="form-label" style="color: #b8b8d0;">Departamentos que pueden fichar en este kiosco</label>
+                                                <select class="form-select" style="background: #252542; border: 1px solid #3d3d5c; color: #e8e8e8;" id="kiosk-departments" multiple size="5">
                                                     <option value="">Cargando departamentos...</option>
                                                 </select>
-                                                <small class="text-muted">
+                                                <small style="color: #8888aa;">
                                                     <i class="fas fa-info-circle"></i>
                                                     Si no selecciona ninguno, todos los departamentos pueden fichar en este kiosco.
                                                     Mantenga Ctrl para seleccionar múltiples.
@@ -3287,14 +3287,14 @@ async function showAddKioskModal(kioskId = null) {
                                 </div>
 
                                 <!-- Hardware de Reconocimiento Facial -->
-                                <div class="card mb-4">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">👤 Hardware de Reconocimiento Facial</h6>
+                                <div class="card mb-4" style="background: #0f0f23; border: 1px solid #2d2d44;">
+                                    <div class="card-header" style="background: #16213e; border-bottom: 1px solid #2d2d44;">
+                                        <h6 class="mb-0" style="color: #e8e8e8;">👤 Hardware de Reconocimiento Facial</h6>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="card-body" style="background: #0f0f23;">
                                         <div class="row g-3">
                                             <div class="col-12">
-                                                <label class="form-label">Seleccionar Hardware *</label>
+                                                <label class="form-label" style="color: #b8b8d0;">Seleccionar Hardware *</label>
                                                 <select class="form-select hardware-select"
                                                         id="facial-hardware-select"
                                                         onchange="showHardwareDetails(this.value, 'facial')"
@@ -3372,14 +3372,14 @@ async function showAddKioskModal(kioskId = null) {
                                 </div>
 
                                 <!-- Hardware de Huella Digital (Opcional) -->
-                                <div class="card mb-4">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">👆 Lector de Huella Digital (Opcional)</h6>
+                                <div class="card mb-4" style="background: #0f0f23; border: 1px solid #2d2d44;">
+                                    <div class="card-header" style="background: #16213e; border-bottom: 1px solid #2d2d44;">
+                                        <h6 class="mb-0" style="color: #e8e8e8;">👆 Lector de Huella Digital (Opcional)</h6>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="card-body" style="background: #0f0f23;">
                                         <div class="row g-3">
                                             <div class="col-12">
-                                                <label class="form-label">Seleccionar Lector</label>
+                                                <label class="form-label" style="color: #b8b8d0;">Seleccionar Lector</label>
                                                 <select class="form-select hardware-select"
                                                         id="fingerprint-hardware-select"
                                                         onchange="showHardwareDetails(this.value, 'fingerprint')">
@@ -3432,7 +3432,7 @@ async function showAddKioskModal(kioskId = null) {
                                 </div>
                             </form>
                         </div>
-                        <div class="modal-footer">
+                        <div class="modal-footer" style="background: #16213e; border-top: 1px solid #2d2d44;">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                 <i class="fas fa-times"></i> Cancelar
                             </button>
@@ -3629,7 +3629,7 @@ function showHardwareDetails(hardwareId, type) {
                 <div class="specs-grid">
                     ${Object.entries(profile.specs).map(([key, value]) => `
                         <div class="spec-item">
-                            <small class="text-muted">${key.replace(/_/g, ' ').toUpperCase()}</small>
+                            <small style="color: #8888aa;">${key.replace(/_/g, ' ').toUpperCase()}</small>
                             <div><strong>${value}</strong></div>
                         </div>
                     `).join('')}
@@ -3829,12 +3829,12 @@ async function showKioskDetails(kioskId) {
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header bg-info text-white">
-                            <h5 class="modal-title">
+                            <h5 class="modal-title" style="color: #ffffff;">
                                 <i class="fas fa-info-circle"></i> Detalles del Kiosk
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body" style="background: #1a1a2e;">
                             <h4>${kiosk.name}</h4>
                             <p class="text-muted">${kiosk.location || 'Sin ubicación'}</p>
 
@@ -3860,7 +3860,7 @@ async function showKioskDetails(kioskId) {
                                 </div>
                             ` : '<p class="text-muted">No configurado</p>'}
                         </div>
-                        <div class="modal-footer">
+                        <div class="modal-footer" style="background: #16213e; border-top: 1px solid #2d2d44;">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                         </div>
                     </div>

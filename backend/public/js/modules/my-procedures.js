@@ -34,7 +34,7 @@ window.MyProcedures = (function() {
 
     const API = {
         async request(endpoint) {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             const response = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -49,7 +49,7 @@ window.MyProcedures = (function() {
         getMySummary: () => API.request('/employee/my-summary'),
 
         async acknowledge(procedureId) {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             const response = await fetch(`${CONFIG.API_BASE}/${procedureId}/acknowledge`, {
                 method: 'POST',
                 headers: {
@@ -172,15 +172,23 @@ window.MyProcedures = (function() {
                 API.getMyPending()
             ]);
 
-            if (summaryRes.success) state.summary = summaryRes;
-            if (proceduresRes.success) state.procedures = proceduresRes.procedures || [];
-            if (pendingRes.success) state.pending = pendingRes.procedures || [];
+            // Asegurar que siempre sean arrays (FIX: evitar .map is not a function)
+            state.summary = summaryRes?.success ? summaryRes : { total: 0, pending: 0, acknowledged: 0 };
+            state.procedures = Array.isArray(proceduresRes?.procedures) ? proceduresRes.procedures : [];
+            state.pending = Array.isArray(pendingRes?.procedures) ? pendingRes.procedures : [];
 
             renderStats();
             renderPending();
             renderList();
         } catch (error) {
             console.error('Error loading data:', error);
+            // Asegurar estado limpio en caso de error
+            state.procedures = [];
+            state.pending = [];
+            state.summary = { total: 0, pending: 0, acknowledged: 0 };
+            renderStats();
+            renderPending();
+            renderList();
             showToast('Error al cargar procedimientos', 'error');
         }
     }
@@ -238,6 +246,11 @@ window.MyProcedures = (function() {
     function renderPending() {
         const container = document.getElementById('my-procedures-pending');
         if (!container) return;
+
+        // Safety check: asegurar que state.pending es un array
+        if (!Array.isArray(state.pending)) {
+            state.pending = [];
+        }
 
         if (state.pending.length === 0) {
             container.innerHTML = `
@@ -334,7 +347,7 @@ window.MyProcedures = (function() {
         isPending = needsAck;
 
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             const response = await fetch(`${CONFIG.API_BASE}/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });

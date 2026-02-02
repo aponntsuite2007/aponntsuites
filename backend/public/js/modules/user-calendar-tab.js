@@ -404,8 +404,9 @@ class UserCalendarTab {
       console.log(`📅 [CALENDAR] Cargando datos para ${startDate} a ${endDate}`);
 
       // Llamar al endpoint de calendario de usuario
+      // Usar endpoint de calendario laboral que incluye asistencias
       const response = await fetch(
-        buildApiUrl(`/api/v1/users/${this.currentUserId}/calendar?startDate=${startDate}&endDate=${endDate}`),
+        buildApiUrl(`/api/calendario/user/${this.currentUserId}/calendar?startDate=${startDate}&endDate=${endDate}`),
         { headers: getAuthHeaders() }
       );
 

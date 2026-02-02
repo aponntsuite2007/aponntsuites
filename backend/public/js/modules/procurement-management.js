@@ -2463,7 +2463,8 @@ window.ProcurementManagement = window.ProcurementManagement || {
     // ========================================
 
     async fetchAPI(url, options = {}) {
-        const token = localStorage.getItem('token');
+        // Compatibilidad: panel-empresa usa 'authToken', otros sistemas pueden usar 'token'
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         const response = await fetch(url, {
             ...options,
             headers: {

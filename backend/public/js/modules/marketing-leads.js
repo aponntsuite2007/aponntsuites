@@ -79,14 +79,28 @@ const MarketingLeadsModule = {
                 ...(this.state.filters.search && { search: this.state.filters.search })
             });
 
+            console.log('[MARKETING] loadLeads() - Fetching with params:', params.toString());
+            console.log('[MARKETING] loadLeads() - Active search filter:', this.state.filters.search);
+
             const response = await fetch(`/api/marketing/leads?${params}`, {
                 headers: { 'Authorization': `Bearer ${this.getToken()}` }
             });
 
+            console.log('[MARKETING] loadLeads() - Response status:', response.status);
+
             const data = await response.json();
+            console.log('[MARKETING] loadLeads() - Response success:', data.success, '- Leads count:', data.data?.length);
+
             if (data.success) {
+                // Log first lead to see if it has updated name
+                if (data.data?.length > 0) {
+                    console.log('[MARKETING] loadLeads() - First lead name:', data.data[0].full_name);
+                }
                 this.state.leads = data.data;
                 this.state.pagination = data.pagination;
+                console.log('[MARKETING] loadLeads() - State updated with', this.state.leads.length, 'leads');
+            } else {
+                console.error('[MARKETING] loadLeads() - Server returned error:', data.error);
             }
         } catch (error) {
             console.error('[MARKETING] Error loading leads:', error);
@@ -98,13 +112,19 @@ const MarketingLeadsModule = {
      */
     async loadStats() {
         try {
+            console.log('[MARKETING] loadStats() - Fetching stats...');
             const response = await fetch('/api/marketing/stats', {
                 headers: { 'Authorization': `Bearer ${this.getToken()}` }
             });
 
+            console.log('[MARKETING] loadStats() - Response status:', response.status);
             const data = await response.json();
+            console.log('[MARKETING] loadStats() - Response success:', data.success);
+
             if (data.success) {
                 this.state.stats = data.data;
+            } else {
+                console.error('[MARKETING] loadStats() - Server returned error:', data.error);
             }
         } catch (error) {
             console.error('[MARKETING] Error loading stats:', error);
@@ -568,8 +588,13 @@ const MarketingLeadsModule = {
     renderContent() {
         const stats = this.state.stats?.general || {};
 
+        // Calcular tasa de apertura
+        const openRate = stats.flyers_sent > 0
+            ? Math.round((stats.emails_opened || 0) / stats.flyers_sent * 100)
+            : 0;
+
         return `
-            <!-- Stats Cards -->
+            <!-- Stats Cards - Principales -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value">${stats.total_leads || 0}</div>
@@ -579,17 +604,20 @@ const MarketingLeadsModule = {
                     <div class="stat-value">${stats.flyers_sent || 0}</div>
                     <div class="stat-label">Flyers Enviados</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value">${stats.interested || 0}</div>
-                    <div class="stat-label">Interesados</div>
+                <div class="stat-card" style="border-color: ${openRate > 30 ? '#22c55e' : openRate > 15 ? '#f59e0b' : '#ef4444'}40">
+                    <div class="stat-value" style="color: ${openRate > 30 ? '#22c55e' : openRate > 15 ? '#f59e0b' : '#ef4444'}">
+                        ${stats.emails_opened || 0}
+                        <small style="font-size: 14px; opacity: 0.7">(${openRate}%)</small>
+                    </div>
+                    <div class="stat-label">📧 Emails Abiertos</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${stats.converted || 0}</div>
-                    <div class="stat-label">Convertidos</div>
+                    <div class="stat-value" style="color: #3b82f6">${stats.page_visits || 0}</div>
+                    <div class="stat-label">👁️ Visitas Página</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${stats.leads_last_7_days || 0}</div>
-                    <div class="stat-label">\u00daltimos 7 d\u00edas</div>
+                    <div class="stat-value" style="color: #22c55e">${stats.converted || 0}</div>
+                    <div class="stat-label">🌟 Convertidos</div>
                 </div>
             </div>
 
@@ -639,7 +667,8 @@ const MarketingLeadsModule = {
                         <th>Idioma</th>
                         <th>Empresa / Rubro</th>
                         <th>Estado</th>
-                        <th>Flyer Enviado</th>
+                        <th>Engagement</th>
+                        <th>Vendedor</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -658,9 +687,35 @@ const MarketingLeadsModule = {
         if (!lead) return '';
         const lang = this.languages.find(l => l.code === (lead.language || 'es')) || this.languages[0];
         const status = this.statuses.find(s => s.code === (lead.status || 'new')) || this.statuses[0];
-        const flyerInfo = lead.flyer_sent_at
-            ? `${lead.flyer_sent_via === 'email' ? '\ud83d\udce7' : '\ud83d\udcf1'} ${new Date(lead.flyer_sent_at).toLocaleDateString()}`
-            : '—';
+
+        // Engagement indicators
+        const engagementIcons = [];
+        if (lead.flyer_sent_at) {
+            engagementIcons.push(`<span title="Flyer enviado ${new Date(lead.flyer_sent_at).toLocaleDateString()}" style="opacity: 1">📤</span>`);
+        }
+        if (lead.flyer_opened_at) {
+            engagementIcons.push(`<span title="Email abierto ${new Date(lead.flyer_opened_at).toLocaleDateString()}" style="color: #22c55e">📧✓</span>`);
+        } else if (lead.flyer_sent_at) {
+            engagementIcons.push(`<span title="Email no abierto aún" style="opacity: 0.4">📧</span>`);
+        }
+        if (lead.page_visit_count > 0) {
+            engagementIcons.push(`<span title="${lead.page_visit_count} visita(s) a la página" style="color: #3b82f6">👁️${lead.page_visit_count}</span>`);
+        }
+        if (lead.demo_accessed_at) {
+            engagementIcons.push(`<span title="Accedió al demo" style="color: #f59e0b">🎯</span>`);
+        }
+        if (lead.interaction_count > 0) {
+            engagementIcons.push(`<span title="${lead.interaction_count} interacción(es)" style="color: #8b5cf6">💬${lead.interaction_count}</span>`);
+        }
+
+        const engagementHtml = engagementIcons.length > 0
+            ? `<div style="display: flex; gap: 6px; font-size: 14px;">${engagementIcons.join('')}</div>`
+            : '<span style="opacity: 0.4">—</span>';
+
+        // Vendedor asignado
+        const sellerHtml = lead.assigned_seller_name
+            ? `<span title="Vendedor asignado" style="color: #22c55e; font-size: 12px;">👤 ${lead.assigned_seller_name}</span>`
+            : '<span style="opacity: 0.4; font-size: 11px;">Sin asignar</span>';
 
         return `
             <tr>
@@ -676,19 +731,20 @@ const MarketingLeadsModule = {
                         ${status.icon} ${status.name}
                     </span>
                 </td>
-                <td>${flyerInfo}</td>
+                <td>${engagementHtml}</td>
+                <td>${sellerHtml}</td>
                 <td>
                     <button class="action-btn" onclick="MarketingLeadsModule.showSendOptions('${lead.id}')" title="Enviar Flyer">
-                        \ud83d\udce4
+                        📤
                     </button>
                     <button class="action-btn" onclick="MarketingLeadsModule.createQuoteFromLead('${lead.id}')" title="Crear Presupuesto" style="color: #22c55e;">
-                        \ud83d\udcdd
+                        📝
                     </button>
                     <button class="action-btn" onclick="MarketingLeadsModule.editLead('${lead.id}')" title="Editar">
-                        \u270f\ufe0f
+                        ✏️
                     </button>
                     <button class="action-btn" onclick="MarketingLeadsModule.deleteLead('${lead.id}')" title="Eliminar">
-                        \ud83d\uddd1\ufe0f
+                        🗑️
                     </button>
                 </td>
             </tr>
@@ -859,6 +915,10 @@ const MarketingLeadsModule = {
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
 
+        // DEBUG: Log de datos antes de enviar
+        console.log('[MARKETING] saveLead() - currentLead:', this.state.currentLead);
+        console.log('[MARKETING] saveLead() - Form data:', data);
+
         // Validaci\u00f3n
         if (!data.full_name || !data.email) {
             alert('Nombre y email son obligatorios');
@@ -867,20 +927,27 @@ const MarketingLeadsModule = {
 
         try {
             const isEdit = !!this.state.currentLead?.id;
+            console.log('[MARKETING] saveLead() - isEdit:', isEdit, '- ID:', this.state.currentLead?.id);
             const url = isEdit
                 ? `/api/marketing/leads/${this.state.currentLead.id}`
                 : '/api/marketing/leads';
+            console.log('[MARKETING] saveLead() - URL:', url, '- Method:', isEdit ? 'PUT' : 'POST');
+
+            const token = this.getToken();
+            console.log('[MARKETING] saveLead() - Token used:', token ? token.substring(0, 50) + '...' : 'NULL');
 
             const response = await fetch(url, {
                 method: isEdit ? 'PUT' : 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.getToken()}`,
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             });
 
+            console.log('[MARKETING] saveLead() - Response status:', response.status);
             const result = await response.json();
+            console.log('[MARKETING] saveLead() - Response body:', JSON.stringify(result).substring(0, 200));
 
             if (result.success) {
                 this.closeModal();
@@ -1159,7 +1226,7 @@ const MarketingLeadsModule = {
                         <div>
                             <h4 style="color: #f59e0b; margin-bottom: 12px;">Por Rubro</h4>
                             ${(stats.byIndustry || []).slice(0, 5).map(i =>
-                                `<p style="color: white;">${i.industry}: <strong>${i.count}</strong></p>`
+                                `<p style="color: white;">${i.industry || 'Sin rubro'}: <strong>${i.count}</strong></p>`
                             ).join('') || '<p style="color: rgba(255,255,255,0.5)">Sin datos</p>'}
                         </div>
                     </div>
