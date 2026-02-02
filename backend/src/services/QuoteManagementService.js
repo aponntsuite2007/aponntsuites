@@ -634,6 +634,26 @@ class QuoteManagementService {
     // ═══════════════════════════════════════════════════════════
     // CREAR CONTRATO
     // ═══════════════════════════════════════════════════════════
+
+    // Generar template HTML del contrato
+    const startDate = new Date();
+    const templateContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <h1 style="text-align: center; color: #333;">CONTRATO DE SERVICIO</h1>
+        <h2 style="text-align: center; color: #666;">${contractNumber}</h2>
+        <p><strong>Fecha:</strong> ${startDate.toLocaleDateString('es-AR')}</p>
+        <p><strong>Presupuesto:</strong> ${quote.quote_number}</p>
+        <p><strong>Monto mensual:</strong> USD ${quote.total_amount}</p>
+        <h3>Módulos contratados:</h3>
+        <ul>
+          ${(quote.modules_data || []).map(m => `<li>${m.module_name || m.name} - USD ${m.price}/mes</li>`).join('')}
+        </ul>
+        <p style="margin-top: 40px; font-size: 12px; color: #666;">
+          Contrato generado electrónicamente por APONNT 360°
+        </p>
+      </div>
+    `;
+
     const contract = await Contract.create({
       contract_number: contractNumber,
       company_id: quote.company_id,
@@ -641,7 +661,7 @@ class QuoteManagementService {
       seller_id: quote.seller_id,
       modules_data: quote.modules_data,
       monthly_total: quote.total_amount,
-      start_date: new Date(),
+      start_date: startDate,
       status: 'active',
       billing_cycle: 'monthly',
       payment_day: 10,
@@ -649,7 +669,8 @@ class QuoteManagementService {
       late_payment_surcharge_percentage: 10.00,
       suspension_days_threshold: 20,
       termination_days_threshold: 30,
-      terms_and_conditions: quote.terms_and_conditions
+      terms_and_conditions: quote.terms_and_conditions,
+      template_content: templateContent
     }, { transaction });
 
     return contract;

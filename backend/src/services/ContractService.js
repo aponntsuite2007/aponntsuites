@@ -73,15 +73,35 @@ class ContractService {
       }
 
       // 4. Auto-generar contract_number (se genera en hook beforeCreate)
-      // 5. Crear contrato
+      // 5. Generar template del contrato
+      const startDate = contractData.start_date || new Date();
+      const modulesData = this.buildModulesData(budget.selected_modules, budget);
+      const templateContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+          <h1 style="text-align: center; color: #333;">CONTRATO DE SERVICIO</h1>
+          <p><strong>Fecha:</strong> ${startDate.toLocaleDateString('es-AR')}</p>
+          <p><strong>Empresa:</strong> ${company.name}</p>
+          <p><strong>Presupuesto:</strong> ${budget.budget_code}</p>
+          <p><strong>Monto mensual:</strong> USD ${budget.total_monthly}</p>
+          <h3>Módulos contratados:</h3>
+          <ul>
+            ${(modulesData || []).map(m => `<li>${m.module_name || m.name} - USD ${m.price}/mes</li>`).join('')}
+          </ul>
+          <p style="margin-top: 40px; font-size: 12px; color: #666;">
+            Contrato generado electrónicamente por APONNT 360° (Trace: ${contractData.trace_id})
+          </p>
+        </div>
+      `;
+
+      // 6. Crear contrato
       const contract = await Contract.create({
         company_id: budget.company_id,
         quote_id: contractData.budget_id, // ⚠️ quote_id apunta a budgets table
         seller_id: budget.vendor_id, // ⚠️ seller_id es vendor_id (aponnt_staff)
         support_partner_id: contractData.support_partner_id || budget.vendor_id, // Default: mismo vendedor
-        modules_data: this.buildModulesData(budget.selected_modules, budget),
+        modules_data: modulesData,
         monthly_total: budget.total_monthly,
-        start_date: contractData.start_date || new Date(),
+        start_date: startDate,
         end_date: contractData.end_date || null, // null = indefinido
         status: contractData.status || 'active', // ⚠️ workflow espera 'PENDING_SIGNATURE'
         billing_cycle: budget.payment_terms === 'ANUAL' ? 'yearly' : 'monthly',
@@ -94,7 +114,8 @@ class ContractService {
         terms_and_conditions: this.getDefaultTermsAndConditions(),
         sla_terms: this.getDefaultSLATerms(),
         created_by: budget.vendor_id,
-        notes: `Contrato generado desde presupuesto ${budget.budget_code} (Trace: ${contractData.trace_id})`
+        notes: `Contrato generado desde presupuesto ${budget.budget_code} (Trace: ${contractData.trace_id})`,
+        template_content: templateContent
       }, { transaction });
 
       // 6. Actualizar presupuesto para marcar que ya tiene contrato
