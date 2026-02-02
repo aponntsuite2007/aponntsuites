@@ -602,5 +602,279 @@ router.post("/:id/onboarding/activate", async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 🔧 CONTROL MANUAL DE ESTADO (Solo superadmin / gerente_general)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * POST /api/v1/companies/:id/manual-onboarding
+ * Alta o Baja manual de empresa
+ * Solo superadmin y gerente_general
+ * Body: { action: 'alta' | 'baja', reason: string }
+ */
+router.post('/:id/manual-onboarding', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, reason } = req.body;
+    const staffId = req.staff?.staff_id || req.user?.staff_id || req.user?.id;
+    const staffRole = req.staff?.role || req.user?.role;
+
+    // Validar rol
+    if (!['superadmin', 'gerente_general'].includes(staffRole)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Solo superadmin y gerente_general pueden realizar cambios manuales de onboarding'
+      });
+    }
+
+    // Validar action
+    if (!['alta', 'baja'].includes(action)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Acción inválida. Debe ser "alta" o "baja"'
+      });
+    }
+
+    // Validar reason
+    if (!reason || reason.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Debe proporcionar un motivo de al menos 10 caracteres'
+      });
+    }
+
+    const { sequelize } = require('../config/database');
+    const bcrypt = require('bcryptjs');
+
+    // Obtener empresa
+    const [company] = await sequelize.query(`
+      SELECT company_id, name, slug, is_active, status, onboarding_status, contact_email
+      FROM companies WHERE company_id = :id
+    `, { replacements: { id }, type: sequelize.QueryTypes.SELECT });
+
+    if (!company) {
+      return res.status(404).json({ success: false, error: 'Empresa no encontrada' });
+    }
+
+    if (action === 'alta') {
+      // Dar de ALTA manual
+      await sequelize.query(`
+        UPDATE companies SET
+          is_active = TRUE,
+          status = 'active',
+          onboarding_status = 'ACTIVE',
+          activated_at = NOW(),
+          onboarding_manual = TRUE,
+          onboarding_manual_reason = :reason,
+          onboarding_manual_by = :staffId,
+          onboarding_manual_at = NOW(),
+          updated_at = NOW()
+        WHERE company_id = :id
+      `, { replacements: { id, reason, staffId }, type: sequelize.QueryTypes.UPDATE });
+
+      // Crear usuario admin si no existe
+      const [existingAdmin] = await sequelize.query(`
+        SELECT id FROM users WHERE company_id = :id AND role = 'admin' LIMIT 1
+      `, { replacements: { id }, type: sequelize.QueryTypes.SELECT });
+
+      let adminCreated = false;
+      if (!existingAdmin) {
+        const hashedPassword = await bcrypt.hash('admin123', 12);
+        await sequelize.query(`
+          INSERT INTO users (company_id, username, password, email, first_name, last_name, role, is_active, is_core_user, force_password_change, created_at, updated_at)
+          VALUES (:id, 'administrador', :password, :email, 'Administrador', 'Principal', 'admin', true, true, true, NOW(), NOW())
+        `, {
+          replacements: {
+            id,
+            password: hashedPassword,
+            email: company.contact_email || `admin@${company.slug}.com`
+          },
+          type: sequelize.QueryTypes.INSERT
+        });
+        adminCreated = true;
+      }
+
+      console.log(`✅ [MANUAL] Alta de empresa "${company.name}" por staff ${staffId}. Motivo: ${reason}`);
+
+      res.json({
+        success: true,
+        message: `Empresa "${company.name}" dada de ALTA manualmente`,
+        action: 'alta',
+        manual: true,
+        reason,
+        admin_created: adminCreated,
+        credentials: adminCreated ? { username: 'administrador', password: 'admin123', force_change: true } : null
+      });
+
+    } else {
+      // Dar de BAJA manual
+      await sequelize.query(`
+        UPDATE companies SET
+          is_active = FALSE,
+          status = 'cancelled',
+          onboarding_status = 'CANCELLED',
+          onboarding_manual = TRUE,
+          onboarding_manual_reason = :reason,
+          onboarding_manual_by = :staffId,
+          onboarding_manual_at = NOW(),
+          updated_at = NOW()
+        WHERE company_id = :id
+      `, { replacements: { id, reason, staffId }, type: sequelize.QueryTypes.UPDATE });
+
+      console.log(`⛔ [MANUAL] Baja de empresa "${company.name}" por staff ${staffId}. Motivo: ${reason}`);
+
+      res.json({
+        success: true,
+        message: `Empresa "${company.name}" dada de BAJA manualmente`,
+        action: 'baja',
+        manual: true,
+        reason
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ [MANUAL ONBOARDING] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/v1/companies/:id/manual-status
+ * Cambiar estado operativo manual (activar, suspender, desactivar)
+ * Solo superadmin y gerente_general
+ * Body: { status: 'active' | 'suspended' | 'cancelled', reason: string }
+ */
+router.post('/:id/manual-status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, reason } = req.body;
+    const staffId = req.staff?.staff_id || req.user?.staff_id || req.user?.id;
+    const staffRole = req.staff?.role || req.user?.role;
+
+    // Validar rol
+    if (!['superadmin', 'gerente_general'].includes(staffRole)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Solo superadmin y gerente_general pueden cambiar el estado manualmente'
+      });
+    }
+
+    // Validar status
+    const validStatuses = ['active', 'suspended', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Estado inválido. Debe ser: ${validStatuses.join(', ')}`
+      });
+    }
+
+    // Validar reason
+    if (!reason || reason.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Debe proporcionar un motivo de al menos 10 caracteres'
+      });
+    }
+
+    const { sequelize } = require('../config/database');
+
+    // Obtener empresa
+    const [company] = await sequelize.query(`
+      SELECT company_id, name, status as current_status FROM companies WHERE company_id = :id
+    `, { replacements: { id }, type: sequelize.QueryTypes.SELECT });
+
+    if (!company) {
+      return res.status(404).json({ success: false, error: 'Empresa no encontrada' });
+    }
+
+    // Determinar is_active según el nuevo status
+    const isActive = status === 'active';
+
+    await sequelize.query(`
+      UPDATE companies SET
+        status = :status,
+        is_active = :isActive,
+        status_manual = TRUE,
+        status_manual_reason = :reason,
+        status_manual_by = :staffId,
+        status_manual_at = NOW(),
+        updated_at = NOW()
+      WHERE company_id = :id
+    `, { replacements: { id, status, isActive, reason, staffId }, type: sequelize.QueryTypes.UPDATE });
+
+    const statusLabels = {
+      'active': 'ACTIVADA',
+      'suspended': 'SUSPENDIDA',
+      'cancelled': 'DESACTIVADA'
+    };
+
+    console.log(`🔧 [MANUAL] Estado de "${company.name}" cambiado a ${status} por staff ${staffId}. Motivo: ${reason}`);
+
+    res.json({
+      success: true,
+      message: `Empresa "${company.name}" ${statusLabels[status]} manualmente`,
+      previous_status: company.current_status,
+      new_status: status,
+      manual: true,
+      reason
+    });
+
+  } catch (error) {
+    console.error('❌ [MANUAL STATUS] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/v1/companies/:id/manual-history
+ * Ver historial de cambios manuales de una empresa
+ */
+router.get('/:id/manual-history', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { sequelize } = require('../config/database');
+
+    const [company] = await sequelize.query(`
+      SELECT
+        company_id, name,
+        onboarding_manual, onboarding_manual_reason, onboarding_manual_by, onboarding_manual_at,
+        status_manual, status_manual_reason, status_manual_by, status_manual_at,
+        status, is_active, onboarding_status
+      FROM companies WHERE company_id = :id
+    `, { replacements: { id }, type: sequelize.QueryTypes.SELECT });
+
+    if (!company) {
+      return res.status(404).json({ success: false, error: 'Empresa no encontrada' });
+    }
+
+    res.json({
+      success: true,
+      company: company.name,
+      current_state: {
+        status: company.status,
+        is_active: company.is_active,
+        onboarding_status: company.onboarding_status
+      },
+      manual_changes: {
+        onboarding: company.onboarding_manual ? {
+          was_manual: true,
+          reason: company.onboarding_manual_reason,
+          changed_by: company.onboarding_manual_by,
+          changed_at: company.onboarding_manual_at
+        } : { was_manual: false },
+        status: company.status_manual ? {
+          was_manual: true,
+          reason: company.status_manual_reason,
+          changed_by: company.status_manual_by,
+          changed_at: company.status_manual_at
+        } : { was_manual: false }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [MANUAL HISTORY] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 module.exports = router;

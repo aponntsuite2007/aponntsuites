@@ -373,6 +373,60 @@ module.exports = (sequelize) => {
       comment: 'Factura que originó el proceso de baja'
     },
 
+    // ═══════════════════════════════════════════════════════════════
+    // CONTROL MANUAL DE ESTADO (Solo superadmin/gerente_general)
+    // ═══════════════════════════════════════════════════════════════
+    onboardingManual: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'onboarding_manual',
+      comment: 'True si el alta/baja fue realizada manualmente'
+    },
+    onboardingManualReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'onboarding_manual_reason',
+      comment: 'Motivo por el cual se realizó el alta/baja manual'
+    },
+    onboardingManualBy: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'onboarding_manual_by',
+      comment: 'Staff que realizó el cambio manual de onboarding'
+    },
+    onboardingManualAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'onboarding_manual_at',
+      comment: 'Fecha/hora del cambio manual de onboarding'
+    },
+    statusManual: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'status_manual',
+      comment: 'True si el estado operativo fue cambiado manualmente'
+    },
+    statusManualReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'status_manual_reason',
+      comment: 'Motivo por el cual se cambió el estado manualmente'
+    },
+    statusManualBy: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'status_manual_by',
+      comment: 'Staff que realizó el cambio manual de estado'
+    },
+    statusManualAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'status_manual_at',
+      comment: 'Fecha/hora del cambio manual de estado'
+    },
+
     // Features & Modules
     activeModules: {
       type: DataTypes.JSONB,
