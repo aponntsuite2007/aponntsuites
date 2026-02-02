@@ -808,6 +808,102 @@ const AponntEmailConfigModule = (() => {
                     height: 2.5rem;
                     cursor: pointer;
                 }
+
+                /* Dark Theme para Modal de Edición */
+                #edit-config-modal .modal-dialog {
+                    background: #1f2937;
+                    border: 1px solid #374151;
+                }
+
+                #edit-config-modal .modal-header {
+                    border-bottom: 1px solid #374151;
+                }
+
+                #edit-config-modal .modal-header h3 {
+                    color: #f9fafb;
+                }
+
+                #edit-config-modal .close-btn {
+                    color: #9ca3af;
+                }
+
+                #edit-config-modal .close-btn:hover {
+                    color: #f9fafb;
+                }
+
+                #edit-config-modal h3 {
+                    color: #f9fafb;
+                }
+
+                #edit-config-modal h4 {
+                    color: #f3f4f6 !important;
+                    border-bottom: 1px solid #374151 !important;
+                }
+
+                #edit-config-modal p {
+                    color: #9ca3af;
+                }
+
+                #edit-config-modal .form-label {
+                    color: #e5e7eb;
+                }
+
+                #edit-config-modal .form-input {
+                    background: #374151;
+                    border: 1px solid #4b5563;
+                    color: #f9fafb;
+                }
+
+                #edit-config-modal .form-input:focus {
+                    background: #374151;
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+                }
+
+                #edit-config-modal .form-input::placeholder {
+                    color: #6b7280;
+                }
+
+                #edit-config-modal small {
+                    color: #9ca3af !important;
+                }
+
+                #edit-config-modal small a {
+                    color: #60a5fa;
+                    text-decoration: none;
+                }
+
+                #edit-config-modal small a:hover {
+                    color: #93c5fd;
+                    text-decoration: underline;
+                }
+
+                #edit-config-modal select.form-input {
+                    background: #374151;
+                    border: 1px solid #4b5563;
+                    color: #f9fafb;
+                }
+
+                #edit-config-modal select.form-input option {
+                    background: #374151;
+                    color: #f9fafb;
+                }
+
+                #edit-config-modal textarea.form-input {
+                    background: #374151;
+                    border: 1px solid #4b5563;
+                    color: #f9fafb;
+                }
+
+                #edit-config-modal .btn-secondary {
+                    background: #4b5563;
+                    color: #f9fafb;
+                    border: 1px solid #6b7280;
+                }
+
+                #edit-config-modal .btn-secondary:hover {
+                    background: #6b7280;
+                }
             </style>
         `;
 
