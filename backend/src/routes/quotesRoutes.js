@@ -1456,6 +1456,7 @@ router.post('/:id/contract/send', verifyStaffToken, async (req, res) => {
     const { id } = req.params;
     const crypto = require('crypto');
     const nodemailer = require('nodemailer');
+    const EmailConfigService = require('../services/EmailConfigService');
 
     // Obtener datos del quote y company
     const quotes = await sequelize.query(`
@@ -1486,14 +1487,29 @@ router.post('/:id/contract/send', verifyStaffToken, async (req, res) => {
     const { getEulaAcceptUrl } = require('../utils/urlHelper');
     const acceptanceLink = getEulaAcceptUrl(acceptanceToken, id);
 
-    // Preparar email
+    // Obtener configuración SMTP desde BD (igual que presupuestos)
+    let smtpConfig = null;
+    let bccEmail = null;
+    try {
+      smtpConfig = await EmailConfigService.getConfigByType('commercial');
+      if (smtpConfig) {
+        bccEmail = smtpConfig.bcc_email;
+        if (bccEmail) {
+          console.log('📧 [CONTRACT] BCC configurado:', bccEmail);
+        }
+      }
+    } catch (configErr) {
+      console.warn('⚠️ [CONTRACT] No se pudo obtener config de email, usando env vars:', configErr.message);
+    }
+
+    // Preparar transporter (prioridad: BD config > env vars)
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
+      host: smtpConfig?.host || process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(smtpConfig?.port || process.env.SMTP_PORT || '587'),
+      secure: smtpConfig?.secure || process.env.SMTP_SECURE === 'true',
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+        user: smtpConfig?.user || process.env.SMTP_USER,
+        pass: smtpConfig?.password || process.env.SMTP_PASS
       }
     });
 
@@ -1526,14 +1542,22 @@ router.post('/:id/contract/send', verifyStaffToken, async (req, res) => {
     `;
 
     // PRIMERO enviar email, DESPUES actualizar BD
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"APONNT 360" <contratos@aponnt.com>',
+    const mailOptions = {
+      from: smtpConfig?.fromEmail ? `"${smtpConfig.fromName || 'APONNT 360'}" <${smtpConfig.fromEmail}>` : (process.env.SMTP_FROM || '"APONNT 360" <contratos@aponnt.com>'),
       to: clientEmail,
       subject: `Contrato EULA - ${quote.quote_number} - APONNT 360`,
       html: emailHtml
-    });
+    };
 
-    console.log('✅ [CONTRACT] Email enviado a:', clientEmail);
+    // Agregar BCC si está configurado
+    if (bccEmail) {
+      mailOptions.bcc = bccEmail;
+      console.log('📧 [CONTRACT] Agregando BCC:', bccEmail);
+    }
+
+    await transporter.sendMail(mailOptions);
+
+    console.log(`✅ [CONTRACT] Email enviado a: ${clientEmail}${bccEmail ? ' (con copia a ' + bccEmail + ')' : ''}`);
 
     // Solo si el email se envio exitosamente, actualizar BD
     await sequelize.query(`
