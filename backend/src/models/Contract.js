@@ -295,6 +295,11 @@ module.exports = (sequelize) => {
       allowNull: true,
       comment: 'Términos y condiciones específicos del contrato'
     },
+    template_content: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      comment: 'HTML template del contrato generado'
+    },
     sla_terms: {
       type: DataTypes.JSONB,
       allowNull: true,
