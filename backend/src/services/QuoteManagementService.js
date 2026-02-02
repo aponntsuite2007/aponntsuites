@@ -669,7 +669,7 @@ class QuoteManagementService {
       contract_date: startDate,
       contract_type: 'EULA',
       template_version: '1.0',
-      status: 'active',
+      status: 'ACTIVE',
       billing_cycle: 'monthly',
       payment_day: 10,
       payment_terms_days: 10,

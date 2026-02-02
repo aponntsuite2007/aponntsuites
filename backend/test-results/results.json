@@ -53,7 +53,7 @@
         "testMatch": [
           "/\\.spec\\.js$/"
         ],
-        "timeout": 180000
+        "timeout": 600000
       }
     ],
     "shard": null,
@@ -65,25 +65,25 @@
   },
   "suites": [
     {
-      "title": "modules\\visual-mi-salud-crud.e2e.spec.js",
-      "file": "modules/visual-mi-salud-crud.e2e.spec.js",
+      "title": "local-crud-completo.e2e.spec.js",
+      "file": "local-crud-completo.e2e.spec.js",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "🏥 Visual CRUD - Mi Salud",
-          "file": "modules/visual-mi-salud-crud.e2e.spec.js",
-          "line": 24,
+          "title": "LOCAL - CRUD COMPLETO USUARIOS",
+          "file": "local-crud-completo.e2e.spec.js",
+          "line": 117,
           "column": 6,
           "specs": [
             {
-              "title": "Capturar flujo completo Mi Salud con screenshots",
-              "ok": true,
+              "title": "CREATE → READ → 10 TABS → UPDATE → DELETE en LOCAL",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 180000,
+                  "timeout": 600000,
                   "annotations": [],
                   "expectedStatus": "passed",
                   "projectId": "chromium",
@@ -92,132 +92,177 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 23172,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 43347,
+                      "error": {
+                        "message": "TimeoutError: page.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Agregar Usuario\")')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"btn-add-user\" onclick=\"showAddUser()\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    29 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+                        "stack": "TimeoutError: page.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Agregar Usuario\")')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"btn-add-user\" onclick=\"showAddUser()\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    29 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\local-crud-completo.e2e.spec.js:149:20",
+                        "location": {
+                          "file": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\local-crud-completo.e2e.spec.js",
+                          "column": 20,
+                          "line": 149
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 147 |\u001b[39m         \u001b[36mawait\u001b[39m shot(page\u001b[33m,\u001b[39m \u001b[32m'02-modulo'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 148 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 149 |\u001b[39m         \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mclick(\u001b[32m'button:has-text(\"Agregar Usuario\")'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                    \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 150 |\u001b[39m         \u001b[36mawait\u001b[39m wait(page\u001b[33m,\u001b[39m \u001b[35m2000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 151 |\u001b[39m\n \u001b[90m 152 |\u001b[39m         \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mfill(\u001b[32m'#newUserName'\u001b[39m\u001b[33m,\u001b[39m testUser\u001b[33m.\u001b[39mnombre)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\local-crud-completo.e2e.spec.js",
+                            "column": 20,
+                            "line": 149
+                          },
+                          "message": "TimeoutError: page.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Agregar Usuario\")')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"btn-add-user\" onclick=\"showAddUser()\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    29 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n\n  147 |         await shot(page, '02-modulo');\n  148 |\n> 149 |         await page.click('button:has-text(\"Agregar Usuario\")');\n      |                    ^\n  150 |         await wait(page, 2000);\n  151 |\n  152 |         await page.fill('#newUserName', testUser.nombre);\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\local-crud-completo.e2e.spec.js:149:20"
+                        }
+                      ],
                       "stdout": [
                         {
-                          "text": "🔐 Paso 1: Login via UI...\n"
+                          "text": "\n======================================================================\n"
                         },
                         {
-                          "text": "   Empresa: 🏢 APONNT Suite\n"
+                          "text": "🏠 TEST CRUD LOCAL - localhost:9998\n"
                         },
                         {
-                          "text": "   ✅ Login exitoso - User: admin@aponnt-empresa-demo.com\n"
+                          "text": "======================================================================\n"
                         },
                         {
-                          "text": "   User ID: f3518284-8585-454b-853a-60b689ef03be\n"
+                          "text": "\n📋 Usuario: Local Test 9567 (LOCAL59567)\n"
                         },
                         {
-                          "text": "   Token: ✅ OK\n"
+                          "text": "\n\n🔐 PASO 1: LOGIN LOCAL\n"
                         },
                         {
-                          "text": "   📸 mi-salud-01-login.png\n"
+                          "text": "📸 001-01-login.png\n"
                         },
                         {
-                          "text": "👤 Paso 2: Navegar a Mi Espacio...\n"
+                          "text": "   ✅ Login exitoso\n"
                         },
                         {
-                          "text": "   Método: showEmployeeDashboard direct - ✅\n"
+                          "text": "\n\n➕ PASO 2: CREATE\n"
                         },
                         {
-                          "text": "   Dashboard rendered: {\"forced\":false,\"hasEmployeeDashboard\":true,\"mainContentVisible\":true,\"moduleGridHidden\":true}\n"
-                        },
-                        {
-                          "text": "   📸 mi-salud-02-mi-espacio.png\n"
-                        },
-                        {
-                          "text": "💊 Paso 3: Buscar y abrir Mi Salud...\n"
-                        },
-                        {
-                          "text": "   📸 mi-salud-02b-scroll-down.png (con scroll)\n"
-                        },
-                        {
-                          "text": "   Card Mi Salud: ✅ encontrado via id-employee\n"
-                        },
-                        {
-                          "text": "   Card ID: card-mi-salud-employee\n"
-                        },
-                        {
-                          "text": "🏥 Paso 4: Abrir Modal Mi Salud...\n"
-                        },
-                        {
-                          "text": "   Modal abierto via: card-mi-salud-employee click - ✅\n"
-                        },
-                        {
-                          "text": "   Modal Mi Salud existe: ❌\n"
-                        },
-                        {
-                          "text": "   📸 mi-salud-03-modal-abierto.png\n"
-                        },
-                        {
-                          "text": "📑 Paso 5: Capturar tabs...\n"
-                        },
-                        {
-                          "text": "   ⚠️ Modal no disponible - saltando capturas de tabs\n"
-                        },
-                        {
-                          "text": "📝 Paso 6: Crear solicitud médica via API...\n"
-                        },
-                        {
-                          "text": "   ✅ Solicitud creada: 400c9eea-aaa4-4fad-8d70-91120fab679b\n"
-                        },
-                        {
-                          "text": "🔄 Paso 7: Verificar solicitud en pendientes...\n"
-                        },
-                        {
-                          "text": "   📸 mi-salud-07-pendiente-creado.png\n"
-                        },
-                        {
-                          "text": "\n═══════════════════════════════════════════════════════════════\n"
-                        },
-                        {
-                          "text": "📸 SCREENSHOTS GENERADOS:\n"
-                        },
-                        {
-                          "text": "   1. mi-salud-01-login.png           - Formulario de login\n"
-                        },
-                        {
-                          "text": "   2. mi-salud-02-mi-espacio.png      - Dashboard Mi Espacio\n"
-                        },
-                        {
-                          "text": "   2b. mi-salud-02b-scroll-down.png   - Mi Espacio (scroll)\n"
-                        },
-                        {
-                          "text": "   3. mi-salud-03-modal-abierto.png   - Modal Mi Salud\n"
-                        },
-                        {
-                          "text": "   4. mi-salud-04-tab-pendientes.png  - Tab Pendientes\n"
-                        },
-                        {
-                          "text": "   5. mi-salud-05-tab-subir.png       - Tab Subir Documento\n"
-                        },
-                        {
-                          "text": "   6. mi-salud-06-tab-historial.png   - Tab Historial\n"
-                        },
-                        {
-                          "text": "   7. mi-salud-07-pendiente-creado.png - Verificación final\n"
-                        },
-                        {
-                          "text": "═══════════════════════════════════════════════════════════════\n"
-                        },
-                        {
-                          "text": "✅ Visual CRUD Testing Mi Salud completado\n"
+                          "text": "📸 002-02-modulo.png\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-02-02T04:26:09.539Z",
+                      "startTime": "2026-02-02T20:57:39.058Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\test-results\\local-crud-completo.e2e-LO-80b02--→-UPDATE-→-DELETE-en-LOCAL-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\test-results\\local-crud-completo.e2e-LO-80b02--→-UPDATE-→-DELETE-en-LOCAL-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\test-results\\local-crud-completo.e2e-LO-80b02--→-UPDATE-→-DELETE-en-LOCAL-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\local-crud-completo.e2e.spec.js",
+                        "column": 20,
+                        "line": 149
+                      }
+                    },
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 43483,
+                      "error": {
+                        "message": "TimeoutError: page.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Agregar Usuario\")')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"btn-add-user\" onclick=\"showAddUser()\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    28 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+                        "stack": "TimeoutError: page.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Agregar Usuario\")')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"btn-add-user\" onclick=\"showAddUser()\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    28 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\local-crud-completo.e2e.spec.js:149:20",
+                        "location": {
+                          "file": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\local-crud-completo.e2e.spec.js",
+                          "column": 20,
+                          "line": 149
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 147 |\u001b[39m         \u001b[36mawait\u001b[39m shot(page\u001b[33m,\u001b[39m \u001b[32m'02-modulo'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 148 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 149 |\u001b[39m         \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mclick(\u001b[32m'button:has-text(\"Agregar Usuario\")'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                    \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 150 |\u001b[39m         \u001b[36mawait\u001b[39m wait(page\u001b[33m,\u001b[39m \u001b[35m2000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 151 |\u001b[39m\n \u001b[90m 152 |\u001b[39m         \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mfill(\u001b[32m'#newUserName'\u001b[39m\u001b[33m,\u001b[39m testUser\u001b[33m.\u001b[39mnombre)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\local-crud-completo.e2e.spec.js",
+                            "column": 20,
+                            "line": 149
+                          },
+                          "message": "TimeoutError: page.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Agregar Usuario\")')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"btn-add-user\" onclick=\"showAddUser()\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    28 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n\n  147 |         await shot(page, '02-modulo');\n  148 |\n> 149 |         await page.click('button:has-text(\"Agregar Usuario\")');\n      |                    ^\n  150 |         await wait(page, 2000);\n  151 |\n  152 |         await page.fill('#newUserName', testUser.nombre);\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\local-crud-completo.e2e.spec.js:149:20"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "\n======================================================================\n"
+                        },
+                        {
+                          "text": "🏠 TEST CRUD LOCAL - localhost:9998\n"
+                        },
+                        {
+                          "text": "======================================================================\n"
+                        },
+                        {
+                          "text": "\n📋 Usuario: Local Test 4461 (LOCAL4461)\n"
+                        },
+                        {
+                          "text": "\n\n🔐 PASO 1: LOGIN LOCAL\n"
+                        },
+                        {
+                          "text": "📸 001-01-login.png\n"
+                        },
+                        {
+                          "text": "   ✅ Login exitoso\n"
+                        },
+                        {
+                          "text": "\n\n➕ PASO 2: CREATE\n"
+                        },
+                        {
+                          "text": "📸 002-02-modulo.png\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2026-02-02T20:58:24.053Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\test-results\\local-crud-completo.e2e-LO-80b02--→-UPDATE-→-DELETE-en-LOCAL-chromium-retry1\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\test-results\\local-crud-completo.e2e-LO-80b02--→-UPDATE-→-DELETE-en-LOCAL-chromium-retry1\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\test-results\\local-crud-completo.e2e-LO-80b02--→-UPDATE-→-DELETE-en-LOCAL-chromium-retry1\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\test-results\\local-crud-completo.e2e-LO-80b02--→-UPDATE-→-DELETE-en-LOCAL-chromium-retry1\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\local-crud-completo.e2e.spec.js",
+                        "column": 20,
+                        "line": 149
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "00b4b7e7848c3dc3a26f-151eff7c26bbc778253c",
-              "file": "modules/visual-mi-salud-crud.e2e.spec.js",
-              "line": 26,
+              "id": "bf3471dc91f6fc68d591-2c57e8f4740f84cf575b",
+              "file": "local-crud-completo.e2e.spec.js",
+              "line": 120,
               "column": 5
             }
           ]
@@ -227,11 +272,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-02-02T04:26:08.101Z",
-    "duration": 24942.43,
-    "expected": 1,
+    "startTime": "2026-02-02T20:57:37.591Z",
+    "duration": 90571.051,
+    "expected": 0,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 1,
     "flaky": 0
   }
 }

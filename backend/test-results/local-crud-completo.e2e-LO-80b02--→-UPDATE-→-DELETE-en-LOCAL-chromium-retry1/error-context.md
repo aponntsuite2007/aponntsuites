@@ -1,0 +1,66 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "🏢 Aponnt" [level=1] [ref=e5]
+      - paragraph [ref=e6]: Acceso Empresarial Multi-Tenant
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]: 🏢 Seleccionar Empresa...
+        - combobox "🏢 Seleccionar Empresa..." [ref=e10]:
+          - option "Selecciona una empresa" [selected]
+          - option "APONNT Suite"
+          - option "Consultores del Sur"
+          - option "Debug2-1769281440972"
+          - option "Debug2-1769283038567"
+          - option "Empresa Pablo Rivas"
+          - option "Empresa Test"
+          - option "Empresa Test Bundle FIX"
+          - option "Empresa Test Bundle RRHH"
+          - option "Empresa Test Onboarding 1769045463571"
+          - option "Empresa Test Onboarding 1769045525908"
+          - option "Empresa Test Vendedores"
+          - option "Ganado Express"
+          - option "ISI"
+          - option "Logística del Sur"
+          - option "Logística Express SRL"
+          - option "Tecnología Avanzada S.A."
+          - option "Test Company"
+          - option "Test Company 1"
+          - option "Test Company 1"
+          - option "Test Company 1"
+          - option "Test Update API"
+          - option "TestCo-1769280086358"
+          - option "TestCo-1769281393058"
+          - option "TestCo-1769282430458"
+          - option "TestCo-1769283781567"
+          - option "TestCompany CRUD 1769279796781"
+          - option "Transportes del Norte S.A."
+          - option "Unicode Test 1767984500959"
+          - option "Unicode Test 1767984501057"
+          - option "Unicode Test 1767984501063"
+          - option "Unicode Test 1767984501069"
+          - option "Unicode Test 1767984501076"
+          - option "Unicode Test 1767984501081"
+          - option "Unicode Test 1767984501086"
+          - option "Unicode Test 1767984501091"
+          - option "Unicode Test 1767984501096"
+          - option "Unicode Test 1767984501100"
+          - option "WFTEST_Empresa Demo SA"
+      - generic [ref=e11]:
+        - generic [ref=e12]: Usuario / Email / DNI
+        - textbox "Usuario / Email / DNI" [disabled] [ref=e13]:
+          - /placeholder: Ingrese su usuario
+      - generic [ref=e14]:
+        - generic [ref=e15]: Contraseña
+        - generic [ref=e16]:
+          - textbox "Contraseña" [disabled] [ref=e17]
+          - button "👁️" [ref=e18] [cursor=pointer]
+      - button "🚀 Iniciar Sesión" [disabled] [ref=e19]
+  - button "?" [ref=e20] [cursor=pointer]
+  - button "🎯" [ref=e21] [cursor=pointer]
+  - button "Centro de Ayuda y Notificaciones" [ref=e23] [cursor=pointer]:
+    - img [ref=e24]
+```

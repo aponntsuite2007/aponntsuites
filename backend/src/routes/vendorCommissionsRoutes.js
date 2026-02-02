@@ -630,7 +630,7 @@ router.post('/quotes/:id/convert-to-contract', requireAponntAuth, async (req, re
         contracted_employees, total_monthly, contract_type, template_version, contract_date, contract_code, trace_id
       ) VALUES (
         :company_id, :vendor_id, :contract_number, :budget_id,
-        :monthly_amount, :start_date, :end_date, 'active', NOW(), :template_content, :selected_modules,
+        :monthly_amount, :start_date, :end_date, 'ACTIVE', NOW(), :template_content, :selected_modules,
         :contracted_employees, :total_monthly, 'EULA', '1.0', CURRENT_DATE, :contract_code, :trace_id
       )
     `, {

@@ -63,7 +63,7 @@ class ContractService {
       const existingContract = await Contract.findOne({
         where: {
           company_id: budget.company_id,
-          status: 'active'
+          status: 'ACTIVE'
         },
         transaction
       });
@@ -109,7 +109,7 @@ class ContractService {
         contract_type: 'EULA',
         template_version: '1.0',
         end_date: contractData.end_date || null, // null = indefinido
-        status: contractData.status || 'active', // ⚠️ workflow espera 'PENDING_SIGNATURE'
+        status: contractData.status || 'ACTIVE', // ⚠️ workflow espera 'PENDING_SIGNATURE'
         billing_cycle: budget.payment_terms === 'ANUAL' ? 'yearly' : 'monthly',
         payment_day: contractData.payment_day || 10,
         payment_terms_days: contractData.payment_terms_days || 10,
@@ -174,7 +174,7 @@ class ContractService {
 
       await contract.update({
         client_signature_date: signatureMetadata.signed_at,
-        status: 'active', // ⚠️ Workflow espera 'SIGNED', pero modelo tiene active/suspended/terminated
+        status: 'ACTIVE', // ⚠️ Workflow espera 'SIGNED', pero modelo tiene active/suspended/terminated
         notes: (contract.notes || '') +
           `\n📝 Firmado digitalmente: ${JSON.stringify(signatureMetadata, null, 2)}`
       }, { transaction });
