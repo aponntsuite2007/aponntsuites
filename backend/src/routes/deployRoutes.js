@@ -186,6 +186,97 @@ function validateDeployCredentials(req, res, next) {
 }
 
 // ============================================================================
+// ENDPOINT: Migración de emergencia para columnas faltantes
+// ============================================================================
+
+router.post('/emergency-migration', async (req, res) => {
+  const { key } = req.body;
+
+  // Validar con key simple del env
+  const validKey = process.env.SEED_DEMO_KEY || 'DEMO_SEED_2024_SECURE';
+  if (key !== validKey) {
+    return res.status(403).json({ error: 'Clave inválida' });
+  }
+
+  console.log('🚨 [EMERGENCY MIGRATION] Iniciando migración de emergencia...');
+
+  const { sequelize } = require('../config/database');
+
+  const migrations = [
+    // Columnas para tabla quotes
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS origin_type VARCHAR(30) DEFAULT 'manual'",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS origin_detail JSONB",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS seller_assigned_at TIMESTAMP",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS lead_id UUID",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS sales_lead_id UUID",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS modules_data JSONB DEFAULT '[]'",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS total_amount NUMERIC(10,2) DEFAULT 0.00",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'draft'",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS has_trial BOOLEAN DEFAULT false",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS trial_modules JSONB",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS trial_start_date TIMESTAMP",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS trial_end_date TIMESTAMP",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS trial_bonification_percentage NUMERIC(5,2) DEFAULT 100.00",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS previous_quote_id INTEGER",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS replaces_quote_id INTEGER",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS replaced_by_quote_id INTEGER",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS is_upgrade BOOLEAN DEFAULT false",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS is_downgrade BOOLEAN DEFAULT false",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS is_modification BOOLEAN DEFAULT false",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS added_modules JSONB",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS removed_modules JSONB",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS sent_date TIMESTAMP",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS accepted_date TIMESTAMP",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS rejected_date TIMESTAMP",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS expiration_date TIMESTAMP",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS valid_until TIMESTAMP",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS notes TEXT",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS client_notes TEXT",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS terms_and_conditions TEXT",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS pdf_file_path VARCHAR(500)",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS created_by INTEGER",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS updated_by INTEGER",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS status_history JSONB DEFAULT '[]'",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS invoice_id INTEGER",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS contract_status VARCHAR(20) DEFAULT 'none'",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS contract_sent_at TIMESTAMP",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS contract_signed_at TIMESTAMP",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS contract_signer_name VARCHAR(255)",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS contract_signer_dni VARCHAR(20)",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS contract_signature_ip VARCHAR(45)",
+    "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS contract_acceptance_data JSONB",
+    // Índices
+    "CREATE INDEX IF NOT EXISTS idx_quotes_origin_type ON quotes(origin_type)",
+    "CREATE INDEX IF NOT EXISTS idx_quotes_lead_id ON quotes(lead_id)",
+    "CREATE INDEX IF NOT EXISTS idx_quotes_sales_lead_id ON quotes(sales_lead_id)"
+  ];
+
+  const results = { success: 0, failed: 0, errors: [] };
+
+  for (const sql of migrations) {
+    try {
+      await sequelize.query(sql);
+      results.success++;
+    } catch (e) {
+      if (!e.message.includes('already exists') && !e.message.includes('ya existe')) {
+        results.failed++;
+        results.errors.push(e.message.substring(0, 100));
+      } else {
+        results.success++;
+      }
+    }
+  }
+
+  console.log(`✅ [EMERGENCY MIGRATION] Completado: ${results.success} éxitos, ${results.failed} errores`);
+
+  res.json({
+    success: results.failed === 0,
+    message: `Migración completada: ${results.success} éxitos, ${results.failed} errores`,
+    ...results
+  });
+});
+
+// ============================================================================
 // ENDPOINT: Verificar estado pre-deploy
 // ============================================================================
 
