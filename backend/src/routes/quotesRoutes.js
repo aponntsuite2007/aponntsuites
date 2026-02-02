@@ -506,6 +506,10 @@ router.get('/:id/status-history', verifyStaffToken, async (req, res) => {
 /**
  * POST /api/quotes/:id/send-email
  * Envía el presupuesto por email al cliente
+ *
+ * ACTUALIZADO: Usa configuración SMTP de aponnt_email_config (tipo 'commercial')
+ * - Incluye BCC si está configurado
+ * - Guarda log en email_logs para tracking
  */
 router.post('/:id/send-email', verifyStaffToken, async (req, res) => {
   try {
@@ -515,6 +519,8 @@ router.post('/:id/send-email', verifyStaffToken, async (req, res) => {
     // Obtener el quote con datos de empresa
     const { sequelize, Company } = require('../config/database');
     const { QueryTypes } = require('sequelize');
+    const EmailConfigService = require('../services/EmailConfigService');
+    const crypto = require('crypto');
 
     const quotes = await sequelize.query(
       `SELECT q.*, c.name as company_name, c.contact_email as company_email
@@ -558,12 +564,37 @@ router.post('/:id/send-email', verifyStaffToken, async (req, res) => {
     const publicUrl = `${baseUrl}/presupuesto/${publicToken}`;
     console.log('📧 [QUOTES] URL pública generada:', publicUrl, '| BASE_URL env:', process.env.BASE_URL || 'no definido');
 
+    // ==== OBTENER CONFIGURACIÓN SMTP DE LA BD (tipo 'commercial') ====
+    let smtpConfig = null;
+    let bccEmail = null;
+    let fromEmail = process.env.SMTP_FROM || '"APONNT" <noreply@aponnt.com>';
+
+    try {
+      smtpConfig = await EmailConfigService.getConfigByType('commercial');
+      if (smtpConfig) {
+        console.log('📧 [QUOTES] Usando config SMTP de BD:', smtpConfig.from_email);
+        bccEmail = smtpConfig.bcc_email;
+        fromEmail = `"${smtpConfig.from_name || 'APONNT Comercial'}" <${smtpConfig.from_email}>`;
+        if (bccEmail) {
+          console.log('📧 [QUOTES] BCC configurado:', bccEmail);
+        }
+      }
+    } catch (configError) {
+      console.warn('⚠️ [QUOTES] No se pudo obtener config de BD, usando env vars:', configError.message);
+    }
+
+    // Generar tracking ID para este email
+    const trackingId = crypto.randomUUID();
+
     // Generar HTML del email
     const modulesData = quote.modules_data || [];
     const modulesHtml = modulesData.map(m =>
       `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${m.module_name}</td>
        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">USD $${m.price}/mes</td></tr>`
     ).join('');
+
+    // Tracking pixel URL
+    const trackingPixelUrl = `${baseUrl}/api/email/track/${trackingId}/open`;
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -603,36 +634,75 @@ router.post('/:id/send-email', verifyStaffToken, async (req, res) => {
             Este presupuesto es válido por 30 días. Si tiene consultas, responda a este email.
           </p>
         </div>
+        <!-- Tracking pixel -->
+        <img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />
       </div>
     `;
 
-    // Enviar email
+    // Configurar transporter
     const nodemailer = require('nodemailer');
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
+      host: smtpConfig?.smtp_host || process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(smtpConfig?.smtp_port || process.env.SMTP_PORT || '587'),
+      secure: smtpConfig?.smtp_secure || process.env.SMTP_SECURE === 'true',
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+        user: smtpConfig?.from_email || process.env.SMTP_USER,
+        pass: smtpConfig?.app_password_decrypted || smtpConfig?.smtp_password_decrypted || process.env.SMTP_PASS
       }
     });
 
+    // Preparar opciones de email
+    const mailOptions = {
+      from: fromEmail,
+      to: recipientEmail,
+      subject: `Presupuesto ${quote.quote_number} - APONNT 360°`,
+      html: emailHtml
+    };
+
+    // Agregar BCC si está configurado
+    if (bccEmail) {
+      mailOptions.bcc = bccEmail;
+      console.log('📧 [QUOTES] Agregando BCC:', bccEmail);
+    }
+
     try {
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"APONNT" <noreply@aponnt.com>',
-        to: recipientEmail,
-        subject: `Presupuesto ${quote.quote_number} - APONNT 360°`,
-        html: emailHtml
-      });
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ [QUOTES] Email enviado:', info.messageId);
+
+      // ==== GUARDAR LOG EN email_logs ====
+      try {
+        await sequelize.query(`
+          INSERT INTO email_logs (
+            sender_type, recipient_email, recipient_name,
+            subject, status, sent_at, message_id,
+            tracking_id, category, priority, created_at, updated_at
+          ) VALUES (
+            'aponnt', :recipientEmail, :companyName,
+            :subject, 'sent', NOW(), :messageId,
+            :trackingId::uuid, 'quote', 'normal', NOW(), NOW()
+          )
+        `, {
+          replacements: {
+            recipientEmail,
+            companyName: quote.company_name,
+            subject: `Presupuesto ${quote.quote_number} - APONNT 360°`,
+            messageId: info.messageId,
+            trackingId
+          }
+        });
+        console.log('📝 [QUOTES] Log guardado en email_logs con tracking_id:', trackingId);
+      } catch (logError) {
+        console.error('⚠️ [QUOTES] Error guardando log (email sí se envió):', logError.message);
+      }
 
       // Marcar como enviado
       await QuoteManagementService.sendQuote(id, req.user?.id);
 
       res.json({
         success: true,
-        message: `Presupuesto enviado a ${recipientEmail}`,
-        public_url: publicUrl
+        message: `Presupuesto enviado a ${recipientEmail}${bccEmail ? ' (con copia a ' + bccEmail + ')' : ''}`,
+        public_url: publicUrl,
+        tracking_id: trackingId
       });
 
     } catch (emailError) {

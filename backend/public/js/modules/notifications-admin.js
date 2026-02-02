@@ -16,6 +16,7 @@ const NotificationsAdmin = {
     companies: [],
     stats: {},
     emailTracking: {},
+    emailsList: [],
     selectedNotification: null,
     filters: {
         company_id: null,
@@ -171,8 +172,27 @@ const NotificationsAdmin = {
                 this.emailTracking = data.tracking;
                 this.renderEmailTracking();
             }
+
+            // También cargar la lista de emails
+            await this.loadEmailsList();
         } catch (error) {
             console.error('[NOTIFICATIONS-ADMIN] Error loading email tracking:', error);
+        }
+    },
+
+    async loadEmailsList() {
+        try {
+            const response = await fetch(`/api/admin/notifications/email-tracking/list?limit=50`, {
+                headers: this.getAuthHeaders()
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.emailsList = data.emails || [];
+                this.renderEmailsList();
+            }
+        } catch (error) {
+            console.error('[NOTIFICATIONS-ADMIN] Error loading emails list:', error);
         }
     },
 
@@ -339,6 +359,29 @@ const NotificationsAdmin = {
             .tracking-stat.clicked .value { color: #9b59b6; }
             .tracking-stat.bounced .value { color: #e74c3c; }
 
+            /* Emails List */
+            .emails-list { max-height: 500px; overflow-y: auto; }
+            .email-row { display: grid; grid-template-columns: 2fr 3fr 1fr 1fr; gap: 15px; padding: 12px 15px; background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 8px; align-items: center; border-left: 3px solid transparent; }
+            .email-row:hover { background: rgba(255,255,255,0.05); }
+            .email-row.status-sent { border-left-color: #3498db; }
+            .email-row.status-opened { border-left-color: #27ae60; }
+            .email-row.status-clicked { border-left-color: #9b59b6; }
+            .email-row.status-bounced, .email-row.status-failed { border-left-color: #e74c3c; }
+            .email-recipient { font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .email-recipient small { display: block; color: #888; font-weight: normal; font-size: 11px; }
+            .email-subject { color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .email-status { text-align: center; }
+            .email-status-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+            .email-status-badge.sent { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+            .email-status-badge.opened { background: rgba(39, 174, 96, 0.2); color: #27ae60; }
+            .email-status-badge.clicked { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
+            .email-status-badge.bounced, .email-status-badge.failed { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+            .email-status-badge.pending { background: rgba(241, 196, 15, 0.2); color: #f1c40f; }
+            .email-date { color: #888; font-size: 12px; text-align: right; }
+            .email-date small { display: block; font-size: 10px; color: #666; }
+            .emails-empty { text-align: center; padding: 40px; color: #888; }
+            .emails-empty-icon { font-size: 3em; margin-bottom: 15px; opacity: 0.5; }
+
             /* Pagination */
             .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 15px; }
             .pagination button {
@@ -449,6 +492,13 @@ const NotificationsAdmin = {
                     <div class="tracking-title">📊 Estadísticas de Email Tracking</div>
                     <div class="tracking-stats" id="tracking-stats">
                         <div class="tracking-stat"><span class="value">-</span><span class="label">Loading...</span></div>
+                    </div>
+
+                    <div class="emails-list-section" style="margin-top: 25px;">
+                        <div class="tracking-title">📧 Emails Enviados</div>
+                        <div id="emails-list" class="emails-list">
+                            <div style="text-align: center; color: #888; padding: 20px;">Cargando emails...</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -708,6 +758,63 @@ const NotificationsAdmin = {
                 <span class="label">Tasa Click</span>
             </div>
         `;
+    },
+
+    renderEmailsList() {
+        const container = document.getElementById('emails-list');
+        if (!container) return;
+
+        if (!this.emailsList || this.emailsList.length === 0) {
+            container.innerHTML = `
+                <div class="emails-empty">
+                    <div class="emails-empty-icon">📭</div>
+                    <div>No hay emails enviados aún</div>
+                    <small style="color: #666;">Los emails enviados desde presupuestos y otros módulos aparecerán aquí</small>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = this.emailsList.map(email => {
+            const statusLabels = {
+                sent: 'Enviado',
+                opened: 'Abierto',
+                clicked: 'Click',
+                bounced: 'Rebotado',
+                failed: 'Falló',
+                pending: 'Pendiente'
+            };
+
+            const statusIcons = {
+                sent: '📤',
+                opened: '👁️',
+                clicked: '🔗',
+                bounced: '⚠️',
+                failed: '❌',
+                pending: '⏳'
+            };
+
+            return `
+                <div class="email-row status-${email.status}">
+                    <div class="email-recipient">
+                        ${email.recipient_name || 'Destinatario'}
+                        <small>${email.recipient_email}</small>
+                    </div>
+                    <div class="email-subject" title="${email.subject}">
+                        ${email.subject}
+                    </div>
+                    <div class="email-status">
+                        <span class="email-status-badge ${email.status}">
+                            ${statusIcons[email.status] || '📧'} ${statusLabels[email.status] || email.status}
+                        </span>
+                    </div>
+                    <div class="email-date">
+                        ${this.formatDate(email.sent_at || email.created_at)}
+                        ${email.opened_at ? `<small>📖 ${this.formatDate(email.opened_at)}</small>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
     },
 
     renderCompaniesView() {

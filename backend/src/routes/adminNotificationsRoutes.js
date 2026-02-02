@@ -401,6 +401,87 @@ router.get('/email-tracking/summary', async (req, res) => {
 });
 
 /**
+ * GET /api/admin/notifications/email-tracking/list
+ * Lista de emails enviados con estado de tracking
+ * Query params: limit, offset, status, category, search
+ */
+router.get('/email-tracking/list', async (req, res) => {
+    try {
+        const {
+            limit = 50,
+            offset = 0,
+            status = 'all',
+            category = 'all',
+            search = ''
+        } = req.query;
+
+        let whereClause = '1=1';
+        const replacements = { limit: parseInt(limit), offset: parseInt(offset) };
+
+        if (status !== 'all') {
+            whereClause += ' AND status = :status';
+            replacements.status = status;
+        }
+
+        if (category !== 'all') {
+            whereClause += ' AND category = :category';
+            replacements.category = category;
+        }
+
+        if (search) {
+            whereClause += ' AND (recipient_email ILIKE :search OR recipient_name ILIKE :search OR subject ILIKE :search)';
+            replacements.search = `%${search}%`;
+        }
+
+        const [emails] = await sequelize.query(`
+            SELECT
+                id,
+                sender_type,
+                recipient_email,
+                recipient_name,
+                subject,
+                category,
+                priority,
+                status,
+                sent_at,
+                delivered_at,
+                opened_at,
+                clicked_at,
+                bounced_at,
+                tracking_id,
+                message_id,
+                error_message,
+                created_at
+            FROM email_logs
+            WHERE ${whereClause}
+            ORDER BY created_at DESC
+            LIMIT :limit OFFSET :offset
+        `, { replacements });
+
+        // Total count
+        const [countResult] = await sequelize.query(`
+            SELECT COUNT(*) as total
+            FROM email_logs
+            WHERE ${whereClause}
+        `, { replacements, type: QueryTypes.SELECT });
+
+        res.json({
+            success: true,
+            emails: emails || [],
+            total: parseInt(countResult?.total || 0),
+            pagination: { limit: parseInt(limit), offset: parseInt(offset) }
+        });
+
+    } catch (error) {
+        console.error('❌ [ADMIN-NOTIFICATIONS] Error listing emails:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+/**
  * GET /api/admin/notifications/companies
  * Lista de empresas con contador de notificaciones
  */
