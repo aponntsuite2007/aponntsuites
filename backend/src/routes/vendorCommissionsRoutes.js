@@ -626,10 +626,10 @@ router.post('/quotes/:id/convert-to-contract', requireAponntAuth, async (req, re
     await sequelize.query(`
       INSERT INTO contracts (
         company_id, vendor_id, contract_number, budget_id,
-        monthly_amount, start_date, end_date, status, created_at, template_content
+        monthly_amount, start_date, end_date, status, created_at, template_content, selected_modules
       ) VALUES (
         :company_id, :vendor_id, :contract_number, :budget_id,
-        :monthly_amount, :start_date, :end_date, 'active', NOW(), :template_content
+        :monthly_amount, :start_date, :end_date, 'active', NOW(), :template_content, :selected_modules
       )
     `, {
       replacements: {
@@ -640,7 +640,8 @@ router.post('/quotes/:id/convert-to-contract', requireAponntAuth, async (req, re
         monthly_amount: budget.total_monthly,
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0],
-        template_content: templateContent
+        template_content: templateContent,
+        selected_modules: JSON.stringify(budget.selected_modules || [])
       },
       type: QueryTypes.INSERT
     });

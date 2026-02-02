@@ -100,6 +100,7 @@ class ContractService {
         seller_id: budget.vendor_id, // ⚠️ seller_id es vendor_id (aponnt_staff)
         support_partner_id: contractData.support_partner_id || budget.vendor_id, // Default: mismo vendedor
         modules_data: modulesData,
+        selected_modules: modulesData, // Duplicado para compatibilidad con esquema BD
         monthly_total: budget.total_monthly,
         start_date: startDate,
         end_date: contractData.end_date || null, // null = indefinido

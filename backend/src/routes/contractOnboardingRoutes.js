@@ -143,10 +143,11 @@ router.post('/onboarding/generate', authMiddleware, async (req, res) => {
         company_tax_id,
         esignature_provider,
         created_by,
-        template_content
+        template_content,
+        selected_modules
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, TRUE, 30, 'GENERATED',
-        $9, $10, $11, $12, 'APONNT_INTERNAL', $13, $14
+        $9, $10, $11, $12, 'APONNT_INTERNAL', $13, $14, $15
       )
       RETURNING *
     `, [
@@ -163,7 +164,8 @@ router.post('/onboarding/generate', authMiddleware, async (req, res) => {
       budget.company_name,
       budget.company_tax_id,
       req.user?.staff_id || null,
-      templateContent
+      templateContent,
+      JSON.stringify(budget.selected_modules || [])
     ]);
 
     // Actualizar empresa

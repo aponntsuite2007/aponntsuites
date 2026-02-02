@@ -660,6 +660,7 @@ class QuoteManagementService {
       quote_id: quote.id,
       seller_id: quote.seller_id,
       modules_data: quote.modules_data,
+      selected_modules: quote.modules_data, // Duplicado para compatibilidad con esquema BD
       monthly_total: quote.total_amount,
       start_date: startDate,
       status: 'active',

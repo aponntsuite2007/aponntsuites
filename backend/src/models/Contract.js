@@ -100,6 +100,12 @@ module.exports = (sequelize) => {
       defaultValue: [],
       comment: 'Array de objetos: [{module_key, module_name, price, quantity}]'
     },
+    selected_modules: {
+      type: DataTypes.JSONB,
+      allowNull: false,
+      defaultValue: [],
+      comment: 'Array de módulos seleccionados (legacy, igual que modules_data)'
+    },
     monthly_total: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
