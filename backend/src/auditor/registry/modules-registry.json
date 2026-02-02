@@ -5486,7 +5486,7 @@
           "entry_point": "BIOMETRIC_CAPTURE",
           "final_states": [],
           "auto_generated": true,
-          "generated_at": "2026-01-29T21:24:24.690Z",
+          "generated_at": "2026-02-02T04:19:05.200Z",
           "stats": {
             "total": 152,
             "core": 37,
@@ -5496,7 +5496,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2026-01-29T21:24:24.706Z",
+      "lastBrainUpdate": "2026-02-02T04:19:05.239Z",
       "ssot": {
         "elements": [
           {
@@ -5900,7 +5900,7 @@
             "CASE_ARCHIVED"
           ],
           "auto_generated": true,
-          "generated_at": "2026-01-29T21:24:24.721Z",
+          "generated_at": "2026-02-02T04:19:05.259Z",
           "stats": {
             "total": 43,
             "core": 3,
@@ -5910,7 +5910,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2026-01-29T21:24:24.732Z",
+      "lastBrainUpdate": "2026-02-02T04:19:05.272Z",
       "ssot": {
         "elements": [
           {

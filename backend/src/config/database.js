@@ -95,6 +95,7 @@ const MedicalHistory = require('../models/MedicalHistory')(sequelize);
 const MedicalStudyRequest = require('../models/MedicalStudyRequest')(sequelize);
 const ARTConfiguration = require('../models/ARTConfiguration')(sequelize);
 const MedicalStatistics = require('../models/MedicalStatistics')(sequelize);
+const CommunicationLog = require('../models/CommunicationLog')(sequelize);
 const Permission = require('../models/Permission')(sequelize);
 const SystemConfig = require('../models/SystemConfig')(sequelize);
 
@@ -265,6 +266,13 @@ const PartnerServiceConversation = require('../models/PartnerServiceConversation
 const PartnerMediationCase = require('../models/PartnerMediationCase')(sequelize);
 const PartnerLegalConsent = require('../models/PartnerLegalConsent')(sequelize);
 const PartnerCommissionLog = require('../models/PartnerCommissionLog')(sequelize);
+
+// ✅ MODELOS - Voice Platform (Experiencias del Empleado: Sugerencias, Problemas, Soluciones)
+const EmployeeExperience = require('../models/EmployeeExperience')(sequelize);
+const ExperienceCluster = require('../models/ExperienceCluster')(sequelize);
+const ExperienceVote = require('../models/ExperienceVote')(sequelize);
+const ExperienceComment = require('../models/ExperienceComment')(sequelize);
+const ExperienceRecognition = require('../models/ExperienceRecognition')(sequelize);
 
 // ✅ MODELOS - Sistema de Vendor Invoicing Completo (Presupuestos, Trials, Contratos)
 const Quote = require('../models/Quote')(sequelize);
@@ -625,6 +633,14 @@ CompanyRiskConfig.belongsTo(User, {
 // ✅ ASOCIACIONES - Sistema Médico Avanzado
 // =========================================================================
 
+// CommunicationLog (Comunicaciones Fehacientes)
+User.hasMany(CommunicationLog, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'receivedCommunications' });
+CommunicationLog.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'recipient' });
+User.hasMany(CommunicationLog, { foreignKey: 'sender_id', sourceKey: 'user_id', as: 'sentCommunications' });
+CommunicationLog.belongsTo(User, { foreignKey: 'sender_id', targetKey: 'user_id', as: 'sender' });
+Company.hasMany(CommunicationLog, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'communicationLogs' });
+CommunicationLog.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
 // User <-> UserAnthropometricData
 User.hasMany(UserAnthropometricData, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'anthropometricData' });
 UserAnthropometricData.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
@@ -928,6 +944,10 @@ OrganizationalPosition.hasMany(OrganizationalPosition, { foreignKey: 'parent_pos
 // Department relations (ajustadas para PostgreSQL)
 Department.hasMany(User, { foreignKey: 'departmentId', as: 'employees' });
 User.belongsTo(Department, { foreignKey: 'departmentId', as: 'department' });
+
+// Department -> Branch association (for CalendarioLaboralService)
+Department.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
+Branch.hasMany(Department, { foreignKey: 'branch_id', as: 'departments' });
 
 // ✅ Sector relations (Subdivisiones de Departamentos)
 Company.hasMany(Sector, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'sectors' });
@@ -1904,6 +1924,51 @@ User.hasMany(SupplierInvoice, { foreignKey: 'uploaded_by', sourceKey: 'user_id',
 SupplierInvoice.belongsTo(User, { foreignKey: 'validated_by', targetKey: 'user_id', as: 'validator' });
 User.hasMany(SupplierInvoice, { foreignKey: 'validated_by', sourceKey: 'user_id', as: 'validatedInvoices' });
 
+// ✅ ASOCIACIONES - Voice Platform (Experiencias del Empleado)
+// =========================================================================
+
+// EmployeeExperience <-> Company
+EmployeeExperience.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+Company.hasMany(EmployeeExperience, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'employeeExperiences' });
+
+// EmployeeExperience <-> User (employee)
+EmployeeExperience.belongsTo(User, { foreignKey: 'employee_id', targetKey: 'user_id', as: 'employee' });
+User.hasMany(EmployeeExperience, { foreignKey: 'employee_id', sourceKey: 'user_id', as: 'experiences' });
+
+// ExperienceCluster <-> Company
+ExperienceCluster.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+Company.hasMany(ExperienceCluster, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'experienceClusters' });
+
+// EmployeeExperience <-> ExperienceCluster
+EmployeeExperience.belongsTo(ExperienceCluster, { foreignKey: 'cluster_id', as: 'cluster' });
+ExperienceCluster.hasMany(EmployeeExperience, { foreignKey: 'cluster_id', as: 'experiences' });
+
+// ExperienceVote <-> EmployeeExperience
+ExperienceVote.belongsTo(EmployeeExperience, { foreignKey: 'experience_id', as: 'experience' });
+EmployeeExperience.hasMany(ExperienceVote, { foreignKey: 'experience_id', as: 'votes' });
+
+// ExperienceVote <-> User
+ExperienceVote.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'voter' });
+User.hasMany(ExperienceVote, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'experienceVotes' });
+
+// ExperienceComment <-> EmployeeExperience
+ExperienceComment.belongsTo(EmployeeExperience, { foreignKey: 'experience_id', as: 'experience' });
+EmployeeExperience.hasMany(ExperienceComment, { foreignKey: 'experience_id', as: 'comments' });
+
+// ExperienceComment <-> User
+ExperienceComment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'author' });
+User.hasMany(ExperienceComment, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'experienceComments' });
+
+// ExperienceRecognition <-> EmployeeExperience
+ExperienceRecognition.belongsTo(EmployeeExperience, { foreignKey: 'experience_id', as: 'experience' });
+EmployeeExperience.hasMany(ExperienceRecognition, { foreignKey: 'experience_id', as: 'recognitions' });
+
+// ExperienceRecognition <-> User (giver and receiver)
+ExperienceRecognition.belongsTo(User, { foreignKey: 'giver_id', targetKey: 'user_id', as: 'giver' });
+User.hasMany(ExperienceRecognition, { foreignKey: 'giver_id', sourceKey: 'user_id', as: 'givenRecognitions' });
+ExperienceRecognition.belongsTo(User, { foreignKey: 'receiver_id', targetKey: 'user_id', as: 'receiver' });
+User.hasMany(ExperienceRecognition, { foreignKey: 'receiver_id', sourceKey: 'user_id', as: 'receivedRecognitions' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -1933,6 +1998,7 @@ module.exports = {
   MedicalStudyRequest,
   ARTConfiguration,
   MedicalStatistics,
+  CommunicationLog,
   MultipleARTConfiguration,
   VacationConfiguration,
   VacationScale,
@@ -2015,6 +2081,13 @@ module.exports = {
   PartnerMediationCase,
   PartnerLegalConsent,
   PartnerCommissionLog,
+
+  // ✅ EXPORTS - Voice Platform (Experiencias del Empleado)
+  EmployeeExperience,
+  ExperienceCluster,
+  ExperienceVote,
+  ExperienceComment,
+  ExperienceRecognition,
 
   // ✅ EXPORT - Sistema de Turnos Rotativos
   UserShiftAssignment,

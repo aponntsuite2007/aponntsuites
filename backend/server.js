@@ -2648,6 +2648,7 @@ const medicalDoctorRoutes = require('./src/routes/medicalDoctorRoutes'); // 🆕
 const medicalRecordsRoutes = require('./src/routes/medicalRecordsRoutes'); // Registros con firma digital y bloqueo
 const medicalTemplatesRoutes = require('./src/routes/medicalTemplatesRoutes'); // Plantillas de exámenes por empresa
 const medicalAuthorizationsRoutes = require('./src/routes/medicalAuthorizationsRoutes'); // Workflow autorizaciones
+const medicalRoutes = require('./src/routes/medicalRoutes'); // Comunicaciones fehacientes y solicitudes médicas
 // ELIMINADO: occupationalHealthPhase2Routes - Módulo redundante, funcionalidad integrada en medicalCaseRoutes
 const salaryAdvancedRoutes = require('./src/routes/salaryAdvancedRoutes'); // Convenios, Categorías, Payroll
 const payrollRoutes = require('./src/routes/payrollRoutes'); // Sistema Liquidación Parametrizable v3.0
@@ -3925,10 +3926,16 @@ app.use('/api/medical/doctor', medicalDoctorRoutes); // 🆕 APK Médico: Login,
 app.use('/api/medical-records', medicalRecordsRoutes); // CRUD con firma digital, ventanas de edición, bloqueo automático
 app.use('/api/medical-templates', medicalTemplatesRoutes); // Plantillas de exámenes por empresa (preocupacional, periódico, etc.)
 app.use('/api/medical-authorizations', medicalAuthorizationsRoutes); // Workflow de autorizaciones RRHH→Supervisor
+app.use('/api/medical', medicalRoutes); // Comunicaciones fehacientes, solicitudes, acuses de recibo
 
 // 📚 CONFIGURAR API DE CAPACITACIONES
 const trainingRoutes = require('./src/routes/trainingRoutes');
 app.use('/api/v1/trainings', trainingRoutes);
+
+// 🔗 CONFIGURAR API DEL ECOSISTEMA DE CAPACITACIONES (Integraciones)
+const trainingEcosystemRoutes = require('./src/routes/trainingEcosystemRoutes');
+app.use('/api/v1/training-ecosystem', trainingEcosystemRoutes);
+console.log('🔗 [TRAINING-ECOSYSTEM] Rutas de integración configuradas: /api/v1/training-ecosystem/*');
 
 // 📍 CONFIGURAR API DE UBICACIONES DE EMPLEADOS
 const locationRoutes = require('./src/routes/locationRoutes');
