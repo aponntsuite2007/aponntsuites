@@ -607,6 +607,25 @@ router.post('/quotes/:id/convert-to-contract', requireAponntAuth, async (req, re
       return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
     }
 
+    // =====================================================================
+    // 🔄 CADUCAR PRESUPUESTOS Y CONTRATOS ANTERIORES DE LA MISMA EMPRESA
+    // =====================================================================
+    const companyId = budget.company_id;
+
+    // Marcar contratos anteriores como EXPIRED
+    await sequelize.query(`
+      UPDATE contracts SET status = 'EXPIRED', updated_at = NOW()
+      WHERE company_id = :companyId AND status = 'ACTIVE' AND budget_id != :budgetId
+    `, { replacements: { companyId, budgetId: id }, type: QueryTypes.UPDATE });
+
+    // Marcar presupuestos anteriores como SUPERSEDED (reemplazados)
+    await sequelize.query(`
+      UPDATE budgets SET status = 'SUPERSEDED', updated_at = NOW()
+      WHERE company_id = :companyId AND status IN ('PENDING', 'ACCEPTED', 'CONVERTED') AND id != :budgetId
+    `, { replacements: { companyId, budgetId: id }, type: QueryTypes.UPDATE });
+
+    console.log(`📋 [CONTRACT] Presupuestos/contratos anteriores de empresa ${companyId} marcados como caducados`);
+
     // Crear contrato
     const contractNumber = `CTR-${Date.now()}`;
     const startDate = new Date();
@@ -657,7 +676,78 @@ router.post('/quotes/:id/convert-to-contract', requireAponntAuth, async (req, re
       UPDATE budgets SET status = 'CONVERTED', updated_at = NOW() WHERE id = :id
     `, { replacements: { id }, type: QueryTypes.UPDATE });
 
-    res.json({ success: true, message: 'Contrato creado exitosamente', contract_number: contractNumber });
+    // =====================================================================
+    // 🔄 SINCRONIZACIÓN DE MÓDULOS - POLÍTICA DE FACTURACIÓN
+    // Solo cuando el presupuesto se convierte a contrato, los módulos se activan
+    // =====================================================================
+    const selectedModules = budget.selected_modules || [];
+    // companyId ya declarado en línea 613
+
+    if (Array.isArray(selectedModules) && selectedModules.length > 0 && companyId) {
+      console.log(`🔄 [SYNC-MODULES] Sincronizando ${selectedModules.length} módulos para empresa ${companyId}`);
+
+      // 1. Obtener módulos actuales de la empresa
+      const currentModules = await sequelize.query(`
+        SELECT cm.id, sm.module_key
+        FROM company_modules cm
+        INNER JOIN system_modules sm ON cm.system_module_id = sm.id
+        WHERE cm.company_id = :companyId
+      `, { replacements: { companyId }, type: QueryTypes.SELECT });
+
+      const currentModuleKeys = new Set(currentModules.map(m => m.module_key));
+      const newModuleKeys = new Set(selectedModules);
+
+      // 2. Desactivar módulos que ya no están en el nuevo contrato
+      const toDeactivate = currentModules.filter(m => !newModuleKeys.has(m.module_key));
+      for (const mod of toDeactivate) {
+        await sequelize.query(`
+          UPDATE company_modules SET activo = false, updated_at = NOW() WHERE id = :id
+        `, { replacements: { id: mod.id }, type: QueryTypes.UPDATE });
+        console.log(`   ⏸️ Módulo desactivado: ${mod.module_key}`);
+      }
+
+      // 3. Activar o crear módulos del nuevo contrato
+      for (const moduleKey of selectedModules) {
+        // Buscar si ya existe
+        const existing = currentModules.find(m => m.module_key === moduleKey);
+        if (existing) {
+          // Reactivar
+          await sequelize.query(`
+            UPDATE company_modules SET activo = true, updated_at = NOW() WHERE id = :id
+          `, { replacements: { id: existing.id }, type: QueryTypes.UPDATE });
+          console.log(`   ✅ Módulo reactivado: ${moduleKey}`);
+        } else {
+          // Crear nuevo - buscar system_module_id
+          const [sysModule] = await sequelize.query(`
+            SELECT id FROM system_modules WHERE module_key = :moduleKey
+          `, { replacements: { moduleKey }, type: QueryTypes.SELECT });
+
+          if (sysModule) {
+            await sequelize.query(`
+              INSERT INTO company_modules (company_id, system_module_id, activo, created_at, updated_at)
+              VALUES (:companyId, :systemModuleId, true, NOW(), NOW())
+              ON CONFLICT (company_id, system_module_id) DO UPDATE SET activo = true, updated_at = NOW()
+            `, {
+              replacements: { companyId, systemModuleId: sysModule.id },
+              type: QueryTypes.INSERT
+            });
+            console.log(`   ➕ Módulo creado/activado: ${moduleKey}`);
+          }
+        }
+      }
+
+      // 4. Actualizar contracted_employees en la empresa
+      if (budget.contracted_employees) {
+        await sequelize.query(`
+          UPDATE companies SET contracted_employees = :employees, updated_at = NOW() WHERE company_id = :companyId
+        `, { replacements: { employees: budget.contracted_employees, companyId }, type: QueryTypes.UPDATE });
+        console.log(`   👥 Empleados contratados actualizado: ${budget.contracted_employees}`);
+      }
+
+      console.log(`✅ [SYNC-MODULES] Sincronización completada para empresa ${companyId}`);
+    }
+
+    res.json({ success: true, message: 'Contrato creado y módulos sincronizados', contract_number: contractNumber });
   } catch (error) {
     console.error('Error converting quote to contract:', error);
     res.status(500).json({ success: false, error: error.message });

@@ -1262,6 +1262,9 @@
                     state.roleName = RolePermissions.getRoleTypeName(state.roleType);
                     state.permissions = RolePermissions.getPermissions(state.staff);
                     console.log('[VENDOR-DASHBOARD] Rol:', state.roleType, 'Permisos:', state.permissions);
+                    // Debug: mostrar si puede ver botón de toggle
+                    const canToggle = state.permissions.hasFullAccess || (state.permissions.dataScope === 'all' && state.permissions.canManageStaff);
+                    console.log('[VENDOR-DASHBOARD] Puede activar/desactivar empresas:', canToggle);
                 } else {
                     console.warn('[VENDOR-DASHBOARD] RolePermissions no disponible, usando defaults');
                 }
@@ -1587,7 +1590,16 @@
                 return `<div class="vendor-empty"><p>No hay empresas asignadas</p></div>`;
             }
 
+            const totalCount = companies.length;
+            const showingText = totalCount > 5
+                ? `Mostrando ${recent.length} de ${totalCount} empresas`
+                : `${totalCount} empresa${totalCount !== 1 ? 's' : ''}`;
+
             return `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <span style="color:#94a3b8;font-size:0.85rem;">${showingText}</span>
+                    ${totalCount > 5 ? `<button class="btn btn-sm btn-outline" onclick="VendorDashboard.switchTab('companies')" style="padding:4px 12px;font-size:0.8rem;">Ver todas →</button>` : ''}
+                </div>
                 <div class="vendor-table-container">
                     <table class="vendor-table">
                         <thead>
@@ -1656,7 +1668,6 @@
             return `
                 <div class="vendor-section-title">
                     <span class="icon">🏢</span> Empresas (${companies.length})
-                    ${canCreateBudget ? '<button class="vendor-btn vendor-btn-primary" style="margin-left: auto;" onclick="VendorDashboard.showNewCompany()">➕ Nueva Empresa</button>' : ''}
                 </div>
                 <div class="vendor-table-container">
                     <table class="vendor-table">
@@ -1692,6 +1703,13 @@
                                         </td>
                                         <td>
                                             <div style="display: flex; gap: 5px;">
+                                                ${(state.permissions.hasFullAccess || (state.permissions.dataScope === 'all' && state.permissions.canManageStaff)) ? `
+                                                    <button class="vendor-btn-sm" onclick="VendorDashboard.toggleCompanyStatus(${companyId}, ${!(c.is_active || c.isActive)})"
+                                                            title="${(c.is_active || c.isActive) ? 'Desactivar empresa' : 'Activar empresa'}"
+                                                            style="background: ${(c.is_active || c.isActive) ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}; border-color: ${(c.is_active || c.isActive) ? '#ef4444' : '#10b981'};">
+                                                        ${(c.is_active || c.isActive) ? '⏸️' : '▶️'}
+                                                    </button>
+                                                ` : ''}
                                                 ${canCreateBudget ? `
                                                     <button class="vendor-btn-sm" onclick="VendorDashboard.showCompanyDetail(${companyId})" title="Ver/Editar">
                                                         ✏️
@@ -2124,6 +2142,67 @@
             const company = state.companies.find(c => (c.company_id || c.id) == companyId);
             if (company && typeof CompanyWorkflow !== 'undefined') {
                 CompanyWorkflow.showEditCompanyModal(company);
+            }
+        },
+
+        /**
+         * Activar/Desactivar empresa desde el dashboard
+         */
+        async toggleCompanyStatus(companyId, newStatus) {
+            const company = state.companies.find(c => (c.company_id || c.id) == companyId);
+            if (!company) {
+                alert('Empresa no encontrada');
+                return;
+            }
+
+            const action = newStatus ? 'activar' : 'desactivar';
+            const reason = prompt(`Motivo para ${action} "${company.name}":\n(mínimo 10 caracteres)`);
+
+            if (!reason || reason.trim().length < 10) {
+                alert('Debe indicar un motivo de al menos 10 caracteres');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                const response = await fetch(`/api/v1/companies/${companyId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        is_active: newStatus,
+                        reason: reason.trim()
+                    })
+                });
+
+                const result = await response.json();
+                console.log('[VENDOR] Toggle status response:', response.status, result);
+
+                if (!response.ok) {
+                    alert('Error: ' + (result.error || result.message || `HTTP ${response.status}`));
+                    return;
+                }
+
+                if (result.success) {
+                    // Actualizar estado local
+                    const idx = state.companies.findIndex(c => (c.company_id || c.id) == companyId);
+                    if (idx !== -1) {
+                        state.companies[idx].is_active = newStatus;
+                        state.companies[idx].isActive = newStatus;
+                    }
+
+                    // Re-renderizar
+                    this.refresh();
+
+                    alert(`Empresa ${newStatus ? 'activada' : 'desactivada'} correctamente`);
+                } else {
+                    alert('Error: ' + (result.message || 'No se pudo cambiar el estado'));
+                }
+            } catch (err) {
+                console.error('Error toggling company status:', err);
+                alert('Error de conexión');
             }
         },
 
