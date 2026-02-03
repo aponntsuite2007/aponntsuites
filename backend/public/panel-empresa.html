@@ -2299,6 +2299,10 @@
     <!-- 🧠 BRAIN INTEGRATION - Verificación de prerrequisitos en tiempo real -->
     <script src="js/core/BrainIntegration.js"></script>
 
+    <!-- ⚠️ CONFIGURACIÓN CRÍTICA - Tipos de documento válidos para BD PostgreSQL -->
+    <!-- OBLIGATORIO: Cargar ANTES de users.js - Define valores CHECK CONSTRAINT -->
+    <script src="js/config/user-documents-config.js"></script>
+
     <!-- ✅ CORE SYSTEM MODULES RESTAURADOS - TODOS LOS 43 MÓDULOS -->
     <!-- Core System -->
     <script src="js/modules/dashboard.js"></script>
@@ -7355,35 +7359,15 @@
     window.onload = function() {
         console.log('🚀 [PROGRESSIVE] Window onload ejecutado');
 
-        // ✅ BYPASS COMPLETO - OMITIR TODO LOGIN
-        // BYPASS-TOTAL REMOVIDO
+        // Inicializar sistema de login multi-tenant
+        window.selectedCompany = null;
+        window.companyAuthToken = null;
+        window.isAuthenticated = false;
+        window.authToken = null;
 
-        // Configurar variables globales directamente
-        window.selectedCompany = {id: 11, name: 'ISI', slug: 'isi'};
-        window.companyAuthToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA1OTNmOTcxLTg0NjEtNGU2Ny04MGExLTFmZGRkMTg5MzJmNCIsImVtYWlsIjoiYWRtaW5AdGVzdC1jb21wYW55LmNvbSIsImNvbXBhbnlfaWQiOjQsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1ODgxMTk1OSwiZXhwIjoxNzU4ODk4MzU5fQ.4wskIaStFAas4kVF4L6Mn3z_SXNZKfLbi97L1bem2Hc';
-        window.isAuthenticated = true;
-        window.authToken = window.companyAuthToken;
-
-        // Ocultar cualquier modal o form de login
-        const loginModal = document.querySelector('.company-login-modal');
-        const loginForm = document.getElementById('loginForm');
-        if (loginModal) loginModal.style.display = 'none';
-        if (loginForm) loginForm.style.display = 'none';
-
-        // Mostrar contenido principal directo
-        const mainContent = document.getElementById('mainContent');
-        if (mainContent) {
-            mainContent.style.display = 'block';
-            mainContent.style.visibility = 'visible';
-            mainContent.style.opacity = '1';
-        }
-
-        // Cargar dashboard directamente
-        setTimeout(() => {
-            console.log('🚀 Cargando dashboard...');
-            loadCoreInterface();
-            // loadCoreInterface ya maneja el scroll hacia arriba
-        }, 500);
+        // Mostrar el formulario de login y cargar empresas
+        console.log('🔐 [INIT] Inicializando sistema de login multi-tenant...');
+        initializeMultiTenantLogin();
 
         // Inicializar objeto progressiveAdmin para los módulos
         window.progressiveAdmin = {

@@ -2164,7 +2164,7 @@ const LegalEngine = {
             const select = document.getElementById('new-case-employee');
             if (result.success && result.data) {
                 select.innerHTML = '<option value="">Seleccione empleado...</option>' +
-                    result.data.map(e => `<option value="${e.id}">${e.full_name || e.first_name + ' ' + e.last_name}</option>`).join('');
+                    result.data.map(e => `<option value="${e.id}">${e.full_name || ((e.first_name || '') + ' ' + (e.last_name || '')).trim() || 'Sin nombre'}</option>`).join('');
             }
         } catch (e) {
             console.error('[LegalEngine] Error loading employees:', e);

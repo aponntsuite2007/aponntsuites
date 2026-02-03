@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 
 // 🔐 MIDDLEWARE DE AUTENTICACIÓN PARA PANEL ADMINISTRATIVO APONNT
 // Verifica el token JWT de staff Aponnt (aponnt_token_staff)
@@ -570,11 +571,12 @@ router.get('/companies', async (req, res) => {
       SELECT
         company_id as id, company_id, name, slug, email as contact_email, phone, address,
         tax_id, is_active, max_employees, contracted_employees,
-        license_type,
+        license_type, status,
         city, country,
-        active_modules
+        active_modules,
+        onboarding_manual, onboarding_manual_reason, onboarding_manual_at,
+        status_manual, status_manual_reason, status_manual_at
       FROM companies
-      WHERE is_active = true
       ORDER BY company_id DESC
     `, {
       type: sequelize.QueryTypes.SELECT
@@ -646,6 +648,7 @@ router.get('/companies', async (req, res) => {
 
       return {
         id: company.company_id,
+        company_id: company.company_id,
         name: company.name || 'Sin nombre',
         legalName: company.legal_name || company.name || 'Sin nombre',
         taxId: company.tax_id || 'Sin CUIT',
@@ -656,6 +659,8 @@ router.get('/companies', async (req, res) => {
         maxEmployees: company.max_employees || 50,
         contractedEmployees: company.contracted_employees || 1,
         status: company.status || 'active',
+        is_active: company.is_active,
+        isActive: company.is_active,
         pricing: {
           monthlyTotal: monthlyTotal,
           monthlySubtotal: monthlySubtotal, // subtotal sin IVA
@@ -666,7 +671,16 @@ router.get('/companies', async (req, res) => {
         currentEmployees: currentEmployees, // Conteo real desde DB
         modulesSummary: modulesSummary, // Resumen de módulos
         paymentMethod: { qr: true, card: true, autopay: false },
-        recentInvoices: []
+        recentInvoices: [],
+        // Campos de control manual
+        onboarding_manual: company.onboarding_manual || false,
+        onboardingManual: company.onboarding_manual || false,
+        onboarding_manual_reason: company.onboarding_manual_reason,
+        onboarding_manual_at: company.onboarding_manual_at,
+        status_manual: company.status_manual || false,
+        statusManual: company.status_manual || false,
+        status_manual_reason: company.status_manual_reason,
+        status_manual_at: company.status_manual_at
       };
     }));
 
@@ -857,9 +871,29 @@ router.post('/companies', async (req, res) => {
       pricing
     } = sanitizedData;
 
-    // Crear slug a partir del nombre
-    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
-    
+    // 🛡️ PROTECCIÓN CONTRA DUPLICADOS POR NOMBRE
+    const existingByName = await Company.findOne({ where: { name: name } });
+    if (existingByName) {
+      return res.status(400).json({
+        success: false,
+        error: `Ya existe una empresa con el nombre "${name}"`,
+        existing: {
+          company_id: existingByName.company_id,
+          name: existingByName.name
+        }
+      });
+    }
+
+    // Crear slug único a partir del nombre
+    const baseSlug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (await Company.findOne({ where: { slug } })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
     console.log(`💰 Guardando precios - Total: ${pricing?.monthlyTotal}, Módulos:`, modules, modulesPricing);
 
     // 🎁 DESCOMPOSICIÓN DE BUNDLES DESDE ENGINEERING-METADATA.JS (SSOT)
@@ -1089,11 +1123,13 @@ router.put('/companies/:id', async (req, res) => {
       pricing
     } = req.body;
 
-    // Si es una actualización parcial simple (sin módulos ni name), usar update directo
-    if (!name && !modules && !modulesPricing) {
+    // Si NO se envían módulos, hacer actualización simple de datos básicos
+    // (POLÍTICA DE FACTURACIÓN: los módulos solo cambian con presupuesto aprobado)
+    if (!modules && !modulesPricing) {
       const updateFields = [];
       const replacements = { id };
 
+      if (name !== undefined) { updateFields.push('name = :name'); replacements.name = name; }
       if (legalName !== undefined) { updateFields.push('legal_name = :legalName'); replacements.legalName = legalName; }
       if (taxId !== undefined) { updateFields.push('tax_id = :taxId'); replacements.taxId = taxId; }
       if (contactEmail !== undefined) { updateFields.push('email = :contactEmail'); replacements.contactEmail = contactEmail; }
@@ -1114,6 +1150,7 @@ router.put('/companies/:id', async (req, res) => {
         { replacements, type: sequelize.QueryTypes.UPDATE }
       );
 
+      console.log(`✅ [BILLING POLICY] Empresa ${id} actualizada (solo datos básicos, sin cambio de módulos)`);
       return res.json({ success: true, message: 'Empresa actualizada exitosamente' });
     }
 

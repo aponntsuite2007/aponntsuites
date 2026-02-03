@@ -52,26 +52,35 @@
 
         async getModules() {
             try {
-                const res = await fetch(`${this.baseUrl}/modules-pricing`, { headers: this.getHeaders() });
+                // SSOT: Usar /api/engineering/commercial-modules (misma fuente que Engineering Dashboard)
+                const res = await fetch('/api/engineering/commercial-modules', { headers: this.getHeaders() });
                 if (!res.ok) {
-                    // Fallback: cargar desde registry
-                    const registryRes = await fetch('/api/audit/registry', { headers: this.getHeaders() });
-                    if (registryRes.ok) {
-                        const data = await registryRes.json();
-                        return Object.values(data.modules || {}).map(m => ({
-                            key: m.key,
-                            name: m.name,
-                            icon: m.icon || '📦',
-                            category: m.category || 'general',
-                            is_core: m.commercial?.is_core || false,
-                            base_price: m.commercial?.base_price || 0,
-                            price_per_employee: m.commercial?.price_per_employee || 0,
-                            description: m.description || ''
-                        }));
+                    console.warn('[WORKFLOW] Engineering API failed, trying fallback...');
+                    // Fallback: cargar desde modules-pricing
+                    const fallbackRes = await fetch(`${this.baseUrl}/modules-pricing`, { headers: this.getHeaders() });
+                    if (fallbackRes.ok) {
+                        return await fallbackRes.json();
                     }
                     return [];
                 }
-                return await res.json();
+                const data = await res.json();
+                if (!data.success) {
+                    console.error('[WORKFLOW] Engineering API returned error:', data.error);
+                    return [];
+                }
+                // Transformar al formato esperado por el workflow
+                return (data.data?.modules || []).map(m => ({
+                    module_key: m.key,
+                    key: m.key,
+                    name: m.name,
+                    icon: m.icon || '📦',
+                    category: m.category || 'general',
+                    is_core: m.isCore || false,
+                    base_price: parseFloat(m.basePrice) || 0,
+                    price_per_employee: 0, // Se calcula por tier
+                    description: m.description || '',
+                    commercial_type: m.commercialType || 'opcional'
+                }));
             } catch (e) {
                 console.error('[WORKFLOW] Error loading modules:', e);
                 return [];
@@ -100,7 +109,7 @@
             }
         },
 
-        async createCompanyWithBudget(companyData, modules, employeeCount) {
+        async createCompanyWithBudget(companyData, modules, employeeCount, modulesPricing = null) {
             const res = await fetch(`${this.baseUrl}/companies`, {
                 method: 'POST',
                 headers: this.getHeaders(),
@@ -108,6 +117,7 @@
                     ...companyData,
                     modules: Array.from(modules),
                     contracted_employees: employeeCount,
+                    modulesPricing: modulesPricing || {},
                     create_budget: true
                 })
             });
@@ -121,18 +131,24 @@
                 headers: this.getHeaders(),
                 body: JSON.stringify(companyData)
             });
-            if (!res.ok) throw new Error('Error al actualizar empresa');
-            return await res.json();
+            const data = await res.json();
+            if (!res.ok) {
+                console.error('[WORKFLOW] updateCompany error:', data);
+                throw new Error(data.error || data.message || 'Error al actualizar empresa');
+            }
+            return data;
         },
 
-        async createBudget(companyId, modules, employeeCount) {
+        async createBudget(companyId, modules, employeeCount, totalMonthly = null, modulesPricing = null) {
             const res = await fetch(`${this.baseUrl}/budgets`, {
                 method: 'POST',
                 headers: this.getHeaders(),
                 body: JSON.stringify({
                     company_id: companyId,
-                    modules: Array.from(modules),
-                    contracted_employees: employeeCount
+                    selected_modules: Array.from(modules),
+                    contracted_employees: employeeCount,
+                    total_monthly: totalMonthly || 0,
+                    pricing: modulesPricing || {}
                 })
             });
             if (!res.ok) throw new Error('Error al crear presupuesto');
@@ -372,10 +388,12 @@
             'siac': '📋 ERP SIAC',
             'admin': '💼 Administración',
             'support': '🎫 Soporte',
+            'additional': '➕ Adicionales',
+            'monitoring': '👁️ Monitoreo',
             'general': '📦 General'
         };
 
-        const categoryOrder = ['core', 'rrhh', 'payroll', 'medical', 'compliance', 'analytics', 'ai', 'hardware', 'communication', 'security', 'admin', 'support', 'siac', 'general'];
+        const categoryOrder = ['core', 'rrhh', 'payroll', 'medical', 'compliance', 'analytics', 'ai', 'hardware', 'communication', 'security', 'admin', 'support', 'siac', 'additional', 'monitoring', 'general'];
         const sortedCategories = categoryOrder.filter(c => categories[c]);
 
         return `
@@ -999,10 +1017,10 @@
                 </div>
                 <div class="wf-modal-footer">
                     <button class="wf-btn wf-btn-secondary" onclick="CompanyWorkflow.closeModal()">
-                        ❌ Cancelar
+                        ❌ Cerrar
                     </button>
                     <button class="wf-btn wf-btn-primary" id="wf-saveBtn">
-                        💾 ${workflowState.isEditing ? 'Generar Presupuesto' : 'Crear Empresa'}
+                        💾 ${workflowState.isEditing ? 'Guardar Cambios' : 'Crear Empresa'}
                     </button>
                 </div>
             </div>
@@ -1515,10 +1533,32 @@
             };
 
             try {
+                // Calcular pricing de los módulos seleccionados
+                const pricing = calculatePricing();
+                const employeeCount = workflowState.employeeCount;
+
+                // Construir modulesPricing con detalle por módulo
+                const modulesPricing = {};
+                workflowState.selectedModules.forEach(moduleKey => {
+                    const module = workflowState.availableModules.find(m => m.key === moduleKey);
+                    if (module) {
+                        const basePrice = parseFloat(module.base_price) || 0;
+                        const perEmployee = parseFloat(module.price_per_employee) || 0;
+                        const totalPrice = basePrice + (perEmployee * employeeCount);
+                        modulesPricing[moduleKey] = {
+                            name: module.name,
+                            basePrice: basePrice,
+                            pricePerEmployee: perEmployee,
+                            totalPrice: totalPrice
+                        };
+                    }
+                });
+
                 const result = await WorkflowAPI.createCompanyWithBudget(
                     companyData,
                     workflowState.selectedModules,
-                    workflowState.employeeCount
+                    employeeCount,
+                    modulesPricing
                 );
 
                 // Mostrar información completa del resultado
@@ -1556,30 +1596,54 @@
             const companyId = workflowState.currentCompany.company_id || workflowState.currentCompany.id;
 
             try {
-                // Actualizar datos de la empresa (ubicación va por sucursal)
+                // Calcular pricing de los módulos seleccionados
+                const pricing = calculatePricing();
+                const employeeCount = workflowState.employeeCount;
+
+                // Construir modulesPricing con detalle por módulo
+                const modulesPricing = {};
+                workflowState.selectedModules.forEach(moduleKey => {
+                    const module = workflowState.availableModules.find(m => m.key === moduleKey);
+                    if (module) {
+                        const basePrice = parseFloat(module.base_price) || 0;
+                        const perEmployee = parseFloat(module.price_per_employee) || 0;
+                        const totalPrice = basePrice + (perEmployee * employeeCount);
+                        modulesPricing[moduleKey] = {
+                            name: module.name,
+                            basePrice: basePrice,
+                            pricePerEmployee: perEmployee,
+                            totalPrice: totalPrice
+                        };
+                    }
+                });
+
+                // POLÍTICA DE FACTURACIÓN: Solo actualizar datos básicos de la empresa
+                // Los módulos NO se cambian hasta que el presupuesto esté VIGENTE
+                // (aprobado por cliente + contrato firmado)
                 const companyData = {
                     name: document.getElementById('wf-companyName')?.value,
-                    legal_name: document.getElementById('wf-legalName')?.value || '',
-                    tax_id: document.getElementById('wf-taxId')?.value,
-                    contact_email: document.getElementById('wf-email')?.value,
-                    contact_phone: document.getElementById('wf-phone')?.value || '',
-                    contact_name: document.getElementById('wf-contactName')?.value || '',
-                    contact_position: document.getElementById('wf-contactPosition')?.value || '',
-                    license_type: document.getElementById('wf-licenseType')?.value || 'basic',
-                    max_employees: parseInt(document.getElementById('wf-maxEmployees')?.value) || 50,
-                    contracted_employees: workflowState.employeeCount
+                    legalName: document.getElementById('wf-legalName')?.value || '',
+                    taxId: document.getElementById('wf-taxId')?.value,
+                    contactEmail: document.getElementById('wf-email')?.value,
+                    contactPhone: document.getElementById('wf-phone')?.value || '',
+                    licenseType: document.getElementById('wf-licenseType')?.value || 'basic',
+                    maxEmployees: parseInt(document.getElementById('wf-maxEmployees')?.value) || 50
+                    // ⚠️ NO incluir modules ni modulesPricing aquí
+                    // Los cambios de módulos van SOLO en el presupuesto
                 };
 
                 await WorkflowAPI.updateCompany(companyId, companyData);
 
-                // Crear nuevo presupuesto
+                // Crear nuevo presupuesto con datos completos
                 const result = await WorkflowAPI.createBudget(
                     companyId,
                     workflowState.selectedModules,
-                    workflowState.employeeCount
+                    employeeCount,
+                    pricing.total,
+                    modulesPricing
                 );
 
-                alert(`✅ Empresa actualizada y nuevo presupuesto generado para "${workflowState.currentCompany.name}"!\n\nEstado: PENDIENTE\nEl presupuesto anterior sigue VIGENTE hasta que el cliente apruebe y firme el nuevo contrato.`);
+                alert(`✅ Presupuesto de modificación generado para "${workflowState.currentCompany.name}"!\n\n💰 Total mensual propuesto: $${pricing.total.toFixed(2)}\n📋 Estado: PENDIENTE\n\n⚠️ IMPORTANTE:\nLos cambios de módulos NO están activos aún.\nSolo se aplicarán cuando:\n1. El cliente apruebe el presupuesto\n2. Se firme el nuevo contrato\n\nEl contrato actual sigue VIGENTE.`);
                 closeModal();
 
                 if (typeof VendorDashboard !== 'undefined') {

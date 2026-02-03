@@ -471,6 +471,13 @@ const EnterpriseCompaniesGrid = {
 
         const hasAI = company.modulesSummary && company.modulesSummary.contractedModules > 0; // Simplificado
 
+        // Determinar si fue manual o automático
+        const isManualOnboarding = company.onboarding_manual || company.onboardingManual;
+        const isManualStatus = company.status_manual || company.statusManual;
+        const manualIndicator = (isManualOnboarding || isManualStatus)
+            ? `<div class="enterprise-badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:10px;" title="${isManualOnboarding ? 'Alta Manual' : 'Estado Manual'}">✋ Manual</div>`
+            : `<div class="enterprise-badge" style="background:linear-gradient(135deg,#10b981,#059669);color:white;font-size:10px;" title="Alta automática">⚡ Auto</div>`;
+
         return `
             <div class="enterprise-company-card">
                 <div class="enterprise-card-header">
@@ -481,8 +488,9 @@ const EnterpriseCompaniesGrid = {
                     </div>
                     <div class="enterprise-card-badges">
                         <div class="enterprise-badge enterprise-badge-status-${company.status || 'active'}">
-                            ${company.status === 'active' ? '✓ Active' : company.status === 'trial' ? '⏱ Trial' : '⏸ Suspended'}
+                            ${company.status === 'active' ? '✓ Active' : company.status === 'trial' ? '⏱ Trial' : company.status === 'suspended' ? '⏸ Suspended' : '🚫 Inactive'}
                         </div>
+                        ${manualIndicator}
                         ${hasAI ? '<div class="enterprise-badge enterprise-badge-ai">🤖 AI</div>' : ''}
                     </div>
                 </div>
@@ -531,9 +539,170 @@ const EnterpriseCompaniesGrid = {
                     <button class="enterprise-btn enterprise-btn-icon" onclick="showCompanyStats(${company.company_id || company.id})" title="Statistics">
                         📊
                     </button>
+                    ${this.renderStatusControls(company)}
                 </div>
             </div>
         `;
+    },
+
+    /**
+     * Renderiza controles de estado para superadmin/gerente_general
+     */
+    renderStatusControls(company) {
+        // Obtener rol del staff actual
+        let staffRole = '';
+        try {
+            // Primero: decodificar JWT (más confiable)
+            const token = sessionStorage.getItem('aponnt_token_staff') || localStorage.getItem('aponnt_token_staff');
+            if (token) {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                staffRole = payload.role || '';
+            }
+            // Fallback: AdminPanelController
+            if (!staffRole && window.AdminPanelController && AdminPanelController._currentStaff) {
+                const staff = AdminPanelController._currentStaff;
+                staffRole = staff.role_code || (staff.role && staff.role.role_code) || '';
+            }
+        } catch (e) { console.warn('[GRID] Error obteniendo rol:', e); }
+
+        // Solo mostrar para roles de alta gerencia
+        const allowedRoles = ['GG', 'GERENTE_GENERAL', 'SUPERADMIN', 'superadmin', 'gerente_general', 'DIR', 'DIRECTOR'];
+        if (!allowedRoles.includes(staffRole)) {
+            return '';
+        }
+
+        const companyId = company.company_id || company.id;
+        const currentStatus = company.status || 'active';
+
+        let html = '<div class="enterprise-status-controls" style="display:flex;gap:4px;margin-left:auto;">';
+
+        if (currentStatus === 'active') {
+            // Si está activa, mostrar botón para suspender
+            html += `<button class="enterprise-btn enterprise-btn-icon" onclick="EnterpriseCompaniesGrid.showStatusChangeModal(${companyId}, 'suspended', '${company.name}')" title="SUSPENDER: Desactiva temporalmente el acceso. La empresa no podrá usar el sistema pero se mantienen sus datos." style="background:#f59e0b;color:white;">⏸</button>`;
+            html += `<button class="enterprise-btn enterprise-btn-icon" onclick="EnterpriseCompaniesGrid.showStatusChangeModal(${companyId}, 'cancelled', '${company.name}')" title="DAR DE BAJA: Desactiva permanentemente la empresa. Usar solo para cancelaciones definitivas." style="background:#dc2626;color:white;">🚫</button>`;
+        } else if (currentStatus === 'suspended') {
+            // Si está suspendida, mostrar botón para reactivar o dar de baja
+            html += `<button class="enterprise-btn enterprise-btn-icon" onclick="EnterpriseCompaniesGrid.showStatusChangeModal(${companyId}, 'active', '${company.name}')" title="REACTIVAR: Restaura el acceso de la empresa al sistema." style="background:#059669;color:white;">✓</button>`;
+            html += `<button class="enterprise-btn enterprise-btn-icon" onclick="EnterpriseCompaniesGrid.showStatusChangeModal(${companyId}, 'cancelled', '${company.name}')" title="DAR DE BAJA: Desactiva permanentemente la empresa." style="background:#dc2626;color:white;">🚫</button>`;
+        } else {
+            // Si está cancelada/inactiva, mostrar botón para reactivar
+            html += `<button class="enterprise-btn enterprise-btn-icon" onclick="EnterpriseCompaniesGrid.showStatusChangeModal(${companyId}, 'active', '${company.name}')" title="REACTIVAR: Restaura el acceso de la empresa al sistema." style="background:#059669;color:white;">✓</button>`;
+        }
+
+        html += '</div>';
+        return html;
+    },
+
+    /**
+     * Mostrar modal para cambiar estado
+     */
+    showStatusChangeModal(companyId, newStatus, companyName) {
+        const statusLabels = {
+            'active': 'Reactivar',
+            'suspended': 'Suspender',
+            'cancelled': 'Dar de Baja'
+        };
+        const statusColors = {
+            'active': '#059669',
+            'suspended': '#f59e0b',
+            'cancelled': '#dc2626'
+        };
+        const statusDescriptions = {
+            'active': {
+                title: '¿Qué significa reactivar?',
+                desc: 'La empresa podrá acceder nuevamente al sistema. Todos sus datos, usuarios y configuraciones se mantienen intactos.',
+                examples: 'Ej: Renovación de contrato, pago de deuda regularizado, fin de suspensión temporal.'
+            },
+            'suspended': {
+                title: '¿Qué significa suspender?',
+                desc: 'La empresa NO podrá acceder al sistema temporalmente, pero sus datos se conservan. Ideal para situaciones que pueden resolverse.',
+                examples: 'Ej: Falta de pago, revisión de contrato, solicitud del cliente, investigación interna.'
+            },
+            'cancelled': {
+                title: '¿Qué significa dar de baja?',
+                desc: 'La empresa queda desactivada permanentemente. Los datos se conservan por requisitos legales pero no podrá operar.',
+                examples: 'Ej: Cancelación de contrato, cierre de empresa, solicitud formal de baja.'
+            }
+        };
+
+        const info = statusDescriptions[newStatus];
+
+        const html = `
+            <div class="enterprise-modal-overlay" onclick="EnterpriseCompaniesGrid.closeStatusModal(event)" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;">
+                <div onclick="event.stopPropagation()" style="background:white;border-radius:12px;max-width:500px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="padding:20px;border-bottom:1px solid #e5e7eb;background:${statusColors[newStatus]};border-radius:12px 12px 0 0;">
+                        <h3 style="margin:0;color:white;font-size:18px;">${statusLabels[newStatus]} Empresa</h3>
+                    </div>
+                    <div style="padding:20px;">
+                        <p style="margin:0 0 15px;color:#374151;font-size:16px;"><strong>${companyName}</strong></p>
+
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:15px;">
+                            <strong style="color:#334155;font-size:13px;">${info.title}</strong>
+                            <p style="margin:8px 0 0;color:#64748b;font-size:13px;">${info.desc}</p>
+                            <p style="margin:8px 0 0;color:#94a3b8;font-size:12px;font-style:italic;">${info.examples}</p>
+                        </div>
+
+                        <label style="display:block;font-weight:600;margin-bottom:8px;color:#374151;">Motivo del cambio *</label>
+                        <textarea id="status-change-reason" rows="3" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;resize:none;box-sizing:border-box;" placeholder="Describe el motivo (mínimo 10 caracteres)..."></textarea>
+                        <p style="margin:5px 0 0;color:#9ca3af;font-size:11px;">Este motivo quedará registrado junto con tu usuario y fecha/hora.</p>
+                    </div>
+                    <div style="padding:15px 20px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:10px;">
+                        <button onclick="EnterpriseCompaniesGrid.closeStatusModal()" style="padding:10px 20px;border:1px solid #d1d5db;background:white;border-radius:8px;cursor:pointer;font-size:14px;">Cancelar</button>
+                        <button onclick="EnterpriseCompaniesGrid.confirmStatusChange(${companyId}, '${newStatus}')" style="padding:10px 20px;border:none;background:${statusColors[newStatus]};color:white;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">${statusLabels[newStatus]}</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', html);
+    },
+
+    /**
+     * Cerrar modal de cambio de estado
+     */
+    closeStatusModal(event) {
+        if (event && event.target.className.indexOf('enterprise-modal-overlay') === -1) return;
+        const modal = document.querySelector('.enterprise-modal-overlay');
+        if (modal) modal.remove();
+    },
+
+    /**
+     * Confirmar cambio de estado
+     */
+    async confirmStatusChange(companyId, newStatus) {
+        const reason = document.getElementById('status-change-reason')?.value?.trim();
+        if (!reason || reason.length < 10) {
+            alert('Debe indicar un motivo de al menos 10 caracteres');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const resp = await fetch(`/api/v1/companies/${companyId}/manual-status`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus, reason })
+            });
+
+            const data = await resp.json();
+            if (!resp.ok || !data.success) {
+                throw new Error(data.error || 'Error al cambiar estado');
+            }
+
+            this.closeStatusModal();
+            alert(data.message || 'Estado actualizado correctamente');
+
+            // Recargar la sección de empresas
+            if (window.AdminPanelController) {
+                AdminPanelController.loadSection('empresas');
+            }
+        } catch (error) {
+            console.error('[ENTERPRISE GRID] Error:', error);
+            alert('Error: ' + error.message);
+        }
     },
 
     /**

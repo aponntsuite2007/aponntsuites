@@ -168,9 +168,12 @@ const auth = async (req, res, next) => {
  * Middleware para verificar roles específicos
  */
 const authorize = (...roles) => {
+  // Aplanar si se pasa un array como primer argumento
+  const allowedRoles = roles.flat();
+
   return (req, res, next) => {
     console.log('🔐 [AUTHORIZE] Verificando permisos...');
-    console.log('🔐 [AUTHORIZE] Roles permitidos:', roles);
+    console.log('🔐 [AUTHORIZE] Roles permitidos:', allowedRoles);
     console.log('🔐 [AUTHORIZE] Usuario:', {
       user_id: req.user?.user_id,
       email: req.user?.email,
@@ -200,11 +203,11 @@ const authorize = (...roles) => {
       });
     }
 
-    if (!roles.includes(userRole)) {
-      console.warn(`⚠️ [AUTHORIZE] Acceso denegado. Rol "${userRole}" no está en ${JSON.stringify(roles)}`);
+    if (!allowedRoles.includes(userRole)) {
+      console.warn(`⚠️ [AUTHORIZE] Acceso denegado. Rol "${userRole}" no está en ${JSON.stringify(allowedRoles)}`);
       return res.status(403).json({
         error: 'Acceso denegado. Permisos insuficientes.',
-        required: roles,
+        required: allowedRoles,
         current: userRole
       });
     }

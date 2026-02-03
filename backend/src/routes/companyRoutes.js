@@ -410,7 +410,60 @@ router.delete('/:id', auth, requireRole(['super_admin']), async (req, res) => {
   }
 });
 
-// 🔄 Activate/Deactivate company
+// 🔄 Cambiar estado de empresa (con motivo) - Dashboard
+router.put('/:id/status', auth, requireRole(['admin', 'super_admin', 'gerente_general', 'director', 'GG', 'DIR']), async (req, res) => {
+  console.log('📍 [COMPANY-STATUS] PUT /:id/status llamado');
+  console.log('📍 [COMPANY-STATUS] Params:', req.params);
+  console.log('📍 [COMPANY-STATUS] Body:', req.body);
+  console.log('📍 [COMPANY-STATUS] User:', req.user?.email, req.user?.role);
+
+  try {
+    const { id } = req.params;
+    const { is_active, reason } = req.body;
+
+    if (typeof is_active !== 'boolean') {
+      return res.status(400).json({ success: false, message: 'is_active debe ser booleano' });
+    }
+    if (!reason || reason.trim().length < 10) {
+      return res.status(400).json({ success: false, message: 'Debe indicar un motivo de al menos 10 caracteres' });
+    }
+
+    const staffId = req.user.id || req.user.staff_id;
+    const { sequelize } = require('../config/database');
+
+    // Actualizar empresa con motivo
+    await sequelize.query(`
+      UPDATE companies SET
+        is_active = :isActive,
+        status_manual = TRUE,
+        status_manual_reason = :reason,
+        status_manual_by = :staffId,
+        status_manual_at = NOW(),
+        updated_at = NOW()
+      WHERE company_id = :id
+    `, {
+      replacements: { id, isActive: is_active, reason: reason.trim(), staffId },
+      type: sequelize.QueryTypes.UPDATE
+    });
+
+    // Obtener empresa actualizada
+    const [company] = await sequelize.query(`
+      SELECT company_id, name, is_active, status_manual_reason FROM companies WHERE company_id = :id
+    `, { replacements: { id }, type: sequelize.QueryTypes.SELECT });
+
+    res.json({
+      success: true,
+      message: `Empresa ${is_active ? 'activada' : 'desactivada'} correctamente`,
+      company
+    });
+
+  } catch (error) {
+    console.error('Error changing company status:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// 🔄 Activate/Deactivate company (legacy toggle)
 router.patch('/:id/toggle-status', auth, requireRole(['super_admin']), async (req, res) => {
   try {
     const { id } = req.params;
@@ -617,13 +670,14 @@ router.post('/:id/manual-onboarding', auth, async (req, res) => {
     const { id } = req.params;
     const { action, reason } = req.body;
     const staffId = req.staff?.staff_id || req.user?.staff_id || req.user?.id;
-    const staffRole = req.staff?.role || req.user?.role;
+    const staffRole = req.user?.staff_role || req.staff?.role || req.user?.role || '';
 
-    // Validar rol
-    if (!['superadmin', 'gerente_general'].includes(staffRole)) {
+    // Validar rol (acepta variantes: GG, GERENTE_GENERAL, SUPERADMIN, o minúsculas)
+    const allowedRoles = ['GG', 'GERENTE_GENERAL', 'SUPERADMIN', 'superadmin', 'gerente_general', 'DIR', 'DIRECTOR'];
+    if (!allowedRoles.includes(staffRole)) {
       return res.status(403).json({
         success: false,
-        error: 'Solo superadmin y gerente_general pueden realizar cambios manuales de onboarding'
+        error: `Solo roles de alta gerencia pueden realizar cambios manuales de onboarding. Tu rol: ${staffRole}`
       });
     }
 
@@ -674,24 +728,51 @@ router.post('/:id/manual-onboarding', auth, async (req, res) => {
 
       // Crear usuario admin si no existe
       const [existingAdmin] = await sequelize.query(`
-        SELECT id FROM users WHERE company_id = :id AND role = 'admin' LIMIT 1
+        SELECT user_id FROM users WHERE company_id = :id AND role = 'admin' LIMIT 1
       `, { replacements: { id }, type: sequelize.QueryTypes.SELECT });
 
       let adminCreated = false;
       if (!existingAdmin) {
         const hashedPassword = await bcrypt.hash('admin123', 12);
+        // Generar employeeId y dni únicos
+        const timestamp = Date.now().toString().slice(-6);
+        const employeeId = 'ADM-' + id + '-' + timestamp;
+        const dni = 'ADMIN' + id + timestamp;  // DNI único por empresa
         await sequelize.query(`
-          INSERT INTO users (company_id, username, password, email, first_name, last_name, role, is_active, is_core_user, force_password_change, created_at, updated_at)
-          VALUES (:id, 'administrador', :password, :email, 'Administrador', 'Principal', 'admin', true, true, true, NOW(), NOW())
+          INSERT INTO users (user_id, company_id, usuario, password, email, "firstName", "lastName", "employeeId", dni, role, is_active, is_core_user, force_password_change, "createdAt", "updatedAt")
+          VALUES (gen_random_uuid(), :id, 'administrador', :password, :email, 'Administrador', 'Principal', :employeeId, :dni, 'admin', true, true, true, NOW(), NOW())
         `, {
           replacements: {
             id,
             password: hashedPassword,
-            email: company.contact_email || `admin@${company.slug}.com`
+            email: company.contact_email || `admin@${company.slug}.com`,
+            employeeId,
+            dni
           },
           type: sequelize.QueryTypes.INSERT
         });
         adminCreated = true;
+      }
+
+      // 📧 ENVIAR EMAIL DE BIENVENIDA
+      try {
+        const AponntNotificationService = require('../services/AponntNotificationService');
+
+        // Obtener datos completos de la empresa para el email
+        const [companyFull] = await sequelize.query(`
+          SELECT company_id as id, name, slug, contact_email as "contactEmail",
+                 license_type as "licenseType", max_employees as "maxEmployees",
+                 active_modules as modules, legal_name as "legalName"
+          FROM companies WHERE company_id = :id
+        `, { replacements: { id }, type: sequelize.QueryTypes.SELECT });
+
+        if (companyFull && companyFull.contactEmail) {
+          await AponntNotificationService.notifyNewCompany(companyFull);
+          console.log(`📧 [MANUAL] Email de bienvenida enviado a ${companyFull.contactEmail}`);
+        }
+      } catch (notifError) {
+        console.error('⚠️ [MANUAL] Error enviando email de bienvenida:', notifError.message);
+        // No fallar el alta por error en notificación
       }
 
       console.log(`✅ [MANUAL] Alta de empresa "${company.name}" por staff ${staffId}. Motivo: ${reason}`);
@@ -749,13 +830,14 @@ router.post('/:id/manual-status', auth, async (req, res) => {
     const { id } = req.params;
     const { status, reason } = req.body;
     const staffId = req.staff?.staff_id || req.user?.staff_id || req.user?.id;
-    const staffRole = req.staff?.role || req.user?.role;
+    const staffRole = req.user?.staff_role || req.staff?.role || req.user?.role || '';
 
-    // Validar rol
-    if (!['superadmin', 'gerente_general'].includes(staffRole)) {
+    // Validar rol (acepta variantes: GG, GERENTE_GENERAL, SUPERADMIN, o minúsculas)
+    const allowedRoles = ['GG', 'GERENTE_GENERAL', 'SUPERADMIN', 'superadmin', 'gerente_general', 'DIR', 'DIRECTOR'];
+    if (!allowedRoles.includes(staffRole)) {
       return res.status(403).json({
         success: false,
-        error: 'Solo superadmin y gerente_general pueden cambiar el estado manualmente'
+        error: `Solo roles de alta gerencia pueden cambiar el estado manualmente. Tu rol: ${staffRole}`
       });
     }
 

@@ -890,6 +890,9 @@ El equipo de Aponnt
     console.log(`🚀 [ONBOARDING] Iniciando desde Quote ${quote.quote_number} - trace: ${trace_id}`);
 
     try {
+      const { Quote, Contract, Company, User, Branch } = require('../config/database');
+      const bcrypt = require('bcryptjs');
+
       // El quote ya tiene contrato creado por QuoteManagementService._createContractFromQuote
       const contract = await Contract.findOne({
         where: { quote_id: quote.id, status: 'active' }
@@ -906,6 +909,75 @@ El equipo de Aponnt
       }
 
       console.log(`📄 [ONBOARDING] Contrato encontrado: ${contract.contract_number}`);
+
+      // =====================================================
+      // GARANTIZAR USUARIOS ADMIN Y SOPORTE (si no existen)
+      // =====================================================
+      const company = await Company.findByPk(quote.company_id);
+      if (company) {
+        const existingAdmin = await User.findOne({
+          where: { company_id: quote.company_id, is_core_user: true }
+        });
+
+        if (!existingAdmin) {
+          const hashedPassword = await bcrypt.hash('admin123', 12);
+
+          await User.create({
+            username: 'administrador',
+            password: hashedPassword,
+            first_name: 'Administrador',
+            last_name: company.name || 'Principal',
+            email: company.contact_email,
+            role: 'admin',
+            company_id: quote.company_id,
+            is_core_user: true,
+            force_password_change: true,
+            is_deletable: false,
+            account_status: 'active'
+          });
+          console.log(`✅ [ONBOARDING] Usuario ADMIN creado: administrador`);
+
+          // Usuario soporte
+          try {
+            await User.create({
+              username: 'soporte',
+              password: hashedPassword,
+              first_name: 'Soporte',
+              last_name: 'Técnico',
+              email: `soporte+${company.slug || company.company_id}@aponnt.com`,
+              role: 'admin',
+              company_id: quote.company_id,
+              is_core_user: true,
+              is_system_user: true,
+              is_visible: false,
+              force_password_change: false,
+              is_deletable: false,
+              account_status: 'active'
+            });
+            console.log(`✅ [ONBOARDING] Usuario SOPORTE creado (invisible)`);
+          } catch (err) {
+            console.warn(`⚠️ [ONBOARDING] Usuario soporte ya existe o error: ${err.message}`);
+          }
+        }
+
+        // =====================================================
+        // GARANTIZAR SUCURSAL CENTRAL (si no existen sucursales)
+        // =====================================================
+        const existingBranches = await Branch.count({ where: { company_id: quote.company_id } });
+        if (existingBranches === 0) {
+          await Branch.create({
+            name: 'Central',
+            code: `CENTRAL-${quote.company_id}`,
+            company_id: quote.company_id,
+            is_main: true,
+            isActive: true,
+            address: company.address || '',
+            city: company.city || '',
+            country: company.country || 'AR'
+          });
+          console.log(`🏢 [ONBOARDING] Sucursal CENTRAL creada por defecto`);
+        }
+      }
 
       // FASE 3: Generar factura inicial
       let invoiceResult;
