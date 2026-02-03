@@ -2900,6 +2900,10 @@ console.log('📬 [ADMIN-NOTIFICATIONS] Bandeja de notificaciones admin configur
 app.use('/api/migrations', require('./src/routes/migrationRoutes')); // 🔧 GET /run con X-Migration-Key header
 console.log('🔧 [MIGRATIONS] Endpoint HTTP de migraciones configurado');
 
+// 🔄 SCHEMA REPLACEMENT (Feb 2026) - HTTP endpoint para reemplazar schema completo
+app.use('/api/schema-replacement', require('./src/routes/schemaReplacementRoutes')); // 🔄 POST /execute para clonar local→Render
+console.log('🔄 [SCHEMA-REPLACEMENT] Endpoint de reemplazo de schema configurado');
+
 app.use('/api', pricingRoutes);
 
 // 💼 CIRCUITO COMERCIAL COMPLETO - 6 FASES (Enero 2025)
