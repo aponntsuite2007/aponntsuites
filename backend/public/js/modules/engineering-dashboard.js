@@ -14,7 +14,6 @@
  *
  * Features:
  * - Drill-down navigation (cube-style)
- * - Gantt charts para roadmap
  * - Dependency graphs
  * - Progress tracking en tiempo real
  * - Color-coded status indicators
@@ -23,8 +22,7 @@
  * Layers:
  * 1. Applications (7 apps del ecosistema)
  * 2. Modules (20+ módulos backend)
- * 3. Roadmap (6 fases con tareas)
- * 4. Database (Schema y relaciones)
+ * 3. Database (Schema y relaciones)
  *
  * ============================================================================
  */
@@ -34,7 +32,7 @@ console.log('✅ [ENGINEERING] Archivo engineering-dashboard.js cargado');
 const EngineeringDashboard = {
   metadata: null,
   stats: null,
-  currentView: 'overview', // overview, applications, modules, roadmap, database
+  currentView: 'commercial-modules', // commercial-modules, backend-files, frontend-files
   currentDrilldown: null,
   searchTerm: '',
   filterStatus: 'all',
@@ -184,11 +182,11 @@ const EngineeringDashboard = {
     try {
       // RENDERIZAR INMEDIATAMENTE sin setTimeout
       container.innerHTML = `
-        <!-- CSS para tabs claros del Engineering Dashboard -->
+        <!-- CSS para tabs DARK THEME del Engineering Dashboard -->
         <style>
           .navigation-tabs {
             display: flex;
-            background: #f8f9fa !important;
+            background: rgba(35, 40, 55, 0.6) !important;
             border-radius: 8px;
             overflow-x: auto;
             padding: 5px;
@@ -199,26 +197,27 @@ const EngineeringDashboard = {
             flex: 0 0 auto;
             min-width: 140px;
             padding: 12px 20px !important;
-            background: white !important;
-            border: 1px solid #e5e7eb !important;
+            background: rgba(45, 49, 66, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
             border-radius: 6px !important;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 500;
-            color: #374151 !important;
+            color: rgba(232, 234, 237, 0.9) !important;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
           }
           .navigation-tabs .nav-tab:hover {
-            background: #f3f4f6 !important;
-            border-color: #3b82f6 !important;
+            background: rgba(55, 60, 77, 0.9) !important;
+            border-color: #ffa726 !important;
           }
           .navigation-tabs .nav-tab.active {
-            background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
-            color: white !important;
-            border-color: #3b82f6 !important;
+            background: linear-gradient(135deg, #ffa726, #ff9800) !important;
+            color: #1a1d29 !important;
+            border-color: #ffa726 !important;
+            box-shadow: 0 4px 12px rgba(255, 167, 38, 0.3);
           }
           .navigation-tabs .tab-icon {
             font-size: 1.2em;
@@ -228,7 +227,7 @@ const EngineeringDashboard = {
           }
         </style>
 
-        <div style="padding: 20px !important; background: white !important; min-height: 600px !important; position: relative !important;">
+        <div style="padding: 20px !important; background: #1a1d29 !important; min-height: 600px !important; position: relative !important; border: 2px solid rgba(255, 167, 38, 0.2) !important; border-radius: 12px !important;">
           ${!this.metadata || !this.stats ? `
             <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0;">
               <h3 style="color: #92400e; margin: 0 0 10px 0;">⚠️ Cargando datos...</h3>
@@ -236,11 +235,6 @@ const EngineeringDashboard = {
               <p style="color: #78350f; margin: 0;">Stats: ${this.stats ? '✅' : '❌'}</p>
             </div>
           ` : `
-            <!-- Header con stats globales -->
-            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              ${this.renderHeader()}
-            </div>
-
             <!-- Toolbar -->
             <div style="margin-bottom: 20px;">
               ${this.renderToolbar()}
@@ -299,7 +293,7 @@ const EngineeringDashboard = {
     if (!this.metadata || !this.stats) return '<p>Cargando...</p>';
 
     const { project } = this.metadata;
-    const { modules, roadmap } = this.stats;
+    const { modules } = this.stats;
 
     return `
       <div class="header-container">
@@ -331,23 +325,12 @@ const EngineeringDashboard = {
             </div>
           </div>
 
-          <!-- Tareas completadas -->
-          <div class="stat-card tasks-stat">
-            <div class="stat-icon">✅</div>
-            <div class="stat-info">
-              <div class="stat-label">Tareas del Roadmap</div>
-              <div class="stat-value">${roadmap.completedTasks} / ${roadmap.totalTasks}</div>
-              <div class="stat-detail">${roadmap.taskCompletionRate}% completo</div>
-            </div>
-          </div>
-
           <!-- Fase actual -->
           <div class="stat-card phase-stat">
             <div class="stat-icon">🎯</div>
             <div class="stat-info">
               <div class="stat-label">Fase Actual</div>
               <div class="stat-value">${this.formatPhaseName(project.currentPhase)}</div>
-              <div class="stat-detail">${roadmap.inProgressPhases} en progreso</div>
             </div>
           </div>
         </div>
@@ -405,18 +388,68 @@ const EngineeringDashboard = {
         </div>
 
         <!-- Acciones -->
-        <div class="toolbar-actions">
-          <button class="btn-refresh" id="btn-refresh-metadata">
+        <div class="toolbar-actions" style="display: flex; gap: 12px; align-items: center;">
+          <button
+            class="btn-refresh"
+            id="btn-refresh-metadata"
+            style="
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              border-radius: 8px;
+              font-weight: 600;
+              cursor: pointer;
+              font-size: 14px;
+              transition: all 0.3s;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            "
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'"
+          >
             🔄 Recargar
           </button>
-          <button class="btn-export" id="btn-export-metadata">
+          <button
+            class="btn-export"
+            id="btn-export-metadata"
+            style="
+              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              border-radius: 8px;
+              font-weight: 600;
+              cursor: pointer;
+              font-size: 14px;
+              transition: all 0.3s;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            "
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.4)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'"
+          >
             📥 Exportar JSON
           </button>
-          <button class="btn-llm-context" id="btn-regenerate-llm-context" title="Regenerar llm-context.json para IAs">
+          <button
+            class="btn-llm-context"
+            id="btn-regenerate-llm-context"
+            title="Regenerar llm-context.json para IAs"
+            style="
+              background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+              color: white;
+              border: none;
+              padding: 10px 24px;
+              border-radius: 8px;
+              font-weight: 600;
+              cursor: pointer;
+              font-size: 14px;
+              transition: all 0.3s;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              white-space: nowrap;
+            "
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(245, 158, 11, 0.4)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'"
+          >
             🤖 Regenerar LLM Context
-          </button>
-          <button class="btn-ultimate-test" id="btn-ultimate-test" title="Ejecutar ULTIMATE TEST - Batería completa integrada">
-            🚀 ULTIMATE TEST
           </button>
         </div>
       </div>
@@ -428,19 +461,11 @@ const EngineeringDashboard = {
    */
   renderNavigation() {
     const tabs = [
-      { id: 'overview', icon: '🌍', label: 'Vista General' },
-      { id: 'system-health', icon: '🧠', label: 'Salud del Sistema' },
       { id: 'commercial-modules', icon: '💰', label: 'Módulos Comerciales' },
-      { id: 'applications', icon: '📱', label: 'Aplicaciones' },
-      { id: 'modules', icon: '📦', label: 'Módulos Técnicos' },
       { id: 'backend-files', icon: '⚙️', label: 'Archivos Backend' },
       { id: 'frontend-files', icon: '🎨', label: 'Archivos Frontend' },
-      { id: 'roadmap', icon: '🗺️', label: 'Roadmap' },
-      { id: 'critical-path', icon: '🎯', label: 'Camino Crítico (CPM)' },
-      { id: 'organigrama', icon: '🏢', label: 'Organigrama' },
       { id: 'database', icon: '🗄️', label: 'Base de Datos' },
       { id: 'workflows', icon: '🔄', label: 'Workflows' },
-      { id: 'auto-healing', icon: '🔧', label: 'Auto-Healing' },
       { id: 'company-restore', icon: '🔄', label: 'Restaurar Empresa' },
       { id: 'system-settings', icon: '⚙️', label: 'Configuración Sistema' },
     ];
@@ -465,20 +490,6 @@ const EngineeringDashboard = {
    */
   renderContent() {
     switch (this.currentView) {
-      case 'overview':
-        return this.renderOverview();
-      case 'system-health':
-        // Cargar salud del sistema dinámicamente
-        setTimeout(() => this.loadSystemHealthView(), 100);
-        return `
-          <div id="system-health-dynamic" style="padding: 20px;">
-            <div style="text-align: center; padding: 50px;">
-              <div style="font-size: 64px; margin-bottom: 20px;">🧠</div>
-              <h2 style="color: #374151;">Cargando Estado del Sistema...</h2>
-              <p style="color: #6b7280;">Obteniendo datos del Brain Orchestrator</p>
-            </div>
-          </div>
-        `;
       case 'commercial-modules':
         // Cargar módulos comerciales dinámicamente
         setTimeout(() => this.loadCommercialModulesView(), 100);
@@ -486,56 +497,20 @@ const EngineeringDashboard = {
           <div id="commercial-modules-dynamic" style="padding: 20px;">
             <div style="text-align: center; padding: 50px;">
               <div style="font-size: 64px; margin-bottom: 20px;">💰</div>
-              <h2 style="color: #374151;">Cargando Módulos Comerciales...</h2>
-              <p style="color: #6b7280;">Obteniendo datos del Single Source of Truth</p>
+              <h2 style="color: #e8eaed;">Cargando Módulos Comerciales...</h2>
+              <p style="color: rgba(232, 234, 237, 0.7);">Obteniendo datos del Single Source of Truth</p>
             </div>
           </div>
         `;
-      case 'applications':
-        return this.renderApplications();
-      case 'modules':
-        return this.renderModules();
       case 'backend-files':
         return this.renderBackendFiles();
       case 'frontend-files':
         return this.renderFrontendFiles();
-      case 'roadmap':
-        return this.renderRoadmap();
-      case 'critical-path':
-        // Critical Path es async, cargar dinámicamente DESPUÉS de que el DOM esté listo
-        setTimeout(() => this.loadCriticalPathView(), 100);
-        return `
-          <div id="critical-path-dynamic" style="padding: 20px;">
-            <div style="text-align: center; padding: 50px;">
-              <div style="font-size: 64px; margin-bottom: 20px;">🎯</div>
-              <h2 style="color: #374151;">Cargando Camino Crítico...</h2>
-              <p style="color: #6b7280;">Analizando tareas y calculando rutas críticas</p>
-            </div>
-          </div>
-        `;
-      case 'organigrama':
-        return this.renderOrganigrama();
       case 'database':
         return this.renderDatabase();
       case 'workflows':
         setTimeout(() => this.loadWorkflowsFromBrain(), 100);
         return this.renderWorkflows();
-      case 'auto-healing':
-        // Inicializar Auto-Healing Dashboard si está disponible
-        setTimeout(() => {
-          if (window.AutoHealingDashboard && typeof window.AutoHealingDashboard.render === 'function') {
-            window.AutoHealingDashboard.render();
-          }
-        }, 100);
-        return `
-          <div id="auto-healing-container" style="padding: 20px;">
-            <div style="text-align: center; padding: 50px;">
-              <div style="font-size: 64px; margin-bottom: 20px;">🔧</div>
-              <h2 style="color: #374151;">Sistema de Auto-Healing</h2>
-              <p style="color: #6b7280;">Cargando dashboard...</p>
-            </div>
-          </div>
-        `;
       case 'company-restore':
         setTimeout(() => this.loadCompanyRestoreView(), 100);
         return `
@@ -874,374 +849,14 @@ const EngineeringDashboard = {
     }
   },
 
-  /**
-   * VISTA: Overview - Arquitectura global en 3D/cubo
-   */
-  renderOverview() {
-    if (!this.metadata) return '<p>Cargando...</p>';
 
-    // Validar que existan las propiedades necesarias
-    const applications = this.metadata.applications || {};
-    const modules = this.metadata.modules || {};
-    const roadmap = this.metadata.roadmap || {};
-    const database = this.metadata.database || { tables: {}, schema: {} };
 
-    return `
-      <div class="overview-container">
-        <h2>🌍 Vista General del Ecosistema</h2>
 
-        <!-- Cubo interactivo con 4 capas -->
-        <div class="architecture-cube">
-          <!-- Capa 1: Aplicaciones -->
-          <div class="cube-layer applications-layer" data-layer="applications">
-            <div class="layer-header">
-              <h3>📱 Aplicaciones (${Object.keys(applications).length})</h3>
-              <button class="btn-drill-down" data-target="applications">Ver Detalle →</button>
-            </div>
-            <div class="layer-preview">
-              ${this.renderApplicationsPreview(applications)}
-            </div>
-          </div>
 
-          <!-- Capa 2: Módulos Backend -->
-          <div class="cube-layer modules-layer" data-layer="modules">
-            <div class="layer-header">
-              <h3>📦 Módulos Backend (${Object.keys(modules).length})</h3>
-              <button class="btn-drill-down" data-target="modules">Ver Detalle →</button>
-            </div>
-            <div class="layer-preview">
-              ${this.renderModulesPreview(modules)}
-            </div>
-          </div>
 
-          <!-- Capa 3: Roadmap -->
-          <div class="cube-layer roadmap-layer" data-layer="roadmap">
-            <div class="layer-header">
-              <h3>🗺️ Roadmap (${Object.keys(roadmap).length} fases)</h3>
-              <button class="btn-drill-down" data-target="roadmap">Ver Detalle →</button>
-            </div>
-            <div class="layer-preview">
-              ${this.renderRoadmapPreview(roadmap)}
-            </div>
-          </div>
 
-          <!-- Capa 4: Base de Datos -->
-          <div class="cube-layer database-layer" data-layer="database">
-            <div class="layer-header">
-              <h3>🗄️ Base de Datos (${Object.keys(database.tables || database.schema || {}).length} tablas)</h3>
-              <button class="btn-drill-down" data-target="database">Ver Detalle →</button>
-            </div>
-            <div class="layer-preview">
-              ${this.renderDatabasePreview(database)}
-            </div>
-          </div>
-        </div>
 
-        <!-- Dependency Graph -->
-        <div class="dependency-section">
-          <h3>🔗 Grafo de Dependencias</h3>
-          <div id="dependency-graph">
-            ${this.renderDependencyGraph()}
-          </div>
-        </div>
-      </div>
-    `;
-  },
 
-  /**
-   * Preview de aplicaciones (para overview)
-   */
-  renderApplicationsPreview(applications) {
-    const apps = Object.entries(applications).slice(0, 4); // Mostrar solo 4
-    const total = Object.keys(applications).length;
-
-    if (apps.length === 0) {
-      return '<div class="preview-grid"><p style="color: #6b7280; text-align: center;">Sin aplicaciones</p></div>';
-    }
-
-    return `
-      <div class="preview-grid">
-        ${apps.map(([key, app]) => {
-          const status = this.safeStatus(app, 'production');
-          const progress = this.safeProgress(app, 100);
-          const name = this.safeName(app, key);
-          return `
-          <div class="preview-card ${status}">
-            <div class="app-icon">${this.getAppIcon(app?.type)}</div>
-            <div class="app-name">${name}</div>
-            <div class="app-status">${this.getStatusBadge(app?.status || 'PRODUCTION')}</div>
-            <div class="app-progress">
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${progress}%"></div>
-              </div>
-              <span class="progress-text">${progress}%</span>
-            </div>
-          </div>
-        `}).join('')}
-        ${total > 4 ? `<div class="preview-more">+${total - 4} más</div>` : ''}
-      </div>
-    `;
-  },
-
-  /**
-   * Preview de módulos (para overview)
-   */
-  renderModulesPreview(modules) {
-    const mods = Object.entries(modules).slice(0, 4);
-    const total = Object.keys(modules).length;
-
-    return `
-      <div class="preview-grid">
-        ${mods.map(([key, mod]) => {
-          // Protección: usar valores por defecto si faltan
-          const status = mod.status || 'PRODUCTION';
-          const progress = mod.progress !== undefined ? mod.progress : 100;
-          const name = mod.name || key;
-          return `
-          <div class="preview-card ${status.toLowerCase()}">
-            <div class="module-name">${name}</div>
-            <div class="module-status">${this.getStatusBadge(status)}</div>
-            <div class="module-progress">
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${progress}%"></div>
-              </div>
-              <span class="progress-text">${progress}%</span>
-            </div>
-          </div>
-        `}).join('')}
-        ${total > 4 ? `<div class="preview-more">+${total - 4} más</div>` : ''}
-      </div>
-    `;
-  },
-
-  /**
-   * Preview de roadmap (para overview)
-   */
-  renderRoadmapPreview(roadmap) {
-    const phases = Object.entries(roadmap).slice(0, 3);
-
-    if (phases.length === 0) {
-      return '<div class="preview-timeline"><p style="color: #6b7280; text-align: center;">Sin fases en roadmap</p></div>';
-    }
-
-    return `
-      <div class="preview-timeline">
-        ${phases.map(([key, phase]) => {
-          // Protección: usar valores por defecto si faltan
-          const status = phase.status || 'IN_PROGRESS';
-          const progress = phase.progress !== undefined ? phase.progress : 0;
-          const name = phase.name || key;
-          return `
-          <div class="timeline-item ${status.toLowerCase()}">
-            <div class="timeline-marker"></div>
-            <div class="timeline-content">
-              <div class="phase-name">${name}</div>
-              <div class="phase-status">${this.getStatusBadge(status)}</div>
-              <div class="phase-progress">${progress}%</div>
-            </div>
-          </div>
-        `}).join('')}
-      </div>
-    `;
-  },
-
-  /**
-   * Preview de base de datos (para overview)
-   */
-  renderDatabasePreview(database) {
-    const tablesSource = database?.tables || database?.schema || {};
-    const tables = Object.entries(tablesSource).slice(0, 5);
-
-    if (tables.length === 0) {
-      return '<div class="preview-list"><p style="color: #6b7280; text-align: center;">Sin datos de BD</p></div>';
-    }
-
-    return `
-      <div class="preview-list">
-        ${tables.map(([key, table]) => `
-          <div class="list-item ${(table?.status || 'unknown').toLowerCase()}">
-            <span class="table-name">${key}</span>
-            <span class="table-status">${this.getStatusBadge(table?.status || 'UNKNOWN')}</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  },
-
-  /**
-   * VISTA: Aplicaciones - Detalle completo
-   */
-  renderApplications() {
-    if (!this.metadata) return '<p>Cargando...</p>';
-
-    const { applications } = this.metadata;
-    const filtered = this.filterByStatus(applications);
-
-    return `
-      <div class="applications-container">
-        <h2>📱 Aplicaciones del Ecosistema</h2>
-
-        <div class="applications-grid">
-          ${Object.entries(filtered).map(([key, app]) => `
-            <div class="application-card ${(app.status || 'unknown').toLowerCase()}" data-app="${key}">
-              <!-- Header -->
-              <div class="app-card-header">
-                <div class="app-icon-large">${this.getAppIcon(app.type)}</div>
-                <div class="app-title">
-                  <h3>${app.name}</h3>
-                  <p class="app-type">${app.type}</p>
-                  ${app.platform ? `<p class="app-platform">📱 ${app.platform}</p>` : ''}
-                </div>
-                <div class="app-status-badge">${this.getStatusBadge(app.status)}</div>
-              </div>
-
-              <!-- Progress -->
-              <div class="app-progress-section">
-                <div class="progress-label">Progreso: ${app.progress}%</div>
-                <div class="progress-bar-large">
-                  <div class="progress-fill" style="width: ${app.progress}%; background: ${this.getProgressColor(app.progress)}"></div>
-                </div>
-              </div>
-
-              <!-- Description -->
-              <div class="app-description">
-                <p>${app.description || 'Sin descripción'}</p>
-              </div>
-
-              <!-- Features (si existen) -->
-              ${app.features ? this.renderAppFeatures(app.features) : ''}
-              ${app.plannedFeatures ? this.renderPlannedFeatures(app.plannedFeatures) : ''}
-
-              <!-- Dependencies (si existen) -->
-              ${app.dependencies ? this.renderDependencies(app.dependencies) : ''}
-
-              <!-- Known Issues (si existen) -->
-              ${app.knownIssues && app.knownIssues.length > 0 ? this.renderKnownIssues(app.knownIssues) : ''}
-
-              <!-- Actions -->
-              <div class="app-actions">
-                <button class="btn-view-details" data-app="${key}">
-                  Ver Detalles Completos
-                </button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  },
-
-  /**
-   * Features de aplicación
-   */
-  renderAppFeatures(features) {
-    return `
-      <div class="app-features">
-        <h4>✅ Features Implementadas</h4>
-        <ul>
-          ${Object.entries(features).map(([key, feature]) => `
-            <li class="${feature.done ? 'done' : feature.inProgress ? 'in-progress' : 'pending'}">
-              ${feature.done ? '✅' : feature.inProgress ? '🔄' : '⏸️'}
-              ${feature.name || key} (${feature.progress || 0}%)
-            </li>
-          `).join('')}
-        </ul>
-      </div>
-    `;
-  },
-
-  /**
-   * Planned features de aplicación
-   */
-  renderPlannedFeatures(plannedFeatures) {
-    return `
-      <div class="app-planned-features">
-        <h4>📋 Features Planificadas</h4>
-        <ul>
-          ${Object.entries(plannedFeatures).map(([key, feature]) => `
-            <li class="planned">
-              📝 ${feature.name || key}
-            </li>
-          `).join('')}
-        </ul>
-      </div>
-    `;
-  },
-
-  /**
-   * VISTA: Módulos - Detalle completo
-   */
-  renderModules() {
-    if (!this.metadata) return '<p>Cargando...</p>';
-
-    const { modules } = this.metadata;
-    const filtered = this.filterByStatus(modules);
-
-    return `
-      <div class="modules-container">
-        <h2>📦 Módulos Backend</h2>
-
-        <div class="modules-grid">
-          ${Object.entries(filtered).map(([key, mod]) => `
-            <div class="module-card ${(mod.status || 'unknown').toLowerCase()}" data-module="${key}">
-              <!-- Header -->
-              <div class="module-card-header">
-                <div class="module-title">
-                  <h3>${mod.name}</h3>
-                  <span class="module-key">${key}</span>
-                </div>
-                <div class="module-status-badge">${this.getStatusBadge(mod.status)}</div>
-              </div>
-
-              <!-- Progress -->
-              <div class="module-progress-section">
-                <div class="progress-label">Progreso: ${mod.progress}%</div>
-                <div class="progress-bar-large">
-                  <div class="progress-fill" style="width: ${mod.progress}%; background: ${this.getProgressColor(mod.progress)}"></div>
-                </div>
-              </div>
-
-              <!-- Description -->
-              <div class="module-description">
-                <p>${mod.description || 'Sin descripción'}</p>
-              </div>
-
-              <!-- Features (si existen) -->
-              ${mod.features ? this.renderModuleFeatures(mod.features) : ''}
-
-              <!-- Dependencies -->
-              ${mod.dependencies ? this.renderDependencies(mod.dependencies) : ''}
-
-              <!-- Known Issues -->
-              ${mod.knownIssues && mod.knownIssues.length > 0 ? this.renderKnownIssues(mod.knownIssues) : ''}
-
-              <!-- Design Doc -->
-              ${mod.designDoc ? `
-                <div class="module-design-doc">
-                  <small>📄 Documentación: <code>${mod.designDoc}</code></small>
-                </div>
-              ` : ''}
-
-              <!-- Code Location (Backend + Frontend) -->
-              ${mod.codeLocation ? this.renderCodeLocation(mod.codeLocation) : ''}
-
-              <!-- Botón Ver Detalles Completos -->
-              <div class="module-actions" style="margin: 15px 0;">
-                <button class="btn-view-details" data-module="${key}" style="width: 100%; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease;">
-                  Ver Detalles Completos
-                </button>
-              </div>
-
-              <!-- Last Updated -->
-              <div class="module-timestamp">
-                <small>Última actualización: ${new Date(mod.lastUpdated).toLocaleString('es-AR')}</small>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  },
 
   /**
    * Renderizar ubicación de código (Backend + Frontend)
@@ -1288,114 +903,8 @@ const EngineeringDashboard = {
     `;
   },
 
-  /**
-   * Features de módulo
-   */
-  renderModuleFeatures(features) {
-    return `
-      <div class="module-features">
-        <h4>Features</h4>
-        <ul>
-          ${Object.entries(features).map(([key, feature]) => `
-            <li class="${feature.done ? 'done' : feature.inProgress ? 'in-progress' : 'pending'}">
-              ${feature.done ? '✅' : feature.inProgress ? '🔄' : '⏸️'}
-              ${feature.name || key}
-              ${feature.tested ? ' 🧪' : ''}
-            </li>
-          `).join('')}
-        </ul>
-      </div>
-    `;
-  },
 
-  /**
-   * VISTA: Roadmap - Gantt charts
-   */
-  renderRoadmap() {
-    if (!this.metadata) return '<p>Cargando...</p>';
-
-    const { roadmap } = this.metadata;
-
-    return `
-      <div class="roadmap-container">
-        <h2>🗺️ Roadmap del Proyecto</h2>
-
-        <!-- Gantt Chart -->
-        <div class="gantt-chart">
-          ${Object.entries(roadmap).map(([key, phase], index) => `
-            <div class="gantt-phase ${(phase.status || 'unknown').toLowerCase()}">
-              <!-- Phase Info -->
-              <div class="gantt-phase-info">
-                <div class="phase-number">Fase ${index + 1}</div>
-                <div class="phase-details">
-                  <h3>${phase.name}</h3>
-                  <div class="phase-meta">
-                    <span class="phase-status">${this.getStatusBadge(phase.status)}</span>
-                    <span class="phase-progress">${phase.progress}% completo</span>
-                    <span class="phase-tasks">${phase.tasks ? phase.tasks.filter(t => t.done).length : 0} / ${phase.tasks ? phase.tasks.length : 0} tareas</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Progress Bar -->
-              <div class="gantt-progress">
-                <div class="progress-bar-gantt">
-                  <div class="progress-fill" style="width: ${phase.progress}%; background: ${this.getProgressColor(phase.progress)}"></div>
-                </div>
-              </div>
-
-              <!-- Tasks -->
-              ${phase.tasks ? `
-                <div class="gantt-tasks" style="margin-top: 15px;">
-                  <button onclick="window.EngineeringDashboard.toggleRoadmapTasks('${key}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);">
-                    <span>📋</span>
-                    <span>${phase.tasks.filter(t => t.done).length}/${phase.tasks.length} tareas</span>
-                    <span id="toggle-icon-${key}" style="margin-left: 5px; transition: transform 0.2s;">▼</span>
-                  </button>
-                  <div id="tasks-list-${key}" style="display: none; margin-top: 10px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    ${phase.tasks.map(task => `
-                      <div class="task-item ${task.done ? 'done' : 'pending'}" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 6px; background: ${task.done ? '#f0fdf4' : 'white'}; border-radius: 6px; border-left: 3px solid ${task.done ? '#22c55e' : '#f59e0b'}; transition: all 0.2s;">
-                        <span class="task-checkbox" style="font-size: 16px;">${task.done ? '✅' : '⏳'}</span>
-                        <span class="task-id" style="font-weight: 600; color: ${task.done ? '#166534' : '#92400e'}; min-width: 60px;">${task.id}</span>
-                        <span class="task-name" style="flex: 1; ${task.done ? 'text-decoration: line-through; color: #6b7280;' : 'color: #374151;'}">${task.name}</span>
-                        ${task.assignedTo ? `<span style="font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 10px;">👤 ${task.assignedTo}</span>` : ''}
-                        ${task.completedDate ? `<span style="font-size: 11px; color: #059669;">📅 ${task.completedDate}</span>` : ''}
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-              ` : ''}
-
-              <!-- Dependencies -->
-              ${phase.dependencies && phase.dependencies.length > 0 ? `
-                <div class="phase-dependencies">
-                  <small>Depende de: ${phase.dependencies.join(', ')}</small>
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-
-        <!-- Timeline Visual -->
-        <div class="timeline-visual">
-          <h3>Timeline del Proyecto</h3>
-          <div class="timeline-container">
-            ${Object.entries(roadmap).map(([key, phase], index) => `
-              <div class="timeline-phase ${(phase.status || 'unknown').toLowerCase()}">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                  <div class="timeline-date">Fase ${index + 1}</div>
-                  <div class="timeline-title">${phase.name}</div>
-                  <div class="timeline-progress">${phase.progress}%</div>
-                </div>
-                ${index < Object.keys(roadmap).length - 1 ? '<div class="timeline-connector"></div>' : ''}
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      </div>
-    `;
-  },
+  // FUNCIÓN ELIMINADA: renderRoadmap() - Ya no se usa en este módulo
 
   /**
    * VISTA: Base de Datos - Schema Completo con Campos y Módulos
@@ -1596,23 +1105,7 @@ const EngineeringDashboard = {
     }
   },
 
-  /**
-   * Toggle tareas del roadmap
-   */
-  toggleRoadmapTasks(phaseKey) {
-    const tasksList = document.getElementById(`tasks-list-${phaseKey}`);
-    const icon = document.getElementById(`toggle-icon-${phaseKey}`);
-
-    if (tasksList && icon) {
-      if (tasksList.style.display === 'none') {
-        tasksList.style.display = 'block';
-        icon.textContent = '▲';
-      } else {
-        tasksList.style.display = 'none';
-        icon.textContent = '▼';
-      }
-    }
-  },
+  // FUNCIÓN ELIMINADA: toggleRoadmapTasks() - Ya no se usa en este módulo
 
   /**
    * Forzar liberación de una tarea específica
@@ -1634,7 +1127,7 @@ const EngineeringDashboard = {
       if (result.success) {
         alert(`✅ Tarea "${taskId}" liberada exitosamente.\n\nPropietario anterior: ${result.previousOwner}`);
         // Recargar la vista de camino crítico
-        this.loadCriticalPathView();
+        // this.loadCriticalPathView(); // FUNCIÓN ELIMINADA
       } else {
         alert(`❌ Error liberando tarea: ${result.error}`);
       }
@@ -1729,7 +1222,7 @@ EJECUTA ESTOS PASOS EXACTOS:
 
       if (result.success) {
         alert(`✅ Sesión "${token}" cerrada exitosamente.\n\nLocks liberados: ${result.releasedLocks || 0}`);
-        this.loadCriticalPathView();
+        // this.loadCriticalPathView(); // FUNCIÓN ELIMINADA
       } else {
         alert(`❌ Error cerrando sesión: ${result.error}`);
       }
@@ -1887,7 +1380,7 @@ EJECUTA ESTOS PASOS EXACTOS:
         <div style="margin-bottom:16px;">
           <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:#374151;margin-bottom:6px;font-size:13px;">
             📋 DESCRIPCIÓN DETALLADA DE LA TAREA:
-            ${taskDescription ? '<span style="color:#10b981;font-size:11px;font-weight:normal;">(cargada del roadmap)</span>' : '<span style="color:#f59e0b;font-size:11px;font-weight:normal;">⚠️ Sin descripción - escribe qué debe hacer Claude</span>'}
+            ${taskDescription ? '<span style="color:#10b981;font-size:11px;font-weight:normal;">(cargada del metadata)</span>' : '<span style="color:#f59e0b;font-size:11px;font-weight:normal;">⚠️ Sin descripción - escribe qué debe hacer Claude</span>'}
           </label>
           <textarea id="claude-task-description" placeholder="Describe detalladamente qué debe hacer Claude para completar esta tarea...
 
@@ -1899,7 +1392,7 @@ Ejemplo:
 - Criterios de éxito" style="width:100%;height:120px;padding:12px;border:2px solid ${taskDescription ? '#10b981' : '#f59e0b'};border-radius:8px;font-size:13px;resize:vertical;box-sizing:border-box;line-height:1.5;">${taskDescription}</textarea>
           <div style="display:flex;justify-content:flex-end;margin-top:6px;">
             <button id="save-description-btn" style="background:#8b5cf6;color:white;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;">
-              💾 Guardar Descripción en Roadmap
+              💾 Guardar Descripción
             </button>
           </div>
         </div>
@@ -1983,7 +1476,7 @@ Ejemplo:
           // 3. Cerrar modal y recargar vista
           setTimeout(() => {
             document.getElementById('claude-assignment-modal').remove();
-            window.EngineeringDashboard.loadCriticalPathView();
+            // window.EngineeringDashboard.loadCriticalPathView(); // FUNCIÓN ELIMINADA
           }, 1000);
 
         } catch(e) {
@@ -2015,7 +1508,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
         } catch(e) { alert('Error al copiar. Usa Ctrl+C manualmente.'); }
       };
 
-      // Handler para guardar descripción en el roadmap
+      // Handler para guardar descripción en el metadata
       document.getElementById('save-description-btn').onclick = async function() {
         const newDescription = document.getElementById('claude-task-description').value.trim();
         if (!newDescription) {
@@ -2044,13 +1537,13 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
             }
             // Cambiar borde del textarea a verde
             document.getElementById('claude-task-description').style.borderColor = '#10b981';
-            setTimeout(() => { this.innerHTML = '💾 Guardar Descripción en Roadmap'; this.style.background = '#8b5cf6'; }, 2000);
+            setTimeout(() => { this.innerHTML = '💾 Guardar Descripción'; this.style.background = '#8b5cf6'; }, 2000);
           } else {
             throw new Error(result.error || 'Error desconocido');
           }
         } catch(e) {
           alert('Error guardando: ' + e.message);
-          this.innerHTML = '💾 Guardar Descripción en Roadmap';
+          this.innerHTML = '💾 Guardar Descripción';
         }
         this.disabled = false;
       };
@@ -2117,7 +1610,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
       if (data.success) {
         alert(`✅ Tarea ${taskId} asignada a ${assignedTo}\n\n🔒 Lock adquirido - la tarea está bloqueada`);
-        this.loadCriticalPathView();
+        // this.loadCriticalPathView(); // FUNCIÓN ELIMINADA
       } else {
         alert('Error: ' + (data.error || 'Error desconocido'));
       }
@@ -2147,7 +1640,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
       if (data.success) {
         alert(`✅ Tarea completada\n\n${data.result.changes?.join('\n') || 'Actualizado'}`);
-        this.loadCriticalPathView();
+        // this.loadCriticalPathView(); // FUNCIÓN ELIMINADA
       } else {
         alert('Error: ' + (data.error || 'Error desconocido'));
       }
@@ -2180,7 +1673,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
       if (data.success) {
         alert(`✅ Prioridad actualizada\nCamino crítico recalculado automáticamente`);
-        this.loadCriticalPathView();
+        // this.loadCriticalPathView(); // FUNCIÓN ELIMINADA
       } else {
         alert('Error: ' + (data.error || 'Error desconocido'));
       }
@@ -2532,1142 +2025,15 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     }
   },
 
-  /**
-   * VISTA: Organigrama Jerárquico Profesional
-   */
-  renderOrganigrama() {
-    if (!this.metadata) return '<p>Cargando...</p>';
 
-    const { organizationalStructure } = this.metadata;
-    if (!organizationalStructure) return '<p>No hay estructura organizacional definida</p>';
 
-    const { hierarchy } = organizationalStructure;
 
-    return `
-      <div class="organigrama-container" style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px;">
-        <h2 style="color: white; margin-bottom: 10px;">🏢 Organigrama Aponnt</h2>
-        <p style="color: rgba(255,255,255,0.9); margin-bottom: 30px;">
-          Estructura organizacional jerárquica completa
-        </p>
 
-        <!-- NIVEL 0: GERENTE GENERAL -->
-        <div style="text-align: center; margin-bottom: 50px;">
-          ${this.renderOrgBox(hierarchy.gerenteGeneral, '#dc2626', '👔')}
-        </div>
 
-        <!-- NIVEL 1: GERENTES DE ÁREA -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-bottom: 50px; position: relative;">
 
-          <!-- Líneas conectoras desde Gerente General -->
-          <div style="position: absolute; top: -30px; left: 0; right: 0; height: 30px; display: flex; justify-content: center;">
-            <div style="width: 2px; height: 30px; background: white;"></div>
-          </div>
-          <div style="position: absolute; top: 0; left: 10%; right: 10%; height: 2px; background: white;"></div>
 
-          <!-- Gerentes Regionales (Ventas) -->
-          <div style="text-align: center;">
-            ${this.renderOrgBox(hierarchy.gerentesRegionales, '#ea580c', '💼')}
-            ${this.renderSubHierarchy(hierarchy.gerentesRegionales.hierarchy, '#f97316')}
-          </div>
 
-          <!-- Gerente Administrativo -->
-          <div style="text-align: center;">
-            ${this.renderOrgBox(hierarchy.gerenteAdministrativo, '#0891b2', '📊')}
-            ${this.renderSubHierarchy(hierarchy.gerenteAdministrativo.hierarchy, '#06b6d4')}
-          </div>
 
-          <!-- Gerente de Desarrollo -->
-          <div style="text-align: center;">
-            ${this.renderOrgBox(hierarchy.gerenteDesarrollo, '#7c3aed', '💻')}
-            ${this.renderSubHierarchy(hierarchy.gerenteDesarrollo.hierarchy, '#8b5cf6')}
-          </div>
-
-          <!-- Staff Externo -->
-          <div style="text-align: center;">
-            ${this.renderOrgBox(hierarchy.staffExterno, '#059669', '🌐')}
-            ${this.renderExternalStaff(hierarchy.staffExterno.areas)}
-          </div>
-        </div>
-
-        <!-- Resumen de niveles -->
-        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
-          <h3 style="color: white; margin-bottom: 15px;">📋 Resumen de Niveles Jerárquicos</h3>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-            ${Object.entries(organizationalStructure.levels).map(([level, data]) => `
-              <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 6px; border-left: 4px solid white;">
-                <div style="color: white; font-weight: 600; font-size: 1.2rem;">Nivel ${level}</div>
-                <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem; margin-top: 4px;">${data.name}</div>
-                <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 4px;">${data.quantity}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- Áreas de negocio -->
-        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px); margin-top: 20px;">
-          <h3 style="color: white; margin-bottom: 15px;">🏢 Áreas de Negocio</h3>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-            ${organizationalStructure.areas.map(area => `
-              <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 6px;">
-                <div style="color: white; font-weight: 600;">${area.name}</div>
-                <div style="color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-top: 4px;">
-                  👤 ${area.gerente}
-                </div>
-                <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 2px;">
-                  📍 ${area.type}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- Sistema de comisiones -->
-        ${organizationalStructure.commissionSystem ? `
-          <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px); margin-top: 20px;">
-            <h3 style="color: white; margin-bottom: 10px;">💰 Sistema de Comisiones</h3>
-            <p style="color: rgba(255,255,255,0.9); margin-bottom: 10px;">${organizationalStructure.commissionSystem.description}</p>
-            <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 6px; border-left: 4px solid #fbbf24;">
-              <div style="color: white; font-weight: 600; margin-bottom: 8px;">Aplica a:</div>
-              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                ${organizationalStructure.commissionSystem.applies.map(role => `
-                  <span style="background: rgba(251, 191, 36, 0.3); color: white; padding: 4px 12px; border-radius: 4px; font-size: 0.85rem;">
-                    ${role}
-                  </span>
-                `).join('')}
-              </div>
-              <div style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 12px;">
-                📊 ${organizationalStructure.commissionSystem.structure}
-              </div>
-              <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-top: 8px;">
-                🚧 ${organizationalStructure.commissionSystem.implementation}
-              </div>
-            </div>
-          </div>
-        ` : ''}
-      </div>
-    `;
-  },
-
-  /**
-   * Renderizar caja de posición organizacional
-   */
-  renderOrgBox(position, color, emoji) {
-    const level = position.level !== undefined ? position.level : '';
-    const code = position.code || '';
-    const quantity = position.quantity ? ` (${position.quantity})` : '';
-
-    return `
-      <div style="
-        display: inline-block;
-        background: ${color};
-        color: white;
-        padding: 10px;
-        border-radius: 6px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        min-width: 120px;
-        text-align: center;
-        position: relative;
-        transform: scale(1);
-        transition: transform 0.2s ease;
-      " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        <div style="font-size: 1rem; margin-bottom: 4px;">${emoji}</div>
-        <div style="font-weight: 700; font-size: 0.55rem; margin-bottom: 2px;">
-          ${position.position}${quantity}
-        </div>
-        ${code ? `<div style="background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 6px; border-radius: 2px; font-size: 0.4rem; margin-bottom: 4px;">${code}</div>` : ''}
-        ${level !== '' ? `<div style="font-size: 0.375rem; opacity: 0.8;">Nivel ${level}</div>` : ''}
-        ${position.responsibilities ? `
-          <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.3);">
-            <div style="font-size: 0.375rem; opacity: 0.9; text-align: left;">
-              ${position.responsibilities.slice(0, 2).map(resp => `
-                <div style="margin-bottom: 2px;">• ${resp}</div>
-              `).join('')}
-              ${position.responsibilities.length > 2 ? `<div style="opacity: 0.7;">+${position.responsibilities.length - 2} más...</div>` : ''}
-            </div>
-          </div>
-        ` : ''}
-      </div>
-    `;
-  },
-
-  /**
-   * Renderizar sub-jerarquía
-   */
-  renderSubHierarchy(hierarchy, baseColor) {
-    if (!hierarchy) return '';
-
-    const entries = Object.entries(hierarchy);
-    if (entries.length === 0) return '';
-
-    // Colores más claros para niveles inferiores
-    const lighterColor = this.adjustColorBrightness(baseColor, 20);
-
-    // Si todos los elementos son invisibles, renderizar directamente sus hijos
-    const allInvisible = entries.every(([_, subPosition]) => subPosition.invisible);
-    if (allInvisible && entries.length === 1) {
-      const [_, subPosition] = entries[0];
-      console.log('[DEBUG] Saltando nivel invisible:', subPosition);
-      return `
-        <!-- Nivel invisible omitido -->
-        <div style="margin-top: 20px; padding-top: 20px; position: relative;">
-          <div style="position: absolute; top: 0; left: 50%; width: 2px; height: 20px; background: rgba(255,255,255,0.5);"></div>
-          ${subPosition.hierarchy ? this.renderSubHierarchy(subPosition.hierarchy, baseColor) : ''}
-        </div>
-      `;
-    }
-
-    return `
-      <div style="margin-top: 20px; padding-top: 20px; position: relative;">
-        <!-- Línea conectora vertical -->
-        <div style="position: absolute; top: 0; left: 50%; width: 2px; height: 20px; background: rgba(255,255,255,0.5);"></div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
-          ${entries.map(([key, subPosition]) => {
-            // Si es invisible, solo renderizar su jerarquía
-            if (subPosition.invisible) {
-              return subPosition.hierarchy ? this.renderSubHierarchy(subPosition.hierarchy, baseColor) : '';
-            }
-
-            return `
-            <div style="text-align: center;">
-              <div style="
-                background: ${lighterColor};
-                color: white;
-                padding: 12px;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                font-size: 0.85rem;
-                min-height: 80px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-              ">
-                <div style="font-weight: 600; margin-bottom: 4px;">${subPosition.position}</div>
-                ${subPosition.code ? `<div style="background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.7rem; margin: 4px auto;">${subPosition.code}</div>` : ''}
-                ${subPosition.level !== undefined ? `<div style="font-size: 0.7rem; opacity: 0.8; margin-top: 4px;">Nivel ${subPosition.level}</div>` : ''}
-                ${subPosition.manages ? `<div style="font-size: 0.7rem; opacity: 0.7; margin-top: 4px;">👥 Gestiona ${subPosition.manages.length} área(s)</div>` : ''}
-              </div>
-              ${subPosition.hierarchy ? this.renderSubHierarchy(subPosition.hierarchy, lighterColor) : ''}
-            </div>
-          `}).join('')}
-        </div>
-      </div>
-    `;
-  },
-
-  /**
-   * Renderizar staff externo
-   */
-  renderExternalStaff(areas) {
-    if (!areas) return '';
-
-    const entries = Object.entries(areas);
-    if (entries.length === 0) return '';
-
-    return `
-      <div style="margin-top: 20px; padding-top: 20px; position: relative;">
-        <!-- Línea conectora vertical -->
-        <div style="position: absolute; top: 0; left: 50%; width: 2px; height: 20px; background: rgba(255,255,255,0.5);"></div>
-
-        <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-          ${entries.map(([key, area]) => `
-            <div style="
-              background: rgba(5, 150, 105, 0.7);
-              color: white;
-              padding: 10px;
-              border-radius: 6px;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-              font-size: 0.8rem;
-              border: 1px dashed rgba(255,255,255,0.4);
-            ">
-              <div style="font-weight: 600;">${area.position}</div>
-              ${area.code ? `<div style="background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-top: 4px;">${area.code}</div>` : ''}
-              ${area.contractType ? `<div style="font-size: 0.7rem; opacity: 0.8; margin-top: 4px;">📄 ${area.contractType}</div>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  },
-
-  /**
-   * Ajustar brillo de color (helper)
-   */
-  adjustColorBrightness(color, percent) {
-    // Convertir hex a RGB
-    const num = parseInt(color.replace('#', ''), 16);
-    const r = Math.min(255, Math.floor((num >> 16) + percent));
-    const g = Math.min(255, Math.floor(((num >> 8) & 0x00FF) + percent));
-    const b = Math.min(255, Math.floor((num & 0x0000FF) + percent));
-    return `rgb(${r}, ${g}, ${b})`;
-  },
-
-  /**
-   * Carga async la vista de Camino Crítico
-   */
-  async loadCriticalPathView() {
-    try {
-      const container = document.getElementById('critical-path-dynamic');
-      if (!container) return;
-
-      const html = await this.renderCriticalPathView();
-      container.innerHTML = html;
-    } catch (error) {
-      console.error('Error cargando Critical Path:', error);
-      const container = document.getElementById('critical-path-dynamic');
-      if (container) {
-        container.innerHTML = `
-          <div style="padding: 40px; text-align: center;">
-            <h3 style="color: #dc2626;">❌ Error al cargar Camino Crítico</h3>
-            <p style="color: #6b7280;">${error.message}</p>
-            <button onclick="window.EngineeringDashboard.loadCriticalPathView()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px;">
-              🔄 Reintentar
-            </button>
-          </div>
-        `;
-      }
-    }
-  },
-
-  /**
-   * ⭐ NUEVO: Cargar vista de Salud del Sistema (Brain Orchestrator Live)
-   */
-  async loadSystemHealthView() {
-    console.log('🧠 [SYSTEM-HEALTH] Cargando vista de salud del sistema...');
-
-    const container = document.getElementById('system-health-dynamic');
-    if (!container) {
-      console.error('❌ [SYSTEM-HEALTH] Container no encontrado');
-      return;
-    }
-
-    try {
-      // Fetch estado completo del Brain Orchestrator
-      const response = await fetch('/api/engineering/full-system-status');
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || result.message || 'Error obteniendo estado del sistema');
-      }
-
-      const systemStatus = result.data;
-
-      // Renderizar vista con árbol vivo
-      container.innerHTML = this.renderSystemHealthTree(systemStatus);
-
-      // Auto-actualizar cada 5 segundos
-      if (this.systemHealthInterval) {
-        clearInterval(this.systemHealthInterval);
-      }
-
-      this.systemHealthInterval = setInterval(async () => {
-        // Solo actualizar si todavía estamos en la vista system-health
-        if (this.currentView === 'system-health') {
-          await this.loadSystemHealthView();
-        } else {
-          clearInterval(this.systemHealthInterval);
-        }
-      }, 5000);
-
-    } catch (error) {
-      console.error('❌ [SYSTEM-HEALTH] Error:', error);
-      container.innerHTML = `
-        <div style="padding: 40px; text-align: center;">
-          <h3 style="color: #dc2626;">❌ Error al cargar Salud del Sistema</h3>
-          <p style="color: #6b7280;">${error.message}</p>
-          <button onclick="window.EngineeringDashboard.loadSystemHealthView()"
-                  style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px;">
-            🔄 Reintentar
-          </button>
-        </div>
-      `;
-    }
-  },
-
-  /**
-   * Renderizar árbol vivo del Brain Orchestrator
-   */
-  renderSystemHealthTree(systemStatus) {
-    const { system, orchestrator, nervousSystem, ecosystemBrain, roadmap, metadataWriter, loosePieces, health } = systemStatus;
-
-    // Iconos de salud
-    const healthIcons = {
-      excellent: '🟢',
-      good: '🟡',
-      degraded: '🟠',
-      critical: '🔴',
-      healthy: '✅',
-      unhealthy: '❌',
-      stopped: '⏸️',
-      unavailable: '⚫'
-    };
-
-    return `
-      <div style="padding: 30px; max-width: 1400px; margin: 0 auto;">
-        <!-- Header -->
-        <div style="margin-bottom: 30px; text-align: center;">
-          <h1 style="color: #111827; margin: 0; display: flex; align-items: center; justify-content: center; gap: 15px;">
-            🧠 Brain Orchestrator
-            <span style="font-size: 48px;">${healthIcons[health.overall]}</span>
-          </h1>
-          <p style="color: #6b7280; margin: 10px 0 0 0; font-size: 18px;">
-            Sistema Nervioso Central - Introspección Completa de Código Vivo
-          </p>
-          <p style="color: #9ca3af; margin: 5px 0 0 0; font-size: 14px;">
-            ⏱️ Uptime: ${system.uptime} | 🔄 Auto-actualización cada 5 segundos
-          </p>
-        </div>
-
-        <!-- ¿Qué es el Brain Orchestrator? - Info expandible -->
-        <details style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; padding: 20px; margin-bottom: 25px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          <summary style="font-size: 16px; font-weight: 600; outline: none; user-select: none; list-style: none; display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 24px;">💡</span>
-            <span>¿Qué es el Brain Orchestrator?</span>
-            <span style="margin-left: auto; font-size: 12px; opacity: 0.8;">Click para expandir</span>
-          </summary>
-          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 13px; line-height: 1.8;">
-            <p style="margin: 0 0 15px 0;">
-              El <strong>Brain Orchestrator</strong> es el <strong>sistema nervioso central</strong> de tu aplicación. Funciona como un "cerebro" que:
-            </p>
-            <ul style="margin: 0; padding-left: 20px; line-height: 2;">
-              <li><strong>🧠 Orquesta 5 agentes IA</strong> especializados (Support, Trainer, Tester, Evaluator, Sales)</li>
-              <li><strong>🧬 Monitorea en tiempo real</strong> errores, health checks, integridad de datos (SSOT)</li>
-              <li><strong>🌍 Escanea TODO tu código</strong> automáticamente (192 módulos, 405K líneas, 2,235 endpoints)</li>
-              <li><strong>📝 Auto-actualiza metadata</strong> cada 5 minutos con datos frescos del código vivo</li>
-              <li><strong>🔍 Detecta piezas sueltas</strong> (código desconectado: routes sin modelo, frontends sin backend)</li>
-            </ul>
-            <p style="margin: 15px 0 0 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
-              <strong>✨ La magia:</strong> El Brain <em>conoce</em> tu código sin configuración manual.
-              Se auto-descubre, se auto-monitorea y mantiene una introspección completa del sistema en todo momento.
-            </p>
-          </div>
-        </details>
-
-        <!-- Leyenda de Estados - Info rápida -->
-        <div style="background: #f9fafb; border-radius: 12px; padding: 15px 20px; margin-bottom: 25px; border: 1px solid #e5e7eb;">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-            <span style="font-size: 14px; font-weight: 600; color: #374151;">📊 Leyenda de Estados:</span>
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; font-size: 12px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 16px;">🟢</span>
-              <span style="color: #059669;">Excellent</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 16px;">✅</span>
-              <span style="color: #10b981;">Healthy</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 16px;">🟡</span>
-              <span style="color: #f59e0b;">Good</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 16px;">🟠</span>
-              <span style="color: #f97316;">Degraded</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 16px;">🔴</span>
-              <span style="color: #ef4444;">Critical</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 16px;">❌</span>
-              <span style="color: #dc2626;">Unhealthy</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Salud General - Health Cards con Tooltips -->
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
-          ${this.renderHealthCard('Orchestrator', health.orchestrator, orchestrator.activeAgents + orchestrator.activeServices, 'componentes activos', '🧠 Coordina 5 agentes IA + 8 servicios. Es el director de orquesta del sistema.')}
-          ${this.renderHealthCard('Sistema Nervioso', health.nervousSystem, nervousSystem?.errorsDetected || 0, 'errores detectados', '🧬 Monitorea en tiempo real: errores, health checks cada 60s, tests SSOT cada 5 min.')}
-          ${this.renderHealthCard('Ecosystem Brain', health.ecosystemBrain, ecosystemBrain?.totalModules || 0, 'módulos escaneados', '🌍 Escanea TODO el código vivo: 192 módulos, 405K LOC, 2,235 endpoints, 230 tablas.')}
-          ${this.renderHealthCard('Metadata Writer', metadataWriter?.running ? 'healthy' : 'stopped', metadataWriter?.updateCount || 0, 'updates realizados', '📝 Auto-actualiza engineering-metadata.js cada 5 min con datos frescos del Brain.')}
-        </div>
-
-        <!-- Árbol del Brain -->
-        <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 30px;">
-          <h2 style="color: #111827; margin: 0 0 25px 0; font-size: 24px; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px;">
-            🌳 Árbol Vivo del Sistema
-          </h2>
-
-          <!-- Orchestrator: Root -->
-          ${this.renderBrainBranch('🧠 Brain Orchestrator', orchestrator, health.orchestrator, [
-            { label: 'Agentes IA', value: `${orchestrator.activeAgents}/5`, icon: '🤖' },
-            { label: 'Servicios', value: `${orchestrator.activeServices}/8`, icon: '📦' },
-            { label: 'Requests Totales', value: orchestrator.totalRequests.toLocaleString(), icon: '📊' }
-          ], [
-            // Sub-rama: Agentes IA
-            this.renderBrainSubBranch('🤖 Agentes IA', [
-              { name: 'Support AI', stats: orchestrator.agents?.support?.questionsAnswered || 0, label: 'preguntas' },
-              { name: 'Trainer AI', stats: orchestrator.agents?.trainer?.tutorialsCompleted || 0, label: 'tutoriales' },
-              { name: 'Tester AI', stats: orchestrator.agents?.tester?.testsRun || 0, label: 'tests' },
-              { name: 'Evaluator AI', stats: orchestrator.agents?.evaluator?.evaluationsCompleted || 0, label: 'evaluaciones' },
-              { name: 'Sales AI', stats: orchestrator.agents?.sales?.demosCompleted || 0, label: 'demos' }
-            ]),
-
-            // Sub-rama: Servicios Core
-            this.renderBrainSubBranch('📦 Servicios Core', [
-              { name: 'Knowledge DB', stats: orchestrator.services?.knowledgeDB?.totalEntries || 0, label: 'entradas' },
-              { name: 'Tours', stats: orchestrator.services?.tours?.toursAvailable || 0, label: 'tours' },
-              { name: 'NLU', stats: '✅', label: 'activo' }
-            ])
-          ], '🎭 Director de orquesta del sistema. Coordina 5 agentes IA especializados (Support, Trainer, Tester, Evaluator, Sales) y 8 servicios core. Gestiona todas las solicitudes y distribuye trabajo entre agentes.')}
-
-          <!-- Sistema Nervioso -->
-          ${this.renderBrainBranch('🧬 Sistema Nervioso', nervousSystem, health.nervousSystem, [
-            { label: 'Errores Detectados', value: nervousSystem?.errorsDetected || 0, icon: '🔔' },
-            { label: 'Violaciones SSOT', value: nervousSystem?.ssotViolations || 0, icon: '⚠️' },
-            { label: 'Cambios de Archivos', value: nervousSystem?.fileChangesDetected || 0, icon: '📝' },
-            { label: 'Health Checks', value: nervousSystem?.healthChecks || 0, icon: '💓' },
-            { label: 'Incidentes Activos', value: nervousSystem?.activeIncidents || 0, icon: '🚨' }
-          ], [], '💓 Monitoreo en tiempo real. Ejecuta health checks cada 60 segundos (DB, memory, event loop) y tests de integridad SSOT cada 5 minutos. Detecta errores y anomalías automáticamente.')}
-
-          <!-- Ecosystem Brain -->
-          ${this.renderBrainBranch('🌍 Ecosystem Brain', ecosystemBrain, health.ecosystemBrain, [
-            { label: 'Módulos Totales', value: ecosystemBrain?.totalModules || 0, icon: '📦' },
-            { label: 'Archivos Escaneados', value: (ecosystemBrain?.totalFiles || 0).toLocaleString(), icon: '📄' },
-            { label: 'Endpoints', value: (ecosystemBrain?.totalEndpoints || 0).toLocaleString(), icon: '🔌' },
-            { label: 'Líneas de Código', value: (ecosystemBrain?.totalLines || 0).toLocaleString(), icon: '💻' },
-            { label: 'Aplicaciones', value: ecosystemBrain?.applications || 0, icon: '📱' }
-          ], ecosystemBrain?.modulesByCategory ? [
-            this.renderBrainSubBranch('📂 Módulos por Categoría',
-              Object.entries(ecosystemBrain.modulesByCategory).map(([cat, count]) => ({
-                name: cat,
-                stats: count,
-                label: 'módulos'
-              }))
-            )
-          ] : [], '🔍 Introspección de código vivo. Escanea TODO el código automáticamente sin configuración: detecta módulos, endpoints, archivos, workflows. Genera metadata fresco continuamente.')}
-
-          <!-- Roadmap -->
-          ${this.renderBrainBranch('🗺️ Roadmap', roadmap, 'healthy', [
-            { label: 'Fases Totales', value: roadmap?.totalPhases || 0, icon: '📋' },
-            { label: 'Completadas', value: roadmap?.completedPhases || 0, icon: '✅' },
-            { label: 'En Progreso', value: roadmap?.inProgressPhases || 0, icon: '🔄' },
-            { label: 'Planeadas', value: roadmap?.plannedPhases || 0, icon: '📝' }
-          ], [], '🗺️ Gestión de proyecto. Tracking de fases, tareas, progreso. Incluye cálculo de camino crítico (CPM) y diagramas PERT para planificación óptima.')}
-
-          <!-- Metadata Writer -->
-          ${this.renderBrainBranch('📝 Metadata Writer', metadataWriter, metadataWriter?.running ? 'healthy' : 'stopped', [
-            { label: 'Estado', value: metadataWriter?.running ? 'Activo' : 'Detenido', icon: metadataWriter?.running ? '🟢' : '🔴' },
-            { label: 'Última Actualización', value: metadataWriter?.lastUpdate ? new Date(metadataWriter.lastUpdate).toLocaleTimeString() : 'N/A', icon: '⏰' },
-            { label: 'Updates Totales', value: metadataWriter?.updateCount || 0, icon: '🔄' }
-          ], [], '⏰ Auto-actualización periódica. Reescribe engineering-metadata.js cada 5 minutos con datos frescos del Ecosystem Brain. Mantiene backups automáticos (últimos 10).')}
-
-          <!-- Piezas Sueltas (Loose Pieces Detection) -->
-          ${this.renderBrainBranch('🔍 Detección de Piezas Sueltas',
-            loosePieces,
-            loosePieces?.totalLoosePieces > 0 ? 'unhealthy' : 'healthy', [
-            { label: 'Total Detectadas', value: loosePieces?.totalLoosePieces || 0, icon: loosePieces?.totalLoosePieces > 0 ? '⚠️' : '✅' },
-            { label: 'Routes sin Modelo', value: loosePieces?.byCategory?.routesWithoutModel || 0, icon: '📂' },
-            { label: 'Servicios sin Routes', value: loosePieces?.byCategory?.servicesWithoutRoutes || 0, icon: '⚙️' },
-            { label: 'Frontends sin Backend', value: loosePieces?.byCategory?.frontendsWithoutBackend || 0, icon: '🎨' }
-          ], loosePieces?.totalLoosePieces > 0 ? [
-            this.renderLoosePiecesDetails(loosePieces.categories)
-          ] : [], '🔎 Detección de arquitectura. Identifica código desconectado: routes sin modelos (severidad medium), servicios sin routes (low), frontends sin backend (high). Ayuda a optimizar la arquitectura.')}
-        </div>
-
-        <!-- Alerta de Piezas Sueltas -->
-        ${loosePieces?.totalLoosePieces > 0 ? `
-          <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin-top: 20px; border-left: 4px solid #f59e0b;">
-            <h3 style="color: #92400e; margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px;">
-              ⚠️ Piezas Sueltas Detectadas
-            </h3>
-            <p style="color: #78350f; margin: 0 0 10px 0; font-size: 14px;">
-              El Brain detectó ${loosePieces.totalLoosePieces} componentes que no están conectados o referenciados.
-              Revisa los detalles arriba para optimizar la arquitectura.
-            </p>
-          </div>
-        ` : ''}
-      </div>
-    `;
-  },
-
-  /**
-   * Renderizar card de salud
-   */
-  renderHealthCard(title, status, value, label, tooltip = '') {
-    const healthIcons = {
-      excellent: '🟢',
-      good: '🟡',
-      degraded: '🟠',
-      critical: '🔴',
-      healthy: '✅',
-      unhealthy: '❌',
-      stopped: '⏸️',
-      unavailable: '⚫'
-    };
-
-    const colors = {
-      excellent: '#10b981',
-      good: '#f59e0b',
-      degraded: '#f97316',
-      critical: '#ef4444',
-      healthy: '#10b981',
-      unhealthy: '#ef4444',
-      stopped: '#6b7280',
-      unavailable: '#9ca3af'
-    };
-
-    const icon = healthIcons[status] || '⚫';
-    const color = colors[status] || '#6b7280';
-
-    return `
-      <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid ${color}; position: relative; transition: transform 0.2s, box-shadow 0.2s; cursor: help;"
-           onmouseenter="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
-           onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'"
-           title="${tooltip.replace(/"/g, '&quot;')}">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-          <span style="font-size: 24px;">${icon}</span>
-          <h3 style="margin: 0; color: #374151; font-size: 14px; font-weight: 600;">${title}</h3>
-        </div>
-        <div style="font-size: 32px; font-weight: 700; color: ${color}; margin-bottom: 5px;">${value}</div>
-        <div style="color: #6b7280; font-size: 12px;">${label}</div>
-        ${tooltip ? `
-          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-            <p style="margin: 0; color: #6b7280; font-size: 11px; line-height: 1.5;">${tooltip}</p>
-          </div>
-        ` : ''}
-      </div>
-    `;
-  },
-
-  /**
-   * Renderizar rama del Brain
-   */
-  renderBrainBranch(title, data, status, metrics, subBranches = [], description = '') {
-    if (!data) return '';
-
-    const healthIcons = {
-      healthy: '✅',
-      unhealthy: '❌',
-      stopped: '⏸️',
-      unavailable: '⚫'
-    };
-
-    const icon = healthIcons[status] || '⚫';
-
-    return `
-      <div style="margin-bottom: 25px; padding-left: 20px; border-left: 3px solid #e5e7eb;">
-        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 18px; display: flex; align-items: center; gap: 10px;">
-          ${title} ${icon}
-        </h3>
-
-        ${description ? `
-          <div style="background: #eff6ff; padding: 10px 12px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #3b82f6;">
-            <p style="margin: 0; color: #1e40af; font-size: 12px; line-height: 1.6;">${description}</p>
-          </div>
-        ` : ''}
-
-        <!-- Métricas -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-          ${metrics.map(m => `
-            <div style="background: #f9fafb; padding: 12px; border-radius: 6px; border-left: 3px solid #3b82f6;">
-              <div style="color: #6b7280; font-size: 12px; margin-bottom: 4px;">${m.icon} ${m.label}</div>
-              <div style="color: #111827; font-size: 20px; font-weight: 600;">${m.value}</div>
-            </div>
-          `).join('')}
-        </div>
-
-        <!-- Sub-ramas -->
-        ${subBranches.join('')}
-      </div>
-    `;
-  },
-
-  /**
-   * Renderizar sub-rama del Brain
-   */
-  renderBrainSubBranch(title, items) {
-    return `
-      <div style="margin-left: 25px; margin-top: 15px; padding-left: 15px; border-left: 2px dashed #d1d5db;">
-        <h4 style="color: #374151; margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">${title}</h4>
-        <div style="display: grid; gap: 8px;">
-          ${items.map(item => `
-            <div style="background: #f3f4f6; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-              <span style="color: #374151;">${item.name}</span>
-              <span style="color: #3b82f6; font-weight: 600;">${item.stats} ${item.label}</span>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  },
-
-  /**
-   * Renderizar detalles de piezas sueltas
-   */
-  renderLoosePiecesDetails(categories) {
-    const allPieces = [
-      ...(categories.routesWithoutModel || []).map(p => ({ ...p, category: 'Routes sin Modelo', icon: '📂' })),
-      ...(categories.servicesWithoutRoutes || []).map(p => ({ ...p, category: 'Servicios sin Routes', icon: '⚙️' })),
-      ...(categories.frontendsWithoutBackend || []).map(p => ({ ...p, category: 'Frontends sin Backend', icon: '🎨' }))
-    ];
-
-    if (allPieces.length === 0) return '';
-
-    // Severity colors
-    const severityColors = {
-      high: '#dc2626',
-      medium: '#f59e0b',
-      low: '#6b7280'
-    };
-
-    return `
-      <div style="margin-left: 25px; margin-top: 15px; padding: 15px; background: #fef3c7; border-radius: 6px; border-left: 3px solid #f59e0b;">
-        <h4 style="color: #92400e; margin: 0 0 15px 0; font-size: 14px; font-weight: 600;">⚠️ Detalles de Piezas Sueltas</h4>
-        <div style="display: grid; gap: 10px; max-height: 400px; overflow-y: auto;">
-          ${allPieces.map(piece => `
-            <div style="background: white; padding: 12px; border-radius: 4px; border-left: 3px solid ${severityColors[piece.severity] || '#6b7280'};">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                <span style="font-size: 16px;">${piece.icon}</span>
-                <span style="color: #374151; font-weight: 600; font-size: 12px;">${piece.category}</span>
-                <span style="background: ${severityColors[piece.severity] || '#6b7280'}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 10px; text-transform: uppercase;">
-                  ${piece.severity}
-                </span>
-              </div>
-              <div style="color: #6b7280; font-size: 12px; font-family: 'Courier New', monospace; margin-bottom: 6px;">
-                📄 ${piece.file || piece.routeName || piece.serviceName || piece.endpoint}
-              </div>
-              <div style="color: #3b82f6; font-size: 11px; font-style: italic;">
-                💡 ${piece.suggestion}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  },
-
-  /**
-   * VISTA: Camino Crítico - CPM/PERT Analysis
-   */
-  async renderCriticalPathView() {
-    if (!this.metadata) return '<p>Cargando...</p>';
-
-    try {
-      // Fetch análisis de camino crítico
-      const response = await fetch('/api/critical-path/analyze');
-      const { analysis } = await response.json();
-
-      // Fetch estadísticas
-      const statsResponse = await fetch('/api/critical-path/statistics');
-      const { statistics } = await statsResponse.json();
-
-      // Fetch sesiones activas de coordinación
-      let sessions = [];
-      let locks = { fileLocks: {}, tableLocks: {}, taskAssignments: {} };
-      try {
-        const sessionsResponse = await fetch('/api/coordination/sessions-with-tasks');
-        const sessionsData = await sessionsResponse.json();
-        if (sessionsData.success) sessions = sessionsData.sessions;
-
-        const locksResponse = await fetch('/api/coordination/locks');
-        const locksData = await locksResponse.json();
-        if (locksData.success) locks = locksData;
-      } catch (e) {
-        console.log('No hay sistema de coordinación activo');
-      }
-
-      // Obtener info de roadmap para las tareas
-      const roadmap = this.metadata.roadmap || {};
-
-      return `
-        <div class="critical-path-container" style="padding: 20px;">
-          <!-- Header -->
-          <div class="cp-header" style="margin-bottom: 30px;">
-            <h2 style="margin: 0 0 10px 0; color: #374151; display: flex; align-items: center; gap: 10px;">
-              <span>🎯</span>
-              <span>Camino Crítico - Programación CPM/PERT + Coordinación</span>
-            </h2>
-            <p style="margin: 0; color: #6b7280; font-size: 14px;">
-              Gestión inteligente de tareas con coordinación multi-sesión (Claude + Humanos)
-            </p>
-          </div>
-
-          <!-- Panel de Sesiones Activas -->
-          ${sessions.length > 0 ? `
-            <div class="cp-sessions" style="margin-bottom: 30px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 20px; border: 1px solid #bfdbfe;">
-              <h3 style="margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px; font-size: 18px;">
-                <span>👥</span>
-                <span>Equipo Activo (${sessions.length} sesiones)</span>
-                <button onclick="window.EngineeringDashboard.loadCriticalPathView()" style="margin-left: auto; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">🔄 Refresh</button>
-              </h3>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-                ${sessions.map(s => `
-                  <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; border: 1px solid rgba(255,255,255,0.1);">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                      <span style="font-size: 24px;">${s.type === 'claude' ? '🤖' : '👤'}</span>
-                      <div>
-                        <div style="font-weight: 600;">${s.name}</div>
-                        <div style="font-size: 11px; opacity: 0.7;">Token: ${s.token}</div>
-                      </div>
-                      <span style="margin-left: auto; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: ${s.status === 'working' ? '#22c55e' : s.status === 'idle' ? '#f59e0b' : '#6b7280'};">${s.status.toUpperCase()}</span>
-                    </div>
-                    ${s.currentTask ? `
-                      <div style="background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; margin-bottom: 10px;">
-                        <div style="font-size: 12px; opacity: 0.7; margin-bottom: 4px;">📋 Trabajando en:</div>
-                        <div style="font-weight: 600; color: #fbbf24;">${s.currentTask.taskId}: ${s.currentTask.taskName}</div>
-                        <div style="font-size: 11px; opacity: 0.7; margin-top: 4px;">Fase: ${s.currentTask.phaseName}</div>
-                        <div style="font-size: 11px; opacity: 0.7;">🔒 ${s.currentTask.lockedFiles?.length || 0} archivos, ${s.currentTask.lockedTables?.length || 0} tablas</div>
-                      </div>
-                      <button onclick="window.EngineeringDashboard.forceReleaseTask('${s.currentTask.taskId}')" style="width: 100%; background: #dc2626; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">⚠️ Forzar Liberación de Tarea</button>
-                    ` : `
-                      <div style="text-align: center; padding: 10px; opacity: 0.5; font-size: 13px;">Sin tarea asignada</div>
-                    `}
-                    <button onclick="window.EngineeringDashboard.forceReleaseSession('${s.token}')" style="width: 100%; background: transparent; color: #f87171; border: 1px solid #f87171; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-top: 8px;">🗑️ Cerrar Sesión Completa</button>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          ` : `
-            <div style="margin-bottom: 30px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 12px; padding: 20px; text-align: center;">
-              <div style="font-size: 32px; margin-bottom: 10px;">👥</div>
-              <div style="color: #64748b; font-weight: 500;">No hay sesiones de coordinación activas</div>
-              <div style="color: #94a3b8; font-size: 13px; margin-top: 5px;">Las sesiones de Claude/Humanos aparecerán aquí cuando se registren</div>
-            </div>
-          `}
-
-          <!-- Locks Activos -->
-          ${Object.keys(locks.taskAssignments).length > 0 ? `
-            <div style="margin-bottom: 20px; background: #fef3c7; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 20px;">🔒</span>
-              <span style="color: #92400e; font-weight: 500;">${Object.keys(locks.taskAssignments).length} tareas bloqueadas, ${Object.keys(locks.fileLocks).length} archivos, ${Object.keys(locks.tableLocks).length} tablas</span>
-            </div>
-          ` : ''}
-
-          <!-- Estadísticas Globales -->
-          <div class="cp-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-            <div class="stat-card critical" style="background: #ffffff !important; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2); border-left: 4px solid #dc2626;">
-              <div style="font-size: 14px; color: #dc2626 !important; font-weight: 600; margin-bottom: 8px;">⚠️ Tareas Críticas</div>
-              <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #b91c1c !important;">${statistics.critical}</div>
-              <div style="font-size: 12px; color: #991b1b !important; font-weight: 500;">de ${statistics.pending} pendientes</div>
-            </div>
-
-            <div class="stat-card" style="background: #ffffff !important; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6;">
-              <div style="font-size: 14px; color: #3b82f6 !important; font-weight: 600; margin-bottom: 8px;">📅 Duración Proyecto</div>
-              <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #2563eb !important;">${statistics.projectDuration}</div>
-              <div style="font-size: 12px; color: #1d4ed8 !important; font-weight: 500;">días estimados</div>
-            </div>
-
-            <div class="stat-card" style="background: #ffffff !important; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); border-left: 4px solid #10b981;">
-              <div style="font-size: 14px; color: #10b981 !important; font-weight: 600; margin-bottom: 8px;">✅ Progreso Global</div>
-              <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #059669 !important;">${statistics.completionPercentage}%</div>
-              <div style="font-size: 12px; color: #047857 !important; font-weight: 500;">${statistics.completed} de ${statistics.total} completadas</div>
-            </div>
-
-            <div class="stat-card" style="background: #ffffff !important; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2); border-left: 4px solid #8b5cf6;">
-              <div style="font-size: 14px; color: #8b5cf6 !important; font-weight: 600; margin-bottom: 8px;">⏱️ Holgura Promedio</div>
-              <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #7c3aed !important;">${statistics.averageSlack}</div>
-              <div style="font-size: 12px; color: #6d28d9 !important; font-weight: 500;">días de slack</div>
-            </div>
-          </div>
-
-          <!-- Tareas Críticas -->
-          ${analysis.criticalTasks > 0 ? `
-            <div class="cp-section" style="margin-bottom: 40px;">
-              <h3 style="margin: 0 0 20px 0; color: #dc2626; display: flex; align-items: center; gap: 10px; font-size: 20px;">
-                <span>⚠️</span>
-                <span>Tareas Críticas (Slack = 0)</span>
-              </h3>
-              <div class="tasks-grid" style="display: flex; flex-direction: column; gap: 15px;">
-                ${analysis.criticalPath.map(task => {
-                  const phase = roadmap[task.phaseKey] || {};
-                  const roadmapTask = phase.tasks?.find(t => t.id === task.id) || {};
-                  const taskAssignment = locks.taskAssignments[task.id];
-                  const isAssigned = !!taskAssignment;
-                  const assignedToName = taskAssignment?.sessionName || roadmapTask.assignedTo || '';
-                  const assignedType = taskAssignment?.sessionName?.toLowerCase().includes('claude') ? 'claude' : 'human';
-                  return `
-                  <div class="task-card critical" style="background: white; border-left: 4px solid ${isAssigned ? '#f59e0b' : '#dc2626'}; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s;" onmouseenter="this.style.transform='translateX(4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseleave="this.style.transform='translateX(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
-                    ${isAssigned ? `
-                      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; padding: 12px 16px; margin-bottom: 15px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                          <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 20px;">${assignedType === 'claude' ? '🤖' : '👤'}</span>
-                            <div>
-                              <div style="font-size: 11px; color: #92400e; text-transform: uppercase; font-weight: 700;">🔒 TAREA ASIGNADA</div>
-                              <div style="font-size: 14px; color: #78350f; font-weight: 600;">${assignedToName}</div>
-                            </div>
-                          </div>
-                          <button onclick="window.EngineeringDashboard.releaseTask('${task.id}')" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
-                            🔓 Liberar
-                          </button>
-                        </div>
-                        <button onclick="window.EngineeringDashboard.copyCloseInstructions('${task.id}', '${task.phaseKey}', \`${(task.name || '').replace(/`/g, "'").replace(/\\/g, '')}\`)" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                          <span>📋</span> Copiar Instrucciones de Cierre para Claude
-                        </button>
-                      </div>
-                    ` : ''}
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-                      <div style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                          <span style="background: #fee2e2; color: #dc2626; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase;">⚠️ CRÍTICA</span>
-                          <span style="background: #dbeafe; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;" title="${task.phaseKey}">${phase.name || task.phaseKey}</span>
-                          ${roadmapTask.assignedTo && !isAssigned ? `<span style="background: #f3e8ff; color: #7c3aed; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">👤 ${roadmapTask.assignedTo}</span>` : ''}
-                        </div>
-                        <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 16px; font-weight: 600;">${task.id}: ${task.name}</h4>
-                        ${phase.description ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #6b7280; line-height: 1.5; padding: 8px 12px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #3b82f6;">📋 <strong>Fase:</strong> ${phase.description}</p>` : ''}
-                        ${roadmapTask.estimatedEffort ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #059669; font-weight: 500;">⏱️ Esfuerzo estimado: ${roadmapTask.estimatedEffort}</p>` : ''}
-                        ${roadmapTask.dependencies?.length > 0 ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #f59e0b;">🔗 Depende de: ${roadmapTask.dependencies.join(', ')}</p>` : ''}
-                        <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #374151 !important; background: #f8fafc; padding: 10px 12px; border-radius: 6px; margin-top: 10px;">
-                          <span title="Duración estimada" style="color: #374151 !important;"><strong style="color: #374151 !important;">📅 Duración:</strong> ${task.duration} días</span>
-                          <span title="Earliest Start" style="color: #374151 !important;"><strong style="color: #374151 !important;">ES:</strong> ${task.es}</span>
-                          <span title="Earliest Finish" style="color: #374151 !important;"><strong style="color: #374151 !important;">EF:</strong> ${task.ef}</span>
-                          <span title="Latest Start" style="color: #374151 !important;"><strong style="color: #374151 !important;">LS:</strong> ${task.ls}</span>
-                          <span title="Latest Finish" style="color: #374151 !important;"><strong style="color: #374151 !important;">LF:</strong> ${task.lf}</span>
-                          <span title="Slack/Float" style="color: #dc2626 !important; font-weight: 600;"><strong style="color: #dc2626 !important;">⏱️ Slack:</strong> ${task.slack} días</span>
-                          <span title="Prioridad" style="color: #7c3aed !important; font-weight: 600;"><strong style="color: #7c3aed !important;">🎯 Prioridad:</strong> ${task.priority}/10</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="task-actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
-                      <button onclick="window.EngineeringDashboard.assignToClaude('${task.id}', '${task.phaseKey}', \`${(task.name || '').replace(/`/g, '').replace(/\$/g, '')}\`)" ${isAssigned ? 'disabled' : ''} style="flex: 1; min-width: 150px; background: ${isAssigned ? '#94a3b8' : '#3b82f6'} !important; color: #ffffff !important; border: none; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: ${isAssigned ? 'not-allowed' : 'pointer'}; font-size: 14px; text-shadow: none; opacity: ${isAssigned ? '0.6' : '1'};">
-                        🤖 Asignar a Claude
-                      </button>
-                      <button onclick="window.EngineeringDashboard.assignToHuman('${task.id}', '${task.phaseKey}')" ${isAssigned ? 'disabled' : ''} style="flex: 1; min-width: 150px; background: ${isAssigned ? '#f1f5f9' : '#ffffff'} !important; color: ${isAssigned ? '#94a3b8' : '#3b82f6'} !important; border: 2px solid ${isAssigned ? '#cbd5e1' : '#3b82f6'}; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: ${isAssigned ? 'not-allowed' : 'pointer'}; font-size: 14px; opacity: ${isAssigned ? '0.6' : '1'};">
-                        👤 Asignar a Humano
-                      </button>
-                      <button onclick="window.EngineeringDashboard.completeTask('${task.id}', '${task.phaseKey}')" style="flex: 1; min-width: 150px; background: #10b981 !important; color: #ffffff !important; border: none; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; text-shadow: none;">
-                        ✅ Marcar Completada
-                      </button>
-                      <button onclick="window.EngineeringDashboard.updatePriority('${task.id}', '${task.phaseKey}')" style="background: #ffffff !important; color: #8b5cf6 !important; border: 2px solid #8b5cf6; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">
-                        🎯 Cambiar Prioridad
-                      </button>
-                    </div>
-                    ${roadmapTask.description ? `
-                      <div class="task-description" style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 8px; border-left: 4px solid #6366f1;">
-                        <p style="margin: 0 0 8px 0; font-size: 12px; color: #6366f1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📝 Descripción de la Tarea:</p>
-                        <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.7; white-space: pre-line;">${roadmapTask.description}</p>
-                      </div>
-                    ` : `
-                      <div class="task-description" style="margin-top: 15px; padding: 12px; background: #fef3c7; border-radius: 6px; border-left: 4px solid #f59e0b;">
-                        <p style="margin: 0; font-size: 12px; color: #92400e;"><strong>⚠️ Sin descripción:</strong> Esta tarea no tiene una descripción detallada. Usa "Asignar a Claude" para agregarla.</p>
-                      </div>
-                    `}
-                  </div>
-                `}).join('')}
-              </div>
-            </div>
-          ` : ''}
-
-          <!-- Tareas No Críticas -->
-          ${analysis.tasks.filter(t => !t.isCritical && !t.done).length > 0 ? `
-            <div class="cp-section">
-              <h3 style="margin: 0 0 20px 0; color: #3b82f6; display: flex; align-items: center; gap: 10px; font-size: 20px;">
-                <span>📋</span>
-                <span>Tareas con Holgura</span>
-              </h3>
-              <div class="tasks-grid" style="display: flex; flex-direction: column; gap: 15px;">
-                ${analysis.tasks.filter(t => !t.isCritical && !t.done).map(task => {
-                  const phase = roadmap[task.phaseKey] || {};
-                  const roadmapTask = phase.tasks?.find(t => t.id === task.id) || {};
-                  const taskAssignment = locks.taskAssignments[task.id];
-                  const isAssigned = !!taskAssignment;
-                  const assignedToName = taskAssignment?.sessionName || roadmapTask.assignedTo || '';
-                  const assignedType = taskAssignment?.sessionName?.toLowerCase().includes('claude') ? 'claude' : 'human';
-                  return `
-                  <div class="task-card" style="background: white; border-left: 4px solid ${isAssigned ? '#f59e0b' : '#3b82f6'}; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s;" onmouseenter="this.style.transform='translateX(4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseleave="this.style.transform='translateX(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
-                    ${isAssigned ? `
-                      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; padding: 12px 16px; margin-bottom: 15px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                          <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 20px;">${assignedType === 'claude' ? '🤖' : '👤'}</span>
-                            <div>
-                              <div style="font-size: 11px; color: #92400e; text-transform: uppercase; font-weight: 700;">🔒 TAREA ASIGNADA</div>
-                              <div style="font-size: 14px; color: #78350f; font-weight: 600;">${assignedToName}</div>
-                            </div>
-                          </div>
-                          <button onclick="window.EngineeringDashboard.releaseTask('${task.id}')" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
-                            🔓 Liberar
-                          </button>
-                        </div>
-                        <button onclick="window.EngineeringDashboard.copyCloseInstructions('${task.id}', '${task.phaseKey}', \`${(task.name || '').replace(/\`/g, "'").replace(/\\/g, '')}\`)" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                          <span>📋</span> Copiar Instrucciones de Cierre para Claude
-                        </button>
-                      </div>
-                    ` : ''}
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-                      <div style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                          <span style="background: #dbeafe; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">Slack: ${task.slack}d</span>
-                          <span style="background: #f3f4f6; color: #6b7280; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;" title="${task.phaseKey}">${phase.name || task.phaseKey}</span>
-                          ${roadmapTask.assignedTo && !isAssigned ? `<span style="background: #f3e8ff; color: #7c3aed; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">👤 ${roadmapTask.assignedTo}</span>` : ''}
-                        </div>
-                        <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 16px; font-weight: 600;">${task.id}: ${task.name}</h4>
-                        ${phase.description ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #6b7280; line-height: 1.5; padding: 8px 12px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #10b981;">📋 <strong>Fase:</strong> ${phase.description}</p>` : ''}
-                        ${roadmapTask.estimatedEffort ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #059669; font-weight: 500;">⏱️ Esfuerzo estimado: ${roadmapTask.estimatedEffort}</p>` : ''}
-                        ${roadmapTask.dependencies?.length > 0 ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #f59e0b;">🔗 Depende de: ${roadmapTask.dependencies.join(', ')}</p>` : ''}
-                        <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #374151 !important; background: #f8fafc; padding: 10px 12px; border-radius: 6px; margin-top: 10px;">
-                          <span title="Duración estimada" style="color: #374151 !important;"><strong style="color: #374151 !important;">📅 Duración:</strong> ${task.duration} días</span>
-                          <span title="Earliest Start" style="color: #374151 !important;"><strong style="color: #374151 !important;">ES:</strong> ${task.es}</span>
-                          <span title="Earliest Finish" style="color: #374151 !important;"><strong style="color: #374151 !important;">EF:</strong> ${task.ef}</span>
-                          <span title="Latest Start" style="color: #374151 !important;"><strong style="color: #374151 !important;">LS:</strong> ${task.ls}</span>
-                          <span title="Latest Finish" style="color: #374151 !important;"><strong style="color: #374151 !important;">LF:</strong> ${task.lf}</span>
-                          <span title="Slack/Float" style="color: #10b981 !important; font-weight: 600;"><strong style="color: #10b981 !important;">⏱️ Slack:</strong> ${task.slack} días</span>
-                          <span title="Prioridad" style="color: #7c3aed !important; font-weight: 600;"><strong style="color: #7c3aed !important;">🎯 Prioridad:</strong> ${task.priority}/10</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="task-actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
-                      <button onclick="window.EngineeringDashboard.assignToClaude('${task.id}', '${task.phaseKey}', \`${(task.name || '').replace(/`/g, '').replace(/\$/g, '')}\`)" ${isAssigned ? 'disabled' : ''} style="flex: 1; min-width: 150px; background: ${isAssigned ? '#94a3b8' : '#3b82f6'} !important; color: #ffffff !important; border: none; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: ${isAssigned ? 'not-allowed' : 'pointer'}; font-size: 14px; text-shadow: none; opacity: ${isAssigned ? '0.6' : '1'};">
-                        🤖 Asignar a Claude
-                      </button>
-                      <button onclick="window.EngineeringDashboard.assignToHuman('${task.id}', '${task.phaseKey}')" ${isAssigned ? 'disabled' : ''} style="flex: 1; min-width: 150px; background: ${isAssigned ? '#f1f5f9' : '#ffffff'} !important; color: ${isAssigned ? '#94a3b8' : '#3b82f6'} !important; border: 2px solid ${isAssigned ? '#cbd5e1' : '#3b82f6'}; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: ${isAssigned ? 'not-allowed' : 'pointer'}; font-size: 14px; opacity: ${isAssigned ? '0.6' : '1'};">
-                        👤 Asignar a Humano
-                      </button>
-                      <button onclick="window.EngineeringDashboard.completeTask('${task.id}', '${task.phaseKey}')" style="flex: 1; min-width: 150px; background: #10b981 !important; color: #ffffff !important; border: none; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; text-shadow: none;">
-                        ✅ Marcar Completada
-                      </button>
-                      <button onclick="window.EngineeringDashboard.updatePriority('${task.id}', '${task.phaseKey}')" style="background: #ffffff !important; color: #8b5cf6 !important; border: 2px solid #8b5cf6; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">
-                        🎯 Cambiar Prioridad
-                      </button>
-                    </div>
-                    ${roadmapTask.description ? `
-                      <div class="task-description" style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 8px; border-left: 4px solid #10b981;">
-                        <p style="margin: 0 0 8px 0; font-size: 12px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📝 Descripción de la Tarea:</p>
-                        <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.7; white-space: pre-line;">${roadmapTask.description}</p>
-                      </div>
-                    ` : `
-                      <div class="task-description" style="margin-top: 15px; padding: 12px; background: #fef3c7; border-radius: 6px; border-left: 4px solid #f59e0b;">
-                        <p style="margin: 0; font-size: 12px; color: #92400e;"><strong>⚠️ Sin descripción:</strong> Esta tarea no tiene una descripción detallada. Usa "Asignar a Claude" para agregarla.</p>
-                      </div>
-                    `}
-                  </div>
-                `}).join('')}
-              </div>
-            </div>
-          ` : ''}
-
-          <!-- Análisis por Phases -->
-          <div class="cp-section" style="margin-top: 40px;">
-            <h3 style="margin: 0 0 20px 0; color: #374151; display: flex; align-items: center; gap: 10px; font-size: 20px;">
-              <span>📊</span>
-              <span>Análisis por Phases</span>
-            </h3>
-            <div style="display: grid; gap: 20px;">
-              ${analysis.phases.map(phase => `
-                <div class="phase-card" style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; ${phase.isCritical ? 'border-left: 4px solid #dc2626;' : ''}">
-                  <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-                    <div style="flex: 1;">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                        ${phase.isCritical ? '<span style="background: #fee2e2; color: #dc2626; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">⚠️ PHASE CRÍTICA</span>' : ''}
-                        <span style="background: ${phase.status === 'COMPLETED' ? '#d1fae5' : phase.status === 'IN_PROGRESS' ? '#dbeafe' : '#f3f4f6'}; color: ${phase.status === 'COMPLETED' ? '#065f46' : phase.status === 'IN_PROGRESS' ? '#1e40af' : '#374151'}; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">${phase.status}</span>
-                      </div>
-                      <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 16px; font-weight: 600;">${phase.name}</h4>
-                      <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #6b7280;">
-                        <span><strong>Total Tareas:</strong> ${phase.totalTasks}</span>
-                        <span><strong>✅ Completadas:</strong> ${phase.completedTasks}</span>
-                        <span><strong>📋 Pendientes:</strong> ${phase.pendingTasks}</span>
-                        <span style="${phase.criticalTasks > 0 ? 'color: #dc2626; font-weight: 600;' : ''}"><strong>⚠️ Críticas:</strong> ${phase.criticalTasks}</span>
-                        <span><strong>📈 Progreso:</strong> ${phase.progress}%</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="progress-bar-container" style="width: 100%; height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden;">
-                    <div class="progress-bar" style="width: ${phase.progress}%; height: 100%; background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%); transition: width 0.3s;"></div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-
-        </div>
-      `;
-
-    } catch (error) {
-      console.error('Error renderizando Critical Path:', error);
-      return `
-        <div style="padding: 40px; text-align: center;">
-          <h3 style="color: #dc2626;">❌ Error al cargar Camino Crítico</h3>
-          <p style="color: #6b7280;">${error.message}</p>
-          <button onclick="location.reload()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px;">
-            🔄 Reintentar
-          </button>
-        </div>
-      `;
-    }
-  },
-
-  /**
-   * Calcular Critical Path (CPM - Critical Path Method)
-   */
-  calculateCriticalPath(roadmap) {
-    const phases = Object.entries(roadmap);
-    let totalTasks = 0;
-    let completedTasks = 0;
-    let criticalPath = [];
-    let maxDuration = 0;
-
-    // Calcular duración de cada fase
-    const phasesWithDuration = phases.map(([key, phase]) => {
-      const start = new Date(phase.startDate);
-      const end = new Date(phase.estimatedCompletion);
-      const duration = Math.ceil((end - start) / (1000 * 60 * 60 * 24)); // días
-
-      const tasksCount = phase.tasks ? phase.tasks.length : 0;
-      const doneCount = phase.tasks ? phase.tasks.filter(t => t.done).length : 0;
-
-      totalTasks += tasksCount;
-      completedTasks += doneCount;
-
-      return {
-        key,
-        ...phase,
-        duration,
-        tasksCount,
-        doneCount,
-        dependencies: phase.dependencies || []
-      };
-    });
-
-    // Encontrar Critical Path (considerando dependencias)
-    // En este caso simplificado, el critical path es la secuencia de fases dependientes
-    const visited = new Set();
-    const findLongestPath = (phaseKey, currentPath = [], currentDuration = 0) => {
-      if (visited.has(phaseKey)) return { path: currentPath, duration: currentDuration };
-
-      const phase = phasesWithDuration.find(p => p.key === phaseKey);
-      if (!phase) return { path: currentPath, duration: currentDuration };
-
-      visited.add(phaseKey);
-      const newPath = [...currentPath, phaseKey];
-      const newDuration = currentDuration + phase.duration;
-
-      if (phase.dependencies && phase.dependencies.length > 0) {
-        // Explorar dependencias
-        let longestPath = { path: newPath, duration: newDuration };
-        phase.dependencies.forEach(dep => {
-          const result = findLongestPath(dep, newPath, newDuration);
-          if (result.duration > longestPath.duration) {
-            longestPath = result;
-          }
-        });
-        return longestPath;
-      }
-
-      return { path: newPath, duration: newDuration };
-    };
-
-    // Encontrar el camino más largo
-    phasesWithDuration.forEach(phase => {
-      visited.clear();
-      const result = findLongestPath(phase.key);
-      if (result.duration > maxDuration) {
-        maxDuration = result.duration;
-        criticalPath = result.path;
-      }
-    });
-
-    return {
-      totalPhases: phases.length,
-      totalTasks,
-      completedTasks,
-      criticalPathLength: maxDuration,
-      criticalPath,
-      phases: phasesWithDuration
-    };
-  },
 
   /**
    * Renderizar PERT Chart
@@ -3938,14 +2304,6 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
       });
     }
 
-    // ULTIMATE TEST (2026-01-05)
-    const btnUltimateTest = document.getElementById('btn-ultimate-test');
-    if (btnUltimateTest) {
-      btnUltimateTest.addEventListener('click', async () => {
-        await this.runUltimateTest();
-      });
-    }
-
     // Ver Detalles Completos buttons (Applications y Modules)
     document.querySelectorAll('.btn-view-details').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -3968,22 +2326,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
       });
     });
 
-    // Toggle tasks en roadmap
-    document.querySelectorAll('.btn-toggle-tasks').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const phase = e.currentTarget.getAttribute('data-phase');
-        const tasksList = document.querySelector(`.tasks-list[data-phase="${phase}"]`);
-        const icon = e.currentTarget.querySelector('.toggle-icon');
-
-        if (tasksList.style.display === 'none') {
-          tasksList.style.display = 'block';
-          icon.textContent = '▲';
-        } else {
-          tasksList.style.display = 'none';
-          icon.textContent = '▼';
-        }
-      });
-    });
+    // Toggle tasks en roadmap - ELIMINADO (función ya no existe)
 
     // Gantt sub-tabs switching (Gantt / PERT / Dependencies)
     document.querySelectorAll('.gantt-subtab').forEach(subtab => {
@@ -4033,20 +2376,20 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
       }
 
       const { roadmap } = this.metadata;
-      const criticalPathData = this.calculateCriticalPath(roadmap);
+      // const criticalPathData = this.calculateCriticalPath(roadmap); // FUNCIÓN ELIMINADA
 
-      // Convert roadmap phases to Gantt tasks format
-      const ganttTasks = criticalPathData.phases.map(phase => {
-        const isCritical = criticalPathData.criticalPath.includes(phase.key);
+      // Convert roadmap phases to Gantt tasks format (SIN calculateCriticalPath)
+      const ganttTasks = Object.entries(roadmap).map(([key, phase]) => {
+        // const isCritical = criticalPathData.criticalPath.includes(phase.key); // ELIMINADO
 
         return {
-          id: phase.key,
-          name: phase.name,
+          id: key,
+          name: phase.name || key,
           start: phase.startDate,
-          end: phase.estimatedCompletion,
+          end: phase.estimatedCompletion || phase.completionDate,
           progress: phase.progress || 0,
           dependencies: (phase.dependencies || []).join(', '),
-          custom_class: isCritical ? 'bar-critical' : (phase.status === 'COMPLETE' ? 'bar-complete' : (phase.status === 'IN_PROGRESS' ? 'bar-progress' : 'bar-planned'))
+          custom_class: (phase.status === 'COMPLETE' ? 'bar-complete' : (phase.status === 'IN_PROGRESS' ? 'bar-progress' : 'bar-planned'))
         };
       });
 
@@ -4060,26 +2403,33 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
           date_format: 'YYYY-MM-DD',
           language: 'es',
           custom_popup_html: (task) => {
-            const phase = criticalPathData.phases.find(p => p.key === task.id);
-            const isCritical = criticalPathData.criticalPath.includes(task.id);
+            const phase = roadmap[task.id]; // Obtener directamente del roadmap
+            // const isCritical = criticalPathData.criticalPath.includes(task.id); // ELIMINADO
+
+            // Calcular duración simple
+            const start = new Date(task._start);
+            const end = new Date(task._end);
+            const duration = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+
+            const tasksCount = phase.tasks ? phase.tasks.length : 0;
+            const doneCount = phase.tasks ? phase.tasks.filter(t => t.done).length : 0;
 
             return `
               <div class="gantt-popup" style="padding: 15px; min-width: 300px;">
-                <h4 style="margin: 0 0 10px 0; color: ${isCritical ? '#991b1b' : '#1e40af'};">
-                  ${isCritical ? '⚠️ ' : ''}${task.name}
+                <h4 style="margin: 0 0 10px 0; color: #1e40af;">
+                  ${task.name}
                 </h4>
-                ${isCritical ? '<div style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin-bottom: 10px; display: inline-block;">CRITICAL PATH</div>' : ''}
                 <div style="margin-bottom: 8px;">
                   <strong>Fechas:</strong> ${new Date(task._start).toLocaleDateString('es-AR')} - ${new Date(task._end).toLocaleDateString('es-AR')}
                 </div>
                 <div style="margin-bottom: 8px;">
-                  <strong>Duración:</strong> ${phase.duration} días
+                  <strong>Duración:</strong> ${duration} días
                 </div>
                 <div style="margin-bottom: 8px;">
                   <strong>Progreso:</strong> ${task.progress}%
                 </div>
                 <div style="margin-bottom: 8px;">
-                  <strong>Tareas:</strong> ${phase.doneCount} / ${phase.tasksCount} completadas
+                  <strong>Tareas:</strong> ${doneCount} / ${tasksCount} completadas
                 </div>
                 ${phase.dependencies && phase.dependencies.length > 0
                   ? `<div style="margin-bottom: 8px;"><strong>Depende de:</strong> ${phase.dependencies.join(', ')}</div>`
@@ -4374,13 +2724,6 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
         <!-- Code Location (SI EXISTE) -->
         ${moduleData.codeLocation ? this.renderCodeLocationFull(moduleData.codeLocation) : ''}
 
-        <!-- Features -->
-        ${moduleData.features ? `
-          <div style="margin-bottom: 25px;">
-            <h4 style="margin: 0 0 15px 0; color: #374151; font-size: 16px; font-weight: 600;">⚡ Features</h4>
-            ${this.renderModuleFeatures(moduleData.features)}
-          </div>
-        ` : ''}
 
         <!-- API Endpoints -->
         ${moduleData.apiEndpoints && moduleData.apiEndpoints.length > 0 ? `
@@ -5279,6 +3622,44 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     // Store modules for pricing editor
     this._commercialData = { coreModules, optionalModules, stats, corePricePerEmployee };
 
+    // Mapeo de iconos de texto a emojis
+    const iconMapping = {
+      'shopping-cart': '🛒',
+      'truck': '🚚',
+      'warehouse': '🏭',
+      'chart': '📊',
+      'legal': '⚖️',
+      'compliance': '📋',
+      'analytics': '📈',
+      'document': '📄',
+      'folder': '📁',
+      'calendar': '📅',
+      'user': '👤',
+      'users': '👥',
+      'settings': '⚙️',
+      'bell': '🔔',
+      'mail': '📧',
+      'phone': '📞',
+      'home': '🏠',
+      'building': '🏢',
+      'briefcase': '💼',
+      'money': '💰',
+      'heart': '❤️',
+      'star': '⭐',
+      'shield': '🛡️',
+      'lock': '🔒',
+      'key': '🔑',
+      'search': '🔍',
+      'filter': '🔎',
+      'download': '⬇️',
+      'upload': '⬆️',
+      'check': '✅',
+      'times': '❌',
+      'exclamation': '⚠️',
+      'question': '❓',
+      'info': 'ℹ️'
+    };
+
     const renderModuleCard = (module, isCore) => {
       const borderColor = isCore ? '#3b82f6' : '#10b981';
       const badgeColor = isCore ? '#3b82f6' : '#10b981';
@@ -5287,27 +3668,45 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
       return `
         <div style="
-          background: white;
-          border: 2px solid ${borderColor}22;
+          background: rgba(35, 40, 55, 0.85);
+          border: 2px solid ${borderColor}44;
           border-radius: 12px;
           padding: 20px;
           transition: all 0.3s;
           position: relative;
         "
-        onmouseover="this.style.borderColor='${borderColor}'; this.style.boxShadow='0 4px 12px ${borderColor}22'"
-        onmouseout="this.style.borderColor='${borderColor}22'; this.style.boxShadow='none'"
+        onmouseover="this.style.borderColor='${borderColor}'; this.style.boxShadow='0 4px 12px ${borderColor}44'"
+        onmouseout="this.style.borderColor='${borderColor}44'; this.style.boxShadow='none'"
         >
           <div style="position: absolute; top: 12px; right: 12px;">
             <span style="background: ${badgeColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 700;">${badgeText}</span>
           </div>
 
-          <div style="font-size: 36px; margin-bottom: 12px;">${module.icon || '📦'}</div>
-          <h3 style="margin: 0 0 8px 0; font-size: 16px; color: #374151; font-weight: 700;">${module.name}</h3>
-          <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 13px; line-height: 1.5; min-height: 40px;">${module.description || 'Sin descripción'}</p>
+          <div style="font-size: 36px; margin-bottom: 12px;">
+            ${(() => {
+              if (!module.icon) return '📦';
+              // FontAwesome icons
+              if (module.icon.includes('fa-') || module.icon.includes('fas ') || module.icon.includes('far ') || module.icon.includes('fab ')) {
+                return `<i class="${module.icon}" style="color: #e8eaed;"></i>`;
+              }
+              // Text icons mapped to emojis
+              if (iconMapping[module.icon]) {
+                return iconMapping[module.icon];
+              }
+              // Direct emoji (length <= 4 for composed emojis)
+              if (module.icon.length <= 4) {
+                return module.icon;
+              }
+              // Unknown icon format - use default
+              return '📦';
+            })()}
+          </div>
+          <h3 style="margin: 0 0 8px 0; font-size: 16px; color: #e8eaed; font-weight: 700;">${module.name}</h3>
+          <p style="margin: 0 0 12px 0; color: rgba(232, 234, 237, 0.7); font-size: 13px; line-height: 1.5; min-height: 40px;">${module.description || 'Sin descripción'}</p>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #f3f4f6;">
-            <span style="background: #f3f4f6; padding: 4px 10px; border-radius: 8px; font-size: 11px; color: #6b7280; text-transform: uppercase;">${module.category || 'general'}</span>
-            <span style="font-size: 18px; font-weight: 700; color: ${price > 0 ? '#10b981' : '#6b7280'};">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+            <span style="background: rgba(45, 49, 66, 0.8); padding: 4px 10px; border-radius: 8px; font-size: 11px; color: rgba(232, 234, 237, 0.7); text-transform: uppercase;">${module.category || 'general'}</span>
+            <span style="font-size: 18px; font-weight: 700; color: ${price > 0 ? '#66bb6a' : 'rgba(232, 234, 237, 0.6)'};">
               ${isCore ? 'Incluido' : (price > 0 ? '$' + price.toFixed(2) + '/emp' : 'Sin precio')}
             </span>
           </div>
@@ -5355,25 +3754,25 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
         <!-- Stats -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
-          <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-            <div style="font-size: 32px; font-weight: bold; color: #3b82f6;">${stats.totalCore}</div>
-            <div style="color: #6b7280; font-size: 13px; font-weight: 600;">MÓDULOS CORE</div>
-            <div style="color: #9ca3af; font-size: 11px; margin-top: 4px;">Paquete base incluido</div>
+          <div style="background: rgba(35, 40, 55, 0.85); padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            <div style="font-size: 32px; font-weight: bold; color: #60a5fa;">${stats.totalCore}</div>
+            <div style="color: rgba(232, 234, 237, 0.9); font-size: 13px; font-weight: 600;">MÓDULOS CORE</div>
+            <div style="color: rgba(232, 234, 237, 0.6); font-size: 11px; margin-top: 4px;">Paquete base incluido</div>
           </div>
-          <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #10b981; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-            <div style="font-size: 32px; font-weight: bold; color: #10b981;">${stats.totalOptional}</div>
-            <div style="color: #6b7280; font-size: 13px; font-weight: 600;">MÓDULOS OPCIONALES</div>
-            <div style="color: #9ca3af; font-size: 11px; margin-top: 4px;">Contratación individual</div>
+          <div style="background: rgba(35, 40, 55, 0.85); padding: 20px; border-radius: 12px; border-left: 4px solid #10b981; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            <div style="font-size: 32px; font-weight: bold; color: #66bb6a;">${stats.totalOptional}</div>
+            <div style="color: rgba(232, 234, 237, 0.9); font-size: 13px; font-weight: 600;">MÓDULOS OPCIONALES</div>
+            <div style="color: rgba(232, 234, 237, 0.6); font-size: 11px; margin-top: 4px;">Contratación individual</div>
           </div>
-          <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #8b5cf6; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-            <div style="font-size: 32px; font-weight: bold; color: #8b5cf6;">${stats.total}</div>
-            <div style="color: #6b7280; font-size: 13px; font-weight: 600;">TOTAL PRODUCTOS</div>
-            <div style="color: #9ca3af; font-size: 11px; margin-top: 4px;">Catálogo completo</div>
+          <div style="background: rgba(35, 40, 55, 0.85); padding: 20px; border-radius: 12px; border-left: 4px solid #8b5cf6; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            <div style="font-size: 32px; font-weight: bold; color: #a78bfa;">${stats.total}</div>
+            <div style="color: rgba(232, 234, 237, 0.9); font-size: 13px; font-weight: 600;">TOTAL PRODUCTOS</div>
+            <div style="color: rgba(232, 234, 237, 0.6); font-size: 11px; margin-top: 4px;">Catálogo completo</div>
           </div>
-          <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); color: white;">
+          <div style="background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(255, 167, 38, 0.3); color: white;">
             <div style="font-size: 32px; font-weight: bold;">$${corePricePerEmployee.toFixed(2)}</div>
-            <div style="font-size: 13px; font-weight: 600; opacity: 0.9;">PRECIO CORE/EMPLEADO</div>
-            <div style="font-size: 11px; margin-top: 4px; opacity: 0.8;">Paquete base mensual</div>
+            <div style="font-size: 13px; font-weight: 600; opacity: 0.95;">PRECIO CORE/EMPLEADO</div>
+            <div style="font-size: 11px; margin-top: 4px; opacity: 0.85;">Paquete base mensual</div>
           </div>
         </div>
 
@@ -5382,11 +3781,11 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
           <!-- CORE Section -->
           <div style="margin-bottom: 40px;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-              <h2 style="margin: 0; font-size: 22px; color: #374151;">🔵 Paquete Base (CORE)</h2>
+              <h2 style="margin: 0; font-size: 22px; color: #e8eaed;">🔵 Paquete Base (CORE)</h2>
               <span style="background: #3b82f6; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">${coreModules.length} módulos</span>
-              <span style="background: #f59e0b; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">$${corePricePerEmployee.toFixed(2)}/empleado</span>
+              <span style="background: #ffa726; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">$${corePricePerEmployee.toFixed(2)}/empleado</span>
             </div>
-            <p style="color: #6b7280; margin: 0 0 20px 0; font-size: 14px;">Incluidos en todas las suscripciones. Se comercializan como un único paquete.</p>
+            <p style="color: rgba(232, 234, 237, 0.7); margin: 0 0 20px 0; font-size: 14px;">Incluidos en todas las suscripciones. Se comercializan como un único paquete.</p>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
               ${coreModules.map(m => renderModuleCard(m, true)).join('')}
@@ -5396,10 +3795,10 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
           <!-- OPTIONAL Section -->
           <div>
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-              <h2 style="margin: 0; font-size: 22px; color: #374151;">🟢 Módulos Opcionales</h2>
+              <h2 style="margin: 0; font-size: 22px; color: #e8eaed;">🟢 Módulos Opcionales</h2>
               <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">${optionalModules.length} módulos</span>
             </div>
-            <p style="color: #6b7280; margin: 0 0 20px 0; font-size: 14px;">Módulos adicionales que se contratan por separado según las necesidades del cliente.</p>
+            <p style="color: rgba(232, 234, 237, 0.7); margin: 0 0 20px 0; font-size: 14px;">Módulos adicionales que se contratan por separado según las necesidades del cliente.</p>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
               ${optionalModules.map(m => renderModuleCard(m, false)).join('')}
@@ -6347,146 +4746,6 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
       `;
     }
   },
-
-  /**
-   * ========================================================================
-   * ⚡ ULTIMATE TEST - UN SOLO MEGA TEST (2026-01-05)
-   * ========================================================================
-   * Ejecuta la batería completa de testing integrada
-   */
-  async runUltimateTest() {
-    const btn = document.getElementById('btn-ultimate-test');
-    const originalText = btn.innerHTML;
-
-    try {
-      btn.innerHTML = '⏳ Ejecutando...';
-      btn.disabled = true;
-
-      console.log('🚀 [ULTIMATE-TEST] Iniciando batería completa...');
-
-      // 1. Ejecutar ULTIMATE TEST
-      const response = await fetch('/api/ultimate-test/run', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          modules: 'all',           // Todos los módulos
-          headless: false,          // Ver navegador (útil en local)
-          includePerformance: true,
-          includeSimulation: true,
-          includeSecurity: false    // Security tests opcionales
-        })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        console.log('✅ [ULTIMATE-TEST] Iniciado correctamente');
-
-        // 2. Mostrar modal con link a resultados en tiempo real
-        this.showSuccessModal('🚀 ULTIMATE TEST Iniciado', `
-          <div style="padding: 20px;">
-            <p style="margin-bottom: 20px;">
-              La batería completa de testing se está ejecutando en background.
-            </p>
-
-            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #3b82f6;">
-              <h4 style="margin: 0 0 10px 0; color: #1e40af;">📊 Progreso en Tiempo Real</h4>
-              <p style="margin: 0; font-size: 0.9rem;">
-                Puedes ver el progreso en:
-                <br><br>
-                <a href="/api/ultimate-test/status" target="_blank" style="color: #3b82f6; text-decoration: underline;">
-                  🔗 Ver Estado Actual (JSON)
-                </a>
-              </p>
-            </div>
-
-            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
-              <h4 style="margin: 0 0 10px 0; color: #92400e;">⚡ Fases de Testing</h4>
-              <ol style="margin: 0; padding-left: 20px; font-size: 0.9rem;">
-                <li>Structural Tests (Endpoints, BD)</li>
-                <li>Functional Tests (CRUD, Módulos)</li>
-                <li>Performance Tests (Load Times, Queries)</li>
-                <li>UX Tests (Console Errors, Network)</li>
-                <li>Simulation Tests (Monkey Testing)</li>
-                <li>Auto-Healing (Si detecta errores)</li>
-                <li>Guarantees (Verificación final)</li>
-                <li>Brain Sync (Actualizar knowledge)</li>
-              </ol>
-            </div>
-
-            <div style="margin-top: 20px; text-align: center; background: #f0fdf4; padding: 15px; border-radius: 8px;">
-              <p style="margin: 0; color: #15803d; font-weight: 600;">
-                ⏱️ Tiempo estimado: 10-30 minutos
-              </p>
-              <p style="margin: 10px 0 0 0; color: #166534; font-size: 0.875rem;">
-                Se te notificará cuando termine
-              </p>
-            </div>
-          </div>
-        `);
-
-        // 3. Polling para actualizar estado (cada 5 segundos)
-        const checkStatus = setInterval(async () => {
-          try {
-            const statusResponse = await fetch('/api/ultimate-test/status', {
-              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            });
-            const statusResult = await statusResponse.json();
-
-            if (!statusResult.execution.isRunning) {
-              clearInterval(checkStatus);
-
-              // Mostrar resultados finales
-              const executionId = statusResult.execution.executionId;
-              if (executionId) {
-                const resultsResponse = await fetch(`/api/ultimate-test/results/${executionId}`, {
-                  headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                });
-                const resultsData = await resultsResponse.json();
-
-                this.showSuccessModal('✅ ULTIMATE TEST Completado', `
-                  <div style="padding: 20px;">
-                    <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                      <h4 style="margin: 0 0 10px 0; color: #15803d;">📊 Resultados</h4>
-                      <ul style="margin: 0; padding-left: 20px;">
-                        <li>Total tests: <strong>${resultsData.execution.totalTests}</strong></li>
-                        <li>Passed: <strong style="color: #10b981;">${resultsData.execution.passed}</strong></li>
-                        <li>Failed: <strong style="color: #ef4444;">${resultsData.execution.failed}</strong></li>
-                        <li>Success rate: <strong>${resultsData.execution.successRate}</strong></li>
-                      </ul>
-                    </div>
-                    <div style="text-align: center;">
-                      <a href="/api/ultimate-test/results/${executionId}" target="_blank" style="color: #3b82f6; text-decoration: underline;">
-                        📄 Ver Reporte Completo (JSON)
-                      </a>
-                    </div>
-                  </div>
-                `);
-              }
-            }
-          } catch (error) {
-            console.error('❌ [ULTIMATE-TEST] Error checking status:', error);
-            clearInterval(checkStatus);
-          }
-        }, 5000); // Check cada 5 segundos
-
-      } else {
-        console.error('❌ [ULTIMATE-TEST] Error:', result.message);
-        this.showErrorModal('Error Ejecutando ULTIMATE TEST', result.message);
-      }
-
-    } catch (error) {
-      console.error('❌ [ULTIMATE-TEST] Error en ejecución:', error);
-      this.showErrorModal('Error Ejecutando ULTIMATE TEST', error.message);
-    } finally {
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-    }
-  },
-
   // ═══════════════════════════════════════════════════════════════════════════
   // RESTAURACIÓN DE EMPRESAS
   // ═══════════════════════════════════════════════════════════════════════════
@@ -7050,13 +5309,22 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     if (!container) return;
 
     try {
-      const token = localStorage.getItem('aponnt_token_staff');
-      const response = await fetch('/api/system-settings', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      // Intentar primero con token de staff, luego con token normal
+      const token = localStorage.getItem('aponnt_token_staff') || localStorage.getItem('aponnt_token');
+
+      const headers = { 'Content-Type': 'application/json' };
+      // Solo agregar Authorization si hay un token válido
+      if (token && token !== 'null' && token !== 'undefined') {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch('/api/aponnt/system-settings', {
+        headers,
+        credentials: 'include' // Importante: incluir cookies de sesión
       });
 
       if (!response.ok) {
-        if (response.status === 403) {
+        if (response.status === 403 || response.status === 401) {
           container.innerHTML = this.renderSettingsAccessDenied();
           return;
         }
@@ -7103,14 +5371,14 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     const categoryKeys = Object.keys(categories);
 
     return `
-      <div style="padding: 20px;">
+      <div style="padding: 20px; background: #1a1d29; min-height: 100vh;">
         <!-- Header -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
           <div>
-            <h1 style="color: #1e293b; margin: 0; display: flex; align-items: center; gap: 10px;">
+            <h1 style="color: #e8eaed; margin: 0; display: flex; align-items: center; gap: 10px;">
               ⚙️ Configuración del Sistema
             </h1>
-            <p style="color: #64748b; margin: 5px 0 0 0;">
+            <p style="color: rgba(232, 234, 237, 0.6); margin: 5px 0 0 0;">
               Parámetros configurables sin modificar código - Base de datos tiene prioridad sobre .env
             </p>
           </div>
@@ -7127,12 +5395,12 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
         </div>
 
         <!-- Info Banner -->
-        <div style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border-left: 4px solid #3b82f6; padding: 15px 20px; border-radius: 8px; margin-bottom: 30px;">
+        <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1)); border-left: 4px solid #3b82f6; padding: 15px 20px; border-radius: 8px; margin-bottom: 30px;">
           <div style="display: flex; align-items: start; gap: 15px;">
             <span style="font-size: 24px;">💡</span>
             <div>
-              <strong style="color: #1e40af;">Cómo funciona</strong>
-              <p style="margin: 5px 0 0 0; color: #1e3a8a;">
+              <strong style="color: #60a5fa;">Cómo funciona</strong>
+              <p style="margin: 5px 0 0 0; color: rgba(232, 234, 237, 0.8);">
                 Los valores aquí configurados tienen <strong>prioridad sobre .env</strong>. Si "value" está vacío, se usa "default_value" (de .env o hardcodeado).
                 Los cambios marcados con ⚡ requieren reinicio del servidor para aplicar.
               </p>
@@ -7145,15 +5413,15 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
           ${categoryKeys.map(categoryKey => {
             const category = categories[categoryKey];
             return `
-              <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
+              <div style="background: rgba(35, 40, 55, 0.85); border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1);">
                 <!-- Category Header -->
-                <div style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); padding: 15px 20px; border-bottom: 1px solid #e5e7eb;">
-                  <h3 style="margin: 0; color: #1e293b; display: flex; align-items: center; gap: 10px;">
+                <div style="background: linear-gradient(135deg, rgba(45, 49, 66, 0.9), rgba(35, 40, 55, 0.95)); padding: 15px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                  <h3 style="margin: 0; color: #e8eaed; display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 24px;">${category.icon || '📋'}</span>
                     <span>${category.label || categoryKey}</span>
-                    <span style="font-size: 12px; color: #64748b; font-weight: normal; background: #e5e7eb; padding: 2px 8px; border-radius: 4px;">${category.settings?.length || 0} settings</span>
+                    <span style="font-size: 12px; color: rgba(232, 234, 237, 0.6); font-weight: normal; background: rgba(255, 165, 38, 0.2); padding: 2px 8px; border-radius: 4px;">${category.settings?.length || 0} settings</span>
                   </h3>
-                  ${category.description ? `<p style="margin: 5px 0 0 0; color: #64748b; font-size: 13px;">${category.description}</p>` : ''}
+                  ${category.description ? `<p style="margin: 5px 0 0 0; color: rgba(232, 234, 237, 0.6); font-size: 13px;">${category.description}</p>` : ''}
                 </div>
 
                 <!-- Settings List -->
@@ -7166,10 +5434,10 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
         </div>
 
         ${categoryKeys.length === 0 ? `
-          <div style="text-align: center; padding: 50px; background: #f9fafb; border-radius: 12px;">
+          <div style="text-align: center; padding: 50px; background: rgba(35, 40, 55, 0.7); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
             <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
-            <h3 style="color: #374151; margin-bottom: 10px;">No hay configuraciones</h3>
-            <p style="color: #6b7280;">Usa el botón "🌱 Seed Defaults" para crear las configuraciones iniciales.</p>
+            <h3 style="color: #e8eaed; margin-bottom: 10px;">No hay configuraciones</h3>
+            <p style="color: rgba(232, 234, 237, 0.6);">Usa el botón "🌱 Seed Defaults" para crear las configuraciones iniciales.</p>
           </div>
         ` : ''}
       </div>
@@ -7190,17 +5458,17 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     const isUsingDefault = setting.value === null || setting.value === undefined;
 
     return `
-      <div style="display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f1f5f9;" data-setting-key="${setting.key}">
+      <div style="display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-setting-key="${setting.key}">
         <!-- Info -->
         <div style="flex: 1; min-width: 200px;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <strong style="color: #1e293b;">${setting.display_name}</strong>
-            ${setting.requires_restart ? '<span title="Requiere reinicio" style="color: #f59e0b; font-size: 14px;">⚡</span>' : ''}
-            ${setting.is_sensitive ? '<span title="Dato sensible" style="color: #ef4444; font-size: 14px;">🔐</span>' : ''}
-            ${isUsingDefault ? '<span style="color: #3b82f6; font-size: 11px; background: #eff6ff; padding: 1px 6px; border-radius: 3px;">default</span>' : ''}
+            <strong style="color: #e8eaed;">${setting.display_name}</strong>
+            ${setting.requires_restart ? '<span title="Requiere reinicio" style="color: #fbbf24; font-size: 14px;">⚡</span>' : ''}
+            ${setting.is_sensitive ? '<span title="Dato sensible" style="color: #f87171; font-size: 14px;">🔐</span>' : ''}
+            ${isUsingDefault ? '<span style="color: #60a5fa; font-size: 11px; background: rgba(59, 130, 246, 0.15); padding: 1px 6px; border-radius: 3px;">default</span>' : ''}
           </div>
-          <p style="margin: 3px 0 0 0; color: #64748b; font-size: 12px;">${setting.description || ''}</p>
-          <code style="font-size: 10px; color: #9ca3af; background: #f9fafb; padding: 1px 4px; border-radius: 2px;">${setting.key}</code>
+          <p style="margin: 3px 0 0 0; color: rgba(232, 234, 237, 0.6); font-size: 12px;">${setting.description || ''}</p>
+          <code style="font-size: 10px; color: rgba(232, 234, 237, 0.5); background: rgba(45, 49, 66, 0.7); padding: 1px 4px; border-radius: 2px;">${setting.key}</code>
         </div>
 
         <!-- Input -->
@@ -7209,7 +5477,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
             <select
               id="setting-${setting.key}"
               data-key="${setting.key}"
-              style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white;"
+              style="width: 100%; padding: 8px 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; background: rgba(45, 49, 66, 0.9); color: #e8eaed;"
             >
               ${setting.options.map(opt => `
                 <option value="${opt.value}" ${String(currentValue) === String(opt.value) ? 'selected' : ''}>${opt.label}</option>
@@ -7224,7 +5492,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
                 ${currentValue === 'true' || currentValue === true ? 'checked' : ''}
                 style="width: 20px; height: 20px; cursor: pointer;"
               >
-              <span style="color: #374151;">${currentValue === 'true' || currentValue === true ? 'Habilitado' : 'Deshabilitado'}</span>
+              <span style="color: #e8eaed;">${currentValue === 'true' || currentValue === true ? 'Habilitado' : 'Deshabilitado'}</span>
             </label>
           ` : `
             <input
@@ -7233,7 +5501,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
               data-key="${setting.key}"
               value="${setting.masked ? '' : currentValue}"
               placeholder="${setting.masked ? '********' : (setting.default_value || '')}"
-              style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;"
+              style="width: 100%; padding: 8px 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; background: rgba(45, 49, 66, 0.9); color: #e8eaed;"
             >
           `}
         </div>
@@ -7278,7 +5546,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
       }
 
       const token = localStorage.getItem('aponnt_token_staff');
-      const response = await fetch(`/api/system-settings/key/${key}`, {
+      const response = await fetch(`/api/aponnt/system-settings/key/${key}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -7320,7 +5588,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
     try {
       const token = localStorage.getItem('aponnt_token_staff');
-      const response = await fetch(`/api/system-settings/reset/${key}`, {
+      const response = await fetch(`/api/aponnt/system-settings/reset/${key}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -7353,7 +5621,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
     try {
       const token = localStorage.getItem('aponnt_token_staff');
-      const response = await fetch('/api/system-settings/seed', {
+      const response = await fetch('/api/aponnt/system-settings/seed', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -7415,7 +5683,7 @@ window.showEngineeringDashboardContent = function() {
             <div style="text-align: center; padding: 40px;">
                 <div style="font-size: 48px; margin-bottom: 20px;">🏗️</div>
                 <h2 style="color: #1e293b; margin-bottom: 10px;">Cargando Engineering Dashboard...</h2>
-                <p style="color: #64748b;">Analizando metadata del sistema, roadmap y estadísticas</p>
+                <p style="color: #64748b;">Analizando metadata del sistema y estadísticas</p>
             </div>
         </div>
     `;
