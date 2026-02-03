@@ -2896,6 +2896,10 @@ app.use('/api/admin/notifications', require('./src/routes/adminNotificationsRout
 console.log('📧 [EMAIL-TRACKING] Rutas de tracking de email configuradas');
 console.log('📬 [ADMIN-NOTIFICATIONS] Bandeja de notificaciones admin configurada');
 
+// 🔧 MIGRATION RUNNER (Feb 2026) - HTTP endpoint para ejecutar migraciones en Render
+app.use('/api/migrations', require('./src/routes/migrationRoutes')); // 🔧 GET /run con X-Migration-Key header
+console.log('🔧 [MIGRATIONS] Endpoint HTTP de migraciones configurado');
+
 app.use('/api', pricingRoutes);
 
 // 💼 CIRCUITO COMERCIAL COMPLETO - 6 FASES (Enero 2025)
