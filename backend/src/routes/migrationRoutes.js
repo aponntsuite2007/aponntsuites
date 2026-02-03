@@ -7,6 +7,7 @@ const path = require('path');
 /**
  * Endpoint para ejecutar migraciones pendientes
  * GET /api/migrations/run
+ * GET /api/migrations/run?all=true (ejecuta TODAS las migraciones)
  * Requiere API key en header: X-Migration-Key
  */
 router.get('/run', async (req, res) => {
@@ -17,10 +18,24 @@ router.get('/run', async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const migrations = [
-    '20260202_fix_manual_by_columns_to_varchar.sql',
-    '20260203_create_organizational_hierarchy_functions.sql'
-  ];
+  // Si all=true, ejecutar todas las migraciones
+  const runAll = req.query.all === 'true';
+
+  let migrations;
+
+  if (runAll) {
+    // Leer todos los archivos .sql del directorio migrations
+    const migrationsDir = path.join(__dirname, '../../migrations');
+    migrations = fs.readdirSync(migrationsDir)
+      .filter(f => f.endsWith('.sql'))
+      .sort(); // Ordenar alfabéticamente (por fecha en nombre)
+  } else {
+    // Solo las 2 más recientes
+    migrations = [
+      '20260202_fix_manual_by_columns_to_varchar.sql',
+      '20260203_create_organizational_hierarchy_functions.sql'
+    ];
+  }
 
   const results = [];
   const client = new Client({
