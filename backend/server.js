@@ -2908,6 +2908,10 @@ console.log('🔄 [SCHEMA-REPLACEMENT] Endpoint de reemplazo de schema configura
 app.use('/api/schema-additive', require('./src/routes/schemaAdditiveRoutes')); // ➕ POST /merge para agregar lo que falta
 console.log('➕ [SCHEMA-ADDITIVE] Endpoint de merge aditivo configurado');
 
+// ⚡ QUICK FIX (Feb 2026) - HTTP endpoint para ejecutar SQL rápido
+app.use('/api/quick-fix', require('./src/routes/quickFixRoutes')); // ⚡ POST /execute con SQL en body
+console.log('⚡ [QUICK-FIX] Endpoint de fixes rápidos configurado');
+
 app.use('/api', pricingRoutes);
 
 // 💼 CIRCUITO COMERCIAL COMPLETO - 6 FASES (Enero 2025)
