@@ -28,50 +28,25 @@ router.post('/execute', async (req, res) => {
     await client.connect();
     results.push({ step: 'connect', status: 'success', message: 'Conectado a PostgreSQL' });
 
-    // PASO 1: Obtener lista de todas las tablas en Render
-    results.push({ step: 'list-tables', status: 'running', message: 'Obteniendo lista de tablas...' });
+    // PASO 1: Obtener estadísticas antes
+    results.push({ step: 'stats-before', status: 'running', message: 'Obteniendo estadísticas...' });
     const tablesResult = await client.query(`
-      SELECT tablename
-      FROM pg_tables
-      WHERE schemaname = 'public'
-      ORDER BY tablename
+      SELECT COUNT(*) as count FROM pg_tables WHERE schemaname = 'public'
     `);
-    const tables = tablesResult.rows.map(r => r.tablename);
+    const tableCount = parseInt(tablesResult.rows[0].count);
     results.push({
-      step: 'list-tables',
+      step: 'stats-before',
       status: 'success',
-      message: `Encontradas ${tables.length} tablas en Render`,
-      data: { tableCount: tables.length }
+      message: `Schema actual: ${tableCount} tablas`
     });
 
-    // PASO 2: Eliminar todas las tablas con CASCADE (una por una para evitar "out of shared memory")
-    results.push({ step: 'drop-tables', status: 'running', message: `Eliminando ${tables.length} tablas una por una...` });
-
-    let droppedCount = 0;
-    for (const table of tables) {
-      try {
-        await client.query(`DROP TABLE IF EXISTS "${table}" CASCADE`);
-        droppedCount++;
-
-        // Log cada 100 tablas para tracking
-        if (droppedCount % 100 === 0) {
-          results.push({
-            step: 'drop-progress',
-            status: 'running',
-            message: `${droppedCount}/${tables.length} tablas eliminadas...`
-          });
-        }
-      } catch (error) {
-        // Continuar incluso si falla una tabla
-        results.push({
-          step: 'drop-error',
-          status: 'warning',
-          message: `Error al eliminar ${table}: ${error.message.substring(0, 100)}`
-        });
-      }
-    }
-
-    results.push({ step: 'drop-tables', status: 'success', message: `${droppedCount} tablas eliminadas con CASCADE` });
+    // PASO 2: Eliminar el schema public completo y recrearlo (MÁS RÁPIDO que dropear 700+ tablas)
+    results.push({ step: 'drop-schema', status: 'running', message: 'Eliminando schema public completo...' });
+    await client.query('DROP SCHEMA IF EXISTS public CASCADE');
+    await client.query('CREATE SCHEMA public');
+    await client.query('GRANT ALL ON SCHEMA public TO public');
+    await client.query('GRANT ALL ON SCHEMA public TO attendance_system_866u_user');
+    results.push({ step: 'drop-schema', status: 'success', message: 'Schema public eliminado y recreado' });
 
     // PASO 4: Leer schema local
     results.push({ step: 'read-schema', status: 'running', message: 'Leyendo schema local...' });
