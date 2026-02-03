@@ -44,21 +44,14 @@ router.post('/execute', async (req, res) => {
       data: { tableCount: tables.length }
     });
 
-    // PASO 2: Desactivar todas las foreign keys
-    results.push({ step: 'disable-fk', status: 'running', message: 'Desactivando foreign keys...' });
-    await client.query('SET session_replication_role = replica;');
-    results.push({ step: 'disable-fk', status: 'success', message: 'Foreign keys desactivadas' });
-
-    // PASO 3: Eliminar todas las tablas
+    // PASO 2: Eliminar todas las tablas con CASCADE (no necesita desactivar FKs)
     results.push({ step: 'drop-tables', status: 'running', message: `Eliminando ${tables.length} tablas...` });
-    for (const table of tables) {
-      try {
-        await client.query(`DROP TABLE IF EXISTS "${table}" CASCADE`);
-      } catch (error) {
-        // Continuar aunque falle alguna
-      }
-    }
-    results.push({ step: 'drop-tables', status: 'success', message: `${tables.length} tablas eliminadas` });
+
+    // Usar DROP CASCADE para manejar foreign keys automáticamente
+    const dropSQL = tables.map(table => `DROP TABLE IF EXISTS "${table}" CASCADE;`).join('\n');
+    await client.query(dropSQL);
+
+    results.push({ step: 'drop-tables', status: 'success', message: `${tables.length} tablas eliminadas con CASCADE` });
 
     // PASO 4: Leer schema local
     results.push({ step: 'read-schema', status: 'running', message: 'Leyendo schema local...' });
@@ -71,17 +64,12 @@ router.post('/execute', async (req, res) => {
       message: `Schema local leído (${lines} líneas)`
     });
 
-    // PASO 5: Ejecutar schema local en Render
+    // PASO 4: Ejecutar schema local en Render
     results.push({ step: 'import-schema', status: 'running', message: 'Importando schema local...' });
     await client.query(schema);
     results.push({ step: 'import-schema', status: 'success', message: 'Schema local importado exitosamente' });
 
-    // PASO 6: Reactivar foreign keys
-    results.push({ step: 'enable-fk', status: 'running', message: 'Reactivando foreign keys...' });
-    await client.query('SET session_replication_role = DEFAULT;');
-    results.push({ step: 'enable-fk', status: 'success', message: 'Foreign keys reactivadas' });
-
-    // PASO 7: Verificar tablas creadas
+    // PASO 5: Verificar tablas creadas
     const newTablesResult = await client.query(`
       SELECT COUNT(*) as count
       FROM pg_tables
