@@ -151,24 +151,26 @@ window.QuotesManagement = (function() {
             '.form-control { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }',
             '.form-control:focus { outline: none; border-color: #007bff; }',
 
-            '/* Modal styles */',
-            '.quote-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }',
-            '.quote-modal { background: white; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; }',
-            '.quote-modal-header { padding: 20px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-radius: 12px 12px 0 0; }',
-            '.quote-modal-header h3 { margin: 0; color: #1e293b; }',
-            '.quote-modal-body { padding: 20px; color: #1a1a1a; }',
-            '.quote-modal-body h4 { color: #1e293b; }',
-            '.quote-modal-footer { padding: 20px; border-top: 1px solid #ccc; display: flex; justify-content: flex-end; gap: 10px; }',
-            '.close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #444; }',
-            '.close-btn:hover { color: #111; }',
+            '/* Modal styles - Dark Theme */',
+            '.quote-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }',
+            '.quote-modal { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; max-width: 750px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }',
+            '.quote-modal-header { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%); border-radius: 16px 16px 0 0; }',
+            '.quote-modal-header h3 { margin: 0; color: #f1f5f9; font-size: 18px; }',
+            '.quote-modal-body { padding: 24px; color: #e2e8f0; }',
+            '.quote-modal-body h4 { color: #f1f5f9; margin-top: 20px; margin-bottom: 12px; font-size: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }',
+            '.quote-modal-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; background: rgba(0,0,0,0.2); border-radius: 0 0 16px 16px; }',
+            '.close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; transition: color 0.2s; }',
+            '.close-btn:hover { color: #f1f5f9; }',
 
-            '.detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd; }',
-            '.detail-label { color: #444; font-weight: 500; }',
-            '.detail-value { font-weight: 600; color: #1a1a1a; }',
+            '.detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }',
+            '.detail-label { color: #94a3b8; font-weight: 500; font-size: 13px; }',
+            '.detail-value { font-weight: 600; color: #f1f5f9; font-size: 13px; }',
             '.modules-table { width: 100%; border-collapse: collapse; margin: 15px 0; }',
-            '.modules-table th, .modules-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ccc; color: #1a1a1a; }',
-            '.modules-table th { background: #e2e8f0; font-weight: 700; color: #1e293b; }',
-            '.modules-table .price { text-align: right; }',
+            '.modules-table th, .modules-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); color: #e2e8f0; font-size: 13px; }',
+            '.modules-table th { background: rgba(255,255,255,0.05); font-weight: 600; color: #94a3b8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }',
+            '.modules-table .price { text-align: right; color: #10b981; }',
+            '.modules-table tr:last-child { background: rgba(16,185,129,0.1); }',
+            '.modules-table tr:last-child td { color: #10b981; font-weight: 700; border-bottom: none; }',
 
             '/* Pipeline Funnel */',
             '.pipeline-funnel { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-bottom: 15px; }',
@@ -183,21 +185,44 @@ window.QuotesManagement = (function() {
             '.funnel-clear { font-size: 12px; color: #007bff; cursor: pointer; padding: 5px 10px; }',
             '.pipeline-avg-days { font-size: 12px; color: #888; padding: 5px 0; }',
 
-            '/* Stepper */',
-            '.quote-stepper { display: flex; align-items: center; gap: 0; margin-bottom: 20px; }',
-            '.stepper-step { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; }',
-            '.stepper-step.step-done { background: #d4edda; color: #155724; }',
-            '.stepper-step.step-current { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }',
-            '.stepper-step.step-pending { background: #f8f9fa; color: #aaa; }',
-            '.stepper-arrow { color: #ccc; margin: 0 2px; }',
+            '/* Stepper - Dark Theme */',
+            '.quote-stepper { display: flex; align-items: center; gap: 0; margin-bottom: 20px; flex-wrap: wrap; }',
+            '.stepper-step { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; }',
+            '.stepper-step.step-done { background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }',
+            '.stepper-step.step-current { background: rgba(251,191,36,0.2); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }',
+            '.stepper-step.step-pending { background: rgba(255,255,255,0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.1); }',
+            '.stepper-arrow { color: #475569; margin: 0 2px; }',
 
-            '/* Tabs */',
-            '.quote-tabs { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 15px; }',
-            '.quote-tab { padding: 10px 18px; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; }',
-            '.quote-tab:hover { color: #333; }',
-            '.quote-tab.tab-active { color: #007bff; border-bottom-color: #007bff; }',
+            '/* Tabs - Dark Theme */',
+            '.quote-tabs { display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }',
+            '.quote-tab { padding: 12px 20px; cursor: pointer; font-size: 13px; font-weight: 500; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }',
+            '.quote-tab:hover { color: #e2e8f0; background: rgba(255,255,255,0.03); }',
+            '.quote-tab.tab-active { color: #3b82f6; border-bottom-color: #3b82f6; background: rgba(59,130,246,0.1); }',
             '.tab-content { display: none; }',
             '.tab-content.tab-visible { display: block; }',
+
+            '/* Buttons Dark Theme */',
+            '.quote-modal-footer .btn { font-size: 12px; padding: 8px 14px; border-radius: 6px; font-weight: 500; transition: all 0.2s; }',
+            '.quote-modal-footer .btn-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; color: white; }',
+            '.quote-modal-footer .btn-primary:hover { background: linear-gradient(135deg, #2563eb, #1d4ed8); transform: translateY(-1px); }',
+            '.quote-modal-footer .btn-success { background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; }',
+            '.quote-modal-footer .btn-success:hover { background: linear-gradient(135deg, #059669, #047857); transform: translateY(-1px); }',
+            '.quote-modal-footer .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: white; }',
+            '.quote-modal-footer .btn-warning:hover { background: linear-gradient(135deg, #d97706, #b45309); transform: translateY(-1px); }',
+            '.quote-modal-footer .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); border: none; color: white; }',
+            '.quote-modal-footer .btn-danger:hover { background: linear-gradient(135deg, #dc2626, #b91c1c); transform: translateY(-1px); }',
+            '.quote-modal-footer .btn-secondary { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #e2e8f0; }',
+            '.quote-modal-footer .btn-secondary:hover { background: rgba(255,255,255,0.15); }',
+            '.quote-modal-footer .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #94a3b8; }',
+            '.quote-modal-footer .btn-outline:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }',
+
+            '/* Footer Layout Groups */',
+            '.quote-modal-footer .footer-left { display: flex; gap: 8px; align-items: center; }',
+            '.quote-modal-footer .footer-right { display: flex; gap: 8px; align-items: center; }',
+            '.quote-modal-footer .status-badge { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }',
+
+            '/* Responsive footer */',
+            '@media (max-width: 600px) { .quote-modal-footer { flex-direction: column; gap: 12px; } .footer-left, .footer-right { width: 100%; justify-content: center; } }',
         ].join('\n');
     }
 
@@ -822,10 +847,10 @@ window.QuotesManagement = (function() {
         modules.forEach(function(mod) {
             html += '<tr><td>' + (mod.module_name || mod.module_key) + '</td><td class="price">$' + parseFloat(mod.price || 0).toLocaleString('es-AR') + '</td></tr>';
         });
-        html += '<tr style="font-weight: bold; background: #e2e8f0; color: #1e293b;"><td>TOTAL</td><td class="price">$' + parseFloat(quote.total_amount || 0).toLocaleString('es-AR') + '/mes</td></tr>';
+        html += '<tr style="font-weight: bold; background: rgba(16,185,129,0.15);"><td style="color:#10b981;">TOTAL</td><td class="price" style="color:#10b981;font-size:15px;">$' + parseFloat(quote.total_amount || 0).toLocaleString('es-AR') + '/mes</td></tr>';
         html += '</tbody></table>';
         if (quote.notes) {
-            html += '<h4 style="margin: 20px 0 10px;">Notas</h4><p style="color: #333;">' + quote.notes + '</p>';
+            html += '<h4 style="margin: 20px 0 10px;">Notas</h4><p style="color: #cbd5e1;">' + quote.notes + '</p>';
         }
         html += '</div>';
 
@@ -833,7 +858,7 @@ window.QuotesManagement = (function() {
         html += '<div class="tab-content" id="tab-ficha">';
         var hasOnboarding = quote.company_legal_name || quote.company_tax_id;
         if (hasOnboarding) {
-            html += '<div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;margin-bottom:10px;">';
+            html += '<div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:14px;margin-bottom:10px;">';
             [{ label: 'Razón Social', val: quote.company_legal_name },
              { label: 'CUIT / Tax ID', val: quote.company_tax_id },
              { label: 'Dirección', val: quote.company_address },
@@ -849,8 +874,8 @@ window.QuotesManagement = (function() {
             if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e) { meta = null; } }
             if (meta && meta.onboarding_admin) {
                 var admin = meta.onboarding_admin;
-                html += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #bfdbfe;">';
-                html += '<strong style="color:#1e40af;">Administrador designado</strong>';
+                html += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(59,130,246,0.25);">';
+                html += '<strong style="color:#93c5fd;">👤 Administrador designado</strong>';
                 if (admin.full_name) html += '<div class="detail-row"><span class="detail-label">Nombre</span><span class="detail-value">' + admin.full_name + '</span></div>';
                 if (admin.email) html += '<div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">' + admin.email + '</span></div>';
                 if (admin.phone) html += '<div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">' + admin.phone + '</span></div>';
@@ -858,7 +883,7 @@ window.QuotesManagement = (function() {
             }
             html += '</div>';
         } else {
-            html += '<p style="color:#888;text-align:center;padding:20px;">El cliente aún no completó la ficha de alta.</p>';
+            html += '<p style="color:#64748b;text-align:center;padding:20px;">El cliente aún no completó la ficha de alta.</p>';
         }
         // Trials
         if (ctx.trials && ctx.trials.length > 0) {
@@ -887,23 +912,23 @@ window.QuotesManagement = (function() {
         var csColors = { none: '#6c757d', draft: '#ffc107', sent: '#17a2b8', signed: '#28a745' };
         var csLabels = { none: 'Sin generar', draft: 'Borrador', sent: 'Enviado al cliente', signed: 'Firmado' };
 
-        html += '<div style="margin:15px 0;padding:15px;background:#f0f4ff;border:1px solid #c7d2fe;border-radius:8px;">';
+        html += '<div style="margin:15px 0;padding:15px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:8px;">';
         html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
-        html += '<h4 style="margin:0;color:#3730a3;">EULA / Contrato MSA v2.0</h4>';
+        html += '<h4 style="margin:0;color:#a5b4fc;">EULA / Contrato MSA v2.0</h4>';
         html += '<span style="background:' + csColors[cs] + ';color:white;padding:3px 10px;border-radius:10px;font-size:12px;">' + csLabels[cs] + '</span>';
         html += '</div>';
 
         if (cs === 'signed') {
-            html += '<div style="background:#d4edda;border:1px solid #c3e6cb;border-radius:6px;padding:10px;margin-bottom:10px;">';
-            html += '<strong style="color:#155724;">✅ EULA Aceptado</strong>';
-            if (quote.contract_signed_at) html += '<br><small>Fecha: ' + formatDate(quote.contract_signed_at) + '</small>';
-            if (quote.contract_signature_ip) html += '<br><small>IP: ' + quote.contract_signature_ip + '</small>';
+            html += '<div style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:10px;margin-bottom:10px;">';
+            html += '<strong style="color:#34d399;">✅ EULA Aceptado</strong>';
+            if (quote.contract_signed_at) html += '<br><small style="color:#6ee7b7;">Fecha: ' + formatDate(quote.contract_signed_at) + '</small>';
+            if (quote.contract_signature_ip) html += '<br><small style="color:#6ee7b7;">IP: ' + quote.contract_signature_ip + '</small>';
 
             // Mostrar datos de aceptación EULA si existen
             var acceptData = quote.contract_acceptance_data;
             if (typeof acceptData === 'string') { try { acceptData = JSON.parse(acceptData); } catch(e) { acceptData = null; } }
             if (acceptData) {
-                html += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #c3e6cb;font-size:11px;">';
+                html += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(16,185,129,0.3);font-size:11px;color:#a7f3d0;">';
                 html += '<div><strong>ID Aceptacion:</strong> ' + (acceptData.acceptance_id || '-').substring(0, 8) + '...</div>';
                 html += '<div><strong>Hash documento:</strong> ' + (acceptData.document_hash || '-').substring(0, 16) + '...</div>';
                 html += '<div><strong>Version:</strong> ' + (acceptData.document_version || 'v2.0') + '</div>';
@@ -914,12 +939,12 @@ window.QuotesManagement = (function() {
         if (cs === 'sent') {
             var sentData = quote.contract_acceptance_data;
             if (typeof sentData === 'string') { try { sentData = JSON.parse(sentData); } catch(e) { sentData = null; } }
-            html += '<div style="background:#e0f2fe;border:1px solid #7dd3fc;border-radius:6px;padding:10px;margin-bottom:10px;">';
-            html += '<p style="font-size:12px;color:#0c5460;margin:0;">📧 Enviado el ' + formatDate(quote.contract_sent_at) + '</p>';
+            html += '<div style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);border-radius:6px;padding:10px;margin-bottom:10px;">';
+            html += '<p style="font-size:12px;color:#93c5fd;margin:0;">📧 Enviado el ' + formatDate(quote.contract_sent_at) + '</p>';
             if (sentData && sentData.sent_to_email) {
-                html += '<p style="font-size:12px;color:#0c5460;margin:5px 0 0;"><strong>Email destino:</strong> ' + sentData.sent_to_email + '</p>';
+                html += '<p style="font-size:12px;color:#93c5fd;margin:5px 0 0;"><strong>Email destino:</strong> ' + sentData.sent_to_email + '</p>';
             }
-            html += '<p style="font-size:11px;color:#0369a1;margin:5px 0 0;">El cliente debe hacer click en el link del email para aceptar.</p>';
+            html += '<p style="font-size:11px;color:#60a5fa;margin:5px 0 0;">El cliente debe hacer click en el link del email para aceptar.</p>';
             html += '</div>';
         }
 
@@ -960,20 +985,55 @@ window.QuotesManagement = (function() {
 
         html += '</div>';
 
-        // Footer
-        html += '<div class="quote-modal-footer">';
+        // Footer - Reorganizado en grupos lógicos
+        html += '<div class="quote-modal-footer" style="justify-content:space-between;align-items:center;">';
+
+        // Grupo izquierdo: Acciones secundarias
+        html += '<div class="footer-left" style="display:flex;gap:8px;align-items:center;">';
+        html += '<button class="btn btn-outline" onclick="QuotesManagement.viewStatusHistory(' + quote.id + ')" title="Ver historial de cambios de estado"><span>📜</span> Historial</button>';
+        if (['in_trial', 'accepted', 'rejected'].includes(quote.status)) {
+            html += '<button class="btn btn-outline" onclick="QuotesManagement.revertToSent(' + quote.id + ')" title="Revertir el presupuesto al estado Enviado" style="color:#ef4444;border-color:rgba(239,68,68,0.3);"><span>↩️</span> Revertir</button>';
+        }
+        html += '</div>';
+
+        // Grupo derecho: Acciones principales
+        html += '<div class="footer-right" style="display:flex;gap:8px;align-items:center;">';
+
+        // ALTA MANUAL - Solo para roles de alta gerencia
+        var staffRole = getStaffRole();
+        var companyActiveFromQuote = quote.company_is_active;
+        var companyActiveFromCtx = ctx.quote && ctx.quote.company_is_active;
+        var companyActive = companyActiveFromQuote || companyActiveFromCtx;
+        var allowedRoles = ['GG', 'GERENTE_GENERAL', 'SUPERADMIN', 'superadmin', 'gerente_general', 'DIR', 'DIRECTOR'];
+        var hasRole = allowedRoles.includes(staffRole);
+        var hasCompanyId = !!quote.company_id;
+
+        console.log('🔍 [QUOTES] Alta Manual check:', {
+            staffRole, hasRole, companyActive, companyId: quote.company_id
+        });
+
+        // Estado de empresa / Alta Manual
+        if (hasRole) {
+            if (companyActive) {
+                html += '<span class="status-badge success" style="background:rgba(16,185,129,0.2);color:#10b981;padding:6px 12px;border-radius:6px;font-size:12px;border:1px solid rgba(16,185,129,0.3);" title="La empresa ya está activa y operativa">✅ Empresa Activa</span>';
+            } else if (hasCompanyId) {
+                html += '<button class="btn btn-success" onclick="QuotesManagement.showManualOnboardingModal(' + quote.id + ', ' + quote.company_id + ')" title="Activar la empresa manualmente sin esperar el flujo automático"><span>🏢</span> Alta Manual</button>';
+            } else {
+                html += '<span class="status-badge warning" style="background:rgba(245,158,11,0.2);color:#f59e0b;padding:6px 12px;border-radius:6px;font-size:12px;border:1px solid rgba(245,158,11,0.3);" title="No hay empresa asociada a este presupuesto">⚠️ Sin empresa</span>';
+            }
+        }
+
+        // Botón principal de envío según estado
         if (quote.status === 'draft') {
-            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendQuote(' + quote.id + ')"><span>📧</span> Enviar</button>';
+            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendQuote(' + quote.id + ')" title="Enviar presupuesto al cliente por email"><span>📧</span> Enviar Presupuesto</button>';
         }
         if (quote.status === 'sent') {
-            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendQuote(' + quote.id + ')"><span>🔄</span> Reenviar</button>';
+            html += '<button class="btn btn-primary" onclick="QuotesManagement.sendQuote(' + quote.id + ')" title="Reenviar presupuesto al cliente"><span>🔄</span> Reenviar</button>';
         }
-        if (['in_trial', 'accepted', 'rejected'].includes(quote.status)) {
-            html += '<button class="btn btn-danger" onclick="QuotesManagement.revertToSent(' + quote.id + ')"><span>↩️</span> Revertir</button>';
-        }
-        html += '<button class="btn btn-outline" onclick="QuotesManagement.viewStatusHistory(' + quote.id + ')"><span>📜</span> Historial</button>';
-        html += '<button class="btn btn-warning" onclick="QuotesManagement.downloadPDF(' + quote.id + ')"><span>📄</span> PDF</button>';
+
         html += '<button class="btn btn-secondary" onclick="QuotesManagement.closeModal()">Cerrar</button>';
+        html += '</div>';
+
         html += '</div>';
 
         html += '</div></div>';
@@ -2240,6 +2300,194 @@ window.QuotesManagement = (function() {
         setTimeout(function() { toast.remove(); }, 4000);
     }
 
+    /**
+     * Obtener rol del staff actual
+     */
+    function getStaffRole() {
+        try {
+            // Opción 1: Decodificar JWT directamente (más confiable)
+            var token = sessionStorage.getItem('aponnt_token_staff') || localStorage.getItem('aponnt_token_staff');
+            if (token) {
+                var payload = JSON.parse(atob(token.split('.')[1]));
+                console.log('[QUOTES] Rol desde JWT:', payload.role);
+                return payload.role || '';
+            }
+            // Opción 2: AdminPanelController
+            if (window.AdminPanelController && AdminPanelController._currentStaff) {
+                var staff = AdminPanelController._currentStaff;
+                var role = staff.role_code || (staff.role && staff.role.role_code) || '';
+                console.log('[QUOTES] Rol desde AdminPanelController:', role);
+                return role;
+            }
+        } catch (e) {
+            console.warn('[QUOTES] No se pudo obtener rol del staff:', e);
+        }
+        return '';
+    }
+
+    // =========================================================================
+    // ALTA MANUAL DE EMPRESA
+    // =========================================================================
+
+    /**
+     * Mostrar modal de alta manual
+     */
+    function showManualOnboardingModal(quoteId, companyId) {
+        // Obtener datos del presupuesto actual
+        var quote = quotes.find(function(q) { return q.id === quoteId; }) || currentQuote || {};
+        var quoteNotes = quote.notes || '';
+        var companyName = quote.company_name || 'ID: ' + companyId;
+        var quoteNumber = quote.quote_number || 'PRES-' + quoteId;
+
+        var html = '<div class="quote-modal-overlay" onclick="QuotesManagement.closeManualOnboardingModal(event)" style="z-index:2000;">';
+        html += '<div class="quote-modal" onclick="event.stopPropagation()" style="max-width: 550px;">';
+        html += '<div class="quote-modal-header" style="background: linear-gradient(135deg, #059669, #047857);">';
+        html += '<h3 style="color:white;">🏢 Alta Manual de Empresa</h3>';
+        html += '<button class="close-btn" onclick="QuotesManagement.closeManualOnboardingModal()" style="color:rgba(255,255,255,0.8);">&times;</button>';
+        html += '</div>';
+        html += '<div class="quote-modal-body">';
+
+        // Info del presupuesto
+        html += '<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;margin-bottom:15px;">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+        html += '<span style="color:#94a3b8;font-size:12px;">Presupuesto:</span>';
+        html += '<span style="color:#f1f5f9;font-weight:600;">' + quoteNumber + '</span>';
+        html += '</div>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">';
+        html += '<span style="color:#94a3b8;font-size:12px;">Empresa:</span>';
+        html += '<span style="color:#f1f5f9;font-weight:600;">' + companyName + '</span>';
+        html += '</div>';
+        html += '</div>';
+
+        // Explicación de qué es Alta Manual
+        html += '<div style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:14px;margin-bottom:15px;">';
+        html += '<strong style="color:#10b981;font-size:13px;">¿Qué es el Alta Manual?</strong>';
+        html += '<p style="font-size:13px;color:#a7f3d0;margin:8px 0 0;">Permite activar una empresa <strong>sin esperar</strong> a que complete el flujo normal: aceptar contrato → pagar factura → activación automática.</p>';
+        html += '</div>';
+
+        // Cuándo usar (colapsable)
+        html += '<details style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:14px;margin-bottom:15px;">';
+        html += '<summary style="color:#60a5fa;font-size:13px;font-weight:600;cursor:pointer;">📋 ¿Cuándo usarlo? (click para ver ejemplos)</summary>';
+        html += '<ul style="font-size:12px;color:#93c5fd;margin:8px 0 0;padding-left:20px;">';
+        html += '<li>Cliente solicitó activación urgente por teléfono</li>';
+        html += '<li>Pago confirmado por otro medio (transferencia, efectivo)</li>';
+        html += '<li>Autorización especial de gerencia</li>';
+        html += '<li>Período de prueba extendido acordado</li>';
+        html += '</ul>';
+        html += '</details>';
+
+        // Notas existentes del presupuesto (si hay)
+        if (quoteNotes && quoteNotes.trim().length > 0) {
+            html += '<div style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:12px;margin-bottom:15px;">';
+            html += '<strong style="color:#a78bfa;font-size:12px;">📝 Notas del presupuesto:</strong>';
+            html += '<p style="font-size:13px;color:#c4b5fd;margin:6px 0 0;font-style:italic;">"' + quoteNotes + '"</p>';
+            html += '<button type="button" onclick="document.getElementById(\'manual-onboarding-reason\').value = \'Alta manual - \' + this.parentElement.querySelector(\'p\').textContent.replace(/^\"|\"$/g, \'\'); this.style.display=\'none\';" ';
+            html += 'style="margin-top:8px;font-size:11px;padding:4px 8px;background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.4);border-radius:4px;color:#c4b5fd;cursor:pointer;">📋 Usar como motivo</button>';
+            html += '</div>';
+        }
+
+        // Advertencia
+        html += '<div style="background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:12px;margin-bottom:15px;">';
+        html += '<strong style="color:#fbbf24;font-size:12px;">⚠️ Esta acción quedará registrada con tu usuario, fecha/hora y el motivo.</strong>';
+        html += '</div>';
+
+        // Campo de motivo
+        var defaultReason = quoteNotes && quoteNotes.length > 10 ? 'Alta manual - ' + quoteNotes : '';
+        html += '<div style="margin-bottom:15px;">';
+        html += '<label style="display:block;font-weight:600;margin-bottom:8px;color:#e2e8f0;font-size:13px;">Motivo del alta manual *</label>';
+        html += '<textarea id="manual-onboarding-reason" rows="3" style="width:100%;padding:12px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:14px;background:rgba(255,255,255,0.05);color:#e2e8f0;box-sizing:border-box;resize:none;" ';
+        html += 'placeholder="Ej: Cliente solicitó activación urgente por teléfono.">' + defaultReason + '</textarea>';
+        html += '<small style="color:#64748b;font-size:11px;">Mínimo 10 caracteres.</small>';
+        html += '</div>';
+
+        html += '</div>';
+        html += '<div class="quote-modal-footer" style="justify-content:space-between;">';
+        html += '<button class="btn btn-secondary" onclick="QuotesManagement.closeManualOnboardingModal()">Cancelar</button>';
+        html += '<button class="btn btn-success" onclick="QuotesManagement.performManualOnboarding(' + quoteId + ', ' + companyId + ')">';
+        html += '✅ Confirmar Alta</button>';
+        html += '</div>';
+        html += '</div></div>';
+
+        document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    /**
+     * Cerrar modal de alta manual
+     */
+    function closeManualOnboardingModal(event) {
+        if (event && event.target.className.indexOf('quote-modal-overlay') === -1) return;
+        var overlays = document.querySelectorAll('.quote-modal-overlay[style*="z-index:2000"], .quote-modal-overlay[style*="z-index: 2000"]');
+        overlays.forEach(function(o) { o.remove(); });
+    }
+
+    /**
+     * Ejecutar alta manual
+     */
+    async function performManualOnboarding(quoteId, companyId) {
+        var reason = document.getElementById('manual-onboarding-reason');
+        if (!reason || reason.value.trim().length < 10) {
+            showToast('Debe indicar un motivo de al menos 10 caracteres', 'error');
+            return;
+        }
+
+        try {
+            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var resp = await fetch('/api/v1/companies/' + companyId + '/manual-onboarding', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'alta',
+                    reason: reason.value.trim()
+                })
+            });
+
+            var data = await resp.json();
+            if (!resp.ok || !data.success) {
+                throw new Error(data.error || 'Error al dar de alta la empresa');
+            }
+
+            closeManualOnboardingModal();
+            closeModal();
+
+            var msgHtml = '<div style="text-align:center;padding:20px;">';
+            msgHtml += '<div style="font-size:48px;margin-bottom:15px;">🎉</div>';
+            msgHtml += '<h3 style="color:#059669;margin-bottom:10px;">Empresa Activada</h3>';
+            msgHtml += '<p>' + data.message + '</p>';
+            if (data.admin_created && data.credentials) {
+                msgHtml += '<div style="background:#f0f9ff;border:1px solid #0284c7;border-radius:8px;padding:15px;margin-top:15px;text-align:left;">';
+                msgHtml += '<strong style="color:#0369a1;">Credenciales del Administrador:</strong>';
+                msgHtml += '<p style="margin:10px 0 5px;"><strong>Usuario:</strong> <code style="background:#e0f2fe;padding:2px 6px;border-radius:4px;">' + data.credentials.username + '</code></p>';
+                msgHtml += '<p style="margin:0;"><strong>Contraseña:</strong> <code style="background:#e0f2fe;padding:2px 6px;border-radius:4px;">' + data.credentials.password + '</code></p>';
+                msgHtml += '<p style="margin:10px 0 0;font-size:12px;color:#f59e0b;">⚠️ El usuario deberá cambiar la contraseña en el primer login.</p>';
+                msgHtml += '</div>';
+            }
+            msgHtml += '</div>';
+
+            var successHtml = '<div class="quote-modal-overlay" onclick="this.remove()">';
+            successHtml += '<div class="quote-modal" onclick="event.stopPropagation()" style="max-width:450px;">';
+            successHtml += '<div class="quote-modal-header" style="background:#059669;color:white;">';
+            successHtml += '<h3>Alta Completada</h3>';
+            successHtml += '<button class="close-btn" onclick="this.closest(\'.quote-modal-overlay\').remove()" style="color:white;">&times;</button>';
+            successHtml += '</div>';
+            successHtml += '<div class="quote-modal-body">' + msgHtml + '</div>';
+            successHtml += '<div class="quote-modal-footer">';
+            successHtml += '<button class="btn btn-success" onclick="this.closest(\'.quote-modal-overlay\').remove()">Entendido</button>';
+            successHtml += '</div></div></div>';
+
+            document.body.insertAdjacentHTML('beforeend', successHtml);
+
+            // Recargar datos
+            await loadQuotes();
+
+        } catch (error) {
+            console.error('[QUOTES] Error en alta manual:', error);
+            showToast('Error: ' + error.message, 'error');
+        }
+    }
+
     // =========================================================================
     // API PÚBLICA
     // =========================================================================
@@ -2282,7 +2530,11 @@ window.QuotesManagement = (function() {
         changeStatus: changeStatus,
         // Pipeline view
         switchView: switchView,
-        confirmPayment: confirmPayment
+        confirmPayment: confirmPayment,
+        // Alta manual
+        showManualOnboardingModal: showManualOnboardingModal,
+        closeManualOnboardingModal: closeManualOnboardingModal,
+        performManualOnboarding: performManualOnboarding
     };
 
 })();

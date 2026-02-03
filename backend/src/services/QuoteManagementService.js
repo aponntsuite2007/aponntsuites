@@ -10,10 +10,12 @@
  * - Generación de contratos desde presupuestos aceptados
  */
 
-const { Quote, ModuleTrial, Contract, Company, Partner, Invoice, Branch } = require('../config/database');
+const { Quote, ModuleTrial, Contract, Company, Partner, Invoice, Branch, User } = require('../config/database');
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const NCE = require('./NotificationCentralExchange');
+const bcrypt = require('bcryptjs');
+const BranchMemory = require('../models/BranchMemory');
 
 /**
  * Envía notificación NCE al vendedor asignado de un presupuesto
@@ -1010,11 +1012,10 @@ class QuoteManagementService {
           code: `${(b.name || 'SUC-' + (i + 1)).toUpperCase().replace(/\s+/g, '-')}-${quote.company_id}`,
           company_id: quote.company_id,
           is_main: i === 0 || b.is_main === true,
-          isActive: false, // Inactiva hasta activación
+          isActive: true,
           address: b.address || '',
           city: b.city || '',
-          country: b.country || '',
-          timezone: b.timezone || 'America/Argentina/Buenos_Aires'
+          country: b.country || 'AR'
         }, { transaction });
       }
 
@@ -1029,10 +1030,11 @@ class QuoteManagementService {
       console.log(`🏢 [QUOTE SERVICE] ${branchesData.length} sucursal(es) creada(s) para empresa ${quote.company_id}`);
     }
 
-    // 3. Guardar datos del admin en metadata de la empresa
+    // 3. Crear usuarios admin y soporte
     if (adminData) {
       const company = await Company.findByPk(quote.company_id, { transaction });
       if (company) {
+        // Guardar metadata del admin
         const metadata = company.metadata || {};
         metadata.onboarding_admin = {
           full_name: adminData.full_name,
@@ -1044,7 +1046,93 @@ class QuoteManagementService {
           { metadata },
           { where: { company_id: quote.company_id }, transaction }
         );
+
+        // =====================================================
+        // CREAR USUARIO ADMIN si no existe
+        // =====================================================
+        const existingAdmin = await User.findOne({
+          where: { company_id: quote.company_id, is_core_user: true },
+          transaction
+        });
+
+        if (!existingAdmin) {
+          const hashedPassword = await bcrypt.hash('admin123', 12);
+
+          // Parsear nombre completo
+          const nameParts = (adminData.full_name || 'Administrador Principal').split(' ');
+          const firstName = nameParts[0] || 'Administrador';
+          const lastName = nameParts.slice(1).join(' ') || company.name;
+
+          await User.create({
+            username: 'administrador',
+            password: hashedPassword,
+            first_name: firstName,
+            last_name: lastName,
+            email: adminData.email || company.contact_email,
+            phone: adminData.phone || '',
+            role: 'admin',
+            company_id: quote.company_id,
+            is_core_user: true,
+            force_password_change: true,
+            is_deletable: false,
+            account_status: 'active'
+          }, { transaction });
+
+          console.log(`✅ [ONBOARDING] Usuario ADMIN creado: administrador (${adminData.email})`);
+
+          // =====================================================
+          // CREAR USUARIO SOPORTE (invisible - para tests/soporte técnico)
+          // =====================================================
+          try {
+            await User.create({
+              username: 'soporte',
+              password: hashedPassword,
+              first_name: 'Soporte',
+              last_name: 'Técnico',
+              email: `soporte+${company.slug || company.company_id}@aponnt.com`,
+              role: 'admin',
+              company_id: quote.company_id,
+              is_core_user: true,
+              is_system_user: true,
+              is_visible: false,
+              force_password_change: false,
+              is_deletable: false,
+              account_status: 'active'
+            }, { transaction });
+
+            console.log(`✅ [ONBOARDING] Usuario SOPORTE creado (invisible): soporte`);
+          } catch (supportErr) {
+            console.warn(`⚠️ [ONBOARDING] No se pudo crear usuario soporte: ${supportErr.message}`);
+          }
+        } else {
+          console.log(`ℹ️ [ONBOARDING] Usuario admin ya existe para empresa ${quote.company_id}`);
+        }
       }
+    }
+
+    // =====================================================
+    // 4. GARANTIZAR SUCURSAL "CENTRAL" SI NO HAY SUCURSALES
+    // =====================================================
+    const existingBranches = await Branch.findAll({
+      where: { company_id: quote.company_id },
+      transaction
+    });
+
+    if (existingBranches.length === 0) {
+      const company = await Company.findByPk(quote.company_id, { transaction });
+
+      await Branch.create({
+        name: 'Central',
+        code: `CENTRAL-${quote.company_id}`,
+        company_id: quote.company_id,
+        is_main: true,
+        isActive: true,
+        address: company?.address || '',
+        city: company?.city || '',
+        country: company?.country || 'AR'
+      }, { transaction });
+
+      console.log(`🏢 [ONBOARDING] Sucursal CENTRAL creada por defecto para empresa ${quote.company_id}`);
     }
   }
 }

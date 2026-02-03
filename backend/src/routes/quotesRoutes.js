@@ -80,7 +80,9 @@ router.get('/', verifyStaffToken, async (req, res) => {
         c.province as company_province,
         c.country as company_country,
         c.phone as company_phone,
-        c.metadata as company_metadata
+        c.metadata as company_metadata,
+        c.is_active as company_is_active,
+        c.status as company_status
       FROM quotes q
       LEFT JOIN companies c ON q.company_id = c.company_id
       WHERE ${whereClause}
