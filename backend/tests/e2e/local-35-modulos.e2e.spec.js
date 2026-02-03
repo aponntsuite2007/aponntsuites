@@ -160,7 +160,7 @@ test.describe('LOCAL - EXPLORAR 35 MÓDULOS', () => {
         await page.evaluate(() => window.scrollTo(0, 0));
         await wait(page, 1000);
 
-        // Explorar algunos módulos específicos (los primeros 10)
+        // Explorar algunos módulos específicos (los primeros 15)
         console.log('\n\n🔍 EXPLORANDO MÓDULOS PRINCIPALES...\n');
 
         const modulosAExplorar = modulos.slice(0, 15); // Primeros 15
@@ -173,11 +173,32 @@ test.describe('LOCAL - EXPLORAR 35 MÓDULOS', () => {
             console.log('='.repeat(50));
 
             try {
-                // Volver al dashboard
-                await page.goto(`${BASE_URL}/panel-empresa.html`);
-                await wait(page, 2000);
-                await fullLogin(page);
-                await wait(page, 2000);
+                // Volver al dashboard SIN recargar página (mantener sesión)
+                const volverOK = await page.evaluate(() => {
+                    // Mostrar grid y ocultar mainContent
+                    const grid = document.querySelector('.module-grid');
+                    const mainContent = document.getElementById('mainContent');
+                    if (grid) {
+                        grid.style.display = 'grid';
+                        if (mainContent) {
+                            mainContent.style.display = 'none';
+                            mainContent.innerHTML = '';
+                        }
+                        window.scrollTo(0, 0);
+                        return true;
+                    }
+                    return false;
+                });
+
+                if (!volverOK) {
+                    console.log('   ⚠️ No se pudo volver al dashboard, recargando...');
+                    await page.goto(`${BASE_URL}/panel-empresa.html`);
+                    await wait(page, 2000);
+                    await fullLogin(page);
+                    await wait(page, 2000);
+                } else {
+                    await wait(page, 500);
+                }
 
                 // Hacer click en el módulo
                 const clicked = await page.evaluate((titulo) => {
