@@ -39,7 +39,19 @@ router.post('/merge', async (req, res) => {
     const statements = schema
       .split(';')
       .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.startsWith('--'));
+      .filter(s => {
+        if (s.length === 0) return false;
+        // Remover comentarios al inicio pero mantener el statement
+        const lines = s.split('\n').filter(line => !line.trim().startsWith('--'));
+        return lines.join('\n').trim().length > 0;
+      })
+      .map(s => {
+        // Limpiar comentarios pero mantener el SQL
+        return s.split('\n')
+          .filter(line => !line.trim().startsWith('--'))
+          .join('\n')
+          .trim();
+      });
 
     results.push({
       step: 'read-schema',
