@@ -1445,14 +1445,14 @@ router.get('/hierarchy/escalation/:userId', async (req, res) => {
         const { daysRequested } = req.query;
 
         const chain = await OrganizationalHierarchyService.getEscalationChain(
-            parseInt(userId),
+            userId,  // UUID string, no parseInt
             parseInt(daysRequested) || 1
         );
 
         res.json({
             success: true,
             data: chain,
-            userId: parseInt(userId),
+            userId: userId,
             daysRequested: parseInt(daysRequested) || 1,
             message: 'Cadena de escalamiento obtenida exitosamente'
         });
@@ -1467,12 +1467,12 @@ router.get('/hierarchy/supervisor/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
 
-        const supervisor = await OrganizationalHierarchyService.getImmediateSupervisor(parseInt(userId));
+        const supervisor = await OrganizationalHierarchyService.getImmediateSupervisor(userId);  // UUID string
 
         res.json({
             success: true,
             data: supervisor,
-            userId: parseInt(userId),
+            userId: userId,
             hasSupervisor: supervisor !== null,
             message: supervisor ? 'Supervisor encontrado' : 'No se encontró supervisor asignado'
         });
@@ -1487,12 +1487,12 @@ router.get('/hierarchy/subordinates/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
 
-        const subordinates = await OrganizationalHierarchyService.getDirectReports(parseInt(userId));
+        const subordinates = await OrganizationalHierarchyService.getDirectReports(userId);  // UUID string
 
         res.json({
             success: true,
             data: subordinates,
-            userId: parseInt(userId),
+            userId: userId,
             count: subordinates.length,
             message: `${subordinates.length} subordinado(s) encontrado(s)`
         });
@@ -1555,8 +1555,8 @@ router.post('/hierarchy/can-approve', async (req, res) => {
         }
 
         const result = await OrganizationalHierarchyService.canApproveRequest(
-            parseInt(approverId),
-            parseInt(requesterId),
+            approverId,     // UUID string
+            requesterId,    // UUID string
             parseInt(daysRequested) || 1
         );
 
@@ -1584,8 +1584,8 @@ router.get('/hierarchy/next-approver', async (req, res) => {
         }
 
         const nextApprover = await OrganizationalHierarchyService.getNextApprover(
-            parseInt(currentApproverId),
-            parseInt(requesterId),
+            currentApproverId,   // UUID string
+            requesterId,         // UUID string
             parseInt(daysRequested) || 1
         );
 

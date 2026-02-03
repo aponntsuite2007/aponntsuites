@@ -126,11 +126,11 @@ class OrganizationalHierarchyService {
         try {
             // Primero obtener la posición del empleado
             const userQuery = await sequelize.query(`
-                SELECT u.id, u.first_name, u.last_name, u.organizational_position_id,
+                SELECT u.user_id, u."firstName", u."lastName", u.organizational_position_id,
                        op.parent_position_id, op.position_name as user_position
                 FROM users u
                 LEFT JOIN organizational_positions op ON u.organizational_position_id = op.id
-                WHERE u.id = $1
+                WHERE u.user_id = $1
             `, {
                 bind: [userId],
                 type: QueryTypes.SELECT
@@ -142,7 +142,7 @@ class OrganizationalHierarchyService {
 
             // Buscar al supervisor en la posición padre
             const supervisorQuery = await sequelize.query(`
-                SELECT u.id, u.first_name, u.last_name, u.email, u.photo_url,
+                SELECT u.user_id, u."firstName", u."lastName", u.email, u.biometric_photo_url,
                        op.position_name, op.position_code, op.hierarchy_level, op.branch_code
                 FROM organizational_positions op
                 LEFT JOIN users u ON u.organizational_position_id = op.id AND u.is_active = true
@@ -163,11 +163,11 @@ class OrganizationalHierarchyService {
                 position_code: supervisorQuery[0].position_code,
                 hierarchy_level: supervisorQuery[0].hierarchy_level,
                 branch_code: supervisorQuery[0].branch_code,
-                supervisor: supervisorQuery[0].id ? {
-                    id: supervisorQuery[0].id,
-                    name: `${supervisorQuery[0].first_name} ${supervisorQuery[0].last_name}`,
+                supervisor: supervisorQuery[0].user_id ? {
+                    id: supervisorQuery[0].user_id,
+                    name: `${supervisorQuery[0].firstName} ${supervisorQuery[0].lastName}`,
                     email: supervisorQuery[0].email,
-                    photo_url: supervisorQuery[0].photo_url
+                    photo_url: supervisorQuery[0].biometric_photo_url
                 } : null
             };
         } catch (error) {
@@ -228,18 +228,18 @@ class OrganizationalHierarchyService {
             // Obtener posiciones de ambos
             const [approver, requester] = await Promise.all([
                 sequelize.query(`
-                    SELECT u.id, op.id as position_id, op.hierarchy_level,
+                    SELECT u.user_id, op.id as position_id, op.hierarchy_level,
                            op.can_approve_permissions, op.max_approval_days
                     FROM users u
                     LEFT JOIN organizational_positions op ON u.organizational_position_id = op.id
-                    WHERE u.id = $1
+                    WHERE u.user_id = $1
                 `, { bind: [approverId], type: QueryTypes.SELECT }),
 
                 sequelize.query(`
-                    SELECT u.id, op.id as position_id, op.hierarchy_level, op.full_path
+                    SELECT u.user_id, op.id as position_id, op.hierarchy_level, op.full_path
                     FROM users u
                     LEFT JOIN organizational_positions op ON u.organizational_position_id = op.id
-                    WHERE u.id = $1
+                    WHERE u.user_id = $1
                 `, { bind: [requesterId], type: QueryTypes.SELECT })
             ]);
 
@@ -503,7 +503,7 @@ class OrganizationalHierarchyService {
                 SELECT op.id as position_id, op.parent_position_id
                 FROM users u
                 JOIN organizational_positions op ON u.organizational_position_id = op.id
-                WHERE u.id = $1
+                WHERE u.user_id = $1
             `, {
                 bind: [currentApproverId],
                 type: QueryTypes.SELECT
@@ -515,7 +515,7 @@ class OrganizationalHierarchyService {
 
             // Buscar en la posición padre
             const nextApprover = await sequelize.query(`
-                SELECT u.id, u.first_name, u.last_name, u.email,
+                SELECT u.user_id, u."firstName", u."lastName", u.email,
                        op.position_name, op.can_approve_permissions, op.max_approval_days
                 FROM organizational_positions op
                 LEFT JOIN users u ON u.organizational_position_id = op.id AND u.is_active = true
@@ -531,7 +531,7 @@ class OrganizationalHierarchyService {
             if (!nextApprover.length) {
                 // Continuar subiendo en la jerarquía
                 const parentUser = await sequelize.query(`
-                    SELECT u.id FROM users u
+                    SELECT u.user_id FROM users u
                     JOIN organizational_positions op ON u.organizational_position_id = op.id
                     WHERE op.id = $1 AND u.is_active = true
                     LIMIT 1
@@ -541,14 +541,14 @@ class OrganizationalHierarchyService {
                 });
 
                 if (parentUser.length) {
-                    return this.getNextApprover(parentUser[0].id, requesterId, daysRequested);
+                    return this.getNextApprover(parentUser[0].user_id, requesterId, daysRequested);
                 }
                 return null;
             }
 
             return {
-                id: nextApprover[0].id,
-                name: `${nextApprover[0].first_name} ${nextApprover[0].last_name}`,
+                id: nextApprover[0].user_id,
+                name: `${nextApprover[0].firstName} ${nextApprover[0].lastName}`,
                 email: nextApprover[0].email,
                 position_name: nextApprover[0].position_name,
                 can_approve: nextApprover[0].can_approve_permissions,
@@ -570,7 +570,7 @@ class OrganizationalHierarchyService {
         try {
             // Obtener posición del usuario
             const userPos = await sequelize.query(`
-                SELECT organizational_position_id FROM users WHERE id = $1
+                SELECT organizational_position_id FROM users WHERE user_id = $1
             `, {
                 bind: [userId],
                 type: QueryTypes.SELECT
@@ -582,23 +582,23 @@ class OrganizationalHierarchyService {
 
             // Obtener empleados en posiciones hijas
             const subordinates = await sequelize.query(`
-                SELECT u.id, u.first_name, u.last_name, u.email, u.photo_url,
+                SELECT u.user_id, u."firstName", u."lastName", u.email, u.biometric_photo_url,
                        op.position_name, op.position_code, op.hierarchy_level
                 FROM users u
                 JOIN organizational_positions op ON u.organizational_position_id = op.id
                 WHERE op.parent_position_id = $1
                   AND u.is_active = true
-                ORDER BY op.hierarchy_level, u.first_name
+                ORDER BY op.hierarchy_level, u."firstName"
             `, {
                 bind: [userPos[0].organizational_position_id],
                 type: QueryTypes.SELECT
             });
 
             return subordinates.map(sub => ({
-                id: sub.id,
-                name: `${sub.first_name} ${sub.last_name}`,
+                id: sub.user_id,
+                name: `${sub.firstName} ${sub.lastName}`,
                 email: sub.email,
-                photo_url: sub.photo_url,
+                photo_url: sub.biometric_photo_url,
                 position: sub.position_name,
                 position_code: sub.position_code,
                 level: sub.hierarchy_level

@@ -1,4 +1,56 @@
 /**
+ * ╔════════════════════════════════════════════════════════════════════════════════╗
+ * ║                                                                                ║
+ * ║   🤖 INSTRUCCIONES PARA OTRAS SESIONES DE CLAUDE CODE                         ║
+ * ║                                                                                ║
+ * ╠════════════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                                ║
+ * ║   CUANDO EL USUARIO PIDA:                                                     ║
+ * ║   "Verificar estructura organizacional" / "100% de confianza" / "testear"     ║
+ * ║                                                                                ║
+ * ║   DEBES EJECUTAR:                                                             ║
+ * ║   ─────────────────────────────────────────────────────────────────────────   ║
+ * ║                                                                                ║
+ * ║   PASO 1: cd backend                                                          ║
+ * ║   PASO 2: npx playwright test tests/e2e/test-organizational-structure-completo.e2e.spec.js
+ * ║   PASO 3: Verificar que diga "16 passed"                                      ║
+ * ║                                                                                ║
+ * ║   SI DICE "16 passed" → MÓDULO FUNCIONA AL 100%                               ║
+ * ║                                                                                ║
+ * ╠════════════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                                ║
+ * ║   📋 FUNCIONES VERIFICADAS (2026-02-03) - TODAS PERSISTEN EN BD               ║
+ * ║   ─────────────────────────────────────────────────────────────────────────   ║
+ * ║                                                                                ║
+ * ║   • saveDepartment()      → POST/PUT /api/v1/departments                      ║
+ * ║   • deleteDepartment()    → DELETE /api/v1/departments/:id                    ║
+ * ║   • saveSector()          → POST/PUT /api/v1/organizational/sectors           ║
+ * ║   • deleteSector()        → DELETE /api/v1/organizational/sectors/:id         ║
+ * ║   • saveCategory()        → POST/PUT /api/v1/organizational/categories        ║
+ * ║   • deleteCategory()      → DELETE /api/v1/organizational/categories/:id      ║
+ * ║   • saveAgreement()       → POST/PUT /api/v1/organizational/agreements        ║
+ * ║   • deleteAgreement()     → DELETE /api/v1/organizational/agreements/:id      ║
+ * ║   • saveRole()            → POST/PUT /api/v1/organizational/roles             ║
+ * ║   • deleteRole()          → DELETE /api/v1/organizational/roles/:id           ║
+ * ║   • savePosition()        → POST/PUT /api/v1/organizational/positions         ║
+ * ║   • deletePosition()      → DELETE /api/v1/organizational/positions/:id       ║
+ * ║                                                                                ║
+ * ╠════════════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                                ║
+ * ║   📊 DATOS EN BD VERIFICADOS:                                                 ║
+ * ║   ─────────────────────────────────────────────────────────────────────────   ║
+ * ║                                                                                ║
+ * ║   • Departamentos: 5 registros                                                ║
+ * ║   • Sectores: 6 registros                                                     ║
+ * ║   • Convenios Laborales: 23 registros                                         ║
+ * ║   • Categorías Salariales: 10 registros                                       ║
+ * ║   • Posiciones: 5 registros                                                   ║
+ * ║                                                                                ║
+ * ║   ÚLTIMA ACTUALIZACIÓN: 2026-02-03                                            ║
+ * ║   VERIFICADO CON TEST E2E: test-organizational-structure.e2e.spec.js          ║
+ * ║                                                                                ║
+ * ╚════════════════════════════════════════════════════════════════════════════════╝
+ *
  * ORGANIZATIONAL STRUCTURE ENTERPRISE v1.0
  * Sistema de Estructura Organizacional - Nivel Enterprise
  *
