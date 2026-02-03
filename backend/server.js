@@ -2888,7 +2888,7 @@ app.use('/api/partners/commissions', partnerCommissionRoutes); // 💰 Comisione
 app.use('/api/partners', partnerRoutes); // 🤝 Partners Marketplace (Dic 2025)
 app.use('/api/offboarding', require('./src/routes/offboardingRoutes')); // 🔴 Baja de Empresas (Ene 2026)
 app.use('/api/restore', require('./src/routes/companyRestoreRoutes')); // 🔄 Restauración de Empresas (Ene 2026)
-app.use('/api/system-settings', require('./src/routes/systemSettingsRoutes')); // ⚙️ Settings del Sistema (Ene 2026)
+app.use('/api/aponnt/system-settings', require('./src/routes/systemSettingsRoutes')); // ⚙️ Settings del Sistema (Ene 2026)
 
 // 📧 EMAIL TRACKING Y ADMIN NOTIFICATIONS (Feb 2026)
 app.use('/api/email', require('./src/routes/emailTrackingRoutes')); // 📊 Tracking de emails (pixel + clicks)
@@ -3320,13 +3320,6 @@ console.log('🔍 [AUDITOR] Sistema de Auditoría y Auto-Diagnóstico ACTIVO:');
 console.log('   🔍 /api/audit/run - Ejecutar auditoría completa');
 console.log('   📊 /api/audit/status - Estado actual');
 console.log('   📋 /api/audit/registry - Ver módulos del sistema');
-
-console.log('🔄 [AUTO-HEALING] Sistema de Auto-Healing Cycle ACTIVO:');
-console.log('   🚀 POST /api/auto-healing/run - Ejecutar ciclo de auto-healing');
-console.log('   📊 GET  /api/auto-healing/status - Estado de ejecución actual');
-console.log('   📋 GET  /api/auto-healing/reports - Reportes históricos');
-console.log('   📈 GET  /api/auto-healing/metrics - Métricas agregadas');
-
 // ✅ CONFIGURAR ENGINEERING DASHBOARD - Metadata del sistema
 const engineeringRoutes = require('./src/routes/engineeringRoutes');
 app.use('/api/engineering', engineeringRoutes);
@@ -3455,7 +3448,6 @@ console.log('   🎨 GET  /api/brain/frontend-files - Archivos frontend (VIVO)')
 console.log('   💰 GET  /api/brain/commercial-modules - Módulos comerciales (BD)');
 console.log('   📦 GET  /api/brain/technical-modules - Módulos técnicos (VIVO)');
 console.log('   🗺️ GET  /api/brain/roadmap - Roadmap (BD)');
-console.log('   🎯 GET  /api/brain/critical-path - Camino crítico (BD)');
 console.log('   🔄 GET  /api/brain/workflows - Workflows (VIVO)');
 console.log('   🗄️ GET  /api/brain/database - Schema BD (VIVO)');
 
@@ -3691,16 +3683,9 @@ console.log('   📊 GET  /api/coordination/status - Estado de coordinación');
 console.log('   👥 GET  /api/coordination/team - Ver equipo activo');
 console.log('   🔍 POST /api/coordination/check-conflicts - Verificar conflictos');
 
-// ✅ CONFIGURAR CRITICAL PATH - Programación por Camino Crítico (CPM/PERT)
-const criticalPathRoutes = require('./src/routes/criticalPathRoutes');
-app.use('/api/critical-path', criticalPathRoutes);
-
-console.log('🎯 [CRITICAL PATH] Sistema de Camino Crítico ACTIVO:');
-console.log('   📊 GET  /api/critical-path/analyze - Calcular camino crítico');
-console.log('   ✏️  POST /api/critical-path/update-priority - Actualizar prioridad de tarea');
-console.log('   🔄 POST /api/critical-path/reorder - Reordenar tareas');
-console.log('   💡 GET  /api/critical-path/suggested-order - Orden sugerido por CPM');
-console.log('   📈 GET  /api/critical-path/statistics - Estadísticas del proyecto');
+// ❌ CRITICAL PATH REMOVIDO - Módulo que nunca funcionó correctamente
+// const criticalPathRoutes = require('./src/routes/criticalPathRoutes');
+// app.use('/api/critical-path', criticalPathRoutes);
 
 // ✅ CONFIGURAR TECHNOLOGY STACK API - Para index.html landing page
 const technologyStackRoutes = require('./src/routes/technologyStackRoutes');
