@@ -2912,6 +2912,10 @@ console.log('➕ [SCHEMA-ADDITIVE] Endpoint de merge aditivo configurado');
 app.use('/api/quick-fix', require('./src/routes/quickFixRoutes')); // ⚡ POST /execute con SQL en body
 console.log('⚡ [QUICK-FIX] Endpoint de fixes rápidos configurado');
 
+// 🔍 SCHEMA COMPARE (Feb 2026) - Comparación y sincronización COMPLETA de schemas
+app.use('/api/schema-compare', require('./src/routes/schemaCompareRoutes')); // 🔍 POST /analyze y /sync
+console.log('🔍 [SCHEMA-COMPARE] Endpoint de comparación completa configurado');
+
 app.use('/api', pricingRoutes);
 
 // 💼 CIRCUITO COMERCIAL COMPLETO - 6 FASES (Enero 2025)
