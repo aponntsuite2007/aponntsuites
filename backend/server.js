@@ -2904,6 +2904,10 @@ console.log('🔧 [MIGRATIONS] Endpoint HTTP de migraciones configurado');
 app.use('/api/schema-replacement', require('./src/routes/schemaReplacementRoutes')); // 🔄 POST /execute para clonar local→Render
 console.log('🔄 [SCHEMA-REPLACEMENT] Endpoint de reemplazo de schema configurado');
 
+// ➕ SCHEMA ADDITIVE (Feb 2026) - HTTP endpoint para merge aditivo de schema
+app.use('/api/schema-additive', require('./src/routes/schemaAdditiveRoutes')); // ➕ POST /merge para agregar lo que falta
+console.log('➕ [SCHEMA-ADDITIVE] Endpoint de merge aditivo configurado');
+
 app.use('/api', pricingRoutes);
 
 // 💼 CIRCUITO COMERCIAL COMPLETO - 6 FASES (Enero 2025)
