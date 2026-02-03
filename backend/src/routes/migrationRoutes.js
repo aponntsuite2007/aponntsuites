@@ -38,78 +38,67 @@ router.get('/run', async (req, res) => {
   }
 
   const results = [];
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL?.includes('render.com') ? { rejectUnauthorized: false } : false
-  });
 
-  try {
-    await client.connect();
-    results.push({ step: 'connect', status: 'success', message: 'Conectado a PostgreSQL' });
+  // IMPORTANTE: Crear conexión NUEVA para cada migración (transacciones independientes)
+  results.push({ step: 'start', status: 'success', message: 'Iniciando migraciones' });
 
-    for (const migrationFile of migrations) {
-      const migrationPath = path.join(__dirname, '../../migrations', migrationFile);
+  for (const migrationFile of migrations) {
+    const migrationPath = path.join(__dirname, '../../migrations', migrationFile);
 
-      if (!fs.existsSync(migrationPath)) {
+    if (!fs.existsSync(migrationPath)) {
+      results.push({
+        step: migrationFile,
+        status: 'skipped',
+        message: 'Archivo no encontrado'
+      });
+      continue;
+    }
+
+    // Crear cliente NUEVO para esta migración (transacción independiente)
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL?.includes('render.com') ? { rejectUnauthorized: false } : false
+    });
+
+    try {
+      await client.connect();
+      const sql = fs.readFileSync(migrationPath, 'utf-8');
+      await client.query(sql);
+      await client.end();
+
+      results.push({
+        step: migrationFile,
+        status: 'success',
+        message: 'Ejecutada exitosamente'
+      });
+    } catch (error) {
+      try { await client.end(); } catch (e) {}
+
+      if (error.message.includes('already exists') || error.message.includes('duplicate')) {
         results.push({
           step: migrationFile,
           status: 'skipped',
-          message: 'Archivo no encontrado'
+          message: 'Ya estaba aplicada',
+          error: error.message
         });
-        continue;
-      }
-
-      const sql = fs.readFileSync(migrationPath, 'utf-8');
-
-      try {
-        await client.query(sql);
+      } else {
         results.push({
           step: migrationFile,
-          status: 'success',
-          message: 'Ejecutada exitosamente'
+          status: 'error',
+          message: error.message.substring(0, 200),
+          stack: error.stack?.substring(0, 500)
         });
-      } catch (error) {
-        if (error.message.includes('already exists') || error.message.includes('duplicate')) {
-          results.push({
-            step: migrationFile,
-            status: 'skipped',
-            message: 'Ya estaba aplicada',
-            error: error.message
-          });
-        } else {
-          results.push({
-            step: migrationFile,
-            status: 'error',
-            message: error.message,
-            stack: error.stack
-          });
-        }
       }
     }
-
-    await client.end();
-    results.push({ step: 'disconnect', status: 'success', message: 'Conexión cerrada' });
-
-    return res.json({
-      success: true,
-      results,
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    results.push({
-      step: 'global',
-      status: 'error',
-      message: error.message,
-      stack: error.stack
-    });
-
-    return res.status(500).json({
-      success: false,
-      results,
-      timestamp: new Date().toISOString()
-    });
   }
+
+  results.push({ step: 'finish', status: 'success', message: 'Proceso completado' });
+
+  return res.json({
+    success: true,
+    results,
+    timestamp: new Date().toISOString()
+  });
 });
 
 /**
