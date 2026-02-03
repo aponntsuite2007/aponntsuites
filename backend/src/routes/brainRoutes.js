@@ -143,17 +143,17 @@ router.get('/roadmap', async (req, res) => {
 
 /**
  * GET /api/brain/critical-path
- * Camino crítico (CPM) calculado
+ * ❌ REMOVIDO - Módulo Camino Crítico nunca funcionó correctamente
  */
-router.get('/critical-path', async (req, res) => {
-  try {
-    const data = await brainService.getCriticalPath();
-    res.json({ success: true, data });
-  } catch (error) {
-    console.error('❌ [BRAIN-API] Error en critical-path:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+// router.get('/critical-path', async (req, res) => {
+//   try {
+//     const data = await brainService.getCriticalPath();
+//     res.json({ success: true, data });
+//   } catch (error) {
+//     console.error('❌ [BRAIN-API] Error en critical-path:', error);
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
 
 /**
  * GET /api/brain/workflows
