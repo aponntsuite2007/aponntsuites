@@ -44,14 +44,34 @@ router.post('/execute', async (req, res) => {
       data: { tableCount: tables.length }
     });
 
-    // PASO 2: Eliminar todas las tablas con CASCADE (no necesita desactivar FKs)
-    results.push({ step: 'drop-tables', status: 'running', message: `Eliminando ${tables.length} tablas...` });
+    // PASO 2: Eliminar todas las tablas con CASCADE (una por una para evitar "out of shared memory")
+    results.push({ step: 'drop-tables', status: 'running', message: `Eliminando ${tables.length} tablas una por una...` });
 
-    // Usar DROP CASCADE para manejar foreign keys automáticamente
-    const dropSQL = tables.map(table => `DROP TABLE IF EXISTS "${table}" CASCADE;`).join('\n');
-    await client.query(dropSQL);
+    let droppedCount = 0;
+    for (const table of tables) {
+      try {
+        await client.query(`DROP TABLE IF EXISTS "${table}" CASCADE`);
+        droppedCount++;
 
-    results.push({ step: 'drop-tables', status: 'success', message: `${tables.length} tablas eliminadas con CASCADE` });
+        // Log cada 100 tablas para tracking
+        if (droppedCount % 100 === 0) {
+          results.push({
+            step: 'drop-progress',
+            status: 'running',
+            message: `${droppedCount}/${tables.length} tablas eliminadas...`
+          });
+        }
+      } catch (error) {
+        // Continuar incluso si falla una tabla
+        results.push({
+          step: 'drop-error',
+          status: 'warning',
+          message: `Error al eliminar ${table}: ${error.message.substring(0, 100)}`
+        });
+      }
+    }
+
+    results.push({ step: 'drop-tables', status: 'success', message: `${droppedCount} tablas eliminadas con CASCADE` });
 
     // PASO 4: Leer schema local
     results.push({ step: 'read-schema', status: 'running', message: 'Leyendo schema local...' });
