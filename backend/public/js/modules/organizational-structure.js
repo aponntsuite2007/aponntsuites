@@ -1256,8 +1256,11 @@ const OrgEngine = {
                 <h3 class="org-content-title">⏰ Turnos de Trabajo</h3>
                 <div class="org-toolbar">
                     <span style="color: var(--org-text-secondary); font-size: 12px; margin-right: 15px;">
-                        📅 Gestiona feriados y días no laborables por turno
+                        📅 Gestiona horarios, días laborables y feriados por turno
                     </span>
+                    <button class="org-btn org-btn-primary" onclick="OrgEngine.openShiftModal()">
+                        + Nuevo Turno
+                    </button>
                 </div>
             </div>
             <div class="org-table-container">
@@ -2634,6 +2637,261 @@ const OrgEngine = {
             await this.renderDepartments();
             await this.loadInitialData();
             this.updateKPIs();
+        } catch (error) {
+            this.showToast(error.message, 'error');
+        }
+    },
+
+    // ========================================================================
+    // MODAL CREAR/EDITAR TURNO (CON SOLAPAS)
+    // ========================================================================
+    async openShiftModal(shiftId = null) {
+        const isEdit = !!shiftId;
+        let shift = {};
+
+        if (isEdit) {
+            shift = OrgState.shifts.find(s => s.id == shiftId) || {};
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'org-modal-overlay';
+        modal.id = 'org-modal';
+        modal.innerHTML = `
+            <div class="org-modal" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+                <div class="org-modal-header">
+                    <h3 class="org-modal-title">⏰ ${isEdit ? 'Editar' : 'Nuevo'} Turno</h3>
+                    <button class="org-modal-close" onclick="OrgEngine.closeModal()">&times;</button>
+                </div>
+                <div class="org-modal-body">
+                    <!-- Tabs del Modal -->
+                    <div style="display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">
+                        <button class="org-btn shift-modal-tab active" data-tab="basico" onclick="OrgEngine.switchShiftTab('basico')">
+                            📋 Datos Básicos
+                        </button>
+                        <button class="org-btn shift-modal-tab" data-tab="horarios" onclick="OrgEngine.switchShiftTab('horarios')">
+                            🕐 Horarios
+                        </button>
+                        <button class="org-btn shift-modal-tab" data-tab="dias" onclick="OrgEngine.switchShiftTab('dias')">
+                            📅 Días Laborables
+                        </button>
+                        <button class="org-btn shift-modal-tab" data-tab="feriados" onclick="OrgEngine.switchShiftTab('feriados')">
+                            🎉 Feriados
+                        </button>
+                        <button class="org-btn shift-modal-tab" data-tab="opciones" onclick="OrgEngine.switchShiftTab('opciones')">
+                            ⚙️ Opciones
+                        </button>
+                    </div>
+
+                    <form id="shift-form" onsubmit="OrgEngine.saveShift(event, ${shiftId || 'null'})">
+                        <!-- Tab: Datos Básicos -->
+                        <div id="shift-tab-basico" class="shift-tab-content">
+                            <div class="org-form-group">
+                                <label class="org-form-label">Nombre del Turno *</label>
+                                <input type="text" class="org-form-input" name="name" value="${shift.name || ''}" required placeholder="Ej: Turno Mañana, Turno Rotativo A">
+                            </div>
+                            <div class="org-form-group">
+                                <label class="org-form-label">Código</label>
+                                <input type="text" class="org-form-input" name="code" value="${shift.code || ''}" placeholder="Ej: TM, TR-A">
+                            </div>
+                            <div class="org-form-group">
+                                <label class="org-form-label">Descripción</label>
+                                <textarea class="org-form-input" name="description" rows="2" placeholder="Descripción opcional del turno">${shift.description || ''}</textarea>
+                            </div>
+                            <div class="org-form-group">
+                                <label class="org-form-label">Sucursal</label>
+                                <select class="org-form-input" name="branch_id">
+                                    <option value="">-- Todas las sucursales --</option>
+                                    ${(OrgState.branches || []).map(b => `
+                                        <option value="${b.id}" ${shift.branch_id == b.id ? 'selected' : ''}>${b.name}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Horarios -->
+                        <div id="shift-tab-horarios" class="shift-tab-content" style="display: none;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="org-form-group">
+                                    <label class="org-form-label">Hora de Entrada *</label>
+                                    <input type="time" class="org-form-input" name="start_time" value="${shift.start_time || shift.startTime || '08:00'}" required>
+                                </div>
+                                <div class="org-form-group">
+                                    <label class="org-form-label">Hora de Salida *</label>
+                                    <input type="time" class="org-form-input" name="end_time" value="${shift.end_time || shift.endTime || '17:00'}" required>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                <div class="org-form-group">
+                                    <label class="org-form-label">Tolerancia Entrada (min)</label>
+                                    <input type="number" class="org-form-input" name="entry_tolerance" value="${shift.entry_tolerance || 10}" min="0" max="60">
+                                </div>
+                                <div class="org-form-group">
+                                    <label class="org-form-label">Tolerancia Salida (min)</label>
+                                    <input type="number" class="org-form-input" name="exit_tolerance" value="${shift.exit_tolerance || 10}" min="0" max="60">
+                                </div>
+                            </div>
+                            <div class="org-form-group" style="margin-top: 15px;">
+                                <label class="org-form-label">Duración del Descanso (min)</label>
+                                <input type="number" class="org-form-input" name="break_duration" value="${shift.break_duration || 60}" min="0" max="180">
+                                <small style="color: #666;">Tiempo de almuerzo/descanso durante el turno</small>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Días Laborables -->
+                        <div id="shift-tab-dias" class="shift-tab-content" style="display: none;">
+                            <p style="margin-bottom: 15px; color: #666;">Selecciona los días que se trabaja en este turno:</p>
+                            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
+                                ${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((day, idx) => {
+                                    const dayNum = idx + 1;
+                                    const isChecked = shift.work_days ? (Array.isArray(shift.work_days) ? shift.work_days.includes(dayNum) : true) : (dayNum <= 5);
+                                    return `
+                                        <label style="display: flex; flex-direction: column; align-items: center; padding: 15px; background: ${isChecked ? '#e8f5e9' : '#f5f5f5'}; border-radius: 8px; cursor: pointer; transition: all 0.2s;" class="shift-day-label">
+                                            <input type="checkbox" name="work_days" value="${dayNum}" ${isChecked ? 'checked' : ''} style="margin-bottom: 8px;" onchange="this.parentElement.style.background = this.checked ? '#e8f5e9' : '#f5f5f5'">
+                                            <span style="font-weight: 600;">${day.substring(0, 3)}</span>
+                                        </label>
+                                    `;
+                                }).join('')}
+                            </div>
+                            <div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 8px;">
+                                <strong>💡 Consejo:</strong> Para turnos rotativos, puedes crear múltiples turnos con diferentes días.
+                            </div>
+                        </div>
+
+                        <!-- Tab: Feriados -->
+                        <div id="shift-tab-feriados" class="shift-tab-content" style="display: none;">
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <label style="display: flex; align-items: center; gap: 12px; padding: 15px; background: #f5f5f5; border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="respect_national_holidays" ${shift.respect_national_holidays !== false ? 'checked' : ''} style="width: 20px; height: 20px;">
+                                    <div>
+                                        <div style="font-weight: 600;">🇦🇷 Respetar Feriados Nacionales</div>
+                                        <small style="color: #666;">Los empleados de este turno no trabajan en feriados nacionales</small>
+                                    </div>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 12px; padding: 15px; background: #f5f5f5; border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="respect_provincial_holidays" ${shift.respect_provincial_holidays ? 'checked' : ''} style="width: 20px; height: 20px;">
+                                    <div>
+                                        <div style="font-weight: 600;">🏛️ Respetar Feriados Provinciales</div>
+                                        <small style="color: #666;">Según la provincia de la sucursal asignada</small>
+                                    </div>
+                                </label>
+                            </div>
+                            <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                                <strong>📅 Días No Laborables Personalizados:</strong>
+                                <p style="margin: 8px 0; font-size: 13px; color: #666;">Puedes agregar días específicos después de crear el turno usando el botón 📅 en la tabla.</p>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Opciones -->
+                        <div id="shift-tab-opciones" class="shift-tab-content" style="display: none;">
+                            <div class="org-form-group">
+                                <label style="display: flex; align-items: center; gap: 12px; padding: 15px; background: #f5f5f5; border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="is_active" ${shift.is_active !== false ? 'checked' : ''} style="width: 20px; height: 20px;">
+                                    <div>
+                                        <div style="font-weight: 600;">✅ Turno Activo</div>
+                                        <small style="color: #666;">Los turnos inactivos no aparecen en las asignaciones</small>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="org-form-group" style="margin-top: 15px;">
+                                <label style="display: flex; align-items: center; gap: 12px; padding: 15px; background: #f5f5f5; border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="is_flexible" ${shift.is_flexible ? 'checked' : ''} style="width: 20px; height: 20px;">
+                                    <div>
+                                        <div style="font-weight: 600;">🔄 Horario Flexible</div>
+                                        <small style="color: #666;">Permite variaciones en horario de entrada/salida</small>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="org-form-group" style="margin-top: 15px;">
+                                <label style="display: flex; align-items: center; gap: 12px; padding: 15px; background: #f5f5f5; border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="requires_overtime_approval" ${shift.requires_overtime_approval !== false ? 'checked' : ''} style="width: 20px; height: 20px;">
+                                    <div>
+                                        <div style="font-weight: 600;">⏱️ Horas Extra Requieren Aprobación</div>
+                                        <small style="color: #666;">Las horas extra deben ser aprobadas por supervisor</small>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="org-form-group" style="margin-top: 15px;">
+                                <label class="org-form-label">Color del Turno</label>
+                                <input type="color" class="org-form-input" name="color" value="${shift.color || '#4CAF50'}" style="height: 45px; padding: 5px;">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="org-modal-footer">
+                    <button type="button" class="org-btn" onclick="OrgEngine.closeModal()">Cancelar</button>
+                    <button type="submit" form="shift-form" class="org-btn org-btn-primary">
+                        ${isEdit ? '💾 Guardar Cambios' : '✅ Crear Turno'}
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        requestAnimationFrame(() => modal.classList.add('active'));
+    },
+
+    switchShiftTab(tabId) {
+        // Ocultar todos los tabs
+        document.querySelectorAll('.shift-tab-content').forEach(tab => tab.style.display = 'none');
+        document.querySelectorAll('.shift-modal-tab').forEach(btn => btn.classList.remove('active'));
+
+        // Mostrar tab seleccionado
+        document.getElementById(`shift-tab-${tabId}`).style.display = 'block';
+        document.querySelector(`.shift-modal-tab[data-tab="${tabId}"]`).classList.add('active');
+    },
+
+    async saveShift(event, shiftId) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        // Recoger días laborables
+        const workDays = [];
+        form.querySelectorAll('input[name="work_days"]:checked').forEach(cb => {
+            workDays.push(parseInt(cb.value));
+        });
+
+        const data = {
+            name: formData.get('name'),
+            code: formData.get('code') || null,
+            description: formData.get('description') || null,
+            branch_id: formData.get('branch_id') || null,
+            start_time: formData.get('start_time'),
+            end_time: formData.get('end_time'),
+            entry_tolerance: parseInt(formData.get('entry_tolerance')) || 10,
+            exit_tolerance: parseInt(formData.get('exit_tolerance')) || 10,
+            break_duration: parseInt(formData.get('break_duration')) || 60,
+            work_days: workDays,
+            respect_national_holidays: form.querySelector('input[name="respect_national_holidays"]').checked,
+            respect_provincial_holidays: form.querySelector('input[name="respect_provincial_holidays"]').checked,
+            is_active: form.querySelector('input[name="is_active"]').checked,
+            is_flexible: form.querySelector('input[name="is_flexible"]').checked,
+            requires_overtime_approval: form.querySelector('input[name="requires_overtime_approval"]').checked,
+            color: formData.get('color'),
+            company_id: getCompanyId()
+        };
+
+        try {
+            const url = shiftId ? `/api/v1/shifts/${shiftId}` : '/api/v1/shifts';
+            const method = shiftId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Error guardando turno');
+            }
+
+            this.closeModal();
+            this.showToast(shiftId ? 'Turno actualizado' : 'Turno creado exitosamente', 'success');
+            await this.renderShifts();
         } catch (error) {
             this.showToast(error.message, 'error');
         }
