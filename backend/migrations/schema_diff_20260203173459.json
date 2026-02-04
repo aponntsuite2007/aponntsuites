@@ -1,0 +1,359 @@
+{
+  "generated": "2026-02-03T17:34:59.292Z",
+  "local": {
+    "tables": 712,
+    "columns": 14659
+  },
+  "render": {
+    "tables": 728,
+    "columns": 15196
+  },
+  "differences": {
+    "missingTables": [],
+    "missingColumns": [
+      {
+        "table": "aponnt_staff",
+        "column": "password",
+        "type": "VARCHAR(255)",
+        "nullable": "YES"
+      },
+      {
+        "table": "aponnt_staff",
+        "column": "username",
+        "type": "VARCHAR(100)",
+        "nullable": "YES"
+      },
+      {
+        "table": "aponnt_staff",
+        "column": "last_login_at",
+        "type": "TIMESTAMP",
+        "nullable": "YES"
+      },
+      {
+        "table": "aponnt_staff",
+        "column": "first_login",
+        "type": "BOOLEAN",
+        "nullable": "YES"
+      },
+      {
+        "table": "aponnt_staff",
+        "column": "biometric_enabled",
+        "type": "BOOLEAN",
+        "nullable": "YES"
+      },
+      {
+        "table": "aponnt_staff",
+        "column": "dni",
+        "type": "VARCHAR(50)",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "user_id",
+        "type": "UUID",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "action",
+        "type": "VARCHAR(100)",
+        "nullable": "NO"
+      },
+      {
+        "table": "audit_logs",
+        "column": "module_id",
+        "type": "VARCHAR(50)",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "entity_type",
+        "type": "VARCHAR(50)",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "entity_id",
+        "type": "VARCHAR(100)",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "old_values",
+        "type": "JSONB",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "new_values",
+        "type": "JSONB",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "ip_address",
+        "type": "INET",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "user_agent",
+        "type": "TEXT",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "session_id",
+        "type": "VARCHAR(100)",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "success",
+        "type": "BOOLEAN",
+        "nullable": "YES"
+      },
+      {
+        "table": "audit_logs",
+        "column": "created_at",
+        "type": "TIMESTAMPTZ",
+        "nullable": "YES"
+      },
+      {
+        "table": "companies",
+        "column": "onboarding_manual",
+        "type": "BOOLEAN",
+        "nullable": "YES"
+      },
+      {
+        "table": "companies",
+        "column": "onboarding_manual_reason",
+        "type": "TEXT",
+        "nullable": "YES"
+      },
+      {
+        "table": "companies",
+        "column": "onboarding_manual_by",
+        "type": "VARCHAR(50)",
+        "nullable": "YES"
+      },
+      {
+        "table": "companies",
+        "column": "onboarding_manual_at",
+        "type": "TIMESTAMP",
+        "nullable": "YES"
+      },
+      {
+        "table": "companies",
+        "column": "status_manual",
+        "type": "BOOLEAN",
+        "nullable": "YES"
+      },
+      {
+        "table": "companies",
+        "column": "status_manual_reason",
+        "type": "TEXT",
+        "nullable": "YES"
+      },
+      {
+        "table": "companies",
+        "column": "status_manual_by",
+        "type": "VARCHAR(50)",
+        "nullable": "YES"
+      },
+      {
+        "table": "companies",
+        "column": "status_manual_at",
+        "type": "TIMESTAMP",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_templates",
+        "column": "workflow_key",
+        "type": "VARCHAR(100)",
+        "nullable": "NO"
+      },
+      {
+        "table": "notification_templates",
+        "column": "channels",
+        "type": "JSONB",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_templates",
+        "column": "priority",
+        "type": "VARCHAR(20)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_templates",
+        "column": "created_by",
+        "type": "VARCHAR(255)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "process_key",
+        "type": "VARCHAR(100)",
+        "nullable": "NO"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "process_name",
+        "type": "VARCHAR(255)",
+        "nullable": "NO"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "scope",
+        "type": "VARCHAR(20)",
+        "nullable": "NO"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "workflow_steps",
+        "type": "JSONB",
+        "nullable": "NO"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "channels",
+        "type": "JSONB",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "primary_channel",
+        "type": "VARCHAR(20)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "requires_response",
+        "type": "BOOLEAN",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "response_type",
+        "type": "VARCHAR(20)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "response_options",
+        "type": "JSONB",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "response_timeout_hours",
+        "type": "INTEGER",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "auto_action_on_timeout",
+        "type": "VARCHAR(50)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "priority",
+        "type": "VARCHAR(20)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "sla_delivery_minutes",
+        "type": "INTEGER",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "sla_response_hours",
+        "type": "INTEGER",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "email_template_key",
+        "type": "VARCHAR(100)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "whatsapp_template_key",
+        "type": "VARCHAR(100)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "sms_template_key",
+        "type": "VARCHAR(100)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "push_template_key",
+        "type": "VARCHAR(100)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "recipient_type",
+        "type": "VARCHAR(20)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "recipient_rules",
+        "type": "JSONB",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "email_config_source",
+        "type": "VARCHAR(20)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "email_type",
+        "type": "VARCHAR(50)",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "metadata",
+        "type": "JSONB",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "created_by",
+        "type": "UUID",
+        "nullable": "YES"
+      },
+      {
+        "table": "notification_workflows",
+        "column": "updated_by",
+        "type": "UUID",
+        "nullable": "YES"
+      },
+      {
+        "table": "unified_notifications",
+        "column": "completed_at",
+        "type": "TIMESTAMP",
+        "nullable": "YES"
+      },
+      {
+        "table": "unified_notifications",
+        "column": "is_deleted",
+        "type": "BOOLEAN",
+        "nullable": "YES"
+      }
+    ],
+    "extraColumnsInRender": 594
+  }
+}
