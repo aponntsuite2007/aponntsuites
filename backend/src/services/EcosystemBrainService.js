@@ -2188,33 +2188,40 @@ class EcosystemBrainService {
       const { sequelize } = this.db;
 
       // Query optimizada con empleados y posiciones
-      const [employees] = await sequelize.query(`
-        SELECT
-          u.user_id,
-          u."firstName" || ' ' || u."lastName" as full_name,
-          u."firstName",
-          u."lastName",
-          u.email,
-          u.phone,
-          u.position,
-          u."hireDate" as hire_date,
-          NULL as manager_id,
-          u.is_active,
-          d.id as department_id,
-          d.name as department_name,
-          s.id as sector_id,
-          s.name as sector_name,
-          s.display_order as sector_order
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN sectors s ON u.sector_id = s.id
-        WHERE u.company_id = :companyId
-          AND u.is_active = true
-        ORDER BY d.name, s.display_order, u."firstName"
-      `, {
-        replacements: { companyId },
-        type: sequelize.QueryTypes.SELECT
-      });
+      let employees = [];
+      try {
+        employees = await sequelize.query(`
+          SELECT
+            u.user_id,
+            u."firstName" || ' ' || u."lastName" as full_name,
+            u."firstName",
+            u."lastName",
+            u.email,
+            u.phone,
+            u.position,
+            u."hireDate" as hire_date,
+            NULL as manager_id,
+            u.is_active,
+            d.id as department_id,
+            d.name as department_name,
+            s.id as sector_id,
+            s.name as sector_name,
+            s.display_order as sector_order
+          FROM users u
+          LEFT JOIN departments d ON u.department_id = d.id
+          LEFT JOIN sectors s ON u.sector_id = s.id
+          WHERE u.company_id = :companyId
+            AND u.is_active = true
+          ORDER BY d.name, s.display_order, u."firstName"
+        `, {
+          replacements: { companyId },
+          type: sequelize.QueryTypes.SELECT
+        });
+        if (!Array.isArray(employees)) employees = [];
+      } catch (empErr) {
+        console.warn('[BRAIN] Error obteniendo empleados:', empErr.message);
+        employees = [];
+      }
 
       // Obtener posiciones organizacionales definidas
       let positions = [];
