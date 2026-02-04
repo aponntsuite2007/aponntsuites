@@ -1440,16 +1440,34 @@ const OrgEngine = {
     },
 
     async _initOrgChartIntelligent() {
-        // Obtener company_id de múltiples fuentes posibles
+        // Obtener company_id de TODAS las fuentes posibles
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const company = JSON.parse(localStorage.getItem('company') || '{}');
-        const companyId = user.company_id || user.companyId ||
-                          company.id || company.company_id ||
-                          window.currentCompany?.id || window.currentCompany?.company_id ||
-                          localStorage.getItem('companyId') || localStorage.getItem('company_id') ||
-                          sessionStorage.getItem('company_id');
+        const currentCompanyLS = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+        const selectedCompanyLS = JSON.parse(localStorage.getItem('selectedCompany') || '{}');
 
-        console.log('[ORGCHART] company_id detectado:', companyId, { user, company, currentCompany: window.currentCompany });
+        const companyId =
+            // Desde window (variables globales)
+            window.currentCompany?.id || window.selectedCompany?.id ||
+            // Desde localStorage parseado
+            currentCompanyLS?.id || selectedCompanyLS?.id ||
+            // Desde user object
+            user.company_id || user.companyId ||
+            // Desde company object
+            company.id || company.company_id ||
+            // Desde localStorage directo
+            localStorage.getItem('companyId') || localStorage.getItem('company_id') ||
+            localStorage.getItem('aponnt_remember_company') ||
+            // Desde sessionStorage
+            sessionStorage.getItem('company_id');
+
+        console.log('[ORGCHART] company_id detectado:', companyId, {
+            windowCurrentCompany: window.currentCompany?.id,
+            windowSelectedCompany: window.selectedCompany?.id,
+            currentCompanyLS: currentCompanyLS?.id,
+            selectedCompanyLS: selectedCompanyLS?.id,
+            user: user.company_id
+        });
 
         if (!companyId) {
             document.getElementById('orgchart-intelligent-container-company').innerHTML = `
