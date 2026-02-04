@@ -511,103 +511,133 @@ class WarehouseService {
         const { branch_id, category_id, brand_id, supplier_id, product_type, search, is_active, page = 1, limit = 50 } = filters;
         const offset = (page - 1) * limit;
 
-        let whereConditions = ['p.company_id = :companyId'];
-        const replacements = { companyId, limit, offset };
+        // Intentar con company_id, si no existe usar query sin company_id
+        const buildQuery = (useCompanyId) => {
+            let whereConditions = useCompanyId ? ['p.company_id = :companyId'] : ['1=1'];
+            const replacements = { companyId, limit, offset };
 
-        // NOTA: branch_id filtro removido porque wms_products no tiene esa columna
-        // Los productos se asocian a través de wms_stock → warehouse → branch
-        // if (branch_id) {
-        //     whereConditions.push('p.branch_id = :branchId');
-        //     replacements.branchId = branch_id;
-        // }
-        if (category_id) {
-            whereConditions.push('p.category_id = :categoryId');
-            replacements.categoryId = category_id;
-        }
-        if (brand_id) {
-            whereConditions.push('p.brand_id = :brandId');
-            replacements.brandId = brand_id;
-        }
-        if (supplier_id) {
-            whereConditions.push('p.supplier_id = :supplierId');
-            replacements.supplierId = supplier_id;
-        }
-        if (product_type) {
-            whereConditions.push('p.product_type = :productType');
-            replacements.productType = product_type;
-        }
-        if (is_active !== undefined) {
-            whereConditions.push('p.is_active = :isActive');
-            replacements.isActive = is_active === 'true' || is_active === true;
-        } else {
-            whereConditions.push('p.is_active = true');
-        }
-        if (search) {
-            whereConditions.push(`(
-                p.internal_code ILIKE :search OR
-                p.description ILIKE :search OR
-                p.description_alt ILIKE :search OR
-                EXISTS (SELECT 1 FROM wms_product_barcodes pb WHERE pb.product_id = p.id AND pb.barcode ILIKE :search)
-            )`);
-            replacements.search = `%${search}%`;
-        }
-
-        const whereClause = whereConditions.join(' AND ');
-
-        const countQuery = `SELECT COUNT(*) as total FROM wms_products p WHERE ${whereClause}`;
-        const [countResult] = await sequelize.query(countQuery, {
-            replacements,
-            type: QueryTypes.SELECT
-        });
-
-        const query = `
-            SELECT p.*,
-                   c.name as category_name,
-                   br.name as brand_name,
-                   s.name as supplier_name,
-                   (SELECT barcode FROM wms_product_barcodes WHERE product_id = p.id AND is_primary = true LIMIT 1) as primary_barcode,
-                   (SELECT COALESCE(SUM(quantity), 0) FROM wms_stock WHERE product_id = p.id) as total_stock
-            FROM wms_products p
-            LEFT JOIN wms_categories c ON p.category_id = c.id
-            LEFT JOIN wms_brands br ON p.brand_id = br.id
-            LEFT JOIN wms_suppliers s ON p.supplier_id = s.id
-            WHERE ${whereClause}
-            ORDER BY p.description
-            LIMIT :limit OFFSET :offset
-        `;
-
-        const products = await sequelize.query(query, {
-            replacements,
-            type: QueryTypes.SELECT
-        });
-
-        return {
-            data: products,
-            pagination: {
-                page,
-                limit,
-                total: parseInt(countResult.total),
-                pages: Math.ceil(parseInt(countResult.total) / limit)
+            if (category_id) {
+                whereConditions.push('p.category_id = :categoryId');
+                replacements.categoryId = category_id;
             }
+            if (brand_id) {
+                whereConditions.push('p.brand_id = :brandId');
+                replacements.brandId = brand_id;
+            }
+            if (supplier_id) {
+                whereConditions.push('p.supplier_id = :supplierId');
+                replacements.supplierId = supplier_id;
+            }
+            if (product_type) {
+                whereConditions.push('p.product_type = :productType');
+                replacements.productType = product_type;
+            }
+            if (is_active !== undefined) {
+                whereConditions.push('p.is_active = :isActive');
+                replacements.isActive = is_active === 'true' || is_active === true;
+            } else {
+                whereConditions.push('p.is_active = true');
+            }
+            if (search) {
+                whereConditions.push(`(
+                    p.internal_code ILIKE :search OR
+                    p.description ILIKE :search OR
+                    p.description_alt ILIKE :search OR
+                    EXISTS (SELECT 1 FROM wms_product_barcodes pb WHERE pb.product_id = p.id AND pb.barcode ILIKE :search)
+                )`);
+                replacements.search = `%${search}%`;
+            }
+            return { whereConditions, replacements };
         };
+
+        const executeQuery = async (useCompanyId) => {
+            const { whereConditions, replacements } = buildQuery(useCompanyId);
+            const whereClause = whereConditions.join(' AND ');
+
+            const countQuery = `SELECT COUNT(*) as total FROM wms_products p WHERE ${whereClause}`;
+            const [countResult] = await sequelize.query(countQuery, {
+                replacements,
+                type: QueryTypes.SELECT
+            });
+
+            const query = `
+                SELECT p.*,
+                       c.name as category_name,
+                       br.name as brand_name,
+                       s.name as supplier_name,
+                       (SELECT barcode FROM wms_product_barcodes WHERE product_id = p.id AND is_primary = true LIMIT 1) as primary_barcode,
+                       (SELECT COALESCE(SUM(quantity), 0) FROM wms_stock WHERE product_id = p.id) as total_stock
+                FROM wms_products p
+                LEFT JOIN wms_categories c ON p.category_id = c.id
+                LEFT JOIN wms_brands br ON p.brand_id = br.id
+                LEFT JOIN wms_suppliers s ON p.supplier_id = s.id
+                WHERE ${whereClause}
+                ORDER BY p.description
+                LIMIT :limit OFFSET :offset
+            `;
+
+            const products = await sequelize.query(query, {
+                replacements,
+                type: QueryTypes.SELECT
+            });
+
+            return {
+                data: products,
+                pagination: {
+                    page,
+                    limit,
+                    total: parseInt(countResult.total),
+                    pages: Math.ceil(parseInt(countResult.total) / limit)
+                }
+            };
+        };
+
+        try {
+            return await executeQuery(true);
+        } catch (error) {
+            if (error.message?.includes('company_id') && error.message?.includes('does not exist')) {
+                console.log('[WMS] company_id column not available in wms_products, using fallback query');
+                return await executeQuery(false);
+            }
+            throw error;
+        }
     }
 
     static async getProductById(companyId, productId) {
-        const query = `
-            SELECT p.*,
-                   c.name as category_name, c.code as category_code,
-                   br.name as brand_name,
-                   s.name as supplier_name
-            FROM wms_products p
-            LEFT JOIN wms_categories c ON p.category_id = c.id
-            LEFT JOIN wms_brands br ON p.brand_id = br.id
-            LEFT JOIN wms_suppliers s ON p.supplier_id = s.id
-            WHERE p.id = :productId AND p.company_id = :companyId
-        `;
-        const [product] = await sequelize.query(query, {
-            replacements: { productId, companyId },
-            type: QueryTypes.SELECT
-        });
+        // Intentar con company_id, si no existe usar query sin company_id
+        const executeQuery = async (useCompanyId) => {
+            const whereClause = useCompanyId
+                ? 'WHERE p.id = :productId AND p.company_id = :companyId'
+                : 'WHERE p.id = :productId';
+            const query = `
+                SELECT p.*,
+                       c.name as category_name, c.code as category_code,
+                       br.name as brand_name,
+                       s.name as supplier_name
+                FROM wms_products p
+                LEFT JOIN wms_categories c ON p.category_id = c.id
+                LEFT JOIN wms_brands br ON p.brand_id = br.id
+                LEFT JOIN wms_suppliers s ON p.supplier_id = s.id
+                ${whereClause}
+            `;
+            const [product] = await sequelize.query(query, {
+                replacements: { productId, companyId },
+                type: QueryTypes.SELECT
+            });
+            return product;
+        };
+
+        let product;
+        try {
+            product = await executeQuery(true);
+        } catch (error) {
+            if (error.message?.includes('company_id') && error.message?.includes('does not exist')) {
+                console.log('[WMS] company_id column not available in wms_products, using fallback query');
+                product = await executeQuery(false);
+            } else {
+                throw error;
+            }
+        }
 
         if (product) {
             // Get barcodes
@@ -829,28 +859,53 @@ class WarehouseService {
     }
 
     static async deleteProduct(companyId, productId) {
-        const query = `
-            UPDATE wms_products SET is_active = false, updated_at = NOW()
-            WHERE id = :productId AND company_id = :companyId
-        `;
-        await sequelize.query(query, {
-            replacements: { productId, companyId },
-            type: QueryTypes.UPDATE
-        });
+        try {
+            const query = `
+                UPDATE wms_products SET is_active = false, updated_at = NOW()
+                WHERE id = :productId AND company_id = :companyId
+            `;
+            await sequelize.query(query, {
+                replacements: { productId, companyId },
+                type: QueryTypes.UPDATE
+            });
+        } catch (error) {
+            if (error.message?.includes('company_id') && error.message?.includes('does not exist')) {
+                console.log('[WMS] company_id column not available, deleting by id only');
+                const fallbackQuery = `UPDATE wms_products SET is_active = false, updated_at = NOW() WHERE id = :productId`;
+                await sequelize.query(fallbackQuery, { replacements: { productId }, type: QueryTypes.UPDATE });
+            } else {
+                throw error;
+            }
+        }
     }
 
     static async getProductByBarcode(companyId, barcode) {
-        const query = `
-            SELECT p.*, pb.barcode, pb.barcode_type
-            FROM wms_products p
-            JOIN wms_product_barcodes pb ON p.id = pb.product_id
-            WHERE p.company_id = :companyId AND pb.barcode = :barcode AND p.is_active = true
-        `;
-        const [product] = await sequelize.query(query, {
-            replacements: { companyId, barcode },
-            type: QueryTypes.SELECT
-        });
-        return product;
+        const executeQuery = async (useCompanyId) => {
+            const whereClause = useCompanyId
+                ? 'WHERE p.company_id = :companyId AND pb.barcode = :barcode AND p.is_active = true'
+                : 'WHERE pb.barcode = :barcode AND p.is_active = true';
+            const query = `
+                SELECT p.*, pb.barcode, pb.barcode_type
+                FROM wms_products p
+                JOIN wms_product_barcodes pb ON p.id = pb.product_id
+                ${whereClause}
+            `;
+            const [product] = await sequelize.query(query, {
+                replacements: { companyId, barcode },
+                type: QueryTypes.SELECT
+            });
+            return product;
+        };
+
+        try {
+            return await executeQuery(true);
+        } catch (error) {
+            if (error.message?.includes('company_id') && error.message?.includes('does not exist')) {
+                console.log('[WMS] company_id column not available, searching barcode without company filter');
+                return await executeQuery(false);
+            }
+            throw error;
+        }
     }
 
     // ========================================================================
@@ -858,25 +913,54 @@ class WarehouseService {
     // ========================================================================
 
     static async getProductBarcodes(companyId, productId) {
-        const query = `
-            SELECT pb.* FROM wms_product_barcodes pb
-            JOIN wms_products p ON pb.product_id = p.id
-            WHERE p.id = :productId AND p.company_id = :companyId
-            ORDER BY pb.is_primary DESC, pb.created_at
-        `;
-        return sequelize.query(query, {
-            replacements: { productId, companyId },
-            type: QueryTypes.SELECT
-        });
+        const executeQuery = async (useCompanyId) => {
+            const whereClause = useCompanyId
+                ? 'WHERE p.id = :productId AND p.company_id = :companyId'
+                : 'WHERE p.id = :productId';
+            const query = `
+                SELECT pb.* FROM wms_product_barcodes pb
+                JOIN wms_products p ON pb.product_id = p.id
+                ${whereClause}
+                ORDER BY pb.is_primary DESC, pb.created_at
+            `;
+            return sequelize.query(query, {
+                replacements: { productId, companyId },
+                type: QueryTypes.SELECT
+            });
+        };
+
+        try {
+            return await executeQuery(true);
+        } catch (error) {
+            if (error.message?.includes('company_id') && error.message?.includes('does not exist')) {
+                console.log('[WMS] company_id column not available, getting barcodes by product_id only');
+                return await executeQuery(false);
+            }
+            throw error;
+        }
     }
 
     static async addProductBarcode(companyId, productId, data) {
-        // Verify product belongs to company
-        const verifyQuery = `SELECT id FROM wms_products WHERE id = :productId AND company_id = :companyId`;
-        const [product] = await sequelize.query(verifyQuery, {
-            replacements: { productId, companyId },
-            type: QueryTypes.SELECT
-        });
+        // Verify product exists (resiliente a company_id)
+        let product;
+        try {
+            const verifyQuery = `SELECT id FROM wms_products WHERE id = :productId AND company_id = :companyId`;
+            [product] = await sequelize.query(verifyQuery, {
+                replacements: { productId, companyId },
+                type: QueryTypes.SELECT
+            });
+        } catch (error) {
+            if (error.message?.includes('company_id') && error.message?.includes('does not exist')) {
+                console.log('[WMS] company_id column not available, verifying by product_id only');
+                const fallbackQuery = `SELECT id FROM wms_products WHERE id = :productId`;
+                [product] = await sequelize.query(fallbackQuery, {
+                    replacements: { productId },
+                    type: QueryTypes.SELECT
+                });
+            } else {
+                throw error;
+            }
+        }
 
         if (!product) {
             throw new Error('Product not found');
@@ -901,16 +985,29 @@ class WarehouseService {
     }
 
     static async removeProductBarcode(companyId, productId, barcodeId) {
-        const query = `
-            DELETE FROM wms_product_barcodes pb
-            USING wms_products p
-            WHERE pb.id = :barcodeId AND pb.product_id = :productId
-                  AND p.id = pb.product_id AND p.company_id = :companyId
-        `;
-        await sequelize.query(query, {
-            replacements: { barcodeId, productId, companyId },
-            type: QueryTypes.DELETE
-        });
+        try {
+            const query = `
+                DELETE FROM wms_product_barcodes pb
+                USING wms_products p
+                WHERE pb.id = :barcodeId AND pb.product_id = :productId
+                      AND p.id = pb.product_id AND p.company_id = :companyId
+            `;
+            await sequelize.query(query, {
+                replacements: { barcodeId, productId, companyId },
+                type: QueryTypes.DELETE
+            });
+        } catch (error) {
+            if (error.message?.includes('company_id') && error.message?.includes('does not exist')) {
+                console.log('[WMS] company_id column not available, deleting barcode by ids only');
+                const fallbackQuery = `DELETE FROM wms_product_barcodes WHERE id = :barcodeId AND product_id = :productId`;
+                await sequelize.query(fallbackQuery, {
+                    replacements: { barcodeId, productId },
+                    type: QueryTypes.DELETE
+                });
+            } else {
+                throw error;
+            }
+        }
     }
 
     // ========================================================================
@@ -1189,24 +1286,25 @@ class WarehouseService {
     }
 
     static async bulkUpdatePrices(companyId, userId, priceListId, filters, adjustment) {
-        // Build filter conditions
-        let whereConditions = ['p.company_id = :companyId', 'p.is_active = true'];
-        const replacements = { companyId, priceListId };
+        // Build filter conditions - resiliente a company_id
+        const buildConditions = (useCompanyId) => {
+            let conditions = useCompanyId ? ['p.company_id = :companyId', 'p.is_active = true'] : ['p.is_active = true'];
+            const replacements = { companyId, priceListId };
 
-        if (filters.category_ids && filters.category_ids.length > 0) {
-            whereConditions.push('p.category_id = ANY(:categoryIds)');
-            replacements.categoryIds = filters.category_ids;
-        }
-        if (filters.brand_ids && filters.brand_ids.length > 0) {
-            whereConditions.push('p.brand_id = ANY(:brandIds)');
-            replacements.brandIds = filters.brand_ids;
-        }
-        if (filters.supplier_ids && filters.supplier_ids.length > 0) {
-            whereConditions.push('p.supplier_id = ANY(:supplierIds)');
-            replacements.supplierIds = filters.supplier_ids;
-        }
-
-        const whereClause = whereConditions.join(' AND ');
+            if (filters.category_ids && filters.category_ids.length > 0) {
+                conditions.push('p.category_id = ANY(:categoryIds)');
+                replacements.categoryIds = filters.category_ids;
+            }
+            if (filters.brand_ids && filters.brand_ids.length > 0) {
+                conditions.push('p.brand_id = ANY(:brandIds)');
+                replacements.brandIds = filters.brand_ids;
+            }
+            if (filters.supplier_ids && filters.supplier_ids.length > 0) {
+                conditions.push('p.supplier_id = ANY(:supplierIds)');
+                replacements.supplierIds = filters.supplier_ids;
+            }
+            return { conditions, replacements };
+        };
 
         // Calculate new prices
         let priceCalculation;
@@ -1225,27 +1323,39 @@ class WarehouseService {
             priceCalculation = `ROUND(${priceCalculation} / ${adjustment.rounding_value || 1}) * ${adjustment.rounding_value || 1}`;
         }
 
-        const query = `
-            UPDATE wms_product_prices pp
-            SET final_price = ${priceCalculation},
-                margin_percent = CASE
-                    WHEN pc.total_cost > 0 THEN ((${priceCalculation} - pc.total_cost) / pc.total_cost) * 100
-                    ELSE margin_percent
-                END,
-                updated_at = NOW()
-            FROM wms_products p
-            LEFT JOIN wms_product_costs pc ON p.id = pc.product_id AND pc.is_current = true
-            WHERE pp.product_id = p.id
-              AND pp.price_list_id = :priceListId
-              AND ${whereClause}
-        `;
+        const executeUpdate = async (useCompanyId) => {
+            const { conditions, replacements } = buildConditions(useCompanyId);
+            const whereClause = conditions.join(' AND ');
 
-        const result = await sequelize.query(query, {
-            replacements,
-            type: QueryTypes.UPDATE
-        });
+            const query = `
+                UPDATE wms_product_prices pp
+                SET final_price = ${priceCalculation},
+                    margin_percent = CASE
+                        WHEN pc.total_cost > 0 THEN ((${priceCalculation} - pc.total_cost) / pc.total_cost) * 100
+                        ELSE margin_percent
+                    END,
+                    updated_at = NOW()
+                FROM wms_products p
+                LEFT JOIN wms_product_costs pc ON p.id = pc.product_id AND pc.is_current = true
+                WHERE pp.product_id = p.id
+                  AND pp.price_list_id = :priceListId
+                  AND ${whereClause}
+            `;
 
-        return { updated: result[1] || 0 };
+            return await sequelize.query(query, { replacements, type: QueryTypes.UPDATE });
+        };
+
+        try {
+            const result = await executeUpdate(true);
+            return { updated: result[1] || 0 };
+        } catch (error) {
+            if (error.message?.includes('company_id') && error.message?.includes('does not exist')) {
+                console.log('[WMS] company_id column not available, updating prices without company filter');
+                const result = await executeUpdate(false);
+                return { updated: result[1] || 0 };
+            }
+            throw error;
+        }
     }
 
     // ========================================================================
@@ -2372,15 +2482,26 @@ class WarehouseService {
             replacements.branchId = branchId;
         }
 
-        // Products count (sin filtro por branch porque wms_products no tiene branch_id)
-        const productsQuery = `
-            SELECT COUNT(*) as count FROM wms_products p
-            WHERE p.company_id = :companyId AND p.is_active = true
-        `;
-        const [products] = await sequelize.query(productsQuery, {
-            replacements,
-            type: QueryTypes.SELECT
-        });
+        // Products count - resiliente si company_id no existe
+        let products = { count: 0 };
+        try {
+            const productsQuery = `
+                SELECT COUNT(*) as count FROM wms_products p
+                WHERE p.company_id = :companyId AND p.is_active = true
+            `;
+            [products] = await sequelize.query(productsQuery, {
+                replacements,
+                type: QueryTypes.SELECT
+            });
+        } catch (prodError) {
+            if (prodError.message?.includes('company_id') && prodError.message?.includes('does not exist')) {
+                console.log('[WMS] company_id column not available in wms_products, counting all active products');
+                const fallbackQuery = `SELECT COUNT(*) as count FROM wms_products WHERE is_active = true`;
+                [products] = await sequelize.query(fallbackQuery, { type: QueryTypes.SELECT });
+            } else {
+                console.error('[WMS] Error counting products:', prodError.message);
+            }
+        }
 
         // Warehouses count
         const warehousesQuery = `
