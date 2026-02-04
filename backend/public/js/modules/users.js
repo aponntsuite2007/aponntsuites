@@ -112,6 +112,14 @@ if (typeof window.showUsersContent === 'function') {
     console.log('👥 [USERS] Módulo users v6.0 - PLUG & PLAY SYSTEM INTEGRADO - PRIMERA CARGA');
     window.__USERS_MODULE_LOADED__ = true;
 
+    // 🔧 FALLBACK: Asegurar que progressiveAdmin existe
+    if (!window.progressiveAdmin) {
+        window.progressiveAdmin = {
+            getApiUrl: (path) => path // Retorna el path directamente si no hay progressiveAdmin
+        };
+        console.log('⚠️ [USERS] progressiveAdmin no definido, usando fallback');
+    }
+
 // ═══════════════════════════════════════════════════════════════════
 // 🎨 INYECTAR CSS MODERNO PARA MÓDULO USERS (estilo hours-cube-dashboard)
 // ═══════════════════════════════════════════════════════════════════
