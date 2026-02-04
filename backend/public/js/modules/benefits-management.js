@@ -683,16 +683,24 @@ function showDashboardTab() {
     loadDashboardStats();
 }
 
-async function loadDashboardStats() {
+async function loadDashboardStats(retryCount = 0) {
     try {
-        const companyId = window.currentCompany?.company_id || window.currentCompany?.id;
+        const companyId = window.currentCompany?.company_id || window.currentCompany?.id ||
+                          localStorage.getItem('companyId') || localStorage.getItem('company_id');
+
         if (!companyId) {
-            console.error('No hay empresa seleccionada');
+            // Reintentar hasta 3 veces con delay si la empresa no está cargada
+            if (retryCount < 3) {
+                console.log(`[BENEFITS] Esperando carga de empresa... (intento ${retryCount + 1}/3)`);
+                setTimeout(() => loadDashboardStats(retryCount + 1), 1000);
+                return;
+            }
+            console.warn('[BENEFITS] No hay empresa seleccionada después de 3 intentos');
             return;
         }
 
         const response = await fetch(`/api/benefits/stats/${companyId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || localStorage.getItem('authToken')}` }
         });
 
         if (!response.ok) throw new Error('Error al cargar estadísticas');
@@ -700,11 +708,16 @@ async function loadDashboardStats() {
         const data = await response.json();
         BenefitsState.benefitStats = data.stats || {};
 
-        // Actualizar números
-        document.getElementById('total-benefits').textContent = BenefitsState.benefitStats.active_benefits || 0;
-        document.getElementById('employees-with-benefits').textContent = BenefitsState.benefitStats.employees_with_benefits || 0;
-        document.getElementById('pending-approval').textContent = BenefitsState.benefitStats.pending_approval || 0;
-        document.getElementById('total-amount').textContent = formatCurrency(BenefitsState.benefitStats.total_amount || 0);
+        // Actualizar números (con verificación de elementos)
+        const totalBenefits = document.getElementById('total-benefits');
+        const employeesWithBenefits = document.getElementById('employees-with-benefits');
+        const pendingApproval = document.getElementById('pending-approval');
+        const totalAmount = document.getElementById('total-amount');
+
+        if (totalBenefits) totalBenefits.textContent = BenefitsState.benefitStats.active_benefits || 0;
+        if (employeesWithBenefits) employeesWithBenefits.textContent = BenefitsState.benefitStats.employees_with_benefits || 0;
+        if (pendingApproval) pendingApproval.textContent = BenefitsState.benefitStats.pending_approval || 0;
+        if (totalAmount) totalAmount.textContent = formatCurrency(BenefitsState.benefitStats.total_amount || 0);
 
         // Renderizar gráfico
         if (data.by_category && data.by_category.length > 0) {
@@ -712,8 +725,8 @@ async function loadDashboardStats() {
         }
 
     } catch (error) {
-        console.error('Error cargando estadísticas:', error);
-        showNotification('Error al cargar estadísticas', 'error');
+        console.warn('[BENEFITS] Error cargando estadísticas:', error.message);
+        // No mostrar notificación de error para no molestar al usuario
     }
 }
 
@@ -923,16 +936,23 @@ function showPoliciesTab() {
     loadCompanyPolicies();
 }
 
-async function loadCompanyPolicies() {
+async function loadCompanyPolicies(retryCount = 0) {
     try {
-        const companyId = window.currentCompany?.company_id || window.currentCompany?.id;
+        const companyId = window.currentCompany?.company_id || window.currentCompany?.id ||
+                          localStorage.getItem('companyId') || localStorage.getItem('company_id');
+
         if (!companyId) {
-            showNotification('No hay empresa seleccionada', 'error');
+            if (retryCount < 3) {
+                console.log(`[BENEFITS] Esperando empresa para políticas... (${retryCount + 1}/3)`);
+                setTimeout(() => loadCompanyPolicies(retryCount + 1), 1000);
+                return;
+            }
+            console.warn('[BENEFITS] No hay empresa para cargar políticas');
             return;
         }
 
         const response = await fetch(`/api/benefits/policies/${companyId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || localStorage.getItem('authToken')}` }
         });
 
         if (!response.ok) throw new Error('Error al cargar políticas');
