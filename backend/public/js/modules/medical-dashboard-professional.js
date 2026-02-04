@@ -824,7 +824,13 @@ function initMedicalEngineNav() {
             const container = document.getElementById('candidates-list-container');
             const countEl = document.getElementById('candidates-pending-count');
 
-            if (!container) return;
+            console.log('[MEDICAL] loadCandidates iniciando...');
+            console.log('[MEDICAL] container:', container ? 'existe' : 'NO EXISTE');
+
+            if (!container) {
+                console.error('[MEDICAL] ERROR: candidates-list-container no encontrado');
+                return;
+            }
 
             container.innerHTML = `
                 <div class="me-loading">
@@ -834,7 +840,9 @@ function initMedicalEngineNav() {
             `;
 
             try {
+                console.log('[MEDICAL] Llamando a JobPostingsAPI.getPendingMedicalExam...');
                 const response = await JobPostingsAPI.getPendingMedicalExam();
+                console.log('[MEDICAL] Respuesta recibida:', response);
                 const candidates = response.data || response.applications || [];
 
                 if (countEl) countEl.textContent = candidates.length;
@@ -924,20 +932,33 @@ function initMedicalEngineNav() {
 
             } catch (error) {
                 console.error('[MEDICAL] Error cargando candidatos:', error);
-                container.innerHTML = `
-                    <div class="me-empty-state" style="color: #ff5252;">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="15" y1="9" x2="9" y2="15"/>
-                            <line x1="9" y1="9" x2="15" y2="15"/>
-                        </svg>
-                        <h3 style="margin: 16px 0 8px 0;">Error al cargar candidatos</h3>
-                        <p style="font-size: 14px;">${error.message}</p>
-                        <button onclick="MedicalEngine.loadCandidates()" style="margin-top: 16px; padding: 10px 20px; background: #ff6b35; border: none; border-radius: 6px; color: white; cursor: pointer;">
-                            Reintentar
-                        </button>
-                    </div>
-                `;
+                console.error('[MEDICAL] Stack:', error.stack);
+
+                // Asegurar que siempre mostramos algo aunque falle
+                if (container) {
+                    container.innerHTML = `
+                        <div class="me-empty-state" style="color: #ff5252; padding: 40px; text-align: center;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="15" y1="9" x2="9" y2="15"/>
+                                <line x1="9" y1="9" x2="15" y2="15"/>
+                            </svg>
+                            <h3 style="margin: 16px 0 8px 0; color: #ff6b35;">Error al cargar candidatos</h3>
+                            <p style="font-size: 14px; color: #a0aec0;">${error.message || 'Error desconocido'}</p>
+                            <p style="font-size: 12px; color: #6b7280; margin-top: 10px;">
+                                Es posible que no haya candidatos pendientes de examen médico o que el módulo de Reclutamiento no esté activo.
+                            </p>
+                            <button onclick="MedicalEngine.loadCandidates()" style="margin-top: 16px; padding: 10px 20px; background: #ff6b35; border: none; border-radius: 6px; color: white; cursor: pointer;">
+                                Reintentar
+                            </button>
+                            <button onclick="MedicalEngine.showView('overview')" style="margin-top: 16px; margin-left: 10px; padding: 10px 20px; background: #30363d; border: none; border-radius: 6px; color: white; cursor: pointer;">
+                                Volver a Vista General
+                            </button>
+                        </div>
+                    `;
+                }
+
+                if (countEl) countEl.textContent = '0';
             }
         },
 

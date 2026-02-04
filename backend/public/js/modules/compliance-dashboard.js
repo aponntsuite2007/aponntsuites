@@ -229,6 +229,13 @@ const RiskAPI = {
 
     async request(endpoint, options = {}) {
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+        // ✅ Verificar token ANTES de hacer la llamada para evitar 401 que redirige a login
+        if (!token) {
+            console.warn(`[RiskAPI] ${endpoint}: Sin token de autenticación`);
+            throw new Error('Sesión no iniciada. Por favor inicie sesión primero.');
+        }
+
         const config = {
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -240,6 +247,13 @@ const RiskAPI = {
 
         try {
             const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+
+            // ✅ Manejar 401 sin disparar redirección
+            if (response.status === 401) {
+                console.warn(`[RiskAPI] ${endpoint}: Token expirado o inválido`);
+                throw new Error('Sesión expirada. Recargue la página e inicie sesión.');
+            }
+
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'API Error');
             return data;
@@ -332,20 +346,74 @@ const RiskIntelligence = {
 
     async init() {
         console.log('🔍 Iniciando Inteligencia de Riesgos...');
-        this.injectStyles();
-        this.render();
-        this.attachEventListeners();
 
-        // Inicializar sistema de ayuda contextual
-        if (typeof ModuleHelpSystem !== 'undefined') {
-            ModuleHelpSystem.init('risk-intelligence');
-            ModuleHelpSystem.setContext('dashboard');
+        // ✅ VERIFICAR SESIÓN ANTES DE CUALQUIER COSA
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            console.warn('[RISK] No hay sesión activa - mostrando mensaje');
+            this.injectStyles();
+            this.showNoSessionMessage();
+            return;
         }
 
-        // CARGAR CONFIGURACIÓN DESDE BD ANTES DE CARGAR DASHBOARD
-        await loadRiskConfigFromDB();
+        try {
+            this.injectStyles();
+            this.render();
+            this.attachEventListeners();
 
-        await this.loadDashboard();
+            // Inicializar sistema de ayuda contextual
+            if (typeof ModuleHelpSystem !== 'undefined') {
+                ModuleHelpSystem.init('risk-intelligence');
+                ModuleHelpSystem.setContext('dashboard');
+            }
+
+            // CARGAR CONFIGURACIÓN DESDE BD ANTES DE CARGAR DASHBOARD
+            try {
+                await loadRiskConfigFromDB();
+            } catch (configError) {
+                console.warn('[RISK] Error cargando config, usando defaults:', configError.message);
+            }
+
+            await this.loadDashboard();
+
+        } catch (initError) {
+            console.error('[RISK] Error en init():', initError);
+            // Asegurar que el módulo muestre algo aunque falle
+            const container = document.getElementById('content-area') ||
+                             document.getElementById('module-content') ||
+                             document.getElementById('mainContent');
+            if (container && !container.querySelector('.ri-container')) {
+                this.render(); // Renderizar al menos la estructura básica
+            }
+            this.showError('Error inicializando módulo. Verifique su sesión.');
+        }
+    },
+
+    // ✅ Mostrar mensaje cuando no hay sesión (sin hacer llamadas API)
+    showNoSessionMessage() {
+        const container = document.getElementById('content-area') ||
+                         document.getElementById('module-content') ||
+                         document.getElementById('mainContent');
+
+        if (!container) {
+            console.error('[RISK] No se encontró contenedor para mensaje');
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="ri-container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+                <div style="text-align: center; padding: 60px; background: rgba(233, 69, 96, 0.1); border-radius: 16px; border: 1px solid rgba(233, 69, 96, 0.3); max-width: 500px;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">🔐</div>
+                    <h2 style="color: #e94560; margin: 0 0 15px 0;">Sesión Requerida</h2>
+                    <p style="color: #a0aec0; font-size: 16px; margin: 0 0 25px 0;">
+                        Debe iniciar sesión para acceder al módulo de Inteligencia de Riesgos.
+                    </p>
+                    <button onclick="location.reload()" style="padding: 12px 30px; background: linear-gradient(135deg, #e94560, #c73e54); border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: 600; cursor: pointer;">
+                        🔄 Recargar Página
+                    </button>
+                </div>
+            </div>
+        `;
     },
 
     // ========== ESTILOS DARK THEME ==========
@@ -2358,6 +2426,14 @@ window.RiskIntelligence = RiskIntelligence;
 window.RiskAPI = RiskAPI;
 window.RISK_INDICES = RISK_INDICES;
 
+// ✅ Alias para compatibilidad con panel-empresa.html que busca ComplianceDashboard
+window.ComplianceDashboard = {
+    init: function() {
+        console.log('🔄 [COMPLIANCE] ComplianceDashboard.init() ejecutándose');
+        RiskIntelligence.init();
+    }
+};
+
 // Función wrapper para panel-empresa.html
 function showComplianceDashboardContent(container) {
     console.log('🔄 [MODULE] Ejecutando showComplianceDashboardContent()');
@@ -2365,3 +2441,13 @@ function showComplianceDashboardContent(container) {
 }
 
 window.showComplianceDashboardContent = showComplianceDashboardContent;
+
+// ✅ Registrar en sistema de módulos unificado
+if (!window.Modules) window.Modules = {};
+window.Modules['compliance-dashboard'] = {
+    init: function() { RiskIntelligence.init(); },
+    name: 'Compliance Dashboard',
+    version: '2.0.0'
+};
+
+console.log('✅ [COMPLIANCE] Módulo exportado: RiskIntelligence, ComplianceDashboard, showComplianceDashboardContent');

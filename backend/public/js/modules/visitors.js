@@ -200,19 +200,36 @@ visitorsStyleElement.textContent = `
         color: var(--text-primary);
     }
 
-    /* Modal con dark theme */
+    /* Modal con dark theme - CENTRADO FORZADO */
+    #visitorModal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 10050 !important;
+        overflow-y: auto !important;
+        background: rgba(0, 0, 0, 0.7) !important;
+    }
+
     #visitorModal .modal-dialog {
         max-width: 700px !important;
+        margin: 50px auto !important;
+        position: relative !important;
     }
 
     #visitorModal:not(.force-show) {
         display: none !important;
         opacity: 0 !important;
+        visibility: hidden !important;
     }
 
     #visitorModal.force-show {
-        display: block !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
         opacity: 1 !important;
+        visibility: visible !important;
     }
 
     #visitorModal .modal-content {
@@ -1010,30 +1027,30 @@ async function loadDepartmentsAndEmployees() {
  * Abrir modal
  */
 function openVisitorModal() {
+    console.log('[VISITORS] Abriendo modal...');
     const modal = document.getElementById('visitorModal');
+    if (!modal) {
+        console.error('[VISITORS] Modal no encontrado');
+        return;
+    }
     modal.classList.add('force-show');
-    modal.style.setProperty('display', 'block', 'important');
     document.body.classList.add('modal-open');
-
-    const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop fade show';
-    backdrop.id = 'visitorModalBackdrop';
-    document.body.appendChild(backdrop);
+    document.body.style.overflow = 'hidden';
+    console.log('[VISITORS] Modal abierto');
 }
 
 /**
  * Cerrar modal
  */
 function closeVisitorModal() {
+    console.log('[VISITORS] Cerrando modal...');
     const modal = document.getElementById('visitorModal');
-    modal.classList.remove('force-show');
-    modal.style.setProperty('display', 'none', 'important');
-    document.body.classList.remove('modal-open');
-
-    const backdrop = document.getElementById('visitorModalBackdrop');
-    if (backdrop) {
-        backdrop.remove();
+    if (modal) {
+        modal.classList.remove('force-show');
     }
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    console.log('[VISITORS] Modal cerrado');
 }
 
 /**
@@ -1070,7 +1087,14 @@ async function getValidToken() {
     return token;
 }
 
-// Exportar función principal
+// Exportar funciones a window para onclick handlers
 if (typeof window !== 'undefined') {
     window.showVisitorsContent = showVisitorsContent;
+    window.openNewVisitorModal = openNewVisitorModal;
+    window.openVisitorModal = openVisitorModal;
+    window.closeVisitorModal = closeVisitorModal;
+    window.viewVisitor = viewVisitor;
+    window.saveNewVisitor = saveNewVisitor;
+    window.loadVisitors = loadVisitors;
+    console.log('✅ [VISITORS] Funciones exportadas a window');
 }

@@ -444,11 +444,13 @@ function getDemoProducts() {
 // RENDER FUNCTIONS
 // ============================================================================
 function renderMarketplace() {
-    const container = document.getElementById('module-content');
+    // Buscar contenedor en orden de prioridad
+    const container = document.getElementById('mainContent') || document.getElementById('module-content');
     if (!container) {
-        console.error('[MARKETPLACE] Contenedor module-content no encontrado');
+        console.error('[MARKETPLACE] No se encontró contenedor (mainContent ni module-content)');
         return;
     }
+    console.log('[MARKETPLACE] Usando contenedor:', container.id);
 
     injectMarketplaceStyles();
 
@@ -849,9 +851,26 @@ const MarketplaceModule = {
 // Make globally available
 window.MarketplaceModule = MarketplaceModule;
 
-// Auto-initialize when loaded
-if (document.getElementById('module-content')) {
-    MarketplaceModule.init();
+// ✅ Función de inicialización estándar para el sistema de módulos
+function showMarketplaceContent() {
+    console.log('[MARKETPLACE] showMarketplaceContent ejecutándose...');
+    const container = document.getElementById('mainContent') || document.getElementById('module-content');
+    if (container) {
+        MarketplaceModule.init();
+    } else {
+        console.error('[MARKETPLACE] No se encontró contenedor para el módulo');
+    }
 }
 
-console.log('[MARKETPLACE] Modulo cargado correctamente');
+// ✅ Exportar función de inicialización a window
+window.showMarketplaceContent = showMarketplaceContent;
+
+// ✅ Registrar en sistema de módulos unificado
+if (!window.Modules) window.Modules = {};
+window.Modules.marketplace = {
+    init: showMarketplaceContent,
+    name: 'Marketplace',
+    version: '1.0.0'
+};
+
+console.log('✅ [MARKETPLACE] Módulo cargado y registrado correctamente');

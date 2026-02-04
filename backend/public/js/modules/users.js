@@ -112,12 +112,20 @@ if (typeof window.showUsersContent === 'function') {
     console.log('👥 [USERS] Módulo users v6.0 - PLUG & PLAY SYSTEM INTEGRADO - PRIMERA CARGA');
     window.__USERS_MODULE_LOADED__ = true;
 
-    // 🔧 FALLBACK: Asegurar que progressiveAdmin existe
+    // 🔧 FALLBACK: Asegurar que progressiveAdmin existe con todos los métodos necesarios
     if (!window.progressiveAdmin) {
         window.progressiveAdmin = {
-            getApiUrl: (path) => path // Retorna el path directamente si no hay progressiveAdmin
+            getApiUrl: (path) => path, // Retorna el path directamente
+            getAuthToken: () => localStorage.getItem('authToken') || sessionStorage.getItem('authToken'),
+            userContext: {
+                companyId: localStorage.getItem('companyId') || sessionStorage.getItem('companyId')
+            },
+            currentUser: {
+                company_id: localStorage.getItem('companyId') || sessionStorage.getItem('companyId'),
+                companyId: localStorage.getItem('companyId') || sessionStorage.getItem('companyId')
+            }
         };
-        console.log('⚠️ [USERS] progressiveAdmin no definido, usando fallback');
+        console.log('⚠️ [USERS] progressiveAdmin no definido, usando fallback completo');
     }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2118,6 +2126,10 @@ function closeEditModal() {
 
 // View user details - Sistema de Expediente Completo
 async function viewUser(userId) {
+    // DEBUG: Alerta visible para verificar que la función se ejecuta
+    console.log('📋 [USERS] ========== VIEWUSER EJECUTÁNDOSE ==========');
+    console.log('📋 [USERS] userId recibido:', userId);
+    console.log('📋 [USERS] Tipo de userId:', typeof userId);
     console.log('📋 [USERS] Abriendo expediente completo del usuario:', userId);
 
     // Store userId globally for calendar and other components
@@ -3566,6 +3578,10 @@ async function viewUser(userId) {
         showUserMessage('❌ Error cargando expediente del empleado', 'error');
     }
 }
+
+// ⚠️ EXPORTACIÓN TEMPRANA DE viewUser - Evita problemas de ejecución tardía
+window.viewUser = viewUser;
+console.log('✅ [USERS] window.viewUser exportado tempranamente (línea ~3582)');
 
 // Close view modal
 function closeViewModal() {
@@ -17009,7 +17025,9 @@ function viewOffboardingDetails(userId, offboardingData) {
 }
 
 // Exponer funciones globalmente para onclick handlers
+console.log('🔧 [USERS] Exponiendo funciones a window... viewUser existe:', typeof viewUser);
 window.viewUser = viewUser;
+console.log('✅ [USERS] window.viewUser asignado:', typeof window.viewUser);
 window.deleteUser = deleteUser;
 window.resetPassword = resetPassword;
 window.assignUserShifts = assignUserShifts;
@@ -17206,3 +17224,64 @@ window.closeAuditModal = window.closeAuditModal || function() {
 console.log('✅ [USERS] FIX 28: Todas las funciones onclick exportadas a window (100+ funciones)');
 
 }} // Cierre del bloque else + cierre adicional para balancear estructura
+
+// 🚨 RESPALDO CRÍTICO: Asegurar que viewUser SIEMPRE está disponible en window
+// Esto se ejecuta FUERA del guard para garantizar disponibilidad
+(function ensureCriticalFunctions() {
+    console.log('🔧 [USERS] Verificando funciones críticas en window...');
+
+    // Si viewUser no está en window pero existe localmente, intentar asignar
+    if (typeof window.viewUser !== 'function') {
+        console.warn('⚠️ [USERS] window.viewUser no definido, creando stub de emergencia...');
+
+        // Crear función de emergencia que muestra el modal básico
+        window.viewUser = async function(userId) {
+            console.log('🚨 [USERS-STUB] viewUser de emergencia ejecutándose para:', userId);
+
+            try {
+                const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                if (!token) {
+                    alert('⚠️ No hay sesión activa. Por favor inicia sesión nuevamente.');
+                    return;
+                }
+
+                const response = await fetch(`/api/v1/users/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    alert('❌ Error al cargar usuario');
+                    return;
+                }
+
+                const data = await response.json();
+                const user = data.user || data;
+
+                // Modal básico de emergencia
+                const modal = document.createElement('div');
+                modal.id = 'employeeFileModal';
+                modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+                modal.innerHTML = `
+                    <div style="background:#1e293b;color:white;padding:30px;border-radius:10px;max-width:600px;width:90%;">
+                        <h2>👤 ${user.firstName} ${user.lastName}</h2>
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>ID Empleado:</strong> ${user.employeeId || 'N/A'}</p>
+                        <p><strong>Rol:</strong> ${user.role}</p>
+                        <p><strong>Estado:</strong> ${user.isActive ? '✅ Activo' : '❌ Inactivo'}</p>
+                        <p style="color:#fbbf24;margin-top:20px;">⚠️ Vista de emergencia - Recarga la página para ver el expediente completo</p>
+                        <button onclick="this.parentElement.parentElement.remove()" style="margin-top:20px;padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:5px;cursor:pointer;">Cerrar</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+            } catch (err) {
+                console.error('❌ [USERS-STUB] Error:', err);
+                alert('❌ Error al cargar usuario: ' + err.message);
+            }
+        };
+
+        console.log('✅ [USERS] Stub de emergencia creado para viewUser');
+    } else {
+        console.log('✅ [USERS] window.viewUser ya existe correctamente');
+    }
+})();

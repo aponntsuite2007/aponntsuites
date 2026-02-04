@@ -114,7 +114,11 @@
             window.fetch = async function(url, options = {}) {
                 const response = await originalFetch(url, options);
 
-                if (response.status === 401 && !url.includes('/auth/refresh') && !url.includes('/auth/login')) {
+                // ✅ Ignorar 401 para rutas que manejan sus propios errores (compliance, job-postings, etc.)
+                const selfHandled401Routes = ['/auth/refresh', '/auth/login', '/api/compliance', '/api/job-postings'];
+                const shouldHandle401 = response.status === 401 && !selfHandled401Routes.some(route => url.includes(route));
+
+                if (shouldHandle401) {
                     const refreshToken = localStorage.getItem('refreshToken');
 
                     if (!refreshToken) {
