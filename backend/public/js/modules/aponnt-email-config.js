@@ -1467,22 +1467,40 @@ const AponntEmailConfigModule = (() => {
         //     throw new Error('No hay sesión activa. Por favor, inicie sesión como staff de Aponnt.');
         // }
 
-        const response = await fetch(url, {
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-                ...options.headers
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                    ...options.headers
+                }
+            });
+
+            // Manejar errores HTTP antes de parsear JSON
+            if (!response.ok) {
+                console.error(`[EMAIL-CONFIG] API Error ${response.status}: ${url}`);
+                // Intentar obtener mensaje de error del body
+                try {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || errorData.message || `Error ${response.status}`);
+                } catch (jsonError) {
+                    throw new Error(`Error ${response.status} en ${url}`);
+                }
             }
-        });
 
-        const data = await response.json();
+            const data = await response.json();
+            return data;
 
-        if (!response.ok) {
-            throw new Error(data.error || data.message || 'Error en la petición');
+        } catch (fetchError) {
+            console.error(`[EMAIL-CONFIG] Fetch error para ${url}:`, fetchError.message);
+            // Retornar objeto vacío en lugar de fallar para endpoints no críticos
+            if (url.includes('/stats') || url.includes('/workflows')) {
+                console.warn(`[EMAIL-CONFIG] Usando fallback vacío para ${url}`);
+                return { stats: {}, workflows: [], total: 0 };
+            }
+            throw fetchError;
         }
-
-        return data;
     }
 
     function showLoading(message = 'Cargando...') {
