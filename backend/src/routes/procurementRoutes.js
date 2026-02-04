@@ -1536,6 +1536,51 @@ router.post('/invoices/:id/execute-match', async (req, res) => {
 });
 
 /**
+ * GET /api/procurement/payment-orders
+ * Listar órdenes de pago por año
+ */
+router.get('/payment-orders', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id;
+        const { year, limit = 1000 } = req.query;
+
+        if (!companyId) {
+            return res.json({ success: true, data: [], count: 0, warning: 'No company_id' });
+        }
+
+        // Intentar buscar payment orders
+        const sequelize = req.app.get('sequelize');
+        if (!sequelize?.models?.PaymentOrder) {
+            console.log('[Procurement] PaymentOrder model not available');
+            return res.json({ success: true, data: [], count: 0 });
+        }
+
+        const where = { company_id: companyId };
+        if (year) {
+            where.created_at = {
+                [sequelize.Sequelize.Op.gte]: new Date(`${year}-01-01`),
+                [sequelize.Sequelize.Op.lt]: new Date(`${parseInt(year) + 1}-01-01`)
+            };
+        }
+
+        const orders = await sequelize.models.PaymentOrder.findAll({
+            where,
+            limit: parseInt(limit),
+            order: [['created_at', 'DESC']]
+        });
+
+        res.json({ success: true, data: orders, count: orders.length });
+    } catch (error) {
+        console.error('❌ [Procurement] Error listando payment orders:', error);
+        // Retornar array vacío si hay error de tabla/columna
+        if (error.message?.includes('does not exist') || error.message?.includes('no existe')) {
+            return res.json({ success: true, data: [], count: 0, warning: 'Table not initialized' });
+        }
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * POST /api/procurement/payment-orders/from-invoices
  * Crear orden de pago desde facturas aprobadas (bridge P2P → Finance)
  */

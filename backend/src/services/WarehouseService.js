@@ -514,10 +514,12 @@ class WarehouseService {
         let whereConditions = ['p.company_id = :companyId'];
         const replacements = { companyId, limit, offset };
 
-        if (branch_id) {
-            whereConditions.push('p.branch_id = :branchId');
-            replacements.branchId = branch_id;
-        }
+        // NOTA: branch_id filtro removido porque wms_products no tiene esa columna
+        // Los productos se asocian a través de wms_stock → warehouse → branch
+        // if (branch_id) {
+        //     whereConditions.push('p.branch_id = :branchId');
+        //     replacements.branchId = branch_id;
+        // }
         if (category_id) {
             whereConditions.push('p.category_id = :categoryId');
             replacements.categoryId = category_id;
@@ -595,13 +597,11 @@ class WarehouseService {
             SELECT p.*,
                    c.name as category_name, c.code as category_code,
                    br.name as brand_name,
-                   s.name as supplier_name,
-                   b.name as branch_name
+                   s.name as supplier_name
             FROM wms_products p
             LEFT JOIN wms_categories c ON p.category_id = c.id
             LEFT JOIN wms_brands br ON p.brand_id = br.id
             LEFT JOIN wms_suppliers s ON p.supplier_id = s.id
-            LEFT JOIN wms_branches b ON p.branch_id = b.id
             WHERE p.id = :productId AND p.company_id = :companyId
         `;
         const [product] = await sequelize.query(query, {
@@ -2329,12 +2329,10 @@ class WarehouseService {
             replacements.branchId = branchId;
         }
 
-        // Products count
+        // Products count (sin filtro por branch porque wms_products no tiene branch_id)
         const productsQuery = `
             SELECT COUNT(*) as count FROM wms_products p
-            LEFT JOIN wms_branches b ON p.branch_id = b.id
             WHERE p.company_id = :companyId AND p.is_active = true
-            ${branchId ? 'AND (p.branch_id = :branchId OR p.branch_id IS NULL)' : ''}
         `;
         const [products] = await sequelize.query(productsQuery, {
             replacements,
