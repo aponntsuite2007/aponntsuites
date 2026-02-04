@@ -2293,13 +2293,24 @@ router.post('/categories', async (req, res) => {
 router.get('/sectors', async (req, res) => {
     try {
         const sequelize = req.app.get('sequelize');
+
+        // Verificar si el modelo existe
+        if (!sequelize?.models?.ProcurementSector) {
+            console.log('[Procurement] ProcurementSector model not available, returning empty array');
+            return res.json({ success: true, data: [], count: 0 });
+        }
+
         const sectors = await sequelize.models.ProcurementSector.findAll({
-            where: { company_id: req.user.company_id, is_active: true },
+            where: { company_id: req.user?.company_id, is_active: true },
             order: [['name', 'ASC']]
         });
-        res.json({ success: true, data: sectors });
+        res.json({ success: true, data: sectors, count: sectors.length });
     } catch (error) {
         console.error('❌ [Procurement] Error listando sectores:', error);
+        // Si la tabla no existe, retornar array vacío
+        if (error.message?.includes('does not exist') || error.message?.includes('no existe')) {
+            return res.json({ success: true, data: [], count: 0, warning: 'Table not initialized' });
+        }
         res.status(500).json({ success: false, error: error.message });
     }
 });

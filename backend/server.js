@@ -2747,6 +2747,24 @@ try {
     console.log('⚠️ [SIAC-EXTENDED] Routes not available:', e.message);
 }
 
+// 🎁 IMPORTAR RUTAS DE BENEFICIOS LABORALES - OPCIONAL EN PRODUCCIÓN
+let benefitsRoutes = null;
+try {
+    benefitsRoutes = require('./src/routes/benefitsRoutes');
+    console.log('✅ [BENEFITS] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [BENEFITS] Routes not available:', e.message);
+}
+
+// 💳 IMPORTAR RUTAS DE PAYMENT ORDERS - OPCIONAL EN PRODUCCIÓN
+let paymentOrderRoutes = null;
+try {
+    paymentOrderRoutes = require('./src/routes/paymentOrderRoutes');
+    console.log('✅ [PAYMENT-ORDERS] Routes loaded');
+} catch (e) {
+    console.log('⚠️ [PAYMENT-ORDERS] Routes not available:', e.message);
+}
+
 // 🛒 IMPORTAR RUTAS DE PROCUREMENT P2P (Compras y Proveedores) - OPCIONAL EN PRODUCCIÓN
 let procurementRoutes = null;
 try {
@@ -2829,6 +2847,7 @@ app.use('/api/v1/users', userCalendarRoutes); // ✅ Calendario personal del emp
 app.use('/api/v1/shifts', shiftRoutes);
 app.use('/api/v1/shifts', shiftCalendarRoutes); // ✅ Calendario visual de turnos rotativos
 app.use('/api/v1/branches', branchRoutes); // ✅ Rutas de sucursales multi-tenant
+app.use('/api/branches', branchRoutes);    // ⭐ ALIAS sin /v1/ para compatibilidad con frontend legacy
 app.use('/api/v1/departments', departmentRoutes); // ✅ Rutas de departamentos con auth multi-tenant
 app.use('/api/v1/authorization', authorizationRoutes); // Sistema de autorizaciones de llegadas tardías
 app.use('/api/v1/diagnostic', diagnosticRoutes); // Endpoint de diagnóstico para verificar schema
@@ -3989,6 +4008,19 @@ if (siacRemitosRoutes) app.use('/api/siac/remitos', siacRemitosRoutes);
 if (siacCuentaCorrienteRoutes) app.use('/api/siac/cuenta-corriente', siacCuentaCorrienteRoutes);
 if (siacCobranzasRoutes) app.use('/api/siac/cobranzas', siacCobranzasRoutes);
 if (siacCajaRoutes) app.use('/api/siac/caja', siacCajaRoutes);
+
+// 🎁 BENEFITS (Beneficios Laborales) - Solo si está disponible
+if (benefitsRoutes) {
+    app.use('/api/benefits', auth, benefitsRoutes);
+    console.log('🎁 [BENEFITS] Rutas de beneficios laborales configuradas');
+}
+
+// 💳 PAYMENT ORDERS - Solo si está disponible
+if (paymentOrderRoutes) {
+    app.use('/api/payment-orders', auth, paymentOrderRoutes);
+    app.use('/api/procurement/payment-orders', auth, paymentOrderRoutes); // Alias para compatibilidad
+    console.log('💳 [PAYMENT-ORDERS] Rutas de órdenes de pago configuradas');
+}
 
 // 🛒 PROCUREMENT P2P (Compras y Proveedores) - Enero 2026 - Solo si está disponible
 if (procurementRoutes) {

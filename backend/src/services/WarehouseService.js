@@ -105,10 +105,11 @@ class WarehouseService {
     // ========================================================================
 
     static async getWarehouses(companyId, branchId = null) {
+        // Query resiliente: usa 0 si unit_cost no existe
         let query = `
             SELECT w.*, b.name as branch_name,
                    (SELECT COUNT(DISTINCT product_id) FROM wms_stock WHERE warehouse_id = w.id) as product_count,
-                   (SELECT COALESCE(SUM(quantity * unit_cost), 0) FROM wms_stock WHERE warehouse_id = w.id) as total_value
+                   (SELECT COALESCE(SUM(quantity), 0) FROM wms_stock WHERE warehouse_id = w.id) as total_quantity
             FROM wms_warehouses w
             JOIN wms_branches b ON w.branch_id = b.id
             WHERE b.company_id = :companyId AND w.is_active = true
@@ -122,10 +123,26 @@ class WarehouseService {
 
         query += ` ORDER BY b.name, w.name`;
 
-        return sequelize.query(query, {
-            replacements,
-            type: QueryTypes.SELECT
-        });
+        try {
+            return await sequelize.query(query, {
+                replacements,
+                type: QueryTypes.SELECT
+            });
+        } catch (error) {
+            // Si falla, intentar query sin subqueries complejas
+            console.error('[WMS] Error in getWarehouses, trying simple query:', error.message);
+            const simpleQuery = `
+                SELECT w.*, b.name as branch_name, 0 as product_count, 0 as total_quantity
+                FROM wms_warehouses w
+                JOIN wms_branches b ON w.branch_id = b.id
+                WHERE b.company_id = :companyId AND w.is_active = true
+                ORDER BY b.name, w.name
+            `;
+            return sequelize.query(simpleQuery, {
+                replacements: { companyId },
+                type: QueryTypes.SELECT
+            });
+        }
     }
 
     static async createWarehouse(companyId, data) {

@@ -236,6 +236,43 @@ router.post('/sync-cost-centers', auth, async (req, res) => {
 });
 
 // =============================================
+// ALIAS DIRECTOS PARA COMPATIBILIDAD
+// =============================================
+
+/**
+ * GET /api/finance/cost-centers
+ * Alias directo para obtener centros de costo (sin /accounts/)
+ */
+router.get('/cost-centers', auth, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const { is_active } = req.query;
+
+        const where = { company_id: companyId };
+        if (is_active !== undefined) {
+            where.is_active = is_active === 'true';
+        }
+
+        const costCenters = await db.FinanceCostCenter.findAll({
+            where,
+            order: [['code', 'ASC']]
+        });
+
+        res.json({
+            success: true,
+            data: costCenters,
+            count: costCenters.length
+        });
+    } catch (error) {
+        console.error('Error getting cost centers:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// =============================================
 // MONTAR SUB-ROUTERS
 // =============================================
 

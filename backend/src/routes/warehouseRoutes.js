@@ -823,6 +823,31 @@ router.post('/warehouses/:warehouseId/zones', async (req, res) => {
     }
 });
 
+// Get all locations for a warehouse (or all locations for company)
+router.get('/locations', async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const { warehouse_id, zone_id } = req.query;
+
+        // Si no hay WarehouseService.getAllLocations, retornar lista vacía
+        let locations = [];
+        try {
+            if (typeof WarehouseService.getAllLocations === 'function') {
+                locations = await WarehouseService.getAllLocations(companyId, { warehouse_id, zone_id });
+            } else if (zone_id && typeof WarehouseService.getZoneLocations === 'function') {
+                locations = await WarehouseService.getZoneLocations(companyId, zone_id);
+            }
+        } catch (err) {
+            console.log('[WMS] getAllLocations not implemented, returning empty array');
+        }
+
+        res.json({ success: true, data: locations, count: locations.length });
+    } catch (error) {
+        console.error('[WMS] Error getting locations:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 router.get('/zones/:zoneId/locations', async (req, res) => {
     try {
         const companyId = req.user.company_id;

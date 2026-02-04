@@ -1351,4 +1351,68 @@ router.get('/admin/tickets/stats', authenticateStaff, async (req, res) => {
   }
 });
 
+// =========================================================================
+// MODULES - Lista de módulos del sistema para dropdown de tickets
+// =========================================================================
+
+/**
+ * GET /api/support/v2/modules
+ * Obtiene la lista de módulos del sistema para crear tickets
+ */
+router.get('/modules', authenticate, async (req, res) => {
+  try {
+    // Lista de módulos del sistema
+    const modules = [
+      { id: 'users', name: 'Usuarios', icon: '👥' },
+      { id: 'attendance', name: 'Asistencia', icon: '📋' },
+      { id: 'kiosks', name: 'Kioscos', icon: '📟' },
+      { id: 'organizational-structure', name: 'Estructura Organizacional', icon: '🏢' },
+      { id: 'visitors', name: 'Visitantes', icon: '👥' },
+      { id: 'dms-dashboard', name: 'Gestión Documental', icon: '📁' },
+      { id: 'notification-center', name: 'Centro de Notificaciones', icon: '🔔' },
+      { id: 'biometric-consent', name: 'Consentimientos Biométricos', icon: '📋' },
+      { id: 'emotional-analysis', name: 'Análisis Emocional', icon: '😊' },
+      { id: 'hour-bank', name: 'Banco de Horas', icon: '🏦' },
+      { id: 'benefits-management', name: 'Beneficios Laborales', icon: '🎁' },
+      { id: 'job-postings', name: 'Avisos de Empleo', icon: '💼' },
+      { id: 'procurement-management', name: 'Compras y Proveedores', icon: '🛒' },
+      { id: 'employee-360', name: 'Expediente 360°', icon: '🎯' },
+      { id: 'finance-dashboard', name: 'Finanzas', icon: '💰' },
+      { id: 'warehouse-management', name: 'Gestión de Almacenes', icon: '🏭' },
+      { id: 'art-management', name: 'ART', icon: '🏥' },
+      { id: 'training-management', name: 'Gestión Capacitaciones', icon: '📚' },
+      { id: 'sanctions-management', name: 'Gestión de Sanciones', icon: '🚫' },
+      { id: 'vacation-management', name: 'Gestión de Vacaciones', icon: '🏖️' },
+      { id: 'legal-dashboard', name: 'Legal', icon: '⚖️' },
+      { id: 'medical', name: 'Gestión Médica', icon: '👩‍⚕️' },
+      { id: 'payroll-liquidation', name: 'Liquidación Sueldos', icon: '💰' },
+      { id: 'logistics-dashboard', name: 'Logística Avanzada', icon: '🚚' },
+      { id: 'procedures-manual', name: 'Manual de Procedimientos', icon: '📄' },
+      { id: 'employee-map', name: 'Mapa Empleados', icon: '🗺️' },
+      { id: 'my-procedures', name: 'Mis Procedimientos', icon: '📦' },
+      { id: 'audit-reports', name: 'Reportes Auditoría', icon: '📊' },
+      { id: 'compliance-dashboard', name: 'Compliance Legal', icon: '🛡️' },
+      { id: 'sla-tracking', name: 'SLA Tracking', icon: '📊' },
+      { id: 'hse-management', name: 'Seguridad e Higiene', icon: '🛡️' },
+      { id: 'siac-commercial-dashboard', name: 'SIAC Comercial', icon: '📊' },
+      { id: 'voice-platform', name: 'Voice Platform', icon: '🎤' },
+      { id: 'mi-espacio', name: 'Mi Espacio', icon: '🧑‍💼' },
+      { id: 'other', name: 'Otro', icon: '❓' }
+    ];
+
+    res.json({
+      success: true,
+      modules,
+      count: modules.length
+    });
+
+  } catch (error) {
+    console.error('[SUPPORT-V2] Error getting modules:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
