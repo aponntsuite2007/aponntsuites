@@ -2208,54 +2208,97 @@ class WarehouseService {
     // ========================================================================
 
     static async getStockValuationReport(companyId, warehouseId = null) {
-        let query = `
-            SELECT
-                w.name as warehouse_name,
-                c.name as category_name,
-                COUNT(DISTINCT s.product_id) as product_count,
-                SUM(s.quantity) as total_quantity,
-                SUM(s.quantity * s.unit_cost) as total_value
-            FROM wms_stock s
-            JOIN wms_warehouses w ON s.warehouse_id = w.id
-            JOIN wms_branches b ON w.branch_id = b.id
-            JOIN wms_products p ON s.product_id = p.id
-            LEFT JOIN wms_categories c ON p.category_id = c.id
-            WHERE b.company_id = :companyId
-        `;
         const replacements = { companyId };
-
         if (warehouseId) {
-            query += ` AND s.warehouse_id = :warehouseId`;
             replacements.warehouseId = warehouseId;
         }
+        const warehouseFilter = warehouseId ? ' AND s.warehouse_id = :warehouseId' : '';
 
-        query += ` GROUP BY w.id, w.name, c.id, c.name ORDER BY w.name, c.name`;
+        let details = [];
+        let totals = { total_products: 0, total_quantity: 0, total_value: 0 };
 
-        const details = await sequelize.query(query, {
-            replacements,
-            type: QueryTypes.SELECT
-        });
+        try {
+            // Intentar con unit_cost
+            const query = `
+                SELECT
+                    w.name as warehouse_name,
+                    c.name as category_name,
+                    COUNT(DISTINCT s.product_id) as product_count,
+                    SUM(s.quantity) as total_quantity,
+                    SUM(s.quantity * COALESCE(s.unit_cost, 0)) as total_value
+                FROM wms_stock s
+                JOIN wms_warehouses w ON s.warehouse_id = w.id
+                JOIN wms_branches b ON w.branch_id = b.id
+                JOIN wms_products p ON s.product_id = p.id
+                LEFT JOIN wms_categories c ON p.category_id = c.id
+                WHERE b.company_id = :companyId
+                ${warehouseFilter}
+                GROUP BY w.id, w.name, c.id, c.name ORDER BY w.name, c.name
+            `;
+            details = await sequelize.query(query, {
+                replacements,
+                type: QueryTypes.SELECT
+            });
 
-        // Get totals
-        let totalsQuery = `
-            SELECT
-                COUNT(DISTINCT s.product_id) as total_products,
-                SUM(s.quantity) as total_quantity,
-                SUM(s.quantity * s.unit_cost) as total_value
-            FROM wms_stock s
-            JOIN wms_warehouses w ON s.warehouse_id = w.id
-            JOIN wms_branches b ON w.branch_id = b.id
-            WHERE b.company_id = :companyId
-        `;
+            const totalsQuery = `
+                SELECT
+                    COUNT(DISTINCT s.product_id) as total_products,
+                    SUM(s.quantity) as total_quantity,
+                    SUM(s.quantity * COALESCE(s.unit_cost, 0)) as total_value
+                FROM wms_stock s
+                JOIN wms_warehouses w ON s.warehouse_id = w.id
+                JOIN wms_branches b ON w.branch_id = b.id
+                WHERE b.company_id = :companyId
+                ${warehouseFilter}
+            `;
+            [totals] = await sequelize.query(totalsQuery, {
+                replacements,
+                type: QueryTypes.SELECT
+            });
+        } catch (error) {
+            console.log('[WMS] unit_cost column not available, returning without values');
+            // Fallback sin unit_cost
+            try {
+                const fallbackQuery = `
+                    SELECT
+                        w.name as warehouse_name,
+                        c.name as category_name,
+                        COUNT(DISTINCT s.product_id) as product_count,
+                        SUM(s.quantity) as total_quantity,
+                        0 as total_value
+                    FROM wms_stock s
+                    JOIN wms_warehouses w ON s.warehouse_id = w.id
+                    JOIN wms_branches b ON w.branch_id = b.id
+                    JOIN wms_products p ON s.product_id = p.id
+                    LEFT JOIN wms_categories c ON p.category_id = c.id
+                    WHERE b.company_id = :companyId
+                    ${warehouseFilter}
+                    GROUP BY w.id, w.name, c.id, c.name ORDER BY w.name, c.name
+                `;
+                details = await sequelize.query(fallbackQuery, {
+                    replacements,
+                    type: QueryTypes.SELECT
+                });
 
-        if (warehouseId) {
-            totalsQuery += ` AND s.warehouse_id = :warehouseId`;
+                const fallbackTotalsQuery = `
+                    SELECT
+                        COUNT(DISTINCT s.product_id) as total_products,
+                        SUM(s.quantity) as total_quantity,
+                        0 as total_value
+                    FROM wms_stock s
+                    JOIN wms_warehouses w ON s.warehouse_id = w.id
+                    JOIN wms_branches b ON w.branch_id = b.id
+                    WHERE b.company_id = :companyId
+                    ${warehouseFilter}
+                `;
+                [totals] = await sequelize.query(fallbackTotalsQuery, {
+                    replacements,
+                    type: QueryTypes.SELECT
+                });
+            } catch (fallbackError) {
+                console.error('[WMS] Error in fallback valuation report:', fallbackError.message);
+            }
         }
-
-        const [totals] = await sequelize.query(totalsQuery, {
-            replacements,
-            type: QueryTypes.SELECT
-        });
 
         return {
             details,
@@ -2351,19 +2394,42 @@ class WarehouseService {
             type: QueryTypes.SELECT
         });
 
-        // Stock value
-        const stockValueQuery = `
-            SELECT COALESCE(SUM(s.quantity * s.unit_cost), 0) as total_value
-            FROM wms_stock s
-            JOIN wms_warehouses w ON s.warehouse_id = w.id
-            JOIN wms_branches b ON w.branch_id = b.id
-            WHERE b.company_id = :companyId
-            ${branchFilter}
-        `;
-        const [stockValue] = await sequelize.query(stockValueQuery, {
-            replacements,
-            type: QueryTypes.SELECT
-        });
+        // Stock value - resiliente si unit_cost no existe
+        let stockValue = { total_value: 0 };
+        try {
+            const stockValueQuery = `
+                SELECT COALESCE(SUM(s.quantity * COALESCE(s.unit_cost, 0)), 0) as total_value
+                FROM wms_stock s
+                JOIN wms_warehouses w ON s.warehouse_id = w.id
+                JOIN wms_branches b ON w.branch_id = b.id
+                WHERE b.company_id = :companyId
+                ${branchFilter}
+            `;
+            [stockValue] = await sequelize.query(stockValueQuery, {
+                replacements,
+                type: QueryTypes.SELECT
+            });
+        } catch (stockError) {
+            console.log('[WMS] unit_cost column not available, returning 0 for stock value');
+            // Si unit_cost no existe, intentar sin ella
+            try {
+                const simpleStockQuery = `
+                    SELECT COALESCE(SUM(s.quantity), 0) as total_quantity
+                    FROM wms_stock s
+                    JOIN wms_warehouses w ON s.warehouse_id = w.id
+                    JOIN wms_branches b ON w.branch_id = b.id
+                    WHERE b.company_id = :companyId
+                    ${branchFilter}
+                `;
+                const [simpleStock] = await sequelize.query(simpleStockQuery, {
+                    replacements,
+                    type: QueryTypes.SELECT
+                });
+                stockValue = { total_value: 0, total_quantity: simpleStock?.total_quantity || 0 };
+            } catch (e) {
+                stockValue = { total_value: 0 };
+            }
+        }
 
         // Low stock alerts count
         const alertsQuery = `
