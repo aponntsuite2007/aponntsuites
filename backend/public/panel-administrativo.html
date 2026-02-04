@@ -20,6 +20,9 @@
     <!-- Configuración dinámica de puertos -->
     <script src="js/port-config.js"></script>
 
+    <!-- API Service Centralizado - Manejo unificado de autenticación -->
+    <script src="js/core/ApiService.js"></script>
+
     <!-- Sanitizador HTML Global - XSS Prevention -->
     <script>
         window.escapeHTML = function(str) {
@@ -773,6 +776,9 @@
     <!-- Notification Billing Dashboard (debe cargar antes del controller) -->
     <script src="js/modules/notification-billing-dashboard.js"></script>
 
+    <!-- Email Tracking Widget (reusable component) -->
+    <script src="js/modules/email-tracking-widget.js"></script>
+
     <!-- Admin Panel Controller (orquestador principal) -->
     <script src="js/modules/admin-panel-controller.js?v=20251219f"></script>
 
@@ -784,7 +790,7 @@
     <script src="js/modules/quotes-management.js?v=20260126a" defer></script>
     <script src="js/modules/company-workflow.js" defer></script>
     <script src="js/modules/engineering-dashboard.js?v=20260203g" defer></script>
-    <script src="js/modules/auto-healing-dashboard.js" defer></script>
+    <!-- <script src="js/modules/auto-healing-dashboard.js" defer></script> --> <!-- Archivo no existe -->
     <script src="js/modules/e2e-testing-control-v3-unified.js" defer></script>
     <script src="js/modules/ai-testing-dashboard.js?v=20251220a" defer></script>
     <script src="js/modules/aponnt-email-config.js?v=20251219c" defer></script>
