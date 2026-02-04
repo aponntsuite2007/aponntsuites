@@ -49,6 +49,27 @@
                 const savedCompany = localStorage.getItem('currentCompany') || sessionStorage.getItem('currentCompany');
 
                 if (savedToken && savedUser && savedCompany) {
+                    // ✅ FIX: Verificar que el token NO sea de staff (panel administrativo)
+                    try {
+                        const parts = savedToken.split('.');
+                        if (parts.length === 3) {
+                            const payload = JSON.parse(atob(parts[1]));
+                            if (payload.type === 'aponnt_staff') {
+                                console.warn('⚠️ [SESSION] Token de STAFF detectado en panel EMPRESA - limpiando...');
+                                // Limpiar TODAS las claves de token
+                                const tokenKeys = ['authToken', 'token', 'aponnt_token', 'aponnt_token_staff', 'companyAuthToken', 'refreshToken'];
+                                tokenKeys.forEach(key => {
+                                    localStorage.removeItem(key);
+                                    sessionStorage.removeItem(key);
+                                });
+                                console.log('🧹 [SESSION] Tokens de staff limpiados - requiere login de empresa');
+                                return false;
+                            }
+                        }
+                    } catch (tokenError) {
+                        console.warn('⚠️ [SESSION] Error verificando tipo de token:', tokenError.message);
+                    }
+
                     console.log('✅ [SESSION] Sesión existente encontrada - restaurando...');
 
                     // Restaurar variables globales
@@ -347,18 +368,19 @@
                         }
                     }).catch(() => {}); // Fire-and-forget
                 }
-                // Limpiar ALL session data
-                localStorage.removeItem('token');
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('refreshToken');
-                localStorage.removeItem('user');
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('company');
-                localStorage.removeItem('currentCompany');
-                localStorage.removeItem('companyId');
-                localStorage.removeItem('user_data');
-                localStorage.removeItem('selectedCompany');
+                // ✅ FIX: Limpiar ALL session data - TODAS las claves posibles de token
+                const allTokenKeys = [
+                    'token', 'authToken', 'refreshToken',
+                    'aponnt_token', 'aponnt_token_staff', 'companyAuthToken',
+                    'user', 'currentUser', 'user_data',
+                    'company', 'currentCompany', 'selectedCompany', 'companyId'
+                ];
+                allTokenKeys.forEach(key => {
+                    localStorage.removeItem(key);
+                    sessionStorage.removeItem(key);
+                });
                 sessionStorage.clear();
+                console.log('🧹 [LOGOUT] Todas las claves de sesión limpiadas');
                 isAuthenticated = false;
                 currentUser = null;
                 currentCompany = null;
@@ -5673,7 +5695,11 @@
             { id: 'psychological-assessment', name: 'Evaluación Psicológica', icon: '🧠' },
             { id: 'sanctions-management', name: 'Gestión de Sanciones', icon: '🚫' },
             { id: 'vacation-management', name: 'Gestión de Vacaciones', icon: '🏖️' },
-            { id: 'user-support', name: 'Soporte / Tickets', icon: '🎫' }
+            { id: 'user-support', name: 'Soporte / Tickets', icon: '🎫' },
+            { id: 'logistics-dashboard', name: 'Logística Avanzada', icon: '🚚' },
+            { id: 'procedures-manual', name: 'Manual de Procedimientos', icon: '📖' },
+            { id: 'marketplace', name: 'Marketplace', icon: '🛒' },
+            { id: 'my-procedures', name: 'Mis Procedimientos', icon: '📋' }
         ];
         
         return modules.map(module => {
@@ -6041,7 +6067,13 @@
                     // SIAC (3)
                     { id: 'clientes', name: 'Clientes SIAC', icon: '👥' },
                     { id: 'facturacion', name: 'Facturación SIAC', icon: '💵' },
-                    { id: 'plantillas-fiscales', name: 'Plantillas Fiscales', icon: '📋' }
+                    { id: 'plantillas-fiscales', name: 'Plantillas Fiscales', icon: '📋' },
+
+                    // LOGISTICS & PROCEDURES (4)
+                    { id: 'logistics-dashboard', name: 'Logística Avanzada', icon: '🚚' },
+                    { id: 'procedures-manual', name: 'Manual de Procedimientos', icon: '📖' },
+                    { id: 'marketplace', name: 'Marketplace', icon: '🛒' },
+                    { id: 'my-procedures', name: 'Mis Procedimientos', icon: '📋' }
                     // NOTA: permissions-test y licensing-management removidos - solo para panel-administrativo
                 ];
 
