@@ -114,6 +114,12 @@ router.get('/', authMiddleware, async (req, res) => {
             return res.status(400).json({ error: 'company_id es requerido' });
         }
 
+        // Verificar si el servicio está disponible
+        if (!paymentOrderService) {
+            console.log('[PaymentOrders] Service not initialized, returning empty list');
+            return res.json({ success: true, data: [], total: 0, page: 1, pages: 0 });
+        }
+
         const filters = {
             status: req.query.status,
             supplier_id: req.query.supplier_id,
@@ -135,6 +141,11 @@ router.get('/', authMiddleware, async (req, res) => {
         });
     } catch (error) {
         console.error('❌ Error listando órdenes de pago:', error);
+        // Si la tabla no existe, retornar array vacío en vez de 500
+        if (error.message?.includes('does not exist') || error.message?.includes('relation') || error.name === 'SequelizeDatabaseError') {
+            console.log('[PaymentOrders] Table may not exist, returning empty list');
+            return res.json({ success: true, data: [], total: 0, page: 1, pages: 0 });
+        }
         res.status(500).json({ error: error.message });
     }
 });
