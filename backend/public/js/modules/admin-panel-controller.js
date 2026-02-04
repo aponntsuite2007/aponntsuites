@@ -3630,8 +3630,22 @@ const AdminPanelController = {
     },
 
     _clearToken() {
-        localStorage.removeItem('aponnt_token_staff');
-        sessionStorage.removeItem('aponnt_token_staff');
+        // ✅ FIX: Limpiar TODAS las posibles claves de token
+        // Esto previene conflictos cuando tokens de empresa quedan en localStorage
+        const tokenKeys = [
+            'aponnt_token_staff',  // Staff/Admin
+            'aponnt_token',        // Genérico
+            'token',               // Test E2E / Genérico
+            'authToken',           // Empresa (usado por panel-empresa)
+            'companyAuthToken'     // Empresa alternativo
+        ];
+
+        tokenKeys.forEach(key => {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+        });
+
+        console.log('[AdminPanel] 🧹 Tokens limpiados - localStorage y sessionStorage');
     },
 
     async _fetchStaffData(token) {
