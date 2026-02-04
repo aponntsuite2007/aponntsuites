@@ -2217,7 +2217,9 @@ class EcosystemBrainService {
       });
 
       // Obtener posiciones organizacionales definidas
-      const [positions] = await sequelize.query(`
+      let positions = [];
+      try {
+        positions = await sequelize.query(`
         SELECT
           p.id as position_id,
           p.position_name,
@@ -2240,6 +2242,11 @@ class EcosystemBrainService {
         replacements: { companyId },
         type: sequelize.QueryTypes.SELECT
       });
+        if (!Array.isArray(positions)) positions = [];
+      } catch (posErr) {
+        console.warn('[BRAIN] Error obteniendo posiciones, usando array vacío:', posErr.message);
+        positions = [];
+      }
 
       // Construir nodos
       const nodes = this._buildCompanyOrgNodes(employees, positions);
