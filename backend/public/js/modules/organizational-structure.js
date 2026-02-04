@@ -2681,21 +2681,21 @@ const OrgEngine = {
                     <button class="org-modal-close" onclick="OrgEngine.closeModal()">&times;</button>
                 </div>
                 <div class="org-modal-body">
-                    <!-- Tabs del Modal -->
-                    <div style="display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">
-                        <button class="org-btn shift-modal-tab active" data-tab="basico" onclick="OrgEngine.switchShiftTab('basico')">
-                            📋 Datos Básicos
+                    <!-- Tabs del Modal - Tema Oscuro -->
+                    <div style="display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; flex-wrap: wrap;">
+                        <button type="button" class="shift-modal-tab active" data-tab="basico" onclick="OrgEngine.switchShiftTab('basico')" style="background: linear-gradient(135deg, #10B981, #059669); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">
+                            📋 Básicos
                         </button>
-                        <button class="org-btn shift-modal-tab" data-tab="horarios" onclick="OrgEngine.switchShiftTab('horarios')">
+                        <button type="button" class="shift-modal-tab" data-tab="horarios" onclick="OrgEngine.switchShiftTab('horarios')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
                             🕐 Horarios
                         </button>
-                        <button class="org-btn shift-modal-tab" data-tab="dias" onclick="OrgEngine.switchShiftTab('dias')">
-                            📅 Días Laborables
+                        <button type="button" class="shift-modal-tab" data-tab="dias" onclick="OrgEngine.switchShiftTab('dias')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                            📅 Días
                         </button>
-                        <button class="org-btn shift-modal-tab" data-tab="feriados" onclick="OrgEngine.switchShiftTab('feriados')">
+                        <button type="button" class="shift-modal-tab" data-tab="feriados" onclick="OrgEngine.switchShiftTab('feriados')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
                             🎉 Feriados
                         </button>
-                        <button class="org-btn shift-modal-tab" data-tab="opciones" onclick="OrgEngine.switchShiftTab('opciones')">
+                        <button type="button" class="shift-modal-tab" data-tab="opciones" onclick="OrgEngine.switchShiftTab('opciones')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
                             ⚙️ Opciones
                         </button>
                     </div>
@@ -2757,21 +2757,21 @@ const OrgEngine = {
 
                         <!-- Tab: Días Laborables -->
                         <div id="shift-tab-dias" class="shift-tab-content" style="display: none;">
-                            <p style="margin-bottom: 15px; color: #666;">Selecciona los días que se trabaja en este turno:</p>
-                            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
-                                ${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((day, idx) => {
+                            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.7); font-size: 13px;">Selecciona los días que se trabaja en este turno:</p>
+                            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
+                                ${['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day, idx) => {
                                     const dayNum = idx + 1;
                                     const isChecked = shift.work_days ? (Array.isArray(shift.work_days) ? shift.work_days.includes(dayNum) : true) : (dayNum <= 5);
                                     return `
-                                        <label style="display: flex; flex-direction: column; align-items: center; padding: 15px; background: ${isChecked ? '#e8f5e9' : '#f5f5f5'}; border-radius: 8px; cursor: pointer; transition: all 0.2s;" class="shift-day-label">
-                                            <input type="checkbox" name="work_days" value="${dayNum}" ${isChecked ? 'checked' : ''} style="margin-bottom: 8px;" onchange="this.parentElement.style.background = this.checked ? '#e8f5e9' : '#f5f5f5'">
-                                            <span style="font-weight: 600;">${day.substring(0, 3)}</span>
+                                        <label style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; background: ${isChecked ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${isChecked ? '#10B981' : 'rgba(255,255,255,0.1)'}; border-radius: 6px; cursor: pointer; transition: all 0.2s;" class="shift-day-label">
+                                            <input type="checkbox" name="work_days" value="${dayNum}" ${isChecked ? 'checked' : ''} style="margin-bottom: 4px; width: 14px; height: 14px;" onchange="this.parentElement.style.background = this.checked ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.05)'; this.parentElement.style.borderColor = this.checked ? '#10B981' : 'rgba(255,255,255,0.1)';">
+                                            <span style="font-weight: 500; font-size: 11px; color: rgba(255,255,255,0.9);">${day}</span>
                                         </label>
                                     `;
                                 }).join('')}
                             </div>
-                            <div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 8px;">
-                                <strong>💡 Consejo:</strong> Para turnos rotativos, puedes crear múltiples turnos con diferentes días.
+                            <div style="margin-top: 15px; padding: 10px; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); border-radius: 6px; font-size: 12px; color: rgba(255,255,255,0.8);">
+                                💡 Para turnos rotativos, puedes crear múltiples turnos con diferentes días.
                             </div>
                         </div>
 
