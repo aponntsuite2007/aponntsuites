@@ -1,66 +1,42 @@
 {
-  "fecha": "2026-02-04T17:03:58.536Z",
+  "fecha": "2026-02-04T20:57:00.510Z",
   "url": "https://www.aponnt.com",
   "resumen": {
     "total": 36,
     "ok": 0,
-    "warning": 15,
-    "error": 2,
-    "noEncontrado": 14,
-    "excepcion": 5
+    "warning": 16,
+    "error": 1,
+    "noEncontrado": 12,
+    "excepcion": 7
   },
   "modulosConError": [
-    {
-      "nombre": "Finanzas",
-      "key": "finance-dashboard",
-      "erroresJS": [
-        {
-          "timestamp": "2026-02-04T16:55:16.764Z",
-          "text": "Failed to load resource: the server responded with a status of 500 ()",
-          "location": {
-            "url": "https://www.aponnt.com/api/procurement/payment-orders?year=2026&limit=1000",
-            "lineNumber": 0,
-            "columnNumber": 0
-          }
-        }
-      ],
-      "erroresAPI": [
-        {
-          "timestamp": "2026-02-04T16:55:16.763Z",
-          "url": "https://www.aponnt.com/api/procurement/payment-orders?year=2026&limit=1000",
-          "status": 500,
-          "statusText": ""
-        }
-      ],
-      "erroresUI": []
-    },
     {
       "nombre": "Gestión de Almacenes",
       "key": "warehouse-management",
       "erroresJS": [
         {
-          "timestamp": "2026-02-04T16:55:22.526Z",
+          "timestamp": "2026-02-04T20:48:28.430Z",
           "text": "Failed to load resource: the server responded with a status of 500 ()",
           "location": {
-            "url": "https://www.aponnt.com/api/warehouse/dashboard/stats?branch_id=42",
+            "url": "https://www.aponnt.com/api/warehouse/categories?branch_id=42",
             "lineNumber": 0,
             "columnNumber": 0
           }
         },
         {
-          "timestamp": "2026-02-04T16:55:22.529Z",
-          "text": "[WMS] Error cargando datos del tab: Error: column \"company_id\" does not exist\n    at Object.api (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1517:19)\n    at async Object.loadProducts (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1642:31)\n    at async Object.loadTabData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1594:21)\n    at async Object.selectWarehouse (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1569:9)\n    at async Object.selectBranch (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1561:13)\n    at async Object.loadInitialData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1465:17)\n    at async Object.init (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1266:9)",
+          "timestamp": "2026-02-04T20:48:28.431Z",
+          "text": "[WMS] Error cargando datos del tab: Error: column c.branch_id does not exist\n    at Object.api (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1517:19)\n    at async Promise.all (index 0)\n    at async Object.loadProducts (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1648:64)\n    at async Object.loadTabData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1594:21)\n    at async Object.selectWarehouse (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1569:9)\n    at async Object.selectBranch (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1561:13)\n    at async Object.loadInitialData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1465:17)\n    at async Object.init (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1266:9)",
           "location": {
-            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834",
+            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603",
             "lineNumber": 1615,
             "columnNumber": 20
           }
         },
         {
-          "timestamp": "2026-02-04T16:55:22.529Z",
+          "timestamp": "2026-02-04T20:48:28.431Z",
           "text": "[WMS] Error al cargar los datos",
           "location": {
-            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834",
+            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603",
             "lineNumber": 2439,
             "columnNumber": 16
           }
@@ -68,8 +44,8 @@
       ],
       "erroresAPI": [
         {
-          "timestamp": "2026-02-04T16:55:22.526Z",
-          "url": "https://www.aponnt.com/api/warehouse/dashboard/stats?branch_id=42",
+          "timestamp": "2026-02-04T20:48:28.428Z",
+          "url": "https://www.aponnt.com/api/warehouse/categories?branch_id=42",
           "status": 500,
           "statusText": ""
         }
@@ -164,6 +140,13 @@
       "nombre": "Expediente 360°",
       "key": "employee-360",
       "warnings": []
+    },
+    {
+      "nombre": "Finanzas",
+      "key": "finance-dashboard",
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ]
     }
   ],
   "detalleCompleto": [
@@ -186,7 +169,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3113,
+      "tiempoCarga": 3112,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\01-users.png"
     },
     {
@@ -208,7 +191,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3107,
+      "tiempoCarga": 3067,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\02-attendance.png"
     },
     {
@@ -229,7 +212,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3142,
+      "tiempoCarga": 3094,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\03-kiosks.png"
     },
     {
@@ -253,7 +236,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3125,
+      "tiempoCarga": 3043,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\04-organizational-structure.png"
     },
     {
@@ -275,7 +258,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3151,
+      "tiempoCarga": 3074,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\05-visitors.png"
     },
     {
@@ -298,7 +281,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3125,
+      "tiempoCarga": 3060,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\06-dms-dashboard.png"
     },
     {
@@ -318,7 +301,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3112,
+      "tiempoCarga": 3076,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\07-notification-center.png"
     },
     {
@@ -339,7 +322,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3141,
+      "tiempoCarga": 3083,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\08-biometric-consent.png"
     },
     {
@@ -361,7 +344,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3168,
+      "tiempoCarga": 3083,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\09-user-support.png"
     },
     {
@@ -384,7 +367,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3089,
+      "tiempoCarga": 3083,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\10-emotional-analysis.png"
     },
     {
@@ -406,7 +389,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3088,
+      "tiempoCarga": 3071,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\11-hour-bank.png"
     },
     {
@@ -426,7 +409,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3118,
+      "tiempoCarga": 3067,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\12-benefits-management.png"
     },
     {
@@ -448,7 +431,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3117,
+      "tiempoCarga": 3073,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\13-job-postings.png"
     },
     {
@@ -467,7 +450,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3125,
+      "tiempoCarga": 3072,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\14-procurement-management.png"
     },
     {
@@ -488,33 +471,16 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3127,
+      "tiempoCarga": 3056,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\15-employee-360.png"
     },
     {
       "numero": 16,
       "key": "finance-dashboard",
       "nombre": "Finanzas",
-      "estado": "ERROR",
-      "erroresJS": [
-        {
-          "timestamp": "2026-02-04T16:55:16.764Z",
-          "text": "Failed to load resource: the server responded with a status of 500 ()",
-          "location": {
-            "url": "https://www.aponnt.com/api/procurement/payment-orders?year=2026&limit=1000",
-            "lineNumber": 0,
-            "columnNumber": 0
-          }
-        }
-      ],
-      "erroresAPI": [
-        {
-          "timestamp": "2026-02-04T16:55:16.763Z",
-          "url": "https://www.aponnt.com/api/procurement/payment-orders?year=2026&limit=1000",
-          "status": 500,
-          "statusText": ""
-        }
-      ],
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
       "erroresUI": [],
       "warnings": [
         "Módulo sin datos (posiblemente vacío)"
@@ -528,7 +494,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3118,
+      "tiempoCarga": 3061,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\16-finance-dashboard.png"
     },
     {
@@ -538,28 +504,28 @@
       "estado": "ERROR",
       "erroresJS": [
         {
-          "timestamp": "2026-02-04T16:55:22.526Z",
+          "timestamp": "2026-02-04T20:48:28.430Z",
           "text": "Failed to load resource: the server responded with a status of 500 ()",
           "location": {
-            "url": "https://www.aponnt.com/api/warehouse/dashboard/stats?branch_id=42",
+            "url": "https://www.aponnt.com/api/warehouse/categories?branch_id=42",
             "lineNumber": 0,
             "columnNumber": 0
           }
         },
         {
-          "timestamp": "2026-02-04T16:55:22.529Z",
-          "text": "[WMS] Error cargando datos del tab: Error: column \"company_id\" does not exist\n    at Object.api (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1517:19)\n    at async Object.loadProducts (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1642:31)\n    at async Object.loadTabData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1594:21)\n    at async Object.selectWarehouse (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1569:9)\n    at async Object.selectBranch (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1561:13)\n    at async Object.loadInitialData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1465:17)\n    at async Object.init (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1266:9)",
+          "timestamp": "2026-02-04T20:48:28.431Z",
+          "text": "[WMS] Error cargando datos del tab: Error: column c.branch_id does not exist\n    at Object.api (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1517:19)\n    at async Promise.all (index 0)\n    at async Object.loadProducts (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1648:64)\n    at async Object.loadTabData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1594:21)\n    at async Object.selectWarehouse (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1569:9)\n    at async Object.selectBranch (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1561:13)\n    at async Object.loadInitialData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1465:17)\n    at async Object.init (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603:1266:9)",
           "location": {
-            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834",
+            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603",
             "lineNumber": 1615,
             "columnNumber": 20
           }
         },
         {
-          "timestamp": "2026-02-04T16:55:22.529Z",
+          "timestamp": "2026-02-04T20:48:28.431Z",
           "text": "[WMS] Error al cargar los datos",
           "location": {
-            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834",
+            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770238105603",
             "lineNumber": 2439,
             "columnNumber": 16
           }
@@ -567,8 +533,8 @@
       ],
       "erroresAPI": [
         {
-          "timestamp": "2026-02-04T16:55:22.526Z",
-          "url": "https://www.aponnt.com/api/warehouse/dashboard/stats?branch_id=42",
+          "timestamp": "2026-02-04T20:48:28.428Z",
+          "url": "https://www.aponnt.com/api/warehouse/categories?branch_id=42",
           "status": 500,
           "statusText": ""
         }
@@ -585,7 +551,7 @@
       ],
       "tabsExplorados": [],
       "crudResultado": null,
-      "tiempoCarga": 3140,
+      "tiempoCarga": 3067,
       "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\17-warehouse-management.png"
     },
     {
@@ -808,37 +774,43 @@
       "numero": 30,
       "key": "audit-reports",
       "nombre": "Reportes Auditoría",
-      "estado": "NO ENCONTRADO",
-      "erroresJS": [],
-      "erroresAPI": [],
-      "erroresUI": [
-        "Módulo no encontrado: Reportes Auditoría"
+      "estado": "EXCEPTION",
+      "erroresJS": [
+        {
+          "text": "page.evaluate: Test timeout of 600000ms exceeded.",
+          "stack": "page.evaluate: Test timeout of 600000ms exceeded.\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\test-36-modulos-PROFESIONAL.e2e.spec.js:562:28"
+        }
       ],
+      "erroresAPI": [],
+      "erroresUI": [],
       "warnings": [],
       "elementosEncontrados": [],
       "elementosFaltantes": [],
       "tabsExplorados": [],
       "crudResultado": null,
       "tiempoCarga": 0,
-      "screenshot": null
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\30-audit-reports-ERROR.png"
     },
     {
       "numero": 31,
       "key": "compliance-dashboard",
       "nombre": "Compliance Legal",
-      "estado": "NO ENCONTRADO",
-      "erroresJS": [],
-      "erroresAPI": [],
-      "erroresUI": [
-        "Módulo no encontrado: Compliance Legal"
+      "estado": "EXCEPTION",
+      "erroresJS": [
+        {
+          "text": "page.evaluate: Target page, context or browser has been closed",
+          "stack": "page.evaluate: Target page, context or browser has been closed\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\test-36-modulos-PROFESIONAL.e2e.spec.js:562:28"
+        }
       ],
+      "erroresAPI": [],
+      "erroresUI": [],
       "warnings": [],
       "elementosEncontrados": [],
       "elementosFaltantes": [],
       "tabsExplorados": [],
       "crudResultado": null,
       "tiempoCarga": 0,
-      "screenshot": null
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\31-compliance-dashboard-ERROR.png"
     },
     {
       "numero": 32,
