@@ -131,6 +131,7 @@
                         if (refreshResp.ok) {
                             const data = await refreshResp.json();
                             localStorage.setItem('authToken', data.token);
+                            localStorage.setItem('token', data.token); // FIX: Compatibilidad con módulos que usan 'token'
                             authToken = data.token;
                             window.authToken = data.token;
                             window.companyAuthToken = data.token;
@@ -3763,6 +3764,7 @@
 
             // Guardar token para futuras peticiones - REACTIVADO para módulos biométricos
             localStorage.setItem('authToken', authResult.token); // REACTIVADO - Necesario para módulos biométricos
+            localStorage.setItem('token', authResult.token); // FIX: Compatibilidad con módulos que usan 'token'
             companyAuthToken = authResult.token;
             authToken = authResult.token; // Para nuestro sistema de módulos
 
@@ -4889,7 +4891,11 @@
                         'auditor-dashboard': 'showEngineeringDashboardContent',
                         'inbox': 'showInboxContent',
                         'sanctions-management': 'showSanctionsManagementContent',
-                        'roles-permissions': 'showRolesPermissionsContent'
+                        'roles-permissions': 'showRolesPermissionsContent',
+                        'users': 'showUsersContent',  // FIX: Agregar users explícitamente
+                        'attendance': 'showAttendanceContent',
+                        'visitors': 'showVisitorsContent',
+                        'notification-center': 'showNotificationCenterContent'
                         // Finance modules use PascalCase pattern (handled above), no need for legacy mapping
                     };
 
@@ -8120,6 +8126,7 @@
 
                 // Guardar en localStorage - REACTIVADO para módulos biométricos
                 localStorage.setItem('authToken', data.token); // REACTIVADO - Necesario para módulos biométricos
+                localStorage.setItem('token', data.token); // FIX: Muchos módulos buscan 'token' en vez de 'authToken'
                 localStorage.setItem('currentUser', JSON.stringify(data.user));
                 localStorage.setItem('currentCompany', JSON.stringify(currentCompany)); // CAMBIADO: currentCompany en vez de selectedCompany
                 localStorage.setItem('selectedCompany', JSON.stringify(currentCompany)); // Mantener por compatibilidad
