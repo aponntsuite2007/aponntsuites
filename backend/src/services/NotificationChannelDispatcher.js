@@ -338,6 +338,33 @@ class NotificationChannelDispatcher {
 
             console.log(`✅ [EMAIL] Sent: ${info.messageId}`);
 
+            // ================================================================
+            // PASO 7: REGISTRAR EN EMAIL_LOGS (para estadísticas y tracking)
+            // ================================================================
+            try {
+                await this._registerEmailLog({
+                    trackingId,
+                    recipientEmail: recipient.email,
+                    recipientName: recipient.name || null,
+                    subject: emailContent.subject,
+                    htmlContent: emailContent.html,
+                    textContent: emailContent.text,
+                    workflowKey: workflow.process_key,
+                    module: workflow.module,
+                    companyId: workflow.company_id,
+                    notificationLogId: logId,
+                    fromEmail: smtpConfig.fromEmail,
+                    messageId: info.messageId,
+                    metadata: metadata,
+                    category: workflow.module || 'general',
+                    priority: workflow.priority || 'medium'
+                });
+                console.log(`✅ [EMAIL] Registered in email_logs with tracking_id: ${trackingId}`);
+            } catch (logError) {
+                console.error(`❌ [EMAIL LOG] Error registering:`, logError.message);
+                // No bloqueante - el email ya se envió correctamente
+            }
+
             return {
                 provider: 'nodemailer',
                 messageId: info.messageId,
@@ -1036,6 +1063,97 @@ Este mensaje fue enviado automáticamente por el Sistema de Notificaciones de Ap
             messageId: `inbox_${Date.now()}`,
             status: 'simulated'
         };
+    }
+
+    /**
+     * ========================================================================
+     * REGISTER EMAIL LOG - Registrar email en tabla email_logs
+     * ========================================================================
+     *
+     * Registra cada email enviado para tracking completo:
+     * - Tracking pixel (opened_at)
+     * - Click tracking (clicked_at)
+     * - Estadísticas en Centro de Notificaciones
+     */
+    async _registerEmailLog(params) {
+        const {
+            trackingId,
+            recipientEmail,
+            recipientName,
+            subject,
+            htmlContent,
+            textContent,
+            workflowKey,
+            module,
+            companyId,
+            notificationLogId,
+            fromEmail,
+            messageId,
+            metadata,
+            category,
+            priority
+        } = params;
+
+        try {
+            // Mapear a columnas reales de email_logs
+            const insertQuery = `
+                INSERT INTO email_logs (
+                    tracking_id,
+                    recipient_email,
+                    recipient_name,
+                    recipient_type,
+                    subject,
+                    body_html,
+                    body_text,
+                    category,
+                    priority,
+                    message_id,
+                    status,
+                    sent_at,
+                    created_at,
+                    updated_at,
+                    sender_type
+                ) VALUES (
+                    :trackingId,
+                    :recipientEmail,
+                    :recipientName,
+                    'external',
+                    :subject,
+                    :htmlContent,
+                    :textContent,
+                    :category,
+                    :priority,
+                    :messageId,
+                    'sent',
+                    NOW(),
+                    NOW(),
+                    NOW(),
+                    'aponnt'
+                )
+            `;
+
+            await sequelize.query(insertQuery, {
+                replacements: {
+                    trackingId,
+                    recipientEmail,
+                    recipientName: recipientName || null,
+                    subject: subject || 'Sin asunto',
+                    htmlContent: htmlContent || null,
+                    textContent: textContent || null,
+                    messageId: messageId || null,
+                    category: category || module || 'general',
+                    priority: priority === 'medium' ? 'normal' : (priority || 'normal')
+                },
+                type: QueryTypes.INSERT
+            });
+
+            console.log(`✅ [EMAIL LOG] Registered: ${recipientEmail} | Tracking: ${trackingId}`);
+            return true;
+
+        } catch (error) {
+            console.error(`❌ [EMAIL LOG] Error registering:`, error.message);
+            throw error;
+        }
     }
 }
 

@@ -1051,7 +1051,7 @@ class QuoteManagementService {
         // CREAR USUARIO ADMIN si no existe
         // =====================================================
         const existingAdmin = await User.findOne({
-          where: { company_id: quote.company_id, is_core_user: true },
+          where: { companyId: quote.company_id, usuario: 'administrador' },
           transaction
         });
 
@@ -1061,46 +1061,54 @@ class QuoteManagementService {
           // Parsear nombre completo
           const nameParts = (adminData.full_name || 'Administrador Principal').split(' ');
           const firstName = nameParts[0] || 'Administrador';
-          const lastName = nameParts.slice(1).join(' ') || company.name;
+          const lastName = nameParts.slice(1).join(' ') || company.name || 'Admin';
+
+          // Generar employeeId único para admin
+          const adminEmployeeId = `ADM-${quote.company_id}-${Date.now()}`;
+
+          // Generar DNI placeholder único para admin
+          const adminDni = `ADM${quote.company_id}${Date.now().toString().slice(-6)}`;
 
           await User.create({
-            username: 'administrador',
+            employeeId: adminEmployeeId,
+            usuario: 'administrador',
             password: hashedPassword,
-            first_name: firstName,
-            last_name: lastName,
+            firstName: firstName,
+            lastName: lastName,
             email: adminData.email || company.contact_email,
-            phone: adminData.phone || '',
+            dni: adminDni,
+            phone: adminData.phone || null,
             role: 'admin',
-            company_id: quote.company_id,
-            is_core_user: true,
-            force_password_change: true,
-            is_deletable: false,
-            account_status: 'active'
+            companyId: quote.company_id,
+            account_status: 'active',
+            isActive: true
           }, { transaction });
 
           console.log(`✅ [ONBOARDING] Usuario ADMIN creado: administrador (${adminData.email})`);
 
           // =====================================================
-          // CREAR USUARIO SOPORTE (invisible - para tests/soporte técnico)
+          // CREAR USUARIO SOPORTE (para tests/soporte técnico)
           // =====================================================
           try {
+            const supportEmployeeId = `SUP-${quote.company_id}-${Date.now()}`;
+            const supportDni = `SUP${quote.company_id}${Date.now().toString().slice(-6)}`;
+
             await User.create({
-              username: 'soporte',
+              employeeId: supportEmployeeId,
+              usuario: 'soporte',
               password: hashedPassword,
-              first_name: 'Soporte',
-              last_name: 'Técnico',
-              email: `soporte+${company.slug || company.company_id}@aponnt.com`,
+              firstName: 'Soporte',
+              lastName: 'Técnico',
+              email: `soporte+${company.slug || quote.company_id}@aponnt.com`,
+              dni: supportDni,
+              phone: null,
               role: 'admin',
-              company_id: quote.company_id,
-              is_core_user: true,
-              is_system_user: true,
-              is_visible: false,
-              force_password_change: false,
-              is_deletable: false,
-              account_status: 'active'
+              companyId: quote.company_id,
+              account_status: 'active',
+              isActive: true
             }, { transaction });
 
-            console.log(`✅ [ONBOARDING] Usuario SOPORTE creado (invisible): soporte`);
+            console.log(`✅ [ONBOARDING] Usuario SOPORTE creado: soporte`);
           } catch (supportErr) {
             console.warn(`⚠️ [ONBOARDING] No se pudo crear usuario soporte: ${supportErr.message}`);
           }

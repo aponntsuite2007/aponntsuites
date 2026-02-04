@@ -584,42 +584,49 @@ class OnboardingService {
     const { User } = require('../config/database');
     const bcrypt = require('bcryptjs');
 
+    // Generar employeeId y DNI únicos para admin
+    const adminEmployeeId = `ADM-${company.company_id}-${Date.now()}`;
+    const adminDni = `ADM${company.company_id}${Date.now().toString().slice(-6)}`;
+
     // 1. Crear usuario ADMINISTRADOR (visible para la empresa)
     const adminUser = await User.create({
-      username: 'administrador',
+      employeeId: adminEmployeeId,
+      usuario: 'administrador',
       password: await bcrypt.hash('admin123', 12),
-      first_name: 'Administrador',
-      last_name: company.name,
+      firstName: 'Administrador',
+      lastName: company.name || 'Principal',
       email: company.contact_email,
+      dni: adminDni,
+      phone: null,
       role: 'admin',
-      company_id: company.company_id,
-      is_core_user: true,
-      force_password_change: true,
-      is_deletable: false
+      companyId: company.company_id,
+      account_status: 'active',
+      isActive: true
     });
 
     console.log(`✅ [ONBOARDING] Usuario ADMIN creado: administrador`);
 
-    // 2. Crear usuario SOPORTE (invisible para la empresa - solo para tests automáticos)
+    // 2. Crear usuario SOPORTE (para tests automáticos)
     try {
+      const supportEmployeeId = `SUP-${company.company_id}-${Date.now()}`;
+      const supportDni = `SUP${company.company_id}${Date.now().toString().slice(-6)}`;
+
       const supportUser = await User.create({
-        username: 'soporte',
+        employeeId: supportEmployeeId,
+        usuario: 'soporte',
         password: await bcrypt.hash('admin123', 12),
-        first_name: 'Soporte',
-        last_name: 'Técnico',
-        email: `soporte+${company.slug}@aponnt.com`,
+        firstName: 'Soporte',
+        lastName: 'Técnico',
+        email: `soporte+${company.slug || company.company_id}@aponnt.com`,
+        dni: supportDni,
+        phone: null,
         role: 'admin',
-        company_id: company.company_id,
-        is_core_user: true,
-        is_system_user: true,       // Marcado como usuario del sistema
-        is_visible: false,          // Invisible en listados de usuarios
-        force_password_change: false,
-        is_deletable: false,
-        account_status: 'active'
+        companyId: company.company_id,
+        account_status: 'active',
+        isActive: true
       });
-      console.log(`✅ [ONBOARDING] Usuario SOPORTE creado (invisible): soporte`);
+      console.log(`✅ [ONBOARDING] Usuario SOPORTE creado: soporte`);
     } catch (err) {
-      // Si falla (ej: columnas no existen), solo loguear warning
       console.warn(`⚠️ [ONBOARDING] No se pudo crear usuario soporte: ${err.message}`);
     }
 
@@ -916,45 +923,50 @@ El equipo de Aponnt
       const company = await Company.findByPk(quote.company_id);
       if (company) {
         const existingAdmin = await User.findOne({
-          where: { company_id: quote.company_id, is_core_user: true }
+          where: { companyId: quote.company_id, usuario: 'administrador' }
         });
 
         if (!existingAdmin) {
           const hashedPassword = await bcrypt.hash('admin123', 12);
+          const adminEmployeeId = `ADM-${quote.company_id}-${Date.now()}`;
+          const adminDni = `ADM${quote.company_id}${Date.now().toString().slice(-6)}`;
 
           await User.create({
-            username: 'administrador',
+            employeeId: adminEmployeeId,
+            usuario: 'administrador',
             password: hashedPassword,
-            first_name: 'Administrador',
-            last_name: company.name || 'Principal',
+            firstName: 'Administrador',
+            lastName: company.name || 'Principal',
             email: company.contact_email,
+            dni: adminDni,
+            phone: null,
             role: 'admin',
-            company_id: quote.company_id,
-            is_core_user: true,
-            force_password_change: true,
-            is_deletable: false,
-            account_status: 'active'
+            companyId: quote.company_id,
+            account_status: 'active',
+            isActive: true
           });
           console.log(`✅ [ONBOARDING] Usuario ADMIN creado: administrador`);
 
           // Usuario soporte
           try {
+            const supportEmployeeId = `SUP-${quote.company_id}-${Date.now()}`;
+            const supportDni = `SUP${quote.company_id}${Date.now().toString().slice(-6)}`;
+
             await User.create({
-              username: 'soporte',
+              employeeId: supportEmployeeId,
+              usuario: 'soporte',
               password: hashedPassword,
-              first_name: 'Soporte',
-              last_name: 'Técnico',
-              email: `soporte+${company.slug || company.company_id}@aponnt.com`,
+              firstName: 'Soporte',
+              lastName: 'Técnico',
+              email: `soporte+${company.slug || quote.company_id}@aponnt.com`,
+              dni: supportDni,
+              phone: null,
               role: 'admin',
-              company_id: quote.company_id,
-              is_core_user: true,
-              is_system_user: true,
-              is_visible: false,
-              force_password_change: false,
-              is_deletable: false,
-              account_status: 'active'
+              companyId: quote.company_id,
+              account_status: 'active',
+              isActive: true
             });
-            console.log(`✅ [ONBOARDING] Usuario SOPORTE creado (invisible)`);
+            console.log(`✅ [ONBOARDING] Usuario SOPORTE creado`);
           } catch (err) {
             console.warn(`⚠️ [ONBOARDING] Usuario soporte ya existe o error: ${err.message}`);
           }
@@ -1355,44 +1367,51 @@ El equipo de Aponnt
       // 5. Crear usuario admin si no existe
       let adminUser = await User.findOne({
         where: {
-          company_id: company.company_id,
-          is_core_user: true
+          companyId: company.company_id,
+          usuario: 'administrador'
         }
       });
 
       if (!adminUser) {
+        const adminEmployeeId = `ADM-${company.company_id}-${Date.now()}`;
+        const adminDni = `ADM${company.company_id}${Date.now().toString().slice(-6)}`;
+
         adminUser = await User.create({
-          username: 'administrador',
+          employeeId: adminEmployeeId,
+          usuario: 'administrador',
           password: await bcrypt.hash('admin123', 12),
-          first_name: 'Administrador',
-          last_name: company.name,
+          firstName: 'Administrador',
+          lastName: company.name || 'Principal',
           email: company.contact_email,
+          dni: adminDni,
+          phone: null,
           role: 'admin',
-          company_id: company.company_id,
-          is_core_user: true,
-          force_password_change: true,
-          is_deletable: false
+          companyId: company.company_id,
+          account_status: 'active',
+          isActive: true
         });
         console.log(`✅ [ONBOARDING] Usuario admin creado: administrador`);
 
-        // 5.1 Crear usuario SOPORTE (invisible - para tests automáticos)
+        // 5.1 Crear usuario SOPORTE (para tests automáticos)
         try {
+          const supportEmployeeId = `SUP-${company.company_id}-${Date.now()}`;
+          const supportDni = `SUP${company.company_id}${Date.now().toString().slice(-6)}`;
+
           await User.create({
-            username: 'soporte',
+            employeeId: supportEmployeeId,
+            usuario: 'soporte',
             password: await bcrypt.hash('admin123', 12),
-            first_name: 'Soporte',
-            last_name: 'Técnico',
-            email: `soporte+${company.slug}@aponnt.com`,
+            firstName: 'Soporte',
+            lastName: 'Técnico',
+            email: `soporte+${company.slug || company.company_id}@aponnt.com`,
+            dni: supportDni,
+            phone: null,
             role: 'admin',
-            company_id: company.company_id,
-            is_core_user: true,
-            is_system_user: true,
-            is_visible: false,
-            force_password_change: false,
-            is_deletable: false,
-            account_status: 'active'
+            companyId: company.company_id,
+            account_status: 'active',
+            isActive: true
           });
-          console.log(`✅ [ONBOARDING] Usuario SOPORTE creado (invisible): soporte`);
+          console.log(`✅ [ONBOARDING] Usuario SOPORTE creado: soporte`);
         } catch (err) {
           console.warn(`⚠️ [ONBOARDING] No se pudo crear usuario soporte: ${err.message}`);
         }
