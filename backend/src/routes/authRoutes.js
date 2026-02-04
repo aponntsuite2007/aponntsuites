@@ -92,15 +92,6 @@ router.post('/login', loginLimiter, async (req, res) => {
       });
     }
 
-    // Verificar email antes de permitir login
-    if (!user.email_verified || user.account_status === 'pending_verification') {
-      return res.status(403).json({
-        error: 'Cuenta pendiente de verificacion',
-        message: 'Debe verificar su email antes de iniciar sesion. Revise su correo electronico.',
-        can_resend: true
-      });
-    }
-
     // Verificar contraseña
     const isMatch = await bcrypt.compare(password, user.password);
 
