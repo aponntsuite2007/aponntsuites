@@ -1437,9 +1437,16 @@ const OrgEngine = {
     },
 
     async _initOrgChartIntelligent() {
-        // Obtener company_id del usuario logueado
+        // Obtener company_id de múltiples fuentes posibles
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const companyId = user.company_id;
+        const company = JSON.parse(localStorage.getItem('company') || '{}');
+        const companyId = user.company_id || user.companyId ||
+                          company.id || company.company_id ||
+                          window.currentCompany?.id || window.currentCompany?.company_id ||
+                          localStorage.getItem('companyId') || localStorage.getItem('company_id') ||
+                          sessionStorage.getItem('company_id');
+
+        console.log('[ORGCHART] company_id detectado:', companyId, { user, company, currentCompany: window.currentCompany });
 
         if (!companyId) {
             document.getElementById('orgchart-intelligent-container-company').innerHTML = `
