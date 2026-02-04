@@ -11,6 +11,7 @@ const QuoteManagementService = require('../services/QuoteManagementService');
 const { auth: authMiddleware } = require('../middleware/auth');
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
+const NCE = require('../services/NotificationCentralExchange');
 
 /**
  * Middleware para verificar token de staff (Aponnt admin panel)
@@ -2035,9 +2036,91 @@ router.post('/public/contract/:id/accept', async (req, res) => {
 
     console.log('✅ [PUBLIC EULA] Aceptacion registrada:', acceptanceUUID, 'Quote:', id, 'Email:', acceptData.sent_to_email);
 
+    // ═══════════════════════════════════════════════════════════
+    // ENVIAR EMAIL DE CONFIRMACIÓN DE ACEPTACIÓN AL CLIENTE
+    // ═══════════════════════════════════════════════════════════
+    try {
+
+      // Formatear fecha de aceptación
+      const acceptedAtFormatted = acceptedAt.toLocaleDateString('es-AR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // HTML del email de confirmación
+      const confirmationHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #22c55e; color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0;">✅ Contrato Aceptado</h1>
+            <p style="margin: 5px 0 0;">APONNT 360</p>
+          </div>
+          <div style="padding: 30px; background: #f8f9fa;">
+            <p>Estimado/a cliente,</p>
+            <p>Le confirmamos que hemos registrado exitosamente la <strong>aceptación de su Contrato de Suscripción de Servicios APONNT 360</strong>.</p>
+
+            <div style="background: white; padding: 20px; border-left: 4px solid #22c55e; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Presupuesto:</strong> ${quote.quote_number}</p>
+              <p style="margin: 5px 0;"><strong>Fecha de aceptación:</strong> ${acceptedAtFormatted}</p>
+              <p style="margin: 5px 0;"><strong>ID de aceptación:</strong> ${acceptanceUUID}</p>
+              <p style="margin: 5px 0;"><strong>Monto mensual:</strong> $${parseFloat(quote.total_amount || 0).toLocaleString('es-AR')}</p>
+            </div>
+
+            <h3 style="color: #1e3a5f;">Próximos pasos:</h3>
+            <ol style="line-height: 1.8;">
+              <li>En las próximas 24-48 horas recibirá un email con sus credenciales de acceso al panel de administración</li>
+              <li>Nuestro equipo de soporte lo contactará para agendar la capacitación inicial</li>
+              <li>Si tiene alguna consulta, puede responder a este email o contactarnos directamente</li>
+            </ol>
+
+            <p style="margin-top: 30px;">¡Bienvenido/a a APONNT 360! Estamos aquí para ayudarlo a optimizar la gestión de su empresa.</p>
+
+            <p style="font-size: 12px; color: #666; margin-top: 20px;">
+              <strong>Nota legal:</strong> Su aceptación electrónica ha sido registrada conforme la Ley 25.506 de Firma Digital.
+              El documento hash SHA-256 de su contrato es: <code style="font-size: 10px;">${documentHash.substring(0, 32)}...</code>
+            </p>
+          </div>
+          <div style="background: #1e3a5f; color: white; padding: 15px; text-align: center; font-size: 12px;">
+            APONNT S.A.S. - Sistema de Gestión de Asistencia Biométrica<br>
+            soporte@aponnt.com | www.aponnt.com
+          </div>
+        </div>
+      `;
+
+      // Enviar email de confirmación usando NCE (con tracking, BCC automático, etc.)
+      await NCE.send({
+        companyId: null, // Es un email externo pre-onboarding
+        module: 'quotes',
+        workflowKey: 'quotes.contract_confirmation',
+        originType: 'quote',
+        originId: String(id),
+        recipientType: 'external',
+        recipientEmail: acceptData.sent_to_email || quote.contact_email,
+        title: `✅ Confirmación de Aceptación de Contrato - ${quote.quote_number}`,
+        message: `Contrato ${quote.quote_number} aceptado exitosamente el ${acceptedAtFormatted}`,
+        metadata: {
+          quote_id: id,
+          quote_number: quote.quote_number,
+          acceptance_uuid: acceptanceUUID,
+          document_hash: documentHash,
+          htmlContent: confirmationHtml
+        },
+        priority: 'high',
+        channels: ['email']
+      });
+
+      console.log(`✅ [CONTRACT CONFIRMATION] Email de confirmación enviado via NCE a: ${acceptData.sent_to_email || quote.contact_email}`);
+
+    } catch (emailError) {
+      // No romper el flujo si falla el email de confirmación (ya se registró la aceptación)
+      console.error('⚠️ [CONTRACT CONFIRMATION] Error enviando email de confirmación (no bloqueante):', emailError.message);
+    }
+
     res.json({
       success: true,
-      message: 'Contrato aceptado exitosamente',
+      message: 'Contrato aceptado exitosamente. Recibirá un email de confirmación en breve.',
       acceptance: {
         id: acceptanceUUID,
         signed_at: acceptedAt.toISOString(),

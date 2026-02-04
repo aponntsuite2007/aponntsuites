@@ -4482,10 +4482,17 @@ router.post('/budgets', async (req, res) => {
       total_monthly,
       valid_until,
       notes,
-      pricing
+      pricing,
+      // Nuevos campos requeridos
+      vendor_id,
+      price_per_employee,
+      subtotal,
+      client_contact_name,
+      client_contact_email,
+      client_contact_phone
     } = req.body;
 
-    // Validaciones
+    // Validaciones mínimas
     if (!company_id || !total_monthly) {
       return res.status(400).json({
         success: false,
@@ -4493,48 +4500,97 @@ router.post('/budgets', async (req, res) => {
       });
     }
 
-    // Generar código único
-    const budgetCode = `BUD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-    const traceId = `BUDGET-${uuidv4()}`;
+    // Generar código único usando formato PPTO-YYYY-NNNN
+    const year = new Date().getFullYear();
+    const budgetCode = `PPTO-${year}-${Date.now().toString().slice(-4).padStart(4, '0')}`;
+    const traceId = `ONBOARDING-${uuidv4()}`;
 
     // Calcular fecha de validez (30 días si no se especifica)
     const validUntilDate = valid_until || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
+    // Obtener vendor_id del usuario logueado si no viene en el body
+    let finalVendorId = vendor_id;
+    if (!finalVendorId && req.user && req.user.staff_id) {
+      finalVendorId = req.user.staff_id;
+    }
+
+    // Si no hay vendor_id, obtener el primer staff disponible como fallback
+    if (!finalVendorId) {
+      const [staffResult] = await sequelize.query(
+        `SELECT staff_id FROM aponnt_staff WHERE is_active = true LIMIT 1`,
+        { type: sequelize.QueryTypes.SELECT }
+      );
+      finalVendorId = staffResult?.staff_id;
+    }
+
+    if (!finalVendorId) {
+      return res.status(400).json({
+        success: false,
+        error: 'No se pudo determinar el vendor_id'
+      });
+    }
+
+    // Calcular valores por defecto si no vienen
+    const finalContractedEmployees = contracted_employees || 50;
+    const finalPricePerEmployee = price_per_employee || (total_monthly / finalContractedEmployees);
+    const finalSubtotal = subtotal || total_monthly;
+
+    // Obtener datos de contacto de la empresa si no vienen
+    let finalContactName = client_contact_name;
+    let finalContactEmail = client_contact_email;
+    let finalContactPhone = client_contact_phone;
+
+    if (!finalContactName || !finalContactEmail) {
+      const [companyData] = await sequelize.query(
+        `SELECT name, contact_email, contact_phone FROM companies WHERE company_id = $1`,
+        { bind: [company_id], type: sequelize.QueryTypes.SELECT }
+      );
+      if (companyData) {
+        finalContactName = finalContactName || companyData.name || 'Sin nombre';
+        finalContactEmail = finalContactEmail || companyData.contact_email || 'sin@email.com';
+        finalContactPhone = finalContactPhone || companyData.contact_phone;
+      }
+    }
+
+    // Generar quote_number en formato PRES-YYYY-NNNN
+    const quoteNumber = `PRES-${year}-${Date.now().toString().slice(-4).padStart(4, '0')}`;
+
+    // INSERTAR EN TABLA QUOTES (que usa el Pipeline de Altas)
     const result = await sequelize.query(`
-      INSERT INTO budgets (
-        id, trace_id, company_id, budget_code,
-        contracted_employees, selected_modules, total_monthly,
-        valid_until, notes, pricing, status, created_at, updated_at
+      INSERT INTO quotes (
+        quote_number, company_id, seller_id,
+        modules_data, total_amount,
+        status, valid_until, notes,
+        created_at, updated_at
       ) VALUES (
-        gen_random_uuid(), $1, $2, $3,
-        $4, $5, $6,
-        $7, $8, $9, 'PENDING', NOW(), NOW()
+        $1, $2, $3,
+        $4, $5,
+        'draft', $6, $7,
+        NOW(), NOW()
       )
-      RETURNING id, budget_code, status, total_monthly, created_at
+      RETURNING id, quote_number, status, total_amount, created_at
     `, {
       bind: [
-        traceId,
+        quoteNumber,
         company_id,
-        budgetCode,
-        contracted_employees || 50,
+        finalVendorId,
         JSON.stringify(selected_modules || []),
         total_monthly,
         validUntilDate,
-        notes || null,
-        JSON.stringify(pricing || {})
+        notes || null
       ],
       type: sequelize.QueryTypes.INSERT
     });
 
-    console.log(`✅ Presupuesto creado: ${budgetCode} para empresa ${company_id}`);
+    console.log(`✅ Presupuesto creado: ${quoteNumber} para empresa ${company_id}`);
 
     res.json({
       success: true,
       data: {
         id: result[0]?.[0]?.id,
-        budget_code: budgetCode,
-        status: 'PENDING',
-        total_monthly: total_monthly
+        quote_number: quoteNumber,
+        status: 'draft',
+        total_amount: total_monthly
       },
       message: 'Presupuesto creado exitosamente'
     });

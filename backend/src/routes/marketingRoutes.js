@@ -9,6 +9,7 @@ const router = express.Router();
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const salesOrchestrationService = require('../services/SalesOrchestrationService');
+const NCE = require('../services/NotificationCentralExchange');
 
 // Helper para simular pool.query usando sequelize
 // Convierte $1, $2 a ? y usa bind para los parámetros
@@ -537,21 +538,36 @@ router.post('/leads/:id/send-flyer', verifyStaffToken, async (req, res) => {
             // Generar flyer HTML personalizado con el nombre del lead y tracking
             const flyerHtml = salesOrchestrationService.generateAskYourAIFlyer(lead.full_name, lead.language || 'es', trackingToken);
 
-            // Enviar email usando el método correcto
+            // ═══════════════════════════════════════════════════════════
+            // ENVIAR EMAIL VIA NCE (con tracking, BCC automático, etc.)
+            // ═══════════════════════════════════════════════════════════
             try {
-                const emailResult = await salesOrchestrationService.sendEmail({
-                    to: lead.email,
-                    subject: lead.language === 'en'
-                        ? 'Ask your AI about APONNT'
-                        : 'Preguntale a tu IA sobre APONNT',
-                    html: flyerHtml
+                await NCE.send({
+                    companyId: null, // Email comercial externo (pre-venta)
+                    module: 'marketing',
+                    workflowKey: 'marketing.flyer_email',
+                    originType: 'lead',
+                    originId: String(id),
+                    recipientType: 'external',
+                    recipientEmail: lead.email,
+                    title: lead.language === 'en' ? 'Ask your AI about APONNT' : 'Preguntale a tu IA sobre APONNT',
+                    message: `Flyer "Preguntale a tu IA" enviado a ${lead.full_name}`,
+                    metadata: {
+                        lead_id: id,
+                        lead_name: lead.full_name,
+                        language: lead.language || 'es',
+                        tracking_token: trackingToken,
+                        htmlContent: flyerHtml
+                    },
+                    priority: 'normal',
+                    channels: ['email']
                 });
-                sendResult = { success: emailResult === true || (emailResult && emailResult.success) };
-                if (!sendResult.success) {
-                    console.error('[MARKETING] Email send returned false for:', lead.email);
-                }
+
+                sendResult = { success: true };
+                console.log(`✅ [MARKETING FLYER] Email enviado via NCE a: ${lead.email}`);
+
             } catch (emailError) {
-                console.error('[MARKETING] Error enviando email:', emailError.message);
+                console.error('[MARKETING] Error enviando email via NCE:', emailError.message);
                 sendResult = { success: false, error: emailError.message };
             }
 

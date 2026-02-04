@@ -56,6 +56,30 @@ router.get('/', async (req, res) => {
         let whereClause = '1=1';
         const replacements = {};
 
+        // ═══════════════════════════════════════════════════════════
+        // FILTRADO POR ROL (SSOT - Single Source of Truth)
+        // ═══════════════════════════════════════════════════════════
+        const userRole = req.user.role || 'vendedor'; // Default: vendedor
+        const userId = req.user.id;
+
+        // Vendedor: solo ve notificaciones donde es iniciador o destinatario
+        if (userRole === 'vendedor' || userRole === 'staff') {
+            whereClause += ` AND (
+                (ng.initiator_type = 'aponnt_staff' AND ng.initiator_id = :userId)
+                OR EXISTS (
+                    SELECT 1 FROM notification_messages nm
+                    WHERE nm.group_id = ng.id
+                    AND (
+                        (nm.recipient_type = 'aponnt_staff' AND nm.recipient_id = :userId)
+                        OR (nm.sender_type = 'aponnt_staff' AND nm.sender_id = :userId)
+                    )
+                )
+            )`;
+            replacements.userId = userId;
+        }
+        // Gerente/Admin/Superadmin: ven TODAS las notificaciones (sin filtro adicional)
+        // Roles: 'gerente', 'admin', 'superadmin'
+
         // Filtrar por empresa si se especifica
         if (company_id) {
             whereClause += ' AND ng.company_id = :company_id';
@@ -121,7 +145,7 @@ router.get('/', async (req, res) => {
         replacements.limit = parseInt(limit);
         replacements.offset = parseInt(offset);
 
-        const [groups] = await sequelize.query(query, {
+        const groups = await sequelize.query(query, {
             replacements,
             type: QueryTypes.SELECT
         });
@@ -165,6 +189,27 @@ router.get('/stats', async (req, res) => {
 
         let whereClause = '1=1';
         const replacements = {};
+
+        // ═══════════════════════════════════════════════════════════
+        // FILTRADO POR ROL (mismo que endpoint principal)
+        // ═══════════════════════════════════════════════════════════
+        const userRole = req.user.role || 'vendedor';
+        const userId = req.user.id;
+
+        if (userRole === 'vendedor' || userRole === 'staff') {
+            whereClause += ` AND (
+                (ng.initiator_type = 'aponnt_staff' AND ng.initiator_id = :userId)
+                OR EXISTS (
+                    SELECT 1 FROM notification_messages nm
+                    WHERE nm.group_id = ng.id
+                    AND (
+                        (nm.recipient_type = 'aponnt_staff' AND nm.recipient_id = :userId)
+                        OR (nm.sender_type = 'aponnt_staff' AND nm.sender_id = :userId)
+                    )
+                )
+            )`;
+            replacements.userId = userId;
+        }
 
         if (company_id) {
             whereClause += ' AND ng.company_id = :company_id';
