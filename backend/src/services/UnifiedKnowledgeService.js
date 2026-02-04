@@ -168,8 +168,17 @@ class UnifiedKnowledgeService extends EventEmitter {
                 const existing = this.metadata.get(mod.moduleKey) || {};
 
                 // Merge con datos comerciales
+                // FIX: Incluir name, icon, description, category desde BD (tienen prioridad sobre JSON)
                 this.metadata.set(mod.moduleKey, {
                     ...existing,
+                    // Campos básicos desde BD (sobrescriben JSON si existen)
+                    name: mod.name || existing.name || mod.moduleKey,
+                    icon: mod.icon || existing.icon || '📦',
+                    color: mod.color || existing.color || '#666',
+                    description: mod.description || existing.description || '',
+                    category: mod.category || existing.category || 'general',
+                    available_in: mod.availableIn || existing.available_in || 'both',
+                    // Datos comerciales
                     commercial: {
                         basePrice: parseFloat(mod.basePrice),
                         isCore: mod.isCore,
