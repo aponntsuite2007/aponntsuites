@@ -1,0 +1,949 @@
+{
+  "fecha": "2026-02-04T17:03:58.536Z",
+  "url": "https://www.aponnt.com",
+  "resumen": {
+    "total": 36,
+    "ok": 0,
+    "warning": 15,
+    "error": 2,
+    "noEncontrado": 14,
+    "excepcion": 5
+  },
+  "modulosConError": [
+    {
+      "nombre": "Finanzas",
+      "key": "finance-dashboard",
+      "erroresJS": [
+        {
+          "timestamp": "2026-02-04T16:55:16.764Z",
+          "text": "Failed to load resource: the server responded with a status of 500 ()",
+          "location": {
+            "url": "https://www.aponnt.com/api/procurement/payment-orders?year=2026&limit=1000",
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        }
+      ],
+      "erroresAPI": [
+        {
+          "timestamp": "2026-02-04T16:55:16.763Z",
+          "url": "https://www.aponnt.com/api/procurement/payment-orders?year=2026&limit=1000",
+          "status": 500,
+          "statusText": ""
+        }
+      ],
+      "erroresUI": []
+    },
+    {
+      "nombre": "Gestión de Almacenes",
+      "key": "warehouse-management",
+      "erroresJS": [
+        {
+          "timestamp": "2026-02-04T16:55:22.526Z",
+          "text": "Failed to load resource: the server responded with a status of 500 ()",
+          "location": {
+            "url": "https://www.aponnt.com/api/warehouse/dashboard/stats?branch_id=42",
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        },
+        {
+          "timestamp": "2026-02-04T16:55:22.529Z",
+          "text": "[WMS] Error cargando datos del tab: Error: column \"company_id\" does not exist\n    at Object.api (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1517:19)\n    at async Object.loadProducts (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1642:31)\n    at async Object.loadTabData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1594:21)\n    at async Object.selectWarehouse (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1569:9)\n    at async Object.selectBranch (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1561:13)\n    at async Object.loadInitialData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1465:17)\n    at async Object.init (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1266:9)",
+          "location": {
+            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834",
+            "lineNumber": 1615,
+            "columnNumber": 20
+          }
+        },
+        {
+          "timestamp": "2026-02-04T16:55:22.529Z",
+          "text": "[WMS] Error al cargar los datos",
+          "location": {
+            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834",
+            "lineNumber": 2439,
+            "columnNumber": 16
+          }
+        }
+      ],
+      "erroresAPI": [
+        {
+          "timestamp": "2026-02-04T16:55:22.526Z",
+          "url": "https://www.aponnt.com/api/warehouse/dashboard/stats?branch_id=42",
+          "status": 500,
+          "statusText": ""
+        }
+      ],
+      "erroresUI": []
+    }
+  ],
+  "modulosConWarning": [
+    {
+      "nombre": "Usuarios",
+      "key": "users",
+      "warnings": []
+    },
+    {
+      "nombre": "Asistencia",
+      "key": "attendance",
+      "warnings": []
+    },
+    {
+      "nombre": "Kioscos",
+      "key": "kiosks",
+      "warnings": []
+    },
+    {
+      "nombre": "Estructura Organizacional",
+      "key": "organizational-structure",
+      "warnings": []
+    },
+    {
+      "nombre": "Visitantes",
+      "key": "visitors",
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ]
+    },
+    {
+      "nombre": "Gestión Documental (DMS)",
+      "key": "dms-dashboard",
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ]
+    },
+    {
+      "nombre": "Centro de Notificaciones",
+      "key": "notification-center",
+      "warnings": []
+    },
+    {
+      "nombre": "Consentimientos Biométricos",
+      "key": "biometric-consent",
+      "warnings": []
+    },
+    {
+      "nombre": "Soporte / Tickets",
+      "key": "user-support",
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ]
+    },
+    {
+      "nombre": "Análisis Emocional",
+      "key": "emotional-analysis",
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ]
+    },
+    {
+      "nombre": "Banco de Horas",
+      "key": "hour-bank",
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ]
+    },
+    {
+      "nombre": "Beneficios Laborales",
+      "key": "benefits-management",
+      "warnings": []
+    },
+    {
+      "nombre": "Avisos de Empleo",
+      "key": "job-postings",
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ]
+    },
+    {
+      "nombre": "Compras y Proveedores",
+      "key": "procurement-management",
+      "warnings": []
+    },
+    {
+      "nombre": "Expediente 360°",
+      "key": "employee-360",
+      "warnings": []
+    }
+  ],
+  "detalleCompleto": [
+    {
+      "numero": 1,
+      "key": "users",
+      "nombre": "Usuarios",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [
+        "table"
+      ],
+      "elementosFaltantes": [
+        ".users-grid",
+        "[data-module=\"users\"]",
+        ".card"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3113,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\01-users.png"
+    },
+    {
+      "numero": 2,
+      "key": "attendance",
+      "nombre": "Asistencia",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [
+        "table"
+      ],
+      "elementosFaltantes": [
+        ".attendance-grid",
+        ".card",
+        "canvas"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3107,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\02-attendance.png"
+    },
+    {
+      "numero": 3,
+      "key": "kiosks",
+      "nombre": "Kioscos",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [
+        "table"
+      ],
+      "elementosFaltantes": [
+        ".kiosk-card",
+        ".card"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3142,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\03-kiosks.png"
+    },
+    {
+      "numero": 4,
+      "key": "organizational-structure",
+      "nombre": "Estructura Organizacional",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [
+        "table"
+      ],
+      "elementosFaltantes": [
+        ".org-chart",
+        "#organigrama",
+        ".tree",
+        "canvas",
+        "svg"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3125,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\04-organizational-structure.png"
+    },
+    {
+      "numero": 5,
+      "key": "visitors",
+      "nombre": "Visitantes",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        "table",
+        ".visitor-grid",
+        ".card"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3151,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\05-visitors.png"
+    },
+    {
+      "numero": 6,
+      "key": "dms-dashboard",
+      "nombre": "Gestión Documental (DMS)",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        "table",
+        ".document-grid",
+        ".file-list",
+        ".card"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3125,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\06-dms-dashboard.png"
+    },
+    {
+      "numero": 7,
+      "key": "notification-center",
+      "nombre": "Centro de Notificaciones",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        ".notification-list",
+        ".card",
+        "table"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3112,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\07-notification-center.png"
+    },
+    {
+      "numero": 8,
+      "key": "biometric-consent",
+      "nombre": "Consentimientos Biométricos",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [
+        "table"
+      ],
+      "elementosFaltantes": [
+        ".consent-grid",
+        ".card"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3141,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\08-biometric-consent.png"
+    },
+    {
+      "numero": 9,
+      "key": "user-support",
+      "nombre": "Soporte / Tickets",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        "table",
+        ".ticket-list",
+        ".card"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3168,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\09-user-support.png"
+    },
+    {
+      "numero": 10,
+      "key": "emotional-analysis",
+      "nombre": "Análisis Emocional",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        "canvas",
+        ".chart",
+        ".card",
+        "table"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3089,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\10-emotional-analysis.png"
+    },
+    {
+      "numero": 11,
+      "key": "hour-bank",
+      "nombre": "Banco de Horas",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        "table",
+        ".card",
+        "canvas"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3088,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\11-hour-bank.png"
+    },
+    {
+      "numero": 12,
+      "key": "benefits-management",
+      "nombre": "Beneficios Laborales",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        "table",
+        ".card",
+        ".benefit-grid"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3118,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\12-benefits-management.png"
+    },
+    {
+      "numero": 13,
+      "key": "job-postings",
+      "nombre": "Avisos de Empleo",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        "table",
+        ".card",
+        ".job-grid"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3117,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\13-job-postings.png"
+    },
+    {
+      "numero": 14,
+      "key": "procurement-management",
+      "nombre": "Compras y Proveedores",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        "table",
+        ".card"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3125,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\14-procurement-management.png"
+    },
+    {
+      "numero": 15,
+      "key": "employee-360",
+      "nombre": "Expediente 360°",
+      "estado": "WARNING",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        ".card",
+        ".profile",
+        "table",
+        ".tabs"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3127,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\15-employee-360.png"
+    },
+    {
+      "numero": 16,
+      "key": "finance-dashboard",
+      "nombre": "Finanzas",
+      "estado": "ERROR",
+      "erroresJS": [
+        {
+          "timestamp": "2026-02-04T16:55:16.764Z",
+          "text": "Failed to load resource: the server responded with a status of 500 ()",
+          "location": {
+            "url": "https://www.aponnt.com/api/procurement/payment-orders?year=2026&limit=1000",
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        }
+      ],
+      "erroresAPI": [
+        {
+          "timestamp": "2026-02-04T16:55:16.763Z",
+          "url": "https://www.aponnt.com/api/procurement/payment-orders?year=2026&limit=1000",
+          "status": 500,
+          "statusText": ""
+        }
+      ],
+      "erroresUI": [],
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        "canvas",
+        ".chart",
+        ".card",
+        "table"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3118,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\16-finance-dashboard.png"
+    },
+    {
+      "numero": 17,
+      "key": "warehouse-management",
+      "nombre": "Gestión de Almacenes",
+      "estado": "ERROR",
+      "erroresJS": [
+        {
+          "timestamp": "2026-02-04T16:55:22.526Z",
+          "text": "Failed to load resource: the server responded with a status of 500 ()",
+          "location": {
+            "url": "https://www.aponnt.com/api/warehouse/dashboard/stats?branch_id=42",
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        },
+        {
+          "timestamp": "2026-02-04T16:55:22.529Z",
+          "text": "[WMS] Error cargando datos del tab: Error: column \"company_id\" does not exist\n    at Object.api (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1517:19)\n    at async Object.loadProducts (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1642:31)\n    at async Object.loadTabData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1594:21)\n    at async Object.selectWarehouse (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1569:9)\n    at async Object.selectBranch (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1561:13)\n    at async Object.loadInitialData (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1465:17)\n    at async Object.init (https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834:1266:9)",
+          "location": {
+            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834",
+            "lineNumber": 1615,
+            "columnNumber": 20
+          }
+        },
+        {
+          "timestamp": "2026-02-04T16:55:22.529Z",
+          "text": "[WMS] Error al cargar los datos",
+          "location": {
+            "url": "https://www.aponnt.com/js/modules/warehouse-management.js?v=1770224119834",
+            "lineNumber": 2439,
+            "columnNumber": 16
+          }
+        }
+      ],
+      "erroresAPI": [
+        {
+          "timestamp": "2026-02-04T16:55:22.526Z",
+          "url": "https://www.aponnt.com/api/warehouse/dashboard/stats?branch_id=42",
+          "status": 500,
+          "statusText": ""
+        }
+      ],
+      "erroresUI": [],
+      "warnings": [
+        "Módulo sin datos (posiblemente vacío)"
+      ],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [
+        "table",
+        ".card",
+        ".inventory"
+      ],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 3140,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\17-warehouse-management.png"
+    },
+    {
+      "numero": 18,
+      "key": "art-management",
+      "nombre": "ART",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: ART"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 19,
+      "key": "training-management",
+      "nombre": "Gestión Capacitaciones",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Gestión Capacitaciones"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 20,
+      "key": "sanctions-management",
+      "nombre": "Gestión de Sanciones",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Gestión de Sanciones"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 21,
+      "key": "vacation-management",
+      "nombre": "Gestión de Vacaciones",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Gestión de Vacaciones"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 22,
+      "key": "legal-dashboard",
+      "nombre": "Legal",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Legal"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 23,
+      "key": "medical",
+      "nombre": "Gestión Médica",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Gestión Médica"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 24,
+      "key": "payroll-liquidation",
+      "nombre": "Liquidación Sueldos",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Liquidación Sueldos"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 25,
+      "key": "logistics-dashboard",
+      "nombre": "Logistica Avanzada",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Logistica Avanzada"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 26,
+      "key": "procedures-manual",
+      "nombre": "Manual de Procedimientos",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Manual de Procedimientos"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 27,
+      "key": "employee-map",
+      "nombre": "Mapa Empleados",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Mapa Empleados"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 28,
+      "key": "marketplace",
+      "nombre": "Marketplace",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Marketplace"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 29,
+      "key": "my-procedures",
+      "nombre": "Mis Procedimientos",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Mis Procedimientos"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 30,
+      "key": "audit-reports",
+      "nombre": "Reportes Auditoría",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Reportes Auditoría"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 31,
+      "key": "compliance-dashboard",
+      "nombre": "Compliance Legal",
+      "estado": "NO ENCONTRADO",
+      "erroresJS": [],
+      "erroresAPI": [],
+      "erroresUI": [
+        "Módulo no encontrado: Compliance Legal"
+      ],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": null
+    },
+    {
+      "numero": 32,
+      "key": "sla-tracking",
+      "nombre": "SLA Tracking",
+      "estado": "EXCEPTION",
+      "erroresJS": [
+        {
+          "text": "page.evaluate: Target page, context or browser has been closed",
+          "stack": "page.evaluate: Target page, context or browser has been closed\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\test-36-modulos-PROFESIONAL.e2e.spec.js:562:28"
+        }
+      ],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\32-sla-tracking-ERROR.png"
+    },
+    {
+      "numero": 33,
+      "key": "hse-management",
+      "nombre": "Seguridad e Higiene Laboral (HSE)",
+      "estado": "EXCEPTION",
+      "erroresJS": [
+        {
+          "text": "page.evaluate: Target page, context or browser has been closed",
+          "stack": "page.evaluate: Target page, context or browser has been closed\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\test-36-modulos-PROFESIONAL.e2e.spec.js:562:28"
+        }
+      ],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\33-hse-management-ERROR.png"
+    },
+    {
+      "numero": 34,
+      "key": "siac-commercial-dashboard",
+      "nombre": "SIAC Comercial Integral",
+      "estado": "EXCEPTION",
+      "erroresJS": [
+        {
+          "text": "page.evaluate: Target page, context or browser has been closed",
+          "stack": "page.evaluate: Target page, context or browser has been closed\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\test-36-modulos-PROFESIONAL.e2e.spec.js:562:28"
+        }
+      ],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\34-siac-commercial-dashboard-ERROR.png"
+    },
+    {
+      "numero": 35,
+      "key": "voice-platform",
+      "nombre": "Voice Platform",
+      "estado": "EXCEPTION",
+      "erroresJS": [
+        {
+          "text": "page.evaluate: Target page, context or browser has been closed",
+          "stack": "page.evaluate: Target page, context or browser has been closed\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\test-36-modulos-PROFESIONAL.e2e.spec.js:562:28"
+        }
+      ],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\35-voice-platform-ERROR.png"
+    },
+    {
+      "numero": 36,
+      "key": "mi-espacio",
+      "nombre": "Mi Espacio",
+      "estado": "EXCEPTION",
+      "erroresJS": [
+        {
+          "text": "page.evaluate: Target page, context or browser has been closed",
+          "stack": "page.evaluate: Target page, context or browser has been closed\n    at C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\e2e\\test-36-modulos-PROFESIONAL.e2e.spec.js:562:28"
+        }
+      ],
+      "erroresAPI": [],
+      "erroresUI": [],
+      "warnings": [],
+      "elementosEncontrados": [],
+      "elementosFaltantes": [],
+      "tabsExplorados": [],
+      "crudResultado": null,
+      "tiempoCarga": 0,
+      "screenshot": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\tests\\screenshots\\profesional\\36-mi-espacio-ERROR.png"
+    }
+  ]
+}
