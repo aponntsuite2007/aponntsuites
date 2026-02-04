@@ -791,6 +791,12 @@ async function showUsersContent() {
     }, 500);
 }
 
+// ✅ EXPORTACIÓN INMEDIATA (FIX: Evita problemas de balance de llaves)
+window.showUsersContent = showUsersContent;
+if (!window.Modules) window.Modules = {};
+window.Modules.users = { init: showUsersContent };
+console.log('✅ [USERS] showUsersContent exportado inmediatamente');
+
 // Load users list - Original functionality with biometric status
 async function loadUsers() {
     console.log('👥 [USERS] Cargando lista de usuarios...');
@@ -4903,7 +4909,7 @@ async function removeUserShift(userShiftId) {
             // Recargar los datos del modal
             const modal = document.getElementById('assignUserShiftsModal');
             if (modal) {
-                const userId = modal.querySelector('[onclick*="performUserShiftAssignment"]').onclick.toString().match(/performUserShiftAssignment\('(\d+)'/)[1];
+                const userId = modal.querySelector('[onclick*="performUserShiftAssignment"]').onclick.toString().match(/performUserShiftAssignment\('(\d+)'\)/)[1];
                 loadShiftsForUser(userId);
             }
         } else {
@@ -17191,4 +17197,4 @@ window.closeAuditModal = window.closeAuditModal || function() {
 
 console.log('✅ [USERS] FIX 28: Todas las funciones onclick exportadas a window (100+ funciones)');
 
-} // Cierre del bloque else - previene re-ejecución en doble carga del módulo
+}} // Cierre del bloque else + cierre adicional para balancear estructura

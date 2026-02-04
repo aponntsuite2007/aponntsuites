@@ -1,0 +1,218 @@
+[
+  {
+    "key": "notification-center",
+    "name": "Centro de Notificaciones",
+    "type": "core",
+    "status": "ok"
+  },
+  {
+    "key": "biometric-consent",
+    "name": "Consentimientos y Privacidad",
+    "type": "core",
+    "status": "ok"
+  },
+  {
+    "key": "attendance",
+    "name": "Control de Asistencia",
+    "type": "core",
+    "status": "ok"
+  },
+  {
+    "key": "organizational-structure",
+    "name": "Estructura Organizacional",
+    "type": "core",
+    "status": "ok"
+  },
+  {
+    "key": "kiosks",
+    "name": "Gestión de Kioscos",
+    "type": "core",
+    "status": "ok"
+  },
+  {
+    "key": "users",
+    "name": "Gestión de Usuarios",
+    "type": "core",
+    "status": "ok"
+  },
+  {
+    "key": "dms-dashboard",
+    "name": "Gestión Documental (DMS)",
+    "type": "core",
+    "status": "ok"
+  },
+  {
+    "key": "mi-espacio",
+    "name": "Mi Espacio",
+    "type": "core",
+    "status": "not_found"
+  },
+  {
+    "key": "user-support",
+    "name": "Soporte / Tickets",
+    "type": "core",
+    "status": "ok"
+  },
+  {
+    "key": "emotional-analysis",
+    "name": "Análisis Emocional",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "hour-bank",
+    "name": "Banco de Horas",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "benefits-management",
+    "name": "Beneficios Laborales",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "job-postings",
+    "name": "Búsquedas Laborales",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "procurement-management",
+    "name": "Compras y Proveedores",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "visitors",
+    "name": "Control de Visitantes",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "employee-360",
+    "name": "Expediente 360°",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "finance-dashboard",
+    "name": "Finanzas",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "warehouse-management",
+    "name": "Gestión de Almacenes",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "art-management",
+    "name": "Gestión de ART",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "training-management",
+    "name": "Gestión de Capacitaciones",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "sanctions-management",
+    "name": "Gestión de Sanciones",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "vacation-management",
+    "name": "Gestión de Vacaciones",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "legal-dashboard",
+    "name": "Gestión Legal",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "medical",
+    "name": "Gestión Médica",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "payroll-liquidation",
+    "name": "Liquidación de Sueldos",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "logistics-dashboard",
+    "name": "Logística Avanzada",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "procedures-manual",
+    "name": "Manual de Procedimientos",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "employee-map",
+    "name": "Mapa de Empleados",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "marketplace",
+    "name": "Marketplace",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "my-procedures",
+    "name": "Mis Procedimientos",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "audit-reports",
+    "name": "Reportes de Auditoría",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "compliance-dashboard",
+    "name": "Risk Intelligence Dashboard",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "sla-tracking",
+    "name": "Seguimiento de SLA",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "hse-management",
+    "name": "Seguridad e Higiene (HSE)",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "siac-commercial-dashboard",
+    "name": "SIAC Comercial",
+    "type": "opcional",
+    "status": "ok"
+  },
+  {
+    "key": "voice-platform",
+    "name": "Voice Platform",
+    "type": "opcional",
+    "status": "ok"
+  }
+]
