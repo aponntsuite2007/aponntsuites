@@ -2198,7 +2198,7 @@ class EcosystemBrainService {
           u.phone,
           u.position,
           u."hireDate" as hire_date,
-          u.manager_id,
+          NULL as manager_id,
           u.is_active,
           d.id as department_id,
           d.name as department_name,
