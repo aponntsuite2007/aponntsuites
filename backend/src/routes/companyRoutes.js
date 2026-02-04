@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { auth, requireRole } = require('../middleware/auth');
+const NCE = require('../services/NotificationCentralExchange');
 
 // multiTenantDB es opcional - puede no existir en todas las instalaciones
 let multiTenantDB = null;
@@ -618,19 +619,279 @@ router.post("/:id/onboarding/activate", async (req, res) => {
     );
     
     const coreUserId = coreUserResult.rows[0].user_id;
-    
-    // Activar empresa
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // 📦 ASIGNAR MÓDULOS: CORE + CONTRATADOS
+    // ════════════════════════════════════════════════════════════════════════════
+
+    // 1. Obtener módulos CORE (obligatorios para todas las empresas)
+    const coreModulesResult = await client.query(
+      "SELECT module_key FROM system_modules WHERE is_core = true"
+    );
+    const coreModules = coreModulesResult.rows.map(r => r.module_key);
+
+    // 2. Obtener módulos del presupuesto más reciente (contratados o trial)
+    const quoteModulesResult = await client.query(`
+      SELECT modules_data, trial_modules
+      FROM quotes
+      WHERE company_id = $1 AND status IN ('active', 'accepted', 'in_trial')
+      ORDER BY created_at DESC LIMIT 1
+    `, [id]);
+
+    let contractedModules = [];
+    if (quoteModulesResult.rows.length > 0) {
+      const quote = quoteModulesResult.rows[0];
+      // modules_data es un JSON con los módulos contratados
+      if (quote.modules_data && Array.isArray(quote.modules_data)) {
+        contractedModules = quote.modules_data.map(m => m.key || m.module_key || m);
+      }
+      // trial_modules son módulos en período de prueba
+      if (quote.trial_modules && Array.isArray(quote.trial_modules)) {
+        contractedModules = [...contractedModules, ...quote.trial_modules];
+      }
+    }
+
+    // 3. Combinar CORE + contratados (sin duplicados)
+    const allModules = [...new Set([...coreModules, ...contractedModules])];
+
+    console.log(`📦 [ACTIVATION] Asignando ${allModules.length} módulos: ${coreModules.length} CORE + ${contractedModules.length} contratados`);
+
+    // Activar empresa CON módulos asignados (LEGACY field para compatibilidad)
     await client.query(
-      `UPDATE companies 
+      `UPDATE companies
        SET is_active = TRUE,
            activated_at = CURRENT_TIMESTAMP,
-           onboarding_status = "ACTIVE"
+           onboarding_status = 'ACTIVE',
+           active_modules = $2
        WHERE company_id = $1`,
+      [id, JSON.stringify(allModules)]
+    );
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // 📦 INSERT INTO company_modules (FUENTE DE VERDAD)
+    // ════════════════════════════════════════════════════════════════════════════
+    // Primero eliminar registros existentes para evitar duplicados
+    await client.query(
+      `DELETE FROM company_modules WHERE company_id = $1`,
       [id]
     );
-    
+
+    // Insertar todos los módulos (CORE + contratados) en company_modules
+    if (allModules.length > 0) {
+      const insertResult = await client.query(`
+        INSERT INTO company_modules (company_id, system_module_id, activo, created_at, updated_at)
+        SELECT $1, sm.id, true, NOW(), NOW()
+        FROM system_modules sm
+        WHERE sm.module_key = ANY($2::varchar[])
+        ON CONFLICT (company_id, system_module_id) DO UPDATE SET activo = true, updated_at = NOW()
+        RETURNING id
+      `, [id, allModules]);
+
+      console.log(`📦 [ACTIVATION] Insertados ${insertResult.rowCount} registros en company_modules`);
+    }
+
     await client.query("COMMIT");
-    
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // 📧 ENVIAR EMAIL DE ACTIVACIÓN VIA NCE (igual que presupuesto/contrato)
+    // ════════════════════════════════════════════════════════════════════════════
+    try {
+      const activationEmailHtml = `
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 700px; margin: 0 auto; background: #f8f9fa;">
+
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 30px; text-align: center;">
+            <img src="https://aponnt.com/images/logo-aponnt-white.png" alt="APONNT" style="height: 50px; margin-bottom: 15px;" />
+            <h1 style="color: white; margin: 0; font-size: 24px;">¡Bienvenido a APONNT!</h1>
+            <p style="color: #a8d4f5; margin: 10px 0 0 0; font-size: 16px;">Su empresa ha sido activada exitosamente</p>
+          </div>
+
+          <!-- Main Content -->
+          <div style="padding: 30px; background: white;">
+
+            <!-- Company Info -->
+            <div style="background: #e8f4fd; border-radius: 10px; padding: 20px; margin-bottom: 25px; border-left: 4px solid #1e3a5f;">
+              <h2 style="color: #1e3a5f; margin: 0 0 10px 0; font-size: 18px;">📋 Datos de su Empresa</h2>
+              <p style="margin: 5px 0; color: #333;"><strong>Empresa:</strong> ${company.name}</p>
+              <p style="margin: 5px 0; color: #333;"><strong>Identificador (slug):</strong> <code style="background: #1e3a5f; color: white; padding: 2px 8px; border-radius: 4px;">${company.slug}</code></p>
+            </div>
+
+            <!-- Login Instructions with Graphic -->
+            <div style="background: #fff3cd; border-radius: 10px; padding: 25px; margin-bottom: 25px; border: 2px solid #ffc107;">
+              <h2 style="color: #856404; margin: 0 0 15px 0; font-size: 18px;">🔐 Cómo Ingresar al Sistema</h2>
+
+              <p style="color: #333; margin-bottom: 20px;">Siga estos <strong>3 pasos simples</strong> para acceder:</p>
+
+              <!-- Visual Login Steps -->
+              <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+
+                <!-- Step 1 -->
+                <div style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #ddd;">
+                  <div style="background: #1e3a5f; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px;">1</div>
+                  <div style="flex: 1;">
+                    <p style="margin: 0; font-weight: bold; color: #1e3a5f;">Seleccione su empresa</p>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">En el primer campo, escriba: <code style="background: #e8f4fd; padding: 2px 6px; border-radius: 3px; font-weight: bold;">${company.slug}</code></p>
+                  </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #ddd;">
+                  <div style="background: #1e3a5f; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px;">2</div>
+                  <div style="flex: 1;">
+                    <p style="margin: 0; font-weight: bold; color: #1e3a5f;">Ingrese su usuario</p>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">En el campo usuario escriba: <code style="background: #e8f4fd; padding: 2px 6px; border-radius: 3px; font-weight: bold;">administrador</code></p>
+                  </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div style="display: flex; align-items: center;">
+                  <div style="background: #1e3a5f; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px;">3</div>
+                  <div style="flex: 1;">
+                    <p style="margin: 0; font-weight: bold; color: #1e3a5f;">Ingrese su contraseña</p>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">En el campo contraseña escriba: <code style="background: #e8f4fd; padding: 2px 6px; border-radius: 3px; font-weight: bold;">admin123</code></p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Warning to change password -->
+              <div style="background: #f8d7da; border-radius: 6px; padding: 12px; border-left: 4px solid #dc3545;">
+                <p style="margin: 0; color: #721c24; font-size: 14px;">
+                  ⚠️ <strong>IMPORTANTE:</strong> Por seguridad, debe cambiar su contraseña inmediatamente después del primer ingreso.
+                </p>
+              </div>
+            </div>
+
+            <!-- Where to change password -->
+            <div style="background: #d4edda; border-radius: 10px; padding: 20px; margin-bottom: 25px; border-left: 4px solid #28a745;">
+              <h2 style="color: #155724; margin: 0 0 10px 0; font-size: 18px;">🔄 ¿Dónde cambiar la contraseña?</h2>
+              <p style="color: #333; margin: 5px 0;">Una vez dentro del sistema, tiene <strong>dos opciones</strong>:</p>
+              <ul style="color: #333; margin: 10px 0; padding-left: 20px;">
+                <li style="margin-bottom: 8px;"><strong>Opción 1:</strong> Menú lateral → <em>"Gestión de Usuarios"</em> → Editar su usuario</li>
+                <li><strong>Opción 2:</strong> Esquina superior derecha → <em>"Mi Espacio"</em> → Cambiar contraseña</li>
+              </ul>
+            </div>
+
+            <!-- Access URLs -->
+            <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 25px;">
+              <h2 style="color: #1e3a5f; margin: 0 0 15px 0; font-size: 18px;">🌐 Accesos Disponibles</h2>
+
+              <p style="color: #333; margin-bottom: 15px;">Ingrese a <a href="https://www.aponnt.com" style="color: #1e3a5f; font-weight: bold;">www.aponnt.com</a> y seleccione su tipo de acceso:</p>
+
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">
+                    <strong style="color: #1e3a5f;">🏢 Panel Empresa</strong>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">Gestión completa de su empresa, empleados y asistencia</p>
+                  </td>
+                  <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right;">
+                    <a href="https://aponnt.com/panel-empresa.html" style="background: #1e3a5f; color: white; padding: 6px 15px; border-radius: 5px; text-decoration: none; font-size: 13px;">Ingresar →</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">
+                    <strong style="color: #1e3a5f;">🖥️ Panel Administrativo</strong>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">Configuración avanzada y reportes gerenciales</p>
+                  </td>
+                  <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right;">
+                    <a href="https://aponnt.com/panel-administrativo.html" style="background: #6c757d; color: white; padding: 6px 15px; border-radius: 5px; text-decoration: none; font-size: 13px;">Ingresar →</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">
+                    <strong style="color: #1e3a5f;">🤝 Portal Asociados</strong>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">Acceso para socios comerciales</p>
+                  </td>
+                  <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right;">
+                    <a href="https://aponnt.com/panel-asociados.html" style="background: #6c757d; color: white; padding: 6px 15px; border-radius: 5px; text-decoration: none; font-size: 13px;">Ingresar →</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px;">
+                    <strong style="color: #1e3a5f;">📦 Portal Proveedores</strong>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">Acceso para proveedores registrados</p>
+                  </td>
+                  <td style="padding: 10px; text-align: right;">
+                    <a href="https://aponnt.com/panel-proveedores.html" style="background: #6c757d; color: white; padding: 6px 15px; border-radius: 5px; text-decoration: none; font-size: 13px;">Ingresar →</a>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Mobile Apps -->
+            <div style="background: #e8f4fd; border-radius: 10px; padding: 20px; margin-bottom: 25px;">
+              <h2 style="color: #1e3a5f; margin: 0 0 15px 0; font-size: 18px;">📱 Aplicaciones Móviles</h2>
+              <p style="color: #333; margin-bottom: 15px;">APONNT cuenta con aplicaciones móviles para facilitar el registro de asistencia:</p>
+
+              <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px; background: white; border-radius: 8px; padding: 15px; text-align: center;">
+                  <div style="font-size: 40px; margin-bottom: 10px;">🏪</div>
+                  <h3 style="color: #1e3a5f; margin: 0 0 5px 0; font-size: 14px;">APK Kiosko</h3>
+                  <p style="color: #666; font-size: 12px; margin: 0;">Registro biométrico en tablets fijas</p>
+                </div>
+                <div style="flex: 1; min-width: 200px; background: white; border-radius: 8px; padding: 15px; text-align: center;">
+                  <div style="font-size: 40px; margin-bottom: 10px;">👤</div>
+                  <h3 style="color: #1e3a5f; margin: 0 0 5px 0; font-size: 14px;">APK Empleados</h3>
+                  <p style="color: #666; font-size: 12px; margin: 0;">Autogestión desde el celular</p>
+                </div>
+              </div>
+
+              <p style="color: #666; font-size: 13px; margin-top: 15px; text-align: center;">
+                Solicite las APKs a su ejecutivo de cuenta o descárguelas desde el Panel Empresa.
+              </p>
+            </div>
+
+            <!-- Support -->
+            <div style="text-align: center; padding: 20px; border-top: 1px solid #dee2e6;">
+              <p style="color: #666; margin: 0 0 10px 0; font-size: 14px;">¿Necesita ayuda? Estamos para asistirlo</p>
+              <p style="margin: 0;">
+                <a href="mailto:soporte@aponnt.com" style="color: #1e3a5f; text-decoration: none; margin: 0 15px;">📧 soporte@aponnt.com</a>
+                <span style="color: #ccc;">|</span>
+                <a href="https://wa.me/5491112345678" style="color: #25d366; text-decoration: none; margin: 0 15px;">💬 WhatsApp</a>
+              </p>
+            </div>
+
+          </div>
+
+          <!-- Footer -->
+          <div style="background: #1e3a5f; color: white; padding: 20px; text-align: center;">
+            <p style="margin: 0 0 5px 0; font-size: 14px;">APONNT S.A.S. - Sistema de Gestión de Asistencia Biométrica</p>
+            <p style="margin: 0; font-size: 12px; color: #a8d4f5;">
+              <a href="https://www.aponnt.com" style="color: #a8d4f5;">www.aponnt.com</a> |
+              soporte@aponnt.com
+            </p>
+          </div>
+
+        </div>
+      `;
+
+      // Enviar email de activación usando NCE (con tracking, BCC automático, etc.)
+      await NCE.send({
+        companyId: null, // Es un email de onboarding, no pertenece a una empresa activa aún
+        module: 'onboarding',
+        workflowKey: 'onboarding.company_activated',
+        originType: 'company',
+        originId: String(id),
+        recipientType: 'external',
+        recipientEmail: company.contact_email,
+        title: `🎉 ¡Bienvenido a APONNT! - ${company.name} activada exitosamente`,
+        message: `La empresa ${company.name} ha sido activada. Usuario: administrador / Contraseña: admin123`,
+        metadata: {
+          company_id: id,
+          company_name: company.name,
+          company_slug: company.slug,
+          htmlContent: activationEmailHtml
+        },
+        priority: 'high',
+        channels: ['email']
+      });
+
+      console.log(`✅ [COMPANY ACTIVATION] Email de activación enviado via NCE a: ${company.contact_email}`);
+
+    } catch (emailError) {
+      // No romper el flujo si falla el email (la empresa ya está activada)
+      console.error('⚠️ [COMPANY ACTIVATION] Error enviando email de activación (no bloqueante):', emailError.message);
+    }
+
     res.json({
       success: true,
       message: "Empresa activada exitosamente",
@@ -639,9 +900,10 @@ router.post("/:id/onboarding/activate", async (req, res) => {
         username: "administrador",
         password: "admin123",
         force_change: true
-      }
+      },
+      email_sent: true
     });
-    
+
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("❌ [COMPANY ACTIVATION] Error:", error);
