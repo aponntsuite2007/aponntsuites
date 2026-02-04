@@ -163,8 +163,13 @@ class UnifiedKnowledgeService extends EventEmitter {
             });
 
             console.log(`   Módulos comerciales en BD: ${modules.length}`);
+            console.log(`   [FIX-2026-02-04] Aplicando fix de nombres desde BD`);
 
             for (const mod of modules) {
+                // DEBUG: Verificar que los nombres se cargan correctamente
+                if (mod.name !== mod.moduleKey) {
+                    console.log(`   ✓ ${mod.moduleKey}: name="${mod.name}", icon="${mod.icon}"`);
+                }
                 const existing = this.metadata.get(mod.moduleKey) || {};
 
                 // Merge con datos comerciales
