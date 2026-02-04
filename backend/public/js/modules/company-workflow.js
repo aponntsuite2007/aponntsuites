@@ -43,7 +43,8 @@
         baseUrl: '/api/aponnt/dashboard',
 
         getHeaders() {
-            const token = localStorage.getItem('aponnt_token_staff');
+            // Usar función global que busca en localStorage Y sessionStorage
+            const token = window.getMultiKeyToken();
             return {
                 'Content-Type': 'application/json',
                 'Authorization': token ? `Bearer ${token}` : ''

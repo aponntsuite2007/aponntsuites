@@ -353,7 +353,7 @@ const SupportSupervisorDashboard = {
      */
     async _loadStats() {
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`${this._apiBase}/support/stats`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -382,7 +382,7 @@ const SupportSupervisorDashboard = {
      */
     async _loadTickets() {
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`${this._apiBase}/support/tickets`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });

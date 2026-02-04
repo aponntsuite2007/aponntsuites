@@ -245,6 +245,7 @@ const AdminPanelController = {
             'ingenieria-dashboard': () => this._loadIngenieriaDashboard(),
             'ai-testing': () => this._loadAITestingDashboard(),
             'aponnt-email-config': () => this._loadAponntEmailConfig(),
+            'email-tracking': () => this._loadEmailTracking(),
             'brain-ecosystem': () => this._loadBrainEcosystem(),
             'debugging': () => this._loadDebugging(),
             'auditor-sistema': () => this._loadAuditorSistema(),
@@ -702,7 +703,7 @@ const AdminPanelController = {
         if (!container) return;
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/billing/invoices', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -1183,7 +1184,7 @@ const AdminPanelController = {
         if (!container) return;
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
 
             // Cargar estadísticas
             const statsRes = await fetch('/api/aponnt/dashboard/support-stats', {
@@ -1343,7 +1344,7 @@ const AdminPanelController = {
 
     async changeTicketStatus(ticketId, newStatus) {
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`/api/aponnt/dashboard/support-tickets/${ticketId}/status`, {
                 method: 'PUT',
                 headers: {
@@ -1369,7 +1370,7 @@ const AdminPanelController = {
     async assignTicket(ticketId) {
         // Cargar lista de staff para asignar
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/dashboard/staff?area=soporte', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -1408,7 +1409,7 @@ const AdminPanelController = {
         }
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`/api/aponnt/dashboard/support-tickets/${ticketId}/assign`, {
                 method: 'PUT',
                 headers: {
@@ -1529,7 +1530,7 @@ const AdminPanelController = {
         };
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/staff-data/', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -1739,7 +1740,7 @@ const AdminPanelController = {
 
     async _loadRolesForSelect() {
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/staff-data/roles', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -1772,7 +1773,7 @@ const AdminPanelController = {
         };
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/staff-data/', {
                 method: 'POST',
                 headers: {
@@ -1894,7 +1895,7 @@ const AdminPanelController = {
 
     async _loadStaffById(staffId) {
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -1921,7 +1922,7 @@ const AdminPanelController = {
         };
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
                 method: 'PUT',
                 headers: {
@@ -2001,7 +2002,7 @@ const AdminPanelController = {
         if (!confirm('¿Está seguro de desactivar este personal?')) return;
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -2024,7 +2025,7 @@ const AdminPanelController = {
 
     async activateStaff(staffId) {
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
                 method: 'PUT',
                 headers: {
@@ -2133,7 +2134,7 @@ const AdminPanelController = {
         if (!container) return;
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/staff-data/vendors', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -2283,7 +2284,7 @@ const AdminPanelController = {
         };
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/staff-data/', {
                 method: 'POST',
                 headers: {
@@ -2389,7 +2390,7 @@ const AdminPanelController = {
         };
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/staff-data/', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -2515,7 +2516,7 @@ const AdminPanelController = {
         const levelNames = ['Dirección', 'Gerencia', 'Jefatura', 'Supervisión', 'Operativo'];
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/staff-data/roles', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -2629,7 +2630,7 @@ const AdminPanelController = {
         if (!container) return;
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/brain/orgchart/aponnt', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -2654,7 +2655,7 @@ const AdminPanelController = {
         if (!container) return;
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/staff-data/organigrama/data', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -2763,6 +2764,39 @@ const AdminPanelController = {
             <div class="section-container full-width">
                 <div id="email-config-container">
                     <!-- AponntEmailConfigModule se renderizará aquí -->
+                </div>
+            </div>
+        `;
+    },
+
+    async _loadEmailTracking() {
+        // Inicializar EmailTrackingWidget
+        setTimeout(() => {
+            if (window.EmailTrackingWidget) {
+                console.log('📧 [ADMIN] Inicializando EmailTrackingWidget...');
+                window.EmailTrackingWidget.init('email-tracking-container', {
+                    categoryFilter: null, // Ver todos los emails (global)
+                    showStats: true,
+                    showFilters: true,
+                    autoRefresh: true,
+                    refreshInterval: 30000
+                });
+            } else {
+                console.error('❌ [ADMIN] EmailTrackingWidget no disponible');
+            }
+        }, 100);
+
+        return `
+            <div class="section-container full-width">
+                <div class="section-header">
+                    <h2>📊 Email Tracking</h2>
+                    <p class="section-subtitle">Seguimiento de emails enviados (aperturas, clicks, bounces)</p>
+                </div>
+                <div id="email-tracking-container" style="width: 100%;">
+                    <div class="loading-placeholder">
+                        <div class="spinner-small"></div>
+                        <span>Cargando Email Tracking...</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -3592,7 +3626,7 @@ const AdminPanelController = {
     // ============================
 
     _getToken() {
-        return localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+        return window.getMultiKeyToken();
     },
 
     _clearToken() {
@@ -3721,12 +3755,17 @@ const AdminPanelController = {
             const data = await response.json();
 
             if (data.success && data.token) {
-                // Guardar token
+                // Guardar token en TODAS las claves para compatibilidad
+                // Esto resuelve inconsistencias entre módulos que usan diferentes claves
+                const tokenKeys = ['aponnt_token_staff', 'aponnt_token', 'token'];
+
                 if (remember) {
-                    localStorage.setItem('aponnt_token_staff', data.token);
+                    tokenKeys.forEach(key => localStorage.setItem(key, data.token));
                 } else {
-                    sessionStorage.setItem('aponnt_token_staff', data.token);
+                    tokenKeys.forEach(key => sessionStorage.setItem(key, data.token));
                 }
+
+                console.log('✅ [AUTH] Token guardado en múltiples claves para compatibilidad');
 
                 // Recargar página para inicializar el panel
                 window.location.reload();
@@ -3963,7 +4002,7 @@ const AdminPanelController = {
                 licenseType: document.getElementById('company-license-type').value
             };
 
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/dashboard/companies', {
                 method: 'POST',
                 headers: {
@@ -3999,7 +4038,7 @@ const AdminPanelController = {
         // Obtener lista de empresas para el selector
         let companies = [];
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/dashboard/companies', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -4204,7 +4243,7 @@ const AdminPanelController = {
                 }
             };
 
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/dashboard/budgets', {
                 method: 'POST',
                 headers: {
@@ -4238,7 +4277,7 @@ const AdminPanelController = {
 
         let companies = [];
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/dashboard/companies', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -4341,7 +4380,7 @@ const AdminPanelController = {
                 concept: document.getElementById('invoice-concept').value.trim() || 'Servicio mensual'
             };
 
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/dashboard/invoices', {
                 method: 'POST',
                 headers: {
@@ -4377,7 +4416,7 @@ const AdminPanelController = {
         let companies = [];
         let staff = [];
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const [companiesRes, staffRes] = await Promise.all([
                 fetch('/api/aponnt/dashboard/companies', { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch('/api/aponnt/dashboard/staff?area=soporte', { headers: { 'Authorization': `Bearer ${token}` } })
@@ -4496,7 +4535,7 @@ const AdminPanelController = {
                 assigned_to_staff_id: document.getElementById('ticket-assigned').value || undefined
             };
 
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/aponnt/dashboard/support-tickets', {
                 method: 'POST',
                 headers: {
@@ -4561,7 +4600,7 @@ const AdminPanelController = {
         }
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(endpoint, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -4717,7 +4756,7 @@ const AdminPanelController = {
         }
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`${endpoint}?format=${format}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });

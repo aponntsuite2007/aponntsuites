@@ -1708,9 +1708,7 @@ const SalesOrchestrationDashboard = {
     // =========================================================================
 
     async fetchAPI(url, options = {}) {
-        const token = localStorage.getItem('aponnt_token_staff') ||
-                      sessionStorage.getItem('aponnt_token_staff') ||
-                      document.cookie.split('; ').find(c => c.startsWith('aponnt_token_staff='))?.split('=')[1];
+        const token = window.getMultiKeyToken();
 
         if (!token) {
             console.error('❌ [SALES-ORCH] No se encontró token de autenticación');

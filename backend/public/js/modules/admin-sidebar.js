@@ -333,9 +333,12 @@ const AdminSidebar = {
      * Maneja el logout
      */
     _handleLogout() {
-        // Limpiar tokens
-        localStorage.removeItem('aponnt_token_staff');
-        sessionStorage.removeItem('aponnt_token_staff');
+        // Limpiar TODOS los tokens (3 claves para compatibilidad)
+        const tokenKeys = ['aponnt_token_staff', 'aponnt_token', 'token'];
+        tokenKeys.forEach(key => {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+        });
 
         // Limpiar estado del sidebar
         localStorage.removeItem('admin_sidebar_collapsed');

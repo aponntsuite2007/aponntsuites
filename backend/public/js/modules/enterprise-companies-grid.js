@@ -553,7 +553,7 @@ const EnterpriseCompaniesGrid = {
         let staffRole = '';
         try {
             // Primero: decodificar JWT (más confiable)
-            const token = sessionStorage.getItem('aponnt_token_staff') || localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             if (token) {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 staffRole = payload.role || '';
@@ -677,7 +677,7 @@ const EnterpriseCompaniesGrid = {
         }
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const resp = await fetch(`/api/v1/companies/${companyId}/manual-status`, {
                 method: 'POST',
                 headers: {

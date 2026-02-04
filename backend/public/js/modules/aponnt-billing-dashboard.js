@@ -34,7 +34,7 @@ const AponntBillingDashboard = (function() {
     // ==================== API ====================
     const API = {
         getAuthHeaders() {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             return {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`

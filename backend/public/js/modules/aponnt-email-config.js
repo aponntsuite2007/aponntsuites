@@ -41,7 +41,7 @@ const AponntEmailConfigModule = (() => {
         try {
             console.log('[EMAIL-CONFIG] Cargando EMAIL_INFO desde BD...');
 
-            const staffToken = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const staffToken = window.getMultiKeyToken();
             const normalToken = localStorage.getItem('token') || sessionStorage.getItem('token');
             const token = staffToken || normalToken;
 
@@ -94,7 +94,7 @@ const AponntEmailConfigModule = (() => {
         try {
             // MODULO SIN RESTRICCIONES - Acceso libre para todos los admins
             // Buscar token en localStorage Y sessionStorage (como admin-panel-controller)
-            const staffToken = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const staffToken = window.getMultiKeyToken();
             const normalToken = localStorage.getItem('token') || sessionStorage.getItem('token');
             const token = staffToken || normalToken;
 
@@ -1460,7 +1460,7 @@ const AponntEmailConfigModule = (() => {
     async function apiCall(url, options = {}) {
         // Buscar token de staff de Aponnt (panel-administrativo) o token normal (panel-empresa)
         // Buscar en localStorage Y sessionStorage (como admin-panel-controller)
-        const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff') || localStorage.getItem('token') || sessionStorage.getItem('token');
+        const token = window.getMultiKeyToken() || localStorage.getItem('token') || sessionStorage.getItem('token');
 
         // VALIDACIÓN DE TOKEN DESHABILITADA - Módulo público
         // if (!token) {

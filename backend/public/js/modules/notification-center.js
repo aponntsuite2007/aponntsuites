@@ -71,7 +71,8 @@ const NotificationCenter = {
         attendance: { label: 'Asistencia', icon: '⏱️' },
         training: { label: 'Capacitación', icon: '📚' },
         system: { label: 'Sistema', icon: '⚙️' },
-        other: { label: 'Otros', icon: '📌' }
+        other: { label: 'Otros', icon: '📌' },
+        emailTracking: { label: 'Email Tracking', icon: '📧' }
     },
 
     // ========== INICIALIZACIÓN ==========
@@ -910,31 +911,36 @@ const NotificationCenter = {
                         </div>
                     </div>
 
-                    <!-- Lista de notificaciones -->
-                    <div class="nc-list">
-                        ${this.renderGroupList(filteredNotifications)}
-                    </div>
+                    ${this.showEmailTracking ? `
+                        <!-- Email Tracking Widget -->
+                        <div id="emailTrackingContainer" style="grid-column: 1 / -1; width: 100%; overflow: auto;"></div>
+                    ` : `
+                        <!-- Lista de notificaciones -->
+                        <div class="nc-list">
+                            ${this.renderGroupList(filteredNotifications)}
+                        </div>
 
-                    <!-- Panel de detalle -->
-                    <div class="nc-detail" id="ncDetail">
-                        <div class="empty-state">
-                            <div class="empty-icon">📬</div>
-                            <h3>Selecciona una notificación</h3>
-                            <p style="margin-bottom: 20px;">Haz clic en un elemento de la lista para ver los detalles</p>
+                        <!-- Panel de detalle -->
+                        <div class="nc-detail" id="ncDetail">
+                            <div class="empty-state">
+                                <div class="empty-icon">📬</div>
+                                <h3>Selecciona una notificación</h3>
+                                <p style="margin-bottom: 20px;">Haz clic en un elemento de la lista para ver los detalles</p>
 
-                            <!-- Mini guía de características -->
-                            <div style="text-align: left; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 20px; max-width: 300px;">
-                                <div style="font-size: 12px; font-weight: 600; color: #fff; margin-bottom: 12px;">✨ Características del módulo</div>
-                                <div style="font-size: 11px; color: #aaa; line-height: 2;">
-                                    <div>🧠 <span style="color: #00d4ff;">IA integrada</span> - Análisis inteligente</div>
-                                    <div>⏱️ <span style="color: #fd7e14;">SLA tracking</span> - Deadlines visibles</div>
-                                    <div>✅ <span style="color: #27ae60;">Workflows</span> - Aprobar/Rechazar</div>
-                                    <div>📜 <span style="color: #667eea;">Historial</span> - Trazabilidad completa</div>
-                                    <div>🔔 <span style="color: #e74c3c;">Real-time</span> - Auto-actualización</div>
+                                <!-- Mini guía de características -->
+                                <div style="text-align: left; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 20px; max-width: 300px;">
+                                    <div style="font-size: 12px; font-weight: 600; color: #fff; margin-bottom: 12px;">✨ Características del módulo</div>
+                                    <div style="font-size: 11px; color: #aaa; line-height: 2;">
+                                        <div>🧠 <span style="color: #00d4ff;">IA integrada</span> - Análisis inteligente</div>
+                                        <div>⏱️ <span style="color: #fd7e14;">SLA tracking</span> - Deadlines visibles</div>
+                                        <div>✅ <span style="color: #27ae60;">Workflows</span> - Aprobar/Rechazar</div>
+                                        <div>📜 <span style="color: #667eea;">Historial</span> - Trazabilidad completa</div>
+                                        <div>🔔 <span style="color: #e74c3c;">Real-time</span> - Auto-actualización</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    `}
                 </div>
             </div>
         `;
@@ -1555,11 +1561,20 @@ const NotificationCenter = {
             return;
         }
         this.filters.categoryFilter = category;
+
+        // Email Tracking es un caso especial - muestra el widget en lugar de filtrar notificaciones
+        if (category === 'emailTracking') {
+            this.showEmailTracking = true;
+        } else {
+            this.showEmailTracking = false;
+        }
+
         this.render();
     },
 
     clearCategoryFilter() {
         this.filters.categoryFilter = null;
+        this.showEmailTracking = false;
         this.render();
     },
 
@@ -1885,6 +1900,30 @@ const NotificationCenter = {
                 }
             }
         });
+
+        // Inicializar EmailTrackingWidget si está activo
+        if (this.showEmailTracking) {
+            this.initializeEmailTrackingWidget();
+        }
+    },
+
+    initializeEmailTrackingWidget() {
+        // Esperar a que el DOM esté renderizado
+        setTimeout(() => {
+            const container = document.getElementById('emailTrackingContainer');
+            if (container && window.EmailTrackingWidget) {
+                console.log('📧 [NC] Inicializando EmailTrackingWidget...');
+                window.EmailTrackingWidget.init('emailTrackingContainer', {
+                    categoryFilter: null, // Ver todos los emails (global)
+                    showStats: true,
+                    showFilters: true,
+                    autoRefresh: true,
+                    refreshInterval: 30000
+                });
+            } else {
+                console.error('❌ [NC] EmailTrackingWidget no disponible o contenedor no encontrado');
+            }
+        }, 100);
     }
 };
 

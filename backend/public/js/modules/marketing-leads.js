@@ -20,9 +20,7 @@ const MarketingLeadsModule = {
 
     // Token de autenticación
     getToken() {
-        return localStorage.getItem('aponnt_token_staff') ||
-               localStorage.getItem('token') ||
-               sessionStorage.getItem('aponnt_token_staff');
+        return window.getMultiKeyToken();
     },
 
     // Idiomas disponibles

@@ -894,8 +894,7 @@
         baseUrl: '/api/aponnt/dashboard',
 
         getHeaders() {
-            const token = localStorage.getItem('aponnt_token_staff') ||
-                         sessionStorage.getItem('aponnt_token_staff') || '';
+            const token = window.getMultiKeyToken() || '';
             return {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
@@ -2164,7 +2163,7 @@
             }
 
             try {
-                const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                const token = window.getMultiKeyToken();
                 const response = await fetch(`/api/v1/companies/${companyId}/status`, {
                     method: 'PUT',
                     headers: {
@@ -2232,7 +2231,7 @@
          */
         async showInvoiceManager(invoiceId) {
             try {
-                const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                const token = window.getMultiKeyToken();
                 const response = await fetch(`/api/invoicing/invoices/${invoiceId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -2372,7 +2371,7 @@
             formData.append('invoice_pdf', fileInput.files[0]);
 
             try {
-                const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                const token = window.getMultiKeyToken();
                 const response = await fetch(`/api/invoicing/invoices/${invoiceId}/upload-pdf`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
@@ -2406,7 +2405,7 @@
             if (!confirm(`¿Enviar factura a ${toEmail}?`)) return;
 
             try {
-                const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                const token = window.getMultiKeyToken();
                 const response = await fetch(`/api/invoicing/invoices/${invoiceId}/send-email`, {
                     method: 'POST',
                     headers: {
@@ -2433,7 +2432,7 @@
 
         async downloadInvoicePdf(invoiceId) {
             try {
-                const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                const token = window.getMultiKeyToken();
                 const response = await fetch(`/api/invoicing/invoices/${invoiceId}/pdf`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });

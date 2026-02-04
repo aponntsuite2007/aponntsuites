@@ -4759,7 +4759,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
     try {
       // Obtener candidatos para restauración
-      const token = localStorage.getItem('aponnt_token_staff');
+      const token = window.getMultiKeyToken();
       const response = await fetch('/api/restore/candidates', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -5022,7 +5022,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     formData.append('zipFile', fileInput.files[0]);
 
     try {
-      const token = localStorage.getItem('aponnt_token_staff');
+      const token = window.getMultiKeyToken();
       const response = await fetch(`/api/restore/${companyId}/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
@@ -5057,7 +5057,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     validationContent.innerHTML = '<p>⏳ Validando compatibilidad...</p>';
 
     try {
-      const token = localStorage.getItem('aponnt_token_staff');
+      const token = window.getMultiKeyToken();
       const response = await fetch(`/api/restore/${companyId}/validate`, {
         method: 'POST',
         headers: {
@@ -5129,7 +5129,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     resultsContent.innerHTML = '<p>⏳ Ejecutando simulación...</p>';
 
     try {
-      const token = localStorage.getItem('aponnt_token_staff');
+      const token = window.getMultiKeyToken();
       const response = await fetch(`/api/restore/${companyId}/dry-run`, {
         method: 'POST',
         headers: {
@@ -5199,7 +5199,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     resultsContent.innerHTML = '<p>⏳ Ejecutando restauración... (esto puede tardar varios minutos)</p>';
 
     try {
-      const token = localStorage.getItem('aponnt_token_staff');
+      const token = window.getMultiKeyToken();
       const response = await fetch(`/api/restore/${companyId}/execute`, {
         method: 'POST',
         headers: {
@@ -5310,7 +5310,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
     try {
       // Intentar primero con token de staff, luego con token normal
-      const token = localStorage.getItem('aponnt_token_staff') || localStorage.getItem('aponnt_token');
+      const token = window.getMultiKeyToken();
 
       const headers = { 'Content-Type': 'application/json' };
       // Solo agregar Authorization si hay un token válido
@@ -5545,7 +5545,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
         value = input.value;
       }
 
-      const token = localStorage.getItem('aponnt_token_staff');
+      const token = window.getMultiKeyToken();
       const response = await fetch(`/api/aponnt/system-settings/key/${key}`, {
         method: 'PUT',
         headers: {
@@ -5587,7 +5587,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     }
 
     try {
-      const token = localStorage.getItem('aponnt_token_staff');
+      const token = window.getMultiKeyToken();
       const response = await fetch(`/api/aponnt/system-settings/reset/${key}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -5620,7 +5620,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     }
 
     try {
-      const token = localStorage.getItem('aponnt_token_staff');
+      const token = window.getMultiKeyToken();
       const response = await fetch('/api/aponnt/system-settings/seed', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }

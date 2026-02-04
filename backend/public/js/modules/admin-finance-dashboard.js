@@ -575,7 +575,7 @@ const AdminFinanceDashboard = {
 
     async _loadStats() {
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`${this._apiBase}/finance/stats`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -599,7 +599,7 @@ const AdminFinanceDashboard = {
 
     async _loadInvoices() {
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`${this._apiBase}/invoices`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -617,7 +617,7 @@ const AdminFinanceDashboard = {
 
     async _loadCommissions() {
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`${this._apiBase}/vendor-commissions`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });

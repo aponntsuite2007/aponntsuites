@@ -855,8 +855,8 @@ const AITestingDashboard = {
 };
 
 // CSS para tabs activos
-const style = document.createElement('style');
-style.textContent = `
+const aiTestingStyle = document.createElement('style');
+aiTestingStyle.textContent = `
   .testing-tab {
     padding: 12px 24px;
     border: none;
@@ -886,7 +886,7 @@ style.textContent = `
     transform: translateY(-2px);
   }
 `;
-document.head.appendChild(style);
+document.head.appendChild(aiTestingStyle);
 
 // Export for module systems and window global
 if (typeof module !== 'undefined' && module.exports) {

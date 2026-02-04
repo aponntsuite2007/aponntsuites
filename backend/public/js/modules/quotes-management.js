@@ -231,7 +231,7 @@ window.QuotesManagement = (function() {
      */
     async function loadQuotes() {
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/quotes', {
                 headers: {
                     'Authorization': 'Bearer ' + token
@@ -330,7 +330,7 @@ window.QuotesManagement = (function() {
 
     async function loadPipelineStats() {
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/pipeline-stats', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -610,7 +610,7 @@ window.QuotesManagement = (function() {
         }
 
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
 
             // Primero obtener el trace_id del quote
             var quoteRes = await fetch('/api/quotes/' + quoteId, {
@@ -789,7 +789,7 @@ window.QuotesManagement = (function() {
         // Fetch full context
         var ctx = { contract: null, invoice: null, trials: [], lead: null, onboarding_phase: '' };
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/' + id + '/full-context', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -1108,7 +1108,7 @@ window.QuotesManagement = (function() {
      */
     async function generateContract(quoteId) {
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/' + quoteId + '/contract/generate', {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token }
@@ -1128,7 +1128,7 @@ window.QuotesManagement = (function() {
     async function sendContract(quoteId) {
         if (!confirm('¿Enviar el contrato EULA por email al cliente?\n\nEl cliente recibira un link para aceptar los terminos.')) return;
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/' + quoteId + '/contract/send', {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token }
@@ -1169,7 +1169,7 @@ window.QuotesManagement = (function() {
         }
 
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/' + quoteId + '/contract/sign', {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
@@ -1196,7 +1196,7 @@ window.QuotesManagement = (function() {
      */
     async function downloadContractPDF(quoteId) {
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/' + quoteId + '/contract-pdf', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -1233,7 +1233,7 @@ window.QuotesManagement = (function() {
      */
     async function showContractPreview(quoteId) {
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/' + quoteId + '/contract-preview', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -1372,7 +1372,7 @@ window.QuotesManagement = (function() {
         if (!confirm('¿Enviar este presupuesto por email al cliente?')) return;
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/quotes/' + id + '/send-email', {
                 method: 'POST',
                 headers: {
@@ -1402,7 +1402,7 @@ window.QuotesManagement = (function() {
      */
     async function downloadPDF(id) {
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/quotes/' + id + '/pdf', {
                 headers: {
                     'Authorization': 'Bearer ' + token
@@ -1438,7 +1438,7 @@ window.QuotesManagement = (function() {
         if (!confirm('¿Activar este presupuesto? Se creará un contrato activo.')) return;
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch('/api/quotes/' + id + '/activate', {
                 method: 'POST',
                 headers: {
@@ -1473,7 +1473,7 @@ window.QuotesManagement = (function() {
         }
 
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var response = await fetch('/api/quotes/' + id + '/revert-to-sent', {
                 method: 'POST',
                 headers: {
@@ -1517,7 +1517,7 @@ window.QuotesManagement = (function() {
         }
 
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var response = await fetch('/api/quotes/' + id + '/change-status', {
                 method: 'POST',
                 headers: {
@@ -1548,7 +1548,7 @@ window.QuotesManagement = (function() {
      */
     async function viewStatusHistory(id) {
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var response = await fetch('/api/quotes/' + id + '/status-history', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -1697,7 +1697,7 @@ window.QuotesManagement = (function() {
         }
 
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var response = await fetch('/api/quotes/' + quoteId + '/generate-pre-invoice', {
                 method: 'POST',
                 headers: {
@@ -1811,7 +1811,7 @@ window.QuotesManagement = (function() {
         formData.append('quote_id', quoteId);
 
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var response = await fetch('/api/quotes/' + quoteId + '/upload-invoice', {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token },
@@ -1851,7 +1851,7 @@ window.QuotesManagement = (function() {
     async function uploadInvoicePDFLegacy(quoteId) {
         // First get the invoice
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/' + quoteId + '/invoice', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -1905,7 +1905,7 @@ window.QuotesManagement = (function() {
      */
     async function sendInvoiceEmail(quoteId) {
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/' + quoteId + '/invoice', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -1949,7 +1949,7 @@ window.QuotesManagement = (function() {
         // Pre-fetch invoice to get amount
         var prefillAmount = '';
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/' + quoteId + '/invoice', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -2030,7 +2030,7 @@ window.QuotesManagement = (function() {
         }
 
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
 
             var formData = new FormData();
             formData.append('amount', amount);
@@ -2076,7 +2076,7 @@ window.QuotesManagement = (function() {
      */
     async function checkInvoiceStatus(quoteId) {
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/quotes/' + quoteId + '/invoice', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -2157,7 +2157,7 @@ window.QuotesManagement = (function() {
 
     async function loadInlineSteps(quoteId) {
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
 
             // Fetch invoice and pre-invoice status
             var resp = await fetch('/api/quotes/' + quoteId + '/billing-status', {
@@ -2226,7 +2226,7 @@ window.QuotesManagement = (function() {
         } catch (e) {
             // Fallback: try old endpoint
             try {
-                var token2 = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+                var token2 = window.getMultiKeyToken();
                 var resp2 = await fetch('/api/quotes/' + quoteId + '/invoice', {
                     headers: { 'Authorization': 'Bearer ' + token2 }
                 });
@@ -2306,7 +2306,7 @@ window.QuotesManagement = (function() {
     function getStaffRole() {
         try {
             // Opción 1: Decodificar JWT directamente (más confiable)
-            var token = sessionStorage.getItem('aponnt_token_staff') || localStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             if (token) {
                 var payload = JSON.parse(atob(token.split('.')[1]));
                 console.log('[QUOTES] Rol desde JWT:', payload.role);
@@ -2431,7 +2431,7 @@ window.QuotesManagement = (function() {
         }
 
         try {
-            var token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            var token = window.getMultiKeyToken();
             var resp = await fetch('/api/v1/companies/' + companyId + '/manual-onboarding', {
                 method: 'POST',
                 headers: {

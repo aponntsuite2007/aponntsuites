@@ -226,6 +226,14 @@ const RolePermissions = (function() {
             component: 'AponntEmailConfig',
             permission: []  // Acceso público para todos los roles
         },
+        'email-tracking': {
+            id: 'email-tracking',
+            icon: '📊',
+            label: 'Email Tracking',
+            description: 'Seguimiento de emails enviados (aperturas, clicks, bounces)',
+            component: 'EmailTracking',
+            permission: []  // Acceso público para todos los roles
+        },
 
         // ========== CENTRO DE NOTIFICACIONES ADMIN ==========
         'notificaciones-admin': {
@@ -485,7 +493,7 @@ const RolePermissions = (function() {
             groups: [
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem', 'ai-testing', 'debugging', 'metricas-tech', 'aponnt-email-config']
+                    sections: ['engineering', 'brain-ecosystem', 'ai-testing', 'debugging', 'metricas-tech', 'aponnt-email-config', 'email-tracking']
                 },
                 {
                     title: '📢 Marketing',
@@ -539,7 +547,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem', 'ai-testing', 'aponnt-email-config']
+                    sections: ['engineering', 'brain-ecosystem', 'ai-testing', 'aponnt-email-config', 'email-tracking']
                 }
             ]
         },
@@ -634,7 +642,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem', 'ai-testing', 'debugging', 'metricas-tech', 'aponnt-email-config']
+                    sections: ['engineering', 'brain-ecosystem', 'ai-testing', 'debugging', 'metricas-tech', 'aponnt-email-config', 'email-tracking']
                 },
                 {
                     title: '📋 Reportes',

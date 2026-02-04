@@ -818,7 +818,7 @@ class OrgChartIntelligent {
         console.log(`🔄 [OrgChart] Cargando data...`);
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff') || localStorage.getItem('token');
+            const token = window.getMultiKeyToken();
             const endpoint = this.type === 'aponnt'
                 ? '/api/brain/orgchart/aponnt'
                 : `/api/brain/orgchart/company/${this.companyId}`;

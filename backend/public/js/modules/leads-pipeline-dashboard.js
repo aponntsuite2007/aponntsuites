@@ -191,7 +191,7 @@ const LeadsPipelineDashboard = (function() {
 
     async function loadLeads() {
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const params = new URLSearchParams();
 
             if (_isManager) {
@@ -243,7 +243,7 @@ const LeadsPipelineDashboard = (function() {
 
     async function loadLeadAlerts() {
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
 
             // Cargar emails de quotes (presupuestos) enviados a leads
             const response = await fetch('/api/admin/notifications/email-tracking/list?category=quote&limit=10', {
@@ -659,7 +659,7 @@ const LeadsPipelineDashboard = (function() {
         // Cargar actividades
         let activities = [];
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`/api/aponnt/leads/${leadId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -839,7 +839,7 @@ const LeadsPipelineDashboard = (function() {
         const timeline = parseInt(document.getElementById('bant-timeline').value);
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`/api/aponnt/leads/${leadId}/bant`, {
                 method: 'PATCH',
                 headers: {
@@ -880,7 +880,7 @@ const LeadsPipelineDashboard = (function() {
         }
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`/api/aponnt/leads/${leadId}/lifecycle`, {
                 method: 'POST',
                 headers: {
@@ -945,7 +945,7 @@ const LeadsPipelineDashboard = (function() {
         const reactivateAfter = document.getElementById('reactivate-date').value || null;
 
         try {
-            const token = localStorage.getItem('aponnt_token_staff');
+            const token = window.getMultiKeyToken();
             const response = await fetch(`/api/aponnt/leads/${leadId}/disqualify`, {
                 method: 'POST',
                 headers: {

@@ -89,7 +89,7 @@ const NotificationsAdmin = {
     // ========== API CALLS ==========
 
     getAuthHeaders() {
-        const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+        const token = window.getMultiKeyToken();
         return {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -361,7 +361,7 @@ const NotificationsAdmin = {
 
             /* Emails List */
             .emails-list { max-height: 500px; overflow-y: auto; }
-            .email-row { display: grid; grid-template-columns: 2fr 3fr 1fr 1fr; gap: 15px; padding: 12px 15px; background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 8px; align-items: center; border-left: 3px solid transparent; }
+            .email-row { display: grid; grid-template-columns: 2fr 3fr 1fr 1fr auto; gap: 15px; padding: 12px 15px; background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 8px; align-items: center; border-left: 3px solid transparent; }
             .email-row:hover { background: rgba(255,255,255,0.05); }
             .email-row.status-sent { border-left-color: #3498db; }
             .email-row.status-opened { border-left-color: #27ae60; }
@@ -379,6 +379,26 @@ const NotificationsAdmin = {
             .email-status-badge.pending { background: rgba(241, 196, 15, 0.2); color: #f1c40f; }
             .email-date { color: #888; font-size: 12px; text-align: right; }
             .email-date small { display: block; font-size: 10px; color: #666; }
+            .email-actions { text-align: center; }
+            .btn-view-email {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s;
+                white-space: nowrap;
+            }
+            .btn-view-email:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            }
+            .btn-view-email:active {
+                transform: translateY(0);
+            }
             .emails-empty { text-align: center; padding: 40px; color: #888; }
             .emails-empty-icon { font-size: 3em; margin-bottom: 15px; opacity: 0.5; }
 
@@ -815,6 +835,11 @@ const NotificationsAdmin = {
                         ${this.formatDate(email.sent_at || email.created_at)}
                         ${email.opened_at ? `<small>📖 ${this.formatDate(email.opened_at)}</small>` : ''}
                     </div>
+                    <div class="email-actions">
+                        <button class="btn-view-email" onclick="NotificationsAdmin.showEmailDetail('${email.tracking_id}')">
+                            👁️ Ver
+                        </button>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -876,6 +901,41 @@ const NotificationsAdmin = {
             clearInterval(this.refreshInterval);
             this.refreshInterval = null;
         }
+    },
+
+    showEmailDetail(trackingId) {
+        const email = this.emailsList.find(e => e.tracking_id === trackingId);
+        if (!email) {
+            console.error('Email no encontrado:', trackingId);
+            return;
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'email-modal-overlay';
+        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;';
+        modal.innerHTML = `
+            <div style="background:#1a1a2e;border-radius:12px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.5);">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 25px;border-bottom:1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size:18px;font-weight:600;color:#fff;">📧 Detalle del Email</div>
+                    <button onclick="this.closest('[style*=position]').remove()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer;padding:0;width:32px;height:32px;line-height:1;">×</button>
+                </div>
+                <div style="padding:25px;color:#fff;">
+                    <div style="margin-bottom:20px;"><div style="font-size:12px;color:#888;text-transform:uppercase;margin-bottom:8px;">Destinatario</div><div>${email.recipient_email}</div></div>
+                    <div style="margin-bottom:20px;"><div style="font-size:12px;color:#888;text-transform:uppercase;margin-bottom:8px;">Asunto</div><div>${email.subject || 'Sin asunto'}</div></div>
+                    <div style="margin-bottom:20px;"><div style="font-size:12px;color:#888;text-transform:uppercase;margin-bottom:8px;">Categoría</div><div>${email.category || '-'}</div></div>
+                    <div style="margin-bottom:20px;"><div style="font-size:12px;color:#888;text-transform:uppercase;margin-bottom:8px;">Tracking ID</div><div style="font-family:monospace;font-size:11px;">${email.tracking_id}</div></div>
+                    <div style="margin-top:30px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size:12px;color:#888;text-transform:uppercase;margin-bottom:15px;">Timeline</div>
+                        ${email.sent_at ? `<div style="display:flex;gap:15px;margin-bottom:15px;"><div style="width:40px;height:40px;border-radius:50%;background:rgba(52,152,219,0.2);display:flex;align-items:center;justify-content:center;">📤</div><div><div style="font-weight:500;margin-bottom:4px;">Enviado</div><div style="color:#888;font-size:12px;">${new Date(email.sent_at).toLocaleString('es-AR')}</div></div></div>` : ''}
+                        ${email.opened_at ? `<div style="display:flex;gap:15px;margin-bottom:15px;"><div style="width:40px;height:40px;border-radius:50%;background:rgba(39,174,96,0.2);display:flex;align-items:center;justify-content:center;">✅</div><div><div style="font-weight:500;margin-bottom:4px;">Abierto</div><div style="color:#888;font-size:12px;">${new Date(email.opened_at).toLocaleString('es-AR')}</div></div></div>` : ''}
+                        ${email.clicked_at ? `<div style="display:flex;gap:15px;margin-bottom:15px;"><div style="width:40px;height:40px;border-radius:50%;background:rgba(155,89,182,0.2);display:flex;align-items:center;justify-content:center;">🖱️</div><div><div style="font-weight:500;margin-bottom:4px;">Clickeado</div><div style="color:#888;font-size:12px;">${new Date(email.clicked_at).toLocaleString('es-AR')}</div></div></div>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
     },
 
     destroy() {
