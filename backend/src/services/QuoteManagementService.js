@@ -1193,47 +1193,18 @@ class QuoteManagementService {
 
     console.log(`📦 [SYNC] Sincronizando ${allModuleKeys.length} módulos (${CORE_MODULE_KEYS.length} CORE + ${quoteModuleKeys.length} del presupuesto) para empresa ${companyId}`);
 
-    // Buscar IDs de system_modules
-    const [systemModules] = await sequelize.query(`
-      SELECT id, module_key, base_price FROM system_modules WHERE module_key = ANY($1::text[])
-    `, {
-      bind: [allModuleKeys],
-      type: QueryTypes.SELECT,
-      raw: true
-    });
-
-    // sequelize.query con bind y SELECT puede devolver array o object
-    const smRows = Array.isArray(systemModules) ? systemModules : (systemModules ? [systemModules] : []);
-
-    // Fallback: query directa si bind no funciona bien
-    let moduleMap = {};
-    if (smRows.length === 0) {
-      const fallbackResult = await sequelize.query(
-        `SELECT id, module_key, base_price FROM system_modules WHERE module_key IN (${allModuleKeys.map((_, i) => `$${i+1}`).join(',')})`,
-        {
-          bind: allModuleKeys,
-          type: QueryTypes.SELECT
-        }
-      );
-      const rows = Array.isArray(fallbackResult) ? fallbackResult : [];
-      rows.forEach(m => { moduleMap[m.module_key] = m; });
-    } else {
-      smRows.forEach(m => { moduleMap[m.module_key] = m; });
-    }
-
-    // Si el map está vacío, intentar con replacements en vez de bind
-    if (Object.keys(moduleMap).length === 0) {
-      const rawResult = await sequelize.query(
-        `SELECT id, module_key, base_price FROM system_modules WHERE module_key IN (:keys)`,
-        {
-          replacements: { keys: allModuleKeys },
-          type: QueryTypes.SELECT
-        }
-      );
-      if (Array.isArray(rawResult)) {
-        rawResult.forEach(m => { moduleMap[m.module_key] = m; });
+    // Buscar IDs de system_modules usando replacements (más confiable que bind)
+    const systemModules = await sequelize.query(
+      `SELECT id, module_key, base_price FROM system_modules WHERE module_key IN (:keys)`,
+      {
+        replacements: { keys: allModuleKeys },
+        type: QueryTypes.SELECT
       }
-    }
+    );
+
+    const moduleMap = {};
+    const rows = Array.isArray(systemModules) ? systemModules : [];
+    rows.forEach(m => { moduleMap[m.module_key] = m; });
 
     console.log(`📦 [SYNC] Encontrados ${Object.keys(moduleMap).length}/${allModuleKeys.length} en system_modules`);
 
