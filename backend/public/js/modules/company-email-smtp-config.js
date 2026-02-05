@@ -98,6 +98,7 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
     async function loadConfig() {
         try {
             state.loading = true;
+            state.error = null;
             render();
 
             // Obtener company_id del token decodificado
@@ -114,11 +115,24 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
             state.loading = false;
             render();
 
+            // Si no hay configuración, abrir el modal de configuración automáticamente
+            if (!state.config) {
+                console.log('📧 [SMTP] Sin configuración existente, abriendo formulario...');
+                setTimeout(() => openConfigModal(), 300);
+            }
+
         } catch (error) {
             console.error('❌ Error cargando configuración:', error);
             state.loading = false;
-            state.error = error.message;
-            render();
+            // Si es un 404 o "no hay configuración", no es un error real
+            if (error.message && error.message.includes('No hay configuración')) {
+                state.config = null;
+                render();
+                setTimeout(() => openConfigModal(), 300);
+            } else {
+                state.error = error.message;
+                render();
+            }
         }
     }
 
@@ -452,9 +466,9 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
 
                                     <div class="form-group">
                                         <label>Seleccione su Proveedor</label>
-                                        <select class="form-control" id="smtp-provider" onchange="CompanyEmailSMTPConfigModule.onProviderChange(this.value)">
+                                        <select class="form-control" id="smtp-provider" onchange="CompanyEmailSMTPConfigModule.onProviderChange(this.value)" style="background:#1e293b;color:#e2e8f0;">
                                             ${Object.keys(SMTP_PROVIDERS).map(key => `
-                                                <option value="${key}" ${currentProvider === key ? 'selected' : ''}>
+                                                <option value="${key}" ${currentProvider === key ? 'selected' : ''} style="background:#1e293b;color:#e2e8f0;">
                                                     ${SMTP_PROVIDERS[key].name}
                                                 </option>
                                             `).join('')}
@@ -558,6 +572,89 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
                                         💾 Guardar Configuración
                                     </button>
                                 </div>
+
+                                <!-- Guía detallada de App Passwords -->
+                                <div style="margin-top: 2rem; padding: 20px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: 10px;">
+                                    <h4 style="color: #c4b5fd; margin: 0 0 15px 0; font-size: 1rem;">📖 Guía: Cómo obtener App Password / Contraseña de Aplicación</h4>
+                                    <p style="color: #94a3b8; font-size: 12px; margin-bottom: 15px;">La mayoría de proveedores requieren una <strong style="color:#e2e8f0;">contraseña de aplicación</strong> en vez de tu contraseña normal. Seguí estos pasos según tu proveedor:</p>
+
+                                    <!-- Gmail -->
+                                    <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border-left: 3px solid #ea4335;">
+                                        <h5 style="color: #fca5a5; margin: 0 0 8px 0; font-size: 13px;">📧 Gmail / Google Workspace</h5>
+                                        <ol style="margin: 0; padding-left: 18px; color: #94a3b8; font-size: 12px; line-height: 1.8;">
+                                            <li>Ingresá a <a href="https://myaccount.google.com/security" target="_blank" style="color:#60a5fa;">myaccount.google.com/security</a></li>
+                                            <li>Activá la <strong style="color:#e2e8f0;">Verificación en 2 pasos</strong> (obligatorio)</li>
+                                            <li>Volvé a Seguridad → buscá <strong style="color:#e2e8f0;">"Contraseñas de aplicación"</strong></li>
+                                            <li>O ingresá directo a: <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:#60a5fa;">myaccount.google.com/apppasswords</a></li>
+                                            <li>Seleccioná "Otro" → escribí "Aponnt SMTP" → click "Generar"</li>
+                                            <li>Copiá la contraseña de 16 caracteres (ej: <code style="color:#a78bfa;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">abcd efgh ijkl mnop</code>)</li>
+                                            <li>Pegala en el campo "App Password" de arriba (sin espacios)</li>
+                                        </ol>
+                                        <p style="color:#6b7280; font-size: 11px; margin: 6px 0 0 0;">SMTP: smtp.gmail.com | Puerto: 587 | TLS: Sí</p>
+                                    </div>
+
+                                    <!-- Outlook / Hotmail -->
+                                    <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border-left: 3px solid #0078d4;">
+                                        <h5 style="color: #93c5fd; margin: 0 0 8px 0; font-size: 13px;">📨 Outlook.com / Hotmail</h5>
+                                        <ol style="margin: 0; padding-left: 18px; color: #94a3b8; font-size: 12px; line-height: 1.8;">
+                                            <li>Ingresá a <a href="https://account.live.com/proofs/Manage" target="_blank" style="color:#60a5fa;">account.live.com/proofs/Manage</a></li>
+                                            <li>Activá la <strong style="color:#e2e8f0;">Verificación en 2 pasos</strong></li>
+                                            <li>Volvé a Seguridad → <strong style="color:#e2e8f0;">"Contraseñas de aplicación"</strong></li>
+                                            <li>Click en "Crear una nueva contraseña de aplicación"</li>
+                                            <li>Copiá la contraseña generada y usala en el campo de arriba</li>
+                                        </ol>
+                                        <p style="color:#6b7280; font-size: 11px; margin: 6px 0 0 0;">SMTP: smtp-mail.outlook.com | Puerto: 587 | TLS: Sí</p>
+                                    </div>
+
+                                    <!-- Office 365 -->
+                                    <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border-left: 3px solid #d83b01;">
+                                        <h5 style="color: #fdba74; margin: 0 0 8px 0; font-size: 13px;">🏢 Microsoft 365 / Office 365</h5>
+                                        <ol style="margin: 0; padding-left: 18px; color: #94a3b8; font-size: 12px; line-height: 1.8;">
+                                            <li>Ingresá a <a href="https://portal.office.com/account" target="_blank" style="color:#60a5fa;">portal.office.com/account</a></li>
+                                            <li>Ir a <strong style="color:#e2e8f0;">Seguridad → Contraseñas de aplicación</strong></li>
+                                            <li>Si no aparece, tu admin debe habilitar "App Passwords" en Azure AD</li>
+                                            <li>Creá una nueva contraseña y usala en el campo SMTP Password</li>
+                                        </ol>
+                                        <p style="color:#6b7280; font-size: 11px; margin: 6px 0 0 0;">SMTP: smtp.office365.com | Puerto: 587 | TLS: Sí</p>
+                                    </div>
+
+                                    <!-- Yahoo -->
+                                    <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border-left: 3px solid #720e9e;">
+                                        <h5 style="color: #d8b4fe; margin: 0 0 8px 0; font-size: 13px;">💌 Yahoo Mail</h5>
+                                        <ol style="margin: 0; padding-left: 18px; color: #94a3b8; font-size: 12px; line-height: 1.8;">
+                                            <li>Ingresá a <a href="https://login.yahoo.com/account/security" target="_blank" style="color:#60a5fa;">login.yahoo.com/account/security</a></li>
+                                            <li>Activá la <strong style="color:#e2e8f0;">Verificación en 2 pasos</strong></li>
+                                            <li>Luego volvé y buscá <strong style="color:#e2e8f0;">"Generar contraseña de aplicación"</strong></li>
+                                            <li>Seleccioná "Otra app" → escribí "Aponnt" → Generar</li>
+                                            <li>Copiá la contraseña y usala en el campo de arriba</li>
+                                        </ol>
+                                        <p style="color:#6b7280; font-size: 11px; margin: 6px 0 0 0;">SMTP: smtp.mail.yahoo.com | Puerto: 587 | TLS: Sí</p>
+                                    </div>
+
+                                    <!-- Zoho -->
+                                    <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border-left: 3px solid #e8443a;">
+                                        <h5 style="color: #fca5a5; margin: 0 0 8px 0; font-size: 13px;">🔷 Zoho Mail</h5>
+                                        <ol style="margin: 0; padding-left: 18px; color: #94a3b8; font-size: 12px; line-height: 1.8;">
+                                            <li>Ingresá a <a href="https://accounts.zoho.com/home#security/security_pwd" target="_blank" style="color:#60a5fa;">accounts.zoho.com → Seguridad</a></li>
+                                            <li>Buscá <strong style="color:#e2e8f0;">"Contraseñas específicas de aplicación"</strong></li>
+                                            <li>Generá una nueva con nombre "Aponnt SMTP"</li>
+                                            <li>Copiá y pegá en el campo de contraseña</li>
+                                        </ol>
+                                        <p style="color:#6b7280; font-size: 11px; margin: 6px 0 0 0;">SMTP: smtp.zoho.com | Puerto: 587 | TLS: Sí</p>
+                                    </div>
+
+                                    <!-- Custom -->
+                                    <div style="padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border-left: 3px solid #10b981;">
+                                        <h5 style="color: #6ee7b7; margin: 0 0 8px 0; font-size: 13px;">⚙️ Servidor SMTP Personalizado (GoDaddy, cPanel, etc.)</h5>
+                                        <ul style="margin: 0; padding-left: 18px; color: #94a3b8; font-size: 12px; line-height: 1.8;">
+                                            <li>Consultá con tu proveedor de hosting por los datos SMTP</li>
+                                            <li>Generalmente: <code style="color:#a78bfa;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">mail.tudominio.com</code> o <code style="color:#a78bfa;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">smtp.tudominio.com</code></li>
+                                            <li>Puerto habitual: <strong style="color:#e2e8f0;">587</strong> (TLS) o <strong style="color:#e2e8f0;">465</strong> (SSL)</li>
+                                            <li>Usuario: tu email completo (ej: <code style="color:#a78bfa;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">info@tuempresa.com</code>)</li>
+                                            <li>Contraseña: la misma del webmail o la que configuraste en cPanel</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -581,25 +678,25 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
                     align-items: flex-start;
                     margin-bottom: 2rem;
                     padding-bottom: 1rem;
-                    border-bottom: 2px solid #374151;
+                    border-bottom: 2px solid rgba(99,102,241,0.2);
                 }
 
                 .module-header h1 {
                     font-size: 2rem;
-                    color: #f9fafb;
+                    color: #e2e8f0;
                     margin-bottom: 0.5rem;
                 }
 
                 .module-subtitle {
                     font-size: 1rem;
-                    color: #9ca3af;
+                    color: #94a3b8;
                 }
 
                 .empty-state {
                     text-align: center;
                     padding: 4rem 2rem;
-                    background: #1f2937;
-                    border: 1px solid #374151;
+                    background: rgba(255,255,255,0.03);
+                    border: 1px dashed rgba(99,102,241,0.3);
                     border-radius: 12px;
                 }
 
@@ -610,18 +707,18 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
 
                 .empty-state h3 {
                     font-size: 1.5rem;
-                    color: #f9fafb;
+                    color: #e2e8f0;
                     margin-bottom: 0.5rem;
                 }
 
                 .empty-state p {
-                    color: #9ca3af;
+                    color: #94a3b8;
                     margin-bottom: 1.5rem;
                 }
 
                 .current-config-card {
-                    background: #1f2937;
-                    border: 1px solid #374151;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(99,102,241,0.2);
                     border-radius: 12px;
                     padding: 2rem;
                 }
@@ -632,12 +729,12 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
                     align-items: center;
                     margin-bottom: 1.5rem;
                     padding-bottom: 1rem;
-                    border-bottom: 1px solid #374151;
+                    border-bottom: 1px solid rgba(255,255,255,0.08);
                 }
 
                 .config-header h3 {
                     font-size: 1.25rem;
-                    color: #f9fafb;
+                    color: #e2e8f0;
                     margin-bottom: 0.5rem;
                 }
 
@@ -666,16 +763,16 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
                     display: flex;
                     justify-content: space-between;
                     padding: 0.5rem 0;
-                    border-bottom: 1px solid #374151;
+                    border-bottom: 1px solid rgba(255,255,255,0.06);
                 }
 
                 .config-label {
-                    color: #9ca3af;
+                    color: #94a3b8;
                     font-size: 0.875rem;
                 }
 
                 .config-value {
-                    color: #f9fafb;
+                    color: #e2e8f0;
                     font-weight: 500;
                 }
 
@@ -695,13 +792,15 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
                 }
 
                 .modal-dialog {
-                    background: #1f2937;
+                    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+                    border: 1px solid rgba(99,102,241,0.3);
                     border-radius: 12px;
                     max-width: 800px;
                     width: 90%;
                     max-height: 90vh;
                     overflow-y: auto;
                     margin: 2rem auto;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
                 }
 
                 .modal-content {
@@ -710,15 +809,16 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
 
                 .modal-header {
                     padding: 1.5rem;
-                    border-bottom: 1px solid #374151;
+                    border-bottom: 1px solid rgba(99,102,241,0.2);
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
+                    background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1));
                 }
 
                 .modal-header h3 {
                     font-size: 1.5rem;
-                    color: #f9fafb;
+                    color: #e2e8f0;
                 }
 
                 .close-btn {
@@ -745,7 +845,7 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
                 .form-section {
                     margin-bottom: 2rem;
                     padding-bottom: 1.5rem;
-                    border-bottom: 1px solid #374151;
+                    border-bottom: 1px solid rgba(255,255,255,0.08);
                 }
 
                 .form-section:last-of-type {
@@ -754,7 +854,7 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
 
                 .form-section h4 {
                     font-size: 1.125rem;
-                    color: #f9fafb;
+                    color: #c4b5fd;
                     margin-bottom: 1rem;
                 }
 
@@ -776,11 +876,23 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
                 .form-control {
                     width: 100%;
                     padding: 0.75rem;
-                    background: #374151;
+                    background: #1e293b;
                     border: 1px solid #4b5563;
                     border-radius: 6px;
-                    color: #f9fafb;
+                    color: #e2e8f0;
                     font-size: 0.875rem;
+                }
+
+                .smtp-config-module select.form-control,
+                .modal select.form-control {
+                    background: #1e293b;
+                    color: #e2e8f0;
+                }
+
+                .smtp-config-module select.form-control option,
+                .modal select.form-control option {
+                    background: #1e293b;
+                    color: #e2e8f0;
                 }
 
                 .form-control:focus {
@@ -845,7 +957,7 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
                     justify-content: flex-end;
                     margin-top: 2rem;
                     padding-top: 1rem;
-                    border-top: 1px solid #374151;
+                    border-top: 1px solid rgba(255,255,255,0.08);
                 }
 
                 /* Buttons */
@@ -860,43 +972,49 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
                 }
 
                 .btn-primary {
-                    background: #3b82f6;
+                    background: linear-gradient(135deg, #4f46e5, #6366f1);
                     color: white;
+                    border: 1px solid rgba(99,102,241,0.5);
                 }
 
                 .btn-primary:hover {
-                    background: #2563eb;
+                    background: linear-gradient(135deg, #4338ca, #4f46e5);
+                    box-shadow: 0 4px 15px rgba(99,102,241,0.3);
                 }
 
                 .btn-secondary {
-                    background: #6b7280;
-                    color: white;
+                    background: rgba(255,255,255,0.1);
+                    color: #e2e8f0;
+                    border: 1px solid rgba(255,255,255,0.15);
                 }
 
                 .btn-secondary:hover {
-                    background: #4b5563;
+                    background: rgba(255,255,255,0.15);
                 }
 
                 .btn-info {
-                    background: #0891b2;
+                    background: linear-gradient(135deg, #0891b2, #06b6d4);
                     color: white;
+                    border: 1px solid rgba(6,182,212,0.5);
                 }
 
                 .btn-info:hover {
-                    background: #0e7490;
+                    background: linear-gradient(135deg, #0e7490, #0891b2);
+                    box-shadow: 0 4px 15px rgba(6,182,212,0.3);
                 }
 
                 /* Loading */
                 .loading-container {
                     text-align: center;
                     padding: 4rem;
+                    color: #e2e8f0;
                 }
 
                 .spinner {
                     width: 3rem;
                     height: 3rem;
-                    border: 3px solid #374151;
-                    border-top-color: #3b82f6;
+                    border: 3px solid rgba(255,255,255,0.1);
+                    border-top-color: #6366f1;
                     border-radius: 50%;
                     margin: 0 auto 1rem;
                     animation: spin 0.8s linear infinite;
@@ -921,8 +1039,8 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
                 .error-container {
                     text-align: center;
                     padding: 4rem;
-                    background: #1f2937;
-                    border: 1px solid #374151;
+                    background: rgba(239,68,68,0.05);
+                    border: 1px solid rgba(239,68,68,0.2);
                     border-radius: 12px;
                 }
 
@@ -933,12 +1051,12 @@ var CompanyEmailSMTPConfigModule = window.CompanyEmailSMTPConfigModule || (funct
 
                 .error-container h3 {
                     font-size: 1.5rem;
-                    color: #f9fafb;
+                    color: #fca5a5;
                     margin-bottom: 0.5rem;
                 }
 
                 .error-container p {
-                    color: #9ca3af;
+                    color: #94a3b8;
                     margin-bottom: 1.5rem;
                 }
             </style>

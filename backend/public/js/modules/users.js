@@ -646,8 +646,8 @@ if (typeof window.showUsersContent === 'function') {
             padding: 20px 10px !important;
         }
 
-        [id*="Modal"] > div:first-child,
-        [id*="modal"] > div:first-child {
+        [id*="Modal"]:not(#userModal):not(#userCredentialsModal) > div:first-child,
+        [id*="modal"]:not(#userModal):not(#userCredentialsModal) > div:first-child {
             background: white !important;
             border-radius: 12px !important;
             width: 100% !important;
@@ -659,9 +659,22 @@ if (typeof window.showUsersContent === 'function') {
             box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
         }
 
+        /* Dark theme para modales de alta de usuario */
+        #userModal > div:first-child,
+        #userCredentialsModal > div:first-child {
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%) !important;
+            color: #e0e0e0 !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            max-width: 520px !important;
+            width: 92% !important;
+            padding: 35px !important;
+            border-radius: 20px !important;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6) !important;
+        }
+
         @media (max-width: 1200px) {
-            [id*="Modal"] > div:first-child,
-            [id*="modal"] > div:first-child {
+            [id*="Modal"]:not(#userModal):not(#userCredentialsModal) > div:first-child,
+            [id*="modal"]:not(#userModal):not(#userCredentialsModal) > div:first-child {
                 max-width: 95% !important;
                 padding: 20px !important;
             }
@@ -673,8 +686,8 @@ if (typeof window.showUsersContent === 'function') {
             .users-stats-grid { grid-template-columns: repeat(2, 1fr); }
             .users-search-grid { flex-direction: column; }
             .users-table th, .users-table td { padding: 10px 6px; font-size: 0.8em; }
-            [id*="Modal"] > div:first-child,
-            [id*="modal"] > div:first-child {
+            [id*="Modal"]:not(#userModal):not(#userCredentialsModal) > div:first-child,
+            [id*="modal"]:not(#userModal):not(#userCredentialsModal) > div:first-child {
                 max-width: 98% !important;
                 padding: 15px !important;
                 margin: 20px auto !important;
@@ -1390,101 +1403,99 @@ function showUserStats() {
 // Show add user dialog - Original functionality
 function showAddUser() {
     console.log('➕ [USERS] Mostrando formulario agregar usuario...');
-    
-    // Create modal for adding user (simplified version)
+
     const modal = document.createElement('div');
     modal.id = 'userModal';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-    `;
-    
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:10000;';
+
+    const inputStyle = 'width:100%;padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:0.95rem;box-sizing:border-box;outline:none;margin-top:6px;';
+    const selectStyle = 'width:100%;padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:#1e293b;color:#fff;font-size:0.95rem;box-sizing:border-box;outline:none;margin-top:6px;appearance:auto;';
+    const optionStyle = 'background:#1e293b;color:#fff;';
+    const labelStyle = 'color:rgba(255,255,255,0.7);font-size:0.85rem;font-weight:500;';
+    const smallStyle = 'color:rgba(255,255,255,0.4);font-size:0.8rem;display:block;margin-top:4px;';
+    const fieldStyle = 'margin-bottom:16px;';
+
     modal.innerHTML = `
-        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
-            <h3>➕ Agregar Nuevo Usuario</h3>
-            <div style="margin: 15px 0;">
-                <label>👤 Nombre completo:</label>
-                <input type="text" id="newUserName" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="Ej: Juan Pérez" required>
+        <div style="background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 50%,#16213e 100%);padding:35px;border-radius:20px;max-width:520px;width:92%;max-height:90vh;overflow-y:auto;border:1px solid rgba(255,255,255,0.1);box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+            <div style="text-align:center;margin-bottom:25px;">
+                <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 4px 20px rgba(102,126,234,0.4);">
+                    <i class="fas fa-user-plus" style="font-size:1.5rem;color:white;"></i>
+                </div>
+                <h3 style="margin:0;color:#fff;font-size:1.3rem;">Nuevo Usuario</h3>
+                <p style="color:rgba(255,255,255,0.4);margin:6px 0 0;font-size:0.85rem;">Complete los datos del empleado</p>
             </div>
-            <div style="margin: 15px 0;">
-                <label>📧 Email:</label>
-                <input type="email" id="newUserEmail" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="juan.perez@empresa.com" required>
+
+            <div style="${fieldStyle}">
+                <label style="${labelStyle}"><i class="fas fa-user" style="margin-right:6px;"></i>Nombre Completo *</label>
+                <input type="text" id="newUserName" style="${inputStyle}" placeholder="Ej: Juan Pérez" required>
             </div>
-            <div style="margin: 15px 0;">
-                <label>🏷️ Legajo/ID Empleado:</label>
-                <input type="text" id="newUserLegajo" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="EMP001" required>
+            <div style="${fieldStyle}">
+                <label style="${labelStyle}"><i class="fas fa-envelope" style="margin-right:6px;"></i>Email *</label>
+                <input type="email" id="newUserEmail" style="${inputStyle}" placeholder="juan.perez@empresa.com" required>
             </div>
-            <div style="margin: 15px 0;">
-                <label>🔑 Contraseña (para APK):</label>
-                <input type="password" id="newUserPassword" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="Contraseña para login APK" value="123456">
-                <small style="color: #666; display: block; margin-top: 5px;">
-                    💡 Esta será la contraseña que el usuario usará para loguearse en la APK
-                </small>
+            <div style="${fieldStyle}">
+                <label style="${labelStyle}"><i class="fas fa-id-badge" style="margin-right:6px;"></i>Legajo</label>
+                <input type="text" id="newUserLegajo" style="${inputStyle}background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);" placeholder="Se genera automaticamente (ej: EMP-8-0001)" readonly disabled>
+                <small style="${smallStyle}">Se asigna automaticamente al guardar.</small>
             </div>
-            <div style="margin: 15px 0;">
-                <label>👑 Rol:</label>
-                <select id="newUserRole" style="width: 100%; padding: 8px; margin-top: 5px;">
-                    <option value="employee">Empleado</option>
-                    <option value="supervisor">Supervisor</option>
-                    <option value="admin">Administrador</option>
+            <div style="${fieldStyle}">
+                <label style="${labelStyle}"><i class="fas fa-key" style="margin-right:6px;"></i>Contrasena</label>
+                <input type="password" id="newUserPassword" style="${inputStyle}" placeholder="Por defecto: admin123">
+                <small style="${smallStyle}">Opcional. Si queda vacio se asigna admin123.</small>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;${fieldStyle}">
+                <div>
+                    <label style="${labelStyle}"><i class="fas fa-crown" style="margin-right:6px;"></i>Rol</label>
+                    <select id="newUserRole" style="${selectStyle}">
+                        <option value="employee" style="${optionStyle}">Empleado</option>
+                        <option value="supervisor" style="${optionStyle}">Supervisor</option>
+                        <option value="admin" style="${optionStyle}">Administrador</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="${labelStyle}"><i class="fas fa-building" style="margin-right:6px;"></i>Departamento</label>
+                    <select id="newUserDept" style="${selectStyle}">
+                        <option value="" style="${optionStyle}">Seleccionar...</option>
+                    </select>
+                </div>
+            </div>
+            <div style="${fieldStyle}">
+                <label style="${labelStyle}"><i class="fas fa-file-contract" style="margin-right:6px;"></i>Convenio Colectivo</label>
+                <select id="newUserConvenio" style="${selectStyle}">
+                    <option value="" style="${optionStyle}">Seleccionar convenio...</option>
+                    <option value="Convenio General" style="${optionStyle}">Convenio General</option>
+                    <option value="Convenio Comercio" style="${optionStyle}">Convenio Comercio</option>
+                    <option value="Convenio Metalurgico" style="${optionStyle}">Convenio Metalurgico</option>
+                    <option value="Convenio Construccion" style="${optionStyle}">Convenio Construccion</option>
+                    <option value="Convenio Gastronomico" style="${optionStyle}">Convenio Gastronomico</option>
+                    <option value="Convenio UOM" style="${optionStyle}">Convenio UOM</option>
+                    <option value="Convenio UOCRA" style="${optionStyle}">Convenio UOCRA</option>
+                    <option value="Convenio Bancario" style="${optionStyle}">Convenio Bancario</option>
+                    <option value="Convenio Textil" style="${optionStyle}">Convenio Textil</option>
+                    <option value="Convenio Sanidad" style="${optionStyle}">Convenio Sanidad</option>
+                    <option value="Otro" style="${optionStyle}">Otro</option>
                 </select>
             </div>
-            <div style="margin: 15px 0;">
-                <label>🏢 Departamento:</label>
-                <select id="newUserDept" style="width: 100%; padding: 8px; margin-top: 5px;">
-                    <option value="">Selecciona un departamento...</option>
-                    <!-- Se cargarán dinámicamente desde la API -->
-                </select>
-                <small style="color: #666; font-size: 11px; display: block; margin-top: 5px;">
-                    💡 Los departamentos se cargan desde Gestión > Departamentos
-                </small>
-            </div>
-            <div style="margin: 15px 0;">
-                <label>📋 Convenio Colectivo de Trabajo:</label>
-                <select id="newUserConvenio" style="width: 100%; padding: 8px; margin-top: 5px;">
-                    <option value="">Selecciona un convenio...</option>
-                    <option value="Convenio General">Convenio General</option>
-                    <option value="Convenio Comercio">Convenio Comercio</option>
-                    <option value="Convenio Metalúrgico">Convenio Metalúrgico</option>
-                    <option value="Convenio Construcción">Convenio Construcción</option>
-                    <option value="Convenio Gastronómico">Convenio Gastronómico</option>
-                    <option value="Convenio UOM">Convenio UOM</option>
-                    <option value="Convenio UOCRA">Convenio UOCRA</option>
-                    <option value="Convenio Bancario">Convenio Bancario</option>
-                    <option value="Convenio Textil">Convenio Textil</option>
-                    <option value="Convenio Sanidad">Convenio Sanidad</option>
-                    <option value="Otro">Otro - Especificar</option>
-                </select>
-                <small style="color: #666; font-size: 11px; display: block; margin-top: 5px;">
-                    💡 Define el convenio colectivo aplicable al empleado
-                </small>
-            </div>
-            <div style="margin: 15px 0;">
-                <label style="display: flex; align-items: center;">
-                    <input type="checkbox" id="newUserAllowOutsideRadius" style="margin-right: 8px;">
-                    🌍 Permitir fichar fuera del radio GPS del departamento
+            <div style="${fieldStyle}">
+                <label style="display:flex;align-items:center;${labelStyle}cursor:pointer;">
+                    <input type="checkbox" id="newUserAllowOutsideRadius" style="margin-right:10px;width:18px;height:18px;accent-color:#667eea;">
+                    <i class="fas fa-map-marker-alt" style="margin-right:6px;"></i>Permitir fichar fuera del radio GPS
                 </label>
-                <small style="color: #666; font-size: 11px; display: block; margin-top: 5px;">
-                    💡 Si se marca, el usuario podrá fichar aunque esté fuera del área de cobertura GPS
-                </small>
             </div>
-            <div style="margin: 20px 0; text-align: center;">
-                <button class="btn btn-primary" onclick="saveNewUser()" style="margin-right: 10px;">💾 Guardar</button>
-                <button class="btn btn-secondary" onclick="closeUserModal()">❌ Cancelar</button>
+
+            <div style="display:flex;gap:12px;margin-top:24px;">
+                <button onclick="window.saveNewUser()" style="flex:1;padding:14px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,#667eea,#764ba2);color:white;font-size:1rem;font-weight:600;box-shadow:0 4px 15px rgba(102,126,234,0.3);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <i class="fas fa-save" style="margin-right:8px;"></i>Guardar
+                </button>
+                <button onclick="closeUserModal()" style="padding:14px 24px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;cursor:pointer;background:transparent;color:rgba(255,255,255,0.7);font-size:1rem;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)'">
+                    Cancelar
+                </button>
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
     // Cargar departamentos dinámicamente
     setTimeout(() => {
         populateDepartmentSelect('newUserDept');
@@ -1513,9 +1524,9 @@ async function saveNewUser() {
         dept: dept || 'VACÍO'
     });
 
-    if (!name || !email || !legajo || !password) {
+    if (!name || !email) {
         console.log('❌ [DEBUG] VALIDACIÓN FALLIDA - Campos vacíos');
-        showUserMessage('⚠️ Por favor complete todos los campos obligatorios', 'warning');
+        showUserMessage('⚠️ Nombre y email son obligatorios', 'warning');
         return;
     }
 
@@ -1531,16 +1542,16 @@ async function saveNewUser() {
         // Prepare user data for API (userRoutes.js fields)
         // ⭐ FIX: NO enviar usuario ni companyId - el backend los maneja automáticamente
         const userData = {
-            employeeId: legajo,
             firstName: firstName,
             lastName: lastName,
             email: email,
-            password: password,
             role: role,
-            department: dept ? parseInt(dept) : null,  // ⭐ FIX: 'department', no 'departmentId'
+            department: dept ? parseInt(dept) : null,
             convenioColectivo: convenio,
-            // ⚠️ allowOutsideRadius NO se envía - se maneja como gpsEnabled en backend
         };
+        // Legajo SIEMPRE autogenerado por backend, no se envía
+        // Password solo se envía si el admin lo especificó, sino default admin123
+        if (password) userData.password = password;
 
         console.log('🔍 [DEBUG] UserData enviado:', userData);
 
@@ -1571,56 +1582,46 @@ async function saveNewUser() {
             // Show success message with credentials
             const credentialsMsg = `✅ Usuario creado exitosamente!\n\n📱 CREDENCIALES PARA APK:\nEmail: ${email}\nContraseña: ${password}\n\n💡 Estas credenciales son para login en la APK móvil`;
             
-            // Show modal with credentials
+            // Show modal with credentials (Dark Theme)
             const credModal = document.createElement('div');
             credModal.id = 'userCredentialsModal';
-            credModal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.9); display: flex; justify-content: center;
-                align-items: center; z-index: 99999;
-            `;
+            credModal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:99999;';
+            const creds = result.credentials || {};
+            const displayUser = creds.usuario || email.split('@')[0];
+            const displayLegajo = creds.employeeId || legajo || 'Autogenerado';
+            const displayPassword = password || 'admin123';
+            const rowStyle = 'display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);';
             credModal.innerHTML = `
-                <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; text-align: center; box-shadow: 0 10px 50px rgba(0,0,0,0.5);">
-                    <h3 style="color: #4CAF50; margin-bottom: 20px;">✅ Usuario Creado Exitosamente</h3>
-                    <div style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; text-align: left;">
-                        <div style="margin: 8px 0;"><strong>👤 Nombre:</strong> ${name}</div>
-                        <div style="margin: 8px 0;"><strong>📧 Email:</strong> ${email}</div>
-                        <div style="margin: 8px 0;"><strong>🔑 Contraseña:</strong> ${password}</div>
-                        <div style="margin: 8px 0;"><strong>🏷️ ID:</strong> ${legajo}</div>
-                        <div style="margin: 8px 0;"><strong>👑 Rol:</strong> ${role}</div>
+                <div style="background:linear-gradient(135deg,#0f0f1a,#1a1a2e,#16213e);padding:35px;border-radius:20px;max-width:460px;width:92%;border:1px solid rgba(255,255,255,0.1);box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+                    <div style="text-align:center;margin-bottom:25px;">
+                        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#27ae60,#2ecc71);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 4px 20px rgba(39,174,96,0.4);">
+                            <i class="fas fa-check" style="font-size:1.5rem;color:white;"></i>
+                        </div>
+                        <h3 style="margin:0;color:#fff;font-size:1.3rem;">Usuario Creado</h3>
                     </div>
-                    <div style="padding: 10px; background: #e3f2fd; border-radius: 5px; font-size: 0.9em; margin-bottom: 15px;">
-                        📱 <strong>Estas credenciales son para login en la APK móvil</strong>
+                    <div style="padding:5px 15px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);margin-bottom:20px;">
+                        <div style="${rowStyle}"><span style="color:rgba(255,255,255,0.5);"><i class="fas fa-user" style="margin-right:8px;width:16px;"></i>Nombre</span><span style="color:#fff;font-weight:500;">${name}</span></div>
+                        <div style="${rowStyle}"><span style="color:rgba(255,255,255,0.5);"><i class="fas fa-envelope" style="margin-right:8px;width:16px;"></i>Email</span><span style="color:#fff;font-weight:500;">${email}</span></div>
+                        <div style="${rowStyle}"><span style="color:rgba(255,255,255,0.5);"><i class="fas fa-id-badge" style="margin-right:8px;width:16px;"></i>Legajo</span><span style="color:#667eea;font-weight:600;">${displayLegajo}</span></div>
+                        <div style="${rowStyle}"><span style="color:rgba(255,255,255,0.5);"><i class="fas fa-user-circle" style="margin-right:8px;width:16px;"></i>Usuario</span><span style="color:#667eea;font-weight:600;">${displayUser}</span></div>
+                        <div style="${rowStyle}"><span style="color:rgba(255,255,255,0.5);"><i class="fas fa-key" style="margin-right:8px;width:16px;"></i>Contrasena</span><span style="color:#fbbf24;font-weight:600;">${displayPassword}</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;"><span style="color:rgba(255,255,255,0.5);"><i class="fas fa-crown" style="margin-right:8px;width:16px;"></i>Rol</span><span style="color:#fff;font-weight:500;">${role}</span></div>
                     </div>
-                    <button id="closeCredentialsBtn" onclick="document.getElementById('userCredentialsModal').remove(); setTimeout(loadUsers, 500);"
-                            style="margin-top: 10px; padding: 12px 30px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: all 0.3s ease;">
-                        🆗 Entendido
+                    <div style="padding:12px 16px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.2);border-radius:10px;margin-bottom:20px;color:rgba(255,255,255,0.6);font-size:0.85rem;">
+                        <i class="fas fa-envelope-open-text" style="margin-right:8px;color:#667eea;"></i>Se envio un email de bienvenida con las credenciales e instrucciones.
+                    </div>
+                    <button onclick="document.getElementById('userCredentialsModal').remove(); setTimeout(loadUsers, 500);"
+                        style="width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,#667eea,#764ba2);color:white;font-size:1rem;font-weight:600;box-shadow:0 4px 15px rgba(102,126,234,0.3);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        Entendido
                     </button>
                 </div>
             `;
 
-            // Remover cualquier modal de credenciales existente
+            // Remover modal existente si hay
             const existingModal = document.getElementById('userCredentialsModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
+            if (existingModal) existingModal.remove();
 
             document.body.appendChild(credModal);
-
-            // Agregar efecto hover al botón
-            setTimeout(() => {
-                const btn = document.getElementById('closeCredentialsBtn');
-                if (btn) {
-                    btn.addEventListener('mouseover', function() {
-                        this.style.background = '#45a049';
-                        this.style.transform = 'scale(1.05)';
-                    });
-                    btn.addEventListener('mouseout', function() {
-                        this.style.background = '#4CAF50';
-                        this.style.transform = 'scale(1)';
-                    });
-                }
-            }, 100);
             
             console.log('✅ Usuario creado:', result);
             closeUserModal();
@@ -1637,6 +1638,8 @@ async function saveNewUser() {
         showUserMessage('❌ Error de conexión al guardar usuario', 'error');
     }
 }
+// Exportar inmediatamente después de definir
+window.saveNewUser = saveNewUser;
 
 // Close user modal
 function closeUserModal() {

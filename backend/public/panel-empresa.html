@@ -5549,27 +5549,27 @@
         console.log('⚙️ [SETTINGS] mainContent visible');
 
         mainContent.innerHTML = `
-            <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+            <div style="padding: 20px; max-width: 1200px; margin: 0 auto; min-height: 80vh; background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); border-radius: 12px;">
                 <!-- Header -->
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
                     <div>
-                        <h1 style="margin: 0; color: #1a1a2e; font-size: 28px;">⚙️ Configuración de la Empresa</h1>
-                        <p style="color: #666; margin: 5px 0 0 0;">Administre los parámetros de su empresa</p>
+                        <h1 style="margin: 0; color: #e2e8f0; font-size: 28px;">⚙️ Configuración de la Empresa</h1>
+                        <p style="color: #94a3b8; margin: 5px 0 0 0;">Administre los parámetros de su empresa</p>
                     </div>
-                    <button onclick="location.reload()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                    <button onclick="location.reload()" style="background: linear-gradient(135deg, #475569, #334155); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
                         ← Volver
                     </button>
                 </div>
 
                 <!-- Tabs -->
-                <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">
-                    <button onclick="showSettingsTab('email-smtp')" id="tab-email-smtp" class="settings-tab active" style="padding: 12px 24px; border: none; background: #3b82f6; color: white; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600;">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                    <button onclick="showSettingsTab('email-smtp')" id="tab-email-smtp" class="settings-tab active" style="padding: 12px 24px; border: 1px solid rgba(99,102,241,0.5); background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600;">
                         📧 Email SMTP
                     </button>
-                    <button onclick="showSettingsTab('email-process')" id="tab-email-process" class="settings-tab" style="padding: 12px 24px; border: none; background: #e0e0e0; color: #333; border-radius: 8px 8px 0 0; cursor: pointer;">
+                    <button onclick="showSettingsTab('email-process')" id="tab-email-process" class="settings-tab" style="padding: 12px 24px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #94a3b8; border-radius: 8px 8px 0 0; cursor: pointer;">
                         📬 Asignar Emails a Procesos
                     </button>
-                    <button onclick="showSettingsTab('general')" id="tab-general" class="settings-tab" style="padding: 12px 24px; border: none; background: #e0e0e0; color: #333; border-radius: 8px 8px 0 0; cursor: pointer;">
+                    <button onclick="showSettingsTab('general')" id="tab-general" class="settings-tab" style="padding: 12px 24px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #94a3b8; border-radius: 8px 8px 0 0; cursor: pointer;">
                         🏢 Datos Generales
                     </button>
                 </div>
@@ -5584,9 +5584,9 @@
                         <div id="company-email-process-module"></div>
                     </div>
                     <div id="settings-general-content" style="display: none;">
-                        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                            <h3 style="margin-top: 0;">🏢 Datos Generales de la Empresa</h3>
-                            <p style="color: #666;">Próximamente: Edición de datos fiscales, dirección, contacto, etc.</p>
+                        <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                            <h3 style="margin-top: 0; color: #e2e8f0;">🏢 Datos Generales de la Empresa</h3>
+                            <p style="color: #94a3b8;">Próximamente: Edición de datos fiscales, dirección, contacto, etc.</p>
                         </div>
                     </div>
                 </div>
@@ -5619,15 +5619,17 @@
 
         // Resetear estilos de tabs
         document.querySelectorAll('.settings-tab').forEach(tab => {
-            tab.style.background = '#e0e0e0';
-            tab.style.color = '#333';
+            tab.style.background = 'rgba(255,255,255,0.05)';
+            tab.style.color = '#94a3b8';
+            tab.style.border = '1px solid rgba(255,255,255,0.1)';
         });
 
         // Activar tab seleccionado
         const activeTab = document.getElementById('tab-' + tabId);
         if (activeTab) {
-            activeTab.style.background = '#3b82f6';
+            activeTab.style.background = 'linear-gradient(135deg, #4f46e5, #6366f1)';
             activeTab.style.color = 'white';
+            activeTab.style.border = '1px solid rgba(99,102,241,0.5)';
         }
 
         // Mostrar contenido correspondiente

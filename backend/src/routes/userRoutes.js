@@ -496,27 +496,31 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       preferences
     } = req.body;
 
-    // Validaciones básicas (password es opcional, default: admin123)
-    if (!employeeId || !firstName || !lastName || !email) {
+    // Validaciones básicas (password y employeeId son opcionales)
+    if (!firstName || !lastName || !email) {
       return res.status(400).json({
-        error: 'Campos obligatorios faltantes: employeeId, firstName, lastName, email'
+        error: 'Campos obligatorios faltantes: firstName, lastName, email'
       });
     }
 
-    // Verificar que no exista usuario con el mismo employeeId o email
-    const existingUser = await User.findOne({
-      where: {
-        [Op.or]: [
-          { employeeId },
-          { email }
-        ]
-      }
-    });
+    // Verificar que no exista usuario con el mismo email
+    const existingByEmail = await User.findOne({ where: { email } });
+    if (existingByEmail) {
+      return res.status(409).json({ error: 'Ya existe un usuario con ese email' });
+    }
 
-    if (existingUser) {
-      return res.status(409).json({
-        error: 'Ya existe un usuario con ese employeeId o email'
-      });
+    // AUTOGENERAR LEGAJO SIEMPRE: EMP-{companyId}-{correlativo}
+    const [maxResult] = await sequelize.query(
+      `SELECT COUNT(*) as total FROM users WHERE "companyId" = ?`,
+      { replacements: [req.user.companyId], type: sequelize.QueryTypes.SELECT }
+    );
+    const nextNum = (parseInt(maxResult?.total) || 0) + 1;
+    const finalEmployeeId = `EMP-${req.user.companyId}-${String(nextNum).padStart(4, '0')}`;
+
+    // Verificar que el legajo no esté duplicado
+    const existingByLegajo = await User.findOne({ where: { employeeId: finalEmployeeId } });
+    if (existingByLegajo) {
+      return res.status(409).json({ error: `Ya existe un usuario con el legajo ${finalEmployeeId}` });
     }
 
     // Contraseña: usa la enviada o default admin123
@@ -524,15 +528,38 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
     const finalPassword = password || defaultPassword;
     const hashedPassword = await bcrypt.hash(finalPassword, parseInt(process.env.BCRYPT_ROUNDS || 12));
 
-    // Generate usuario from email if not provided
-    const usuario = req.body.usuario || email.split('@')[0] || employeeId;
+    // AUTOGENERAR USERNAME del firstName (lowercase, sin acentos)
+    // Si ya existe, agrega número: alberto, alberto2, alberto3...
+    let usuario = req.body.usuario;
+    if (!usuario) {
+      const baseUsername = firstName.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quitar acentos
+        .replace(/[^a-z0-9]/g, ''); // solo alfanumérico
+
+      // Buscar si ya existe ese username en la misma empresa
+      const existingUsers = await sequelize.query(
+        `SELECT usuario FROM users WHERE "companyId" = ? AND usuario LIKE ?`,
+        { replacements: [req.user.companyId, `${baseUsername}%`], type: sequelize.QueryTypes.SELECT }
+      );
+      const takenUsernames = new Set(existingUsers.map(u => u.usuario));
+
+      if (!takenUsernames.has(baseUsername)) {
+        usuario = baseUsername;
+      } else {
+        let counter = 2;
+        while (takenUsernames.has(`${baseUsername}${counter}`)) {
+          counter++;
+        }
+        usuario = `${baseUsername}${counter}`;
+      }
+    }
 
     // Convert frontend fields to database fields
     // IMPORTANTE: Usuario inicia INACTIVO hasta verificar email
     const newUser = await User.create({
       usuario: usuario,
       companyId: req.user.companyId,
-      employeeId: employeeId,
+      employeeId: finalEmployeeId,
       firstName: firstName,
       lastName: lastName,
       email,
@@ -565,9 +592,9 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
         changedByUserId: req.user.user_id,
         companyId: req.user.companyId,
         action: 'CREATE',
-        description: `Usuario creado: ${firstName} ${lastName} (${employeeId})`,
+        description: `Usuario creado: ${firstName} ${lastName} (${finalEmployeeId})`,
         metadata: {
-          employeeId,
+          employeeId: finalEmployeeId,
           email,
           role,
           department,
@@ -686,6 +713,98 @@ El equipo de Aponnt
 ══════════════════════════════════════════════════════════════
       `.trim();
 
+      // HTML profesional para el email de bienvenida
+      const roleName = role === 'admin' ? 'Administrador' : role === 'supervisor' ? 'Supervisor' : role === 'hr' ? 'RRHH' : 'Empleado';
+      const welcomeHtml = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:30px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+
+  <!-- Header -->
+  <tr><td style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px 40px;text-align:center;">
+    <h1 style="color:#fff;margin:0;font-size:24px;">Bienvenido/a a ${companyName}</h1>
+    <p style="color:rgba(255,255,255,0.9);margin:8px 0 0;font-size:14px;">Sistema de Gestión Empresarial - APONNT</p>
+  </td></tr>
+
+  <!-- Saludo -->
+  <tr><td style="padding:30px 40px 10px;">
+    <p style="font-size:16px;color:#333;margin:0;">Hola <strong>${firstName} ${lastName}</strong>,</p>
+    <p style="font-size:14px;color:#555;margin:10px 0;">Has sido registrado/a como <strong>${roleName}</strong>. Tu cuenta está lista para comenzar a operar.</p>
+  </td></tr>
+
+  <!-- Credenciales -->
+  <tr><td style="padding:10px 40px;">
+    <div style="background:#f0f4ff;border:2px solid #667eea;border-radius:10px;padding:20px;">
+      <h3 style="color:#667eea;margin:0 0 15px;font-size:16px;">🔑 Tus Credenciales de Acceso</h3>
+      <table width="100%" cellpadding="4" cellspacing="0" style="font-size:14px;">
+        <tr><td style="color:#666;width:120px;">URL de acceso:</td><td><a href="${loginUrl}" style="color:#667eea;font-weight:bold;">${loginUrl}</a></td></tr>
+        <tr><td style="color:#666;">Empresa:</td><td style="font-weight:bold;color:#333;">${companyName}</td></tr>
+        <tr><td style="color:#666;">Usuario:</td><td style="font-weight:bold;color:#333;font-size:16px;">${usuario}</td></tr>
+        <tr><td style="color:#666;">Contraseña:</td><td style="font-weight:bold;color:#e74c3c;font-size:16px;">${finalPassword}</td></tr>
+      </table>
+      <p style="margin:12px 0 0;padding:8px;background:#fff3cd;border-radius:6px;font-size:12px;color:#856404;">⚠️ Por seguridad, cambiá tu contraseña en el primer inicio de sesión.</p>
+    </div>
+  </td></tr>
+
+  <!-- Pasos para ingresar -->
+  <tr><td style="padding:20px 40px;">
+    <h3 style="color:#333;margin:0 0 12px;font-size:15px;">📋 Cómo Ingresar al Sistema</h3>
+    <ol style="margin:0;padding-left:20px;color:#555;font-size:13px;line-height:2;">
+      <li>Abrí el navegador e ingresá a: <a href="${loginUrl}" style="color:#667eea;">${loginUrl}</a></li>
+      <li>En el campo "Empresa", seleccioná <strong>"${companyName}"</strong></li>
+      <li>En "Usuario", ingresá: <strong>${usuario}</strong> (o tu email: ${email})</li>
+      <li>En "Contraseña", ingresá: <strong>${finalPassword}</strong></li>
+      <li>Hacé click en <strong>"Iniciar Sesión"</strong></li>
+    </ol>
+  </td></tr>
+
+  <!-- Cambiar contraseña -->
+  <tr><td style="padding:10px 40px;">
+    <h3 style="color:#333;margin:0 0 12px;font-size:15px;">🔒 Cómo Cambiar tu Contraseña</h3>
+    <ol style="margin:0;padding-left:20px;color:#555;font-size:13px;line-height:2;">
+      <li>Ingresá al módulo <strong>"Mi Espacio"</strong></li>
+      <li>Hacé click en <strong>"Cambiar Contraseña"</strong></li>
+      <li>Ingresá tu contraseña actual (${finalPassword})</li>
+      <li>Elegí una nueva contraseña (mínimo 6 caracteres)</li>
+    </ol>
+  </td></tr>
+
+  <!-- Mi Espacio -->
+  <tr><td style="padding:10px 40px;">
+    <h3 style="color:#333;margin:0 0 12px;font-size:15px;">🏠 Qué Podés Hacer en "Mi Espacio"</h3>
+    <table width="100%" cellpadding="6" cellspacing="0" style="font-size:13px;color:#555;">
+      <tr><td style="padding:4px 0;">📄 <strong>Mis Documentos</strong> - Recibos, certificados, contratos</td></tr>
+      <tr><td style="padding:4px 0;">⏰ <strong>Mi Asistencia</strong> - Historial y marcaciones</td></tr>
+      <tr><td style="padding:4px 0;">🏖️ <strong>Mis Vacaciones</strong> - Solicitar días y ver saldo</td></tr>
+      <tr><td style="padding:4px 0;">🔔 <strong>Mis Notificaciones</strong> - Comunicados de RRHH</td></tr>
+      <tr><td style="padding:4px 0;">👤 <strong>Mi Perfil 360°</strong> - Datos personales y laborales</td></tr>
+      <tr><td style="padding:4px 0;">🏥 <strong>Mi Salud</strong> - Certificados y documentos médicos</td></tr>
+    </table>
+  </td></tr>
+
+  <!-- Soporte -->
+  <tr><td style="padding:20px 40px;">
+    <div style="background:#f8f9fa;border-radius:8px;padding:15px;text-align:center;">
+      <p style="margin:0;font-size:13px;color:#666;">¿Necesitás ayuda? Contactá a soporte: <a href="mailto:soporte@aponnt.com" style="color:#667eea;">soporte@aponnt.com</a></p>
+    </div>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="background:#2d3748;padding:20px 40px;text-align:center;">
+    <p style="margin:0;color:rgba(255,255,255,0.7);font-size:12px;">APONNT - Sistema de Gestión Empresarial</p>
+    <p style="margin:4px 0 0;color:rgba(255,255,255,0.5);font-size:11px;">Este email fue enviado automáticamente. No responder a esta dirección.</p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
       await NCE.send({
         companyId: req.user.companyId,
         module: 'users',
@@ -700,7 +819,8 @@ El equipo de Aponnt
           user_id: newUser.user_id,
           username: usuario,
           company_name: companyName,
-          role: role
+          role: role,
+          htmlContent: welcomeHtml
         },
         priority: 'high',
         channels: ['email']
@@ -719,6 +839,7 @@ El equipo de Aponnt
       user: formattedUser,
       credentials: {
         usuario: usuario,
+        employeeId: finalEmployeeId,
         password_is_default: !password,
         email: newUser.email
       },

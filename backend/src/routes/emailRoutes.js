@@ -347,9 +347,10 @@ router.get('/config/company/:companyId', async (req, res) => {
         });
 
         if (config.length === 0) {
-            return res.status(404).json({
-                success: false,
-                error: 'No hay configuración de email para esta empresa'
+            return res.json({
+                success: true,
+                data: null,
+                message: 'No hay configuración de email para esta empresa. Configure una nueva.'
             });
         }
 
