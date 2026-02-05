@@ -2034,6 +2034,19 @@
                         </div>
                     </div>
 
+                    <!-- Card: Cambiar Contraseña -->
+                    <div class="mi-espacio-module-card"
+                         style="--card-accent: #ff6b6b; --card-glow: rgba(255, 107, 107, 0.3);"
+                         onclick="window.MiEspacio.openChangePassword()">
+                        <div class="module-icon"><i class="fas fa-key"></i></div>
+                        <h4>Cambiar Contraseña</h4>
+                        <p>Actualizá tu contraseña de acceso al sistema. Te recomendamos cambiarla periódicamente.</p>
+                        <div class="module-actions">
+                            <span class="action-tag"><i class="fas fa-lock"></i> Seguridad</span>
+                            <span class="action-tag"><i class="fas fa-shield-alt"></i> Privacidad</span>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Accesos Rápidos -->
@@ -2068,6 +2081,148 @@
         console.log('✅ [MI-ESPACIO] Dashboard dark theme renderizado');
     }
 
+    /**
+     * Cambiar Contraseña - Modal inline
+     */
+    function openChangePassword() {
+        const container = document.getElementById('mainContent');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="mi-espacio-dashboard" style="display: flex; align-items: center; justify-content: center;">
+                <div style="
+                    background: rgba(15, 15, 30, 0.95);
+                    border: 1px solid rgba(255, 107, 107, 0.3);
+                    border-radius: 20px;
+                    padding: 40px;
+                    max-width: 450px;
+                    width: 100%;
+                    box-shadow: 0 8px 40px rgba(255, 107, 107, 0.15);
+                ">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="
+                            width: 70px; height: 70px; border-radius: 50%;
+                            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+                            display: inline-flex; align-items: center; justify-content: center;
+                            margin-bottom: 15px; box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+                        ">
+                            <i class="fas fa-key" style="font-size: 1.8rem; color: white;"></i>
+                        </div>
+                        <h3 style="margin: 0; color: #fff; font-size: 1.4rem;">Cambiar Contraseña</h3>
+                        <p style="color: rgba(255,255,255,0.5); margin: 8px 0 0; font-size: 0.9rem;">Ingresá tu contraseña actual y elegí una nueva</p>
+                    </div>
+
+                    <div id="changePasswordAlert" style="display: none; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem;"></div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="color: rgba(255,255,255,0.7); font-size: 0.85rem; display: block; margin-bottom: 6px;">
+                            <i class="fas fa-lock" style="margin-right: 6px;"></i>Contraseña Actual
+                        </label>
+                        <input type="password" id="cpCurrentPassword" placeholder="Ingresá tu contraseña actual" style="
+                            width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+                            background: rgba(255,255,255,0.05); color: #fff; font-size: 0.95rem; box-sizing: border-box;
+                            outline: none; transition: border-color 0.3s;
+                        " onfocus="this.style.borderColor='rgba(255,107,107,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'"/>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="color: rgba(255,255,255,0.7); font-size: 0.85rem; display: block; margin-bottom: 6px;">
+                            <i class="fas fa-key" style="margin-right: 6px;"></i>Nueva Contraseña
+                        </label>
+                        <input type="password" id="cpNewPassword" placeholder="Mínimo 6 caracteres" style="
+                            width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+                            background: rgba(255,255,255,0.05); color: #fff; font-size: 0.95rem; box-sizing: border-box;
+                            outline: none; transition: border-color 0.3s;
+                        " onfocus="this.style.borderColor='rgba(255,107,107,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'"/>
+                    </div>
+
+                    <div style="margin-bottom: 25px;">
+                        <label style="color: rgba(255,255,255,0.7); font-size: 0.85rem; display: block; margin-bottom: 6px;">
+                            <i class="fas fa-check-double" style="margin-right: 6px;"></i>Confirmar Nueva Contraseña
+                        </label>
+                        <input type="password" id="cpConfirmPassword" placeholder="Repetí la nueva contraseña" style="
+                            width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+                            background: rgba(255,255,255,0.05); color: #fff; font-size: 0.95rem; box-sizing: border-box;
+                            outline: none; transition: border-color 0.3s;
+                        " onfocus="this.style.borderColor='rgba(255,107,107,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'"/>
+                    </div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <button onclick="window.MiEspacio.submitChangePassword()" style="
+                            flex: 1; padding: 14px; border: none; border-radius: 12px; cursor: pointer;
+                            background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white;
+                            font-size: 1rem; font-weight: 600;
+                            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+                            transition: transform 0.2s, box-shadow 0.2s;
+                        " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <i class="fas fa-save" style="margin-right: 8px;"></i>Guardar
+                        </button>
+                        <button onclick="window.MiEspacio.render()" style="
+                            padding: 14px 20px; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;
+                            cursor: pointer; background: transparent; color: rgba(255,255,255,0.7);
+                            font-size: 1rem; transition: all 0.2s;
+                        " onmouseover="this.style.borderColor='rgba(255,255,255,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)'">
+                            <i class="fas fa-arrow-left" style="margin-right: 6px;"></i>Volver
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Submit cambio de contraseña al backend
+     */
+    async function submitChangePassword() {
+        const currentPassword = document.getElementById('cpCurrentPassword')?.value;
+        const newPassword = document.getElementById('cpNewPassword')?.value;
+        const confirmPassword = document.getElementById('cpConfirmPassword')?.value;
+        const alertEl = document.getElementById('changePasswordAlert');
+
+        function showAlert(msg, type) {
+            if (!alertEl) return;
+            alertEl.style.display = 'block';
+            alertEl.style.background = type === 'error' ? 'rgba(231,76,60,0.2)' : 'rgba(39,174,96,0.2)';
+            alertEl.style.border = `1px solid ${type === 'error' ? 'rgba(231,76,60,0.4)' : 'rgba(39,174,96,0.4)'}`;
+            alertEl.style.color = type === 'error' ? '#e74c3c' : '#27ae60';
+            alertEl.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}" style="margin-right: 8px;"></i>${msg}`;
+        }
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return showAlert('Completá todos los campos', 'error');
+        }
+        if (newPassword.length < 6) {
+            return showAlert('La nueva contraseña debe tener al menos 6 caracteres', 'error');
+        }
+        if (newPassword !== confirmPassword) {
+            return showAlert('Las contraseñas nuevas no coinciden', 'error');
+        }
+
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const res = await fetch('/api/v1/auth/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                showAlert('Contraseña actualizada correctamente. Redirigiendo...', 'success');
+                setTimeout(() => render(), 2000);
+            } else {
+                const errorMsg = res.status === 401 ? 'La contraseña actual es incorrecta' : (data.message || data.error || 'Error al cambiar la contraseña');
+                showAlert(errorMsg, 'error');
+            }
+        } catch (err) {
+            showAlert('Error de conexión. Intentá nuevamente.', 'error');
+        }
+    }
+
     // Función para mostrar contenido (compatible con legacy)
     function showMiEspacioContent() {
         init();
@@ -2075,11 +2230,11 @@
 
     // Registrar módulo
     if (!window.Modules) window.Modules = {};
-    window.Modules[MODULE_ID] = { init, render, openSubmodule, openHourBank, cancelRedemption, openMiSalud, acknowledgeRequest, uploadForRequest, handleFileSelect, handleFileSelectForRequest, uploadMedicalDocument };
+    window.Modules[MODULE_ID] = { init, render, openSubmodule, openHourBank, cancelRedemption, openMiSalud, acknowledgeRequest, uploadForRequest, handleFileSelect, handleFileSelectForRequest, uploadMedicalDocument, openChangePassword, submitChangePassword };
 
     // Exponer globalmente
     window.showMiEspacioContent = showMiEspacioContent;
-    window.MiEspacio = { init, render, openSubmodule, openHourBank, cancelRedemption, openMiSalud, acknowledgeRequest, uploadForRequest, handleFileSelect, handleFileSelectForRequest, uploadMedicalDocument };
+    window.MiEspacio = { init, render, openSubmodule, openHourBank, cancelRedemption, openMiSalud, acknowledgeRequest, uploadForRequest, handleFileSelect, handleFileSelectForRequest, uploadMedicalDocument, openChangePassword, submitChangePassword };
 
     console.log('📦 [MI-ESPACIO] Módulo dark theme registrado');
 })();

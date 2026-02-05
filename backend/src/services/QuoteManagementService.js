@@ -431,6 +431,17 @@ class QuoteManagementService {
       // Notificar al vendedor
       notifySellerAboutQuote(quote, 'accepted').catch(() => {});
 
+      // ═══════════════════════════════════════════════════════════
+      // SINCRONIZAR company_modules DESDE PRESUPUESTO (SSOT)
+      // Los 9 CORE siempre se incluyen + módulos del presupuesto
+      // ═══════════════════════════════════════════════════════════
+      try {
+        await this._syncCompanyModulesFromQuote(quote);
+        console.log(`✅ [QUOTE SERVICE] company_modules sincronizado desde presupuesto ${quote.quote_number}`);
+      } catch (syncErr) {
+        console.error(`⚠️ [QUOTE SERVICE] Error sincronizando company_modules (no bloqueante): ${syncErr.message}`);
+      }
+
       return {
         success: true,
         quote,
@@ -520,6 +531,16 @@ class QuoteManagementService {
 
       // Notificar al vendedor
       notifySellerAboutQuote(quote, 'activated').catch(() => {});
+
+      // ═══════════════════════════════════════════════════════════
+      // SINCRONIZAR company_modules DESDE PRESUPUESTO (SSOT)
+      // ═══════════════════════════════════════════════════════════
+      try {
+        await this._syncCompanyModulesFromQuote(quote);
+        console.log(`✅ [QUOTE SERVICE] company_modules sincronizado desde presupuesto activado ${quote.quote_number}`);
+      } catch (syncErr) {
+        console.error(`⚠️ [QUOTE SERVICE] Error sincronizando company_modules: ${syncErr.message}`);
+      }
 
       return {
         success: true,
@@ -1142,6 +1163,128 @@ class QuoteManagementService {
 
       console.log(`🏢 [ONBOARDING] Sucursal CENTRAL creada por defecto para empresa ${quote.company_id}`);
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SINCRONIZACIÓN: Presupuesto vigente → company_modules (SSOT)
+  //
+  // REGLAS:
+  // 1. Solo puede haber UN presupuesto vigente por empresa
+  // 2. Los 9 CORE siempre se incluyen (gratis)
+  // 3. El presupuesto define los módulos opcionales contratados
+  // 4. company_modules es la tabla que el dashboard lee
+  // ═══════════════════════════════════════════════════════════════════
+  async _syncCompanyModulesFromQuote(quote) {
+    const { v4: uuidv4 } = require('uuid');
+
+    const CORE_MODULE_KEYS = [
+      'notification-center', 'biometric-consent', 'organizational-structure',
+      'dms-dashboard', 'mi-espacio', 'user-support', 'users', 'attendance', 'kiosks'
+    ];
+
+    const companyId = quote.company_id;
+    let modulesData = quote.modules_data || [];
+    if (typeof modulesData === 'string') modulesData = JSON.parse(modulesData);
+
+    const quoteModuleKeys = modulesData.map(m => m.module_key || m.moduleKey || m.key).filter(Boolean);
+
+    // Combinar CORE + módulos del presupuesto (sin duplicados)
+    const allModuleKeys = [...new Set([...CORE_MODULE_KEYS, ...quoteModuleKeys])];
+
+    console.log(`📦 [SYNC] Sincronizando ${allModuleKeys.length} módulos (${CORE_MODULE_KEYS.length} CORE + ${quoteModuleKeys.length} del presupuesto) para empresa ${companyId}`);
+
+    // Buscar IDs de system_modules
+    const [systemModules] = await sequelize.query(`
+      SELECT id, module_key, base_price FROM system_modules WHERE module_key = ANY($1::text[])
+    `, {
+      bind: [allModuleKeys],
+      type: QueryTypes.SELECT,
+      raw: true
+    });
+
+    // sequelize.query con bind y SELECT puede devolver array o object
+    const smRows = Array.isArray(systemModules) ? systemModules : (systemModules ? [systemModules] : []);
+
+    // Fallback: query directa si bind no funciona bien
+    let moduleMap = {};
+    if (smRows.length === 0) {
+      const fallbackResult = await sequelize.query(
+        `SELECT id, module_key, base_price FROM system_modules WHERE module_key IN (${allModuleKeys.map((_, i) => `$${i+1}`).join(',')})`,
+        {
+          bind: allModuleKeys,
+          type: QueryTypes.SELECT
+        }
+      );
+      const rows = Array.isArray(fallbackResult) ? fallbackResult : [];
+      rows.forEach(m => { moduleMap[m.module_key] = m; });
+    } else {
+      smRows.forEach(m => { moduleMap[m.module_key] = m; });
+    }
+
+    // Si el map está vacío, intentar con replacements en vez de bind
+    if (Object.keys(moduleMap).length === 0) {
+      const rawResult = await sequelize.query(
+        `SELECT id, module_key, base_price FROM system_modules WHERE module_key IN (:keys)`,
+        {
+          replacements: { keys: allModuleKeys },
+          type: QueryTypes.SELECT
+        }
+      );
+      if (Array.isArray(rawResult)) {
+        rawResult.forEach(m => { moduleMap[m.module_key] = m; });
+      }
+    }
+
+    console.log(`📦 [SYNC] Encontrados ${Object.keys(moduleMap).length}/${allModuleKeys.length} en system_modules`);
+
+    // Limpiar company_modules existentes
+    await sequelize.query(
+      'DELETE FROM company_modules WHERE company_id = :companyId',
+      { replacements: { companyId }, type: QueryTypes.DELETE }
+    );
+
+    // Insertar módulos
+    let inserted = 0;
+    for (const moduleKey of allModuleKeys) {
+      const sm = moduleMap[moduleKey];
+      if (!sm) {
+        console.warn(`⚠️ [SYNC] Módulo ${moduleKey} no encontrado en system_modules`);
+        continue;
+      }
+
+      // Precio del presupuesto o base_price
+      const quoteMod = modulesData.find(m => (m.module_key || m.moduleKey || m.key) === moduleKey);
+      const price = quoteMod?.price || quoteMod?.total_price || sm.base_price || 0;
+
+      await sequelize.query(`
+        INSERT INTO company_modules (id, company_id, system_module_id, activo, precio_mensual, fecha_asignacion, is_active, contracted_at, created_at, updated_at)
+        VALUES (:id, :companyId, :systemModuleId, true, :price, NOW(), true, NOW(), NOW(), NOW())
+      `, {
+        replacements: {
+          id: uuidv4(),
+          companyId,
+          systemModuleId: sm.id,
+          price
+        },
+        type: QueryTypes.INSERT
+      });
+      inserted++;
+    }
+
+    // Actualizar active_modules (legacy) en companies
+    await sequelize.query(
+      'UPDATE companies SET active_modules = :modules, updated_at = NOW() WHERE company_id = :companyId',
+      {
+        replacements: {
+          modules: JSON.stringify(allModuleKeys),
+          companyId
+        },
+        type: QueryTypes.UPDATE
+      }
+    );
+
+    console.log(`✅ [SYNC] ${inserted} módulos insertados en company_modules + active_modules actualizado`);
+    return { inserted, total: allModuleKeys.length };
   }
 }
 

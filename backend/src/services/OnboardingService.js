@@ -833,18 +833,29 @@ lista para comenzar a operar.
   👤 Usuario: ${adminUser.username}
   🔑 Contraseña: admin123
 
-  ⚠️ IMPORTANTE: Por seguridad, deberás cambiar tu contraseña
+  ⚠️ IMPORTANTE: Por seguridad, cambiá tu contraseña
   en el primer inicio de sesión.
 
 ${trialInfo}
 
 📋 PRIMEROS PASOS RECOMENDADOS
 ═══════════════════════════════════════
-  1. Inicia sesión con las credenciales proporcionadas
-  2. Cambia tu contraseña temporal
-  3. Configura la información de tu empresa
-  4. Agrega tus primeros empleados
-  5. Configura tus kioscos biométricos (si aplica)
+  1. Iniciá sesión con las credenciales proporcionadas
+  2. Cambiá tu contraseña temporal (ver instrucciones abajo)
+  3. Configurá la información de tu empresa
+  4. Agregá tus primeros empleados
+  5. Configurá tus kioscos biométricos (si aplica)
+
+🔑 CÓMO CAMBIAR TU CONTRASEÑA
+═══════════════════════════════════════
+  1. Iniciá sesión en ${loginUrl}
+  2. En el menú lateral, ingresá al módulo "Mi Espacio"
+  3. Hacé click en la tarjeta "Cambiar Contraseña"
+  4. Ingresá tu contraseña actual (admin123) y elegí una nueva
+  5. Guardá los cambios
+
+  Todos los usuarios de tu empresa pueden cambiar su propia
+  contraseña desde Mi Espacio → Cambiar Contraseña.
 
 📚 RECURSOS ÚTILES
 ═══════════════════════════════════════

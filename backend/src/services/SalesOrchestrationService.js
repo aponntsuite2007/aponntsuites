@@ -96,18 +96,18 @@ class SalesOrchestrationService {
                     meeting_location, meeting_platform, meeting_link,
                     assigned_vendor_id, created_by_id, supervisor_id,
                     status, send_reminder_24h
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 RETURNING *
             `, {
                 replacements: [
-                    data.prospectCompanyName?.toUpperCase() || null,  // Nombres en MAYÚSCULAS
+                    data.prospectCompanyName?.toUpperCase() || null,
                     data.prospectCompanyType || 'otro',
                     data.prospectCountry || 'Argentina',
                     data.prospectProvince?.toUpperCase() || null,
                     data.prospectCity?.toUpperCase() || null,
                     data.prospectEmployeeCount || null,
                     data.prospectPhone || null,
-                    data.prospectEmail?.toLowerCase() || null,  // Emails en minúsculas
+                    data.prospectEmail?.toLowerCase() || null,
                     data.prospectWebsite?.toLowerCase() || null,
                     data.prospectNotes || null,
                     data.meetingDate,
@@ -117,8 +117,9 @@ class SalesOrchestrationService {
                     data.meetingPlatform || 'Zoom',
                     data.meetingLink || null,
                     data.assignedVendorId,
-                    effectiveCreatedById,  // Usar el ID efectivo (UUID válido)
+                    effectiveCreatedById,
                     supervisorId,
+                    'draft',
                     data.sendReminder24h !== false
                 ],
                 transaction

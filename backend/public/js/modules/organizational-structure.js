@@ -2671,6 +2671,16 @@ const OrgEngine = {
             shift = OrgState.shifts.find(s => s.id == shiftId) || {};
         }
 
+        // Cargar sucursales (obligatorio)
+        const branches = await this.loadBranchesForDepartment();
+        OrgState.branches = branches;
+
+        // Auto-seleccionar CENTRAL si no hay branch_id seleccionado
+        const mainBranch = branches.find(b => b.is_main || b.isMain || b.name === 'Central' || b.name === 'CENTRAL');
+        if (!shift.branch_id && mainBranch) {
+            shift.branch_id = mainBranch.id;
+        }
+
         const modal = document.createElement('div');
         modal.className = 'org-modal-overlay';
         modal.id = 'org-modal';
@@ -2716,11 +2726,11 @@ const OrgEngine = {
                                 <textarea class="org-form-input" name="description" rows="2" placeholder="Descripción opcional del turno">${shift.description || ''}</textarea>
                             </div>
                             <div class="org-form-group">
-                                <label class="org-form-label">Sucursal</label>
-                                <select class="org-form-input" name="branch_id">
-                                    <option value="">-- Todas las sucursales --</option>
-                                    ${(OrgState.branches || []).map(b => `
-                                        <option value="${b.id}" ${shift.branch_id == b.id ? 'selected' : ''}>${b.name}</option>
+                                <label class="org-form-label">Sucursal *</label>
+                                <select class="org-form-input" name="branch_id" required>
+                                    ${branches.length === 0 ? '<option value="">-- No hay sucursales --</option>' :
+                                    branches.map(b => `
+                                        <option value="${b.id}" ${shift.branch_id == b.id ? 'selected' : ''}>${b.name}${b.is_main || b.isMain ? ' ★' : ''}</option>
                                     `).join('')}
                                 </select>
                             </div>

@@ -125,36 +125,43 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
     console.log('🕐 [SHIFT-API] Creando turno avanzado:', req.body);
     
     const {
-      // Campos básicos
+      // Campos básicos (acepta camelCase y snake_case)
       name,
       description,
-      startTime,
-      endTime,
-      days = [1, 2, 3, 4, 5],
-      toleranceMinutesEntry = 10,
-      toleranceMinutesExit = 15,
-      isActive = true,
-      
+      startTime: _startTime,
+      endTime: _endTime,
+      start_time,
+      end_time,
+      days,
+      work_days,
+      toleranceMinutesEntry: _tolEntry,
+      toleranceMinutesExit: _tolExit,
+      entry_tolerance,
+      exit_tolerance,
+      isActive: _isActive,
+      is_active,
+
       // Campos nuevos del sistema avanzado
       shiftType = 'standard',
       breakStartTime,
       breakEndTime,
-      
+      break_duration,
+
       // Para turnos rotativos
       rotationPattern,
       cycleStartDate,
       workDays,
       restDays,
-      
+
       // Para turnos flash
       flashStartDate,
       flashEndDate,
       flashPriority = 'normal',
       allowOverride = false,
-      
+
       // Para turnos permanentes
       permanentPriority = 'normal',
-      
+
       // Tarifas
       hourlyRates = {
         normal: 1.0,
@@ -162,14 +169,28 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
         weekend: 1.5,
         holiday: 2.0
       },
-      
+
       // Metadata
       color = '#007bff',
       notes,
+      code,
 
       // Sucursal asociada
-      branch_id
+      branch_id,
+
+      // Flags adicionales del frontend
+      is_flexible,
+      respect_national_holidays,
+      respect_provincial_holidays,
+      requires_overtime_approval
     } = req.body;
+
+    // Normalizar: aceptar tanto camelCase como snake_case
+    const startTime = _startTime || start_time;
+    const endTime = _endTime || end_time;
+    const toleranceMinutesEntry = _tolEntry || entry_tolerance || 10;
+    const toleranceMinutesExit = _tolExit || exit_tolerance || 15;
+    const isActive = _isActive !== undefined ? _isActive : (is_active !== undefined ? is_active : true);
 
     // Si no se proporciona branch_id, asignar automáticamente la sucursal CENTRAL
     let finalBranchId = branch_id;
@@ -216,19 +237,21 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
 
     const shiftData = {
       name,
+      code,
       description,
       startTime,
       endTime,
-      days,
+      days: days || work_days || [1, 2, 3, 4, 5],
       toleranceMinutesEntry,
       toleranceMinutesExit,
       isActive,
       shiftType,
       breakStartTime,
       breakEndTime,
+      break_duration,
       rotationPattern,
       cycleStartDate,
-      global_cycle_start_date: cycleStartDate, // Mapear a campo actual
+      global_cycle_start_date: cycleStartDate,
       workDays,
       restDays,
       flashStartDate,
@@ -239,8 +262,12 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       hourlyRates,
       color,
       notes,
-      company_id: req.user.company_id, // Multi-tenant: asociar turno a empresa del usuario
-      branch_id: finalBranchId // Sucursal asociada (auto-asignada a CENTRAL si no se especifica)
+      is_flexible,
+      respect_national_holidays,
+      respect_provincial_holidays,
+      requires_overtime_approval,
+      company_id: req.user.company_id,
+      branch_id: finalBranchId
     };
 
     console.log('🕐 [SHIFT-API] Datos para crear:', shiftData);

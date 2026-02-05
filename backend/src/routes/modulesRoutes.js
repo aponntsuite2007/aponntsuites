@@ -99,19 +99,47 @@ module.exports = (database) => {
 
       if (!knowledgeService || !knowledgeService.initialized) {
         console.warn('⚠️  [DYNAMIC-MODULES] UnifiedKnowledgeService no inicializado, usando BD');
-        // Fallback: usar SystemModule directo
-        const modules = await SystemModule.findAll({
+
+        // ═══════════════════════════════════════════════════════════
+        // FALLBACK BD: company_modules (SSOT) + CORE siempre
+        // ═══════════════════════════════════════════════════════════
+
+        // 1. Obtener módulos contratados desde company_modules
+        const contractedModules = await sequelize.query(`
+          SELECT sm.module_key
+          FROM company_modules cm
+          INNER JOIN system_modules sm ON cm.system_module_id = sm.id
+          WHERE cm.company_id = ? AND (cm.activo = true OR cm.is_active = true)
+        `, {
+          replacements: [company_id],
+          type: sequelize.QueryTypes.SELECT
+        });
+
+        const contractedKeys = new Set(contractedModules.map(m => m.module_key));
+
+        // 2. Obtener TODOS los módulos del sistema
+        const allModules = await SystemModule.findAll({
           where: { isActive: true },
           order: [['displayOrder', 'ASC']]
         });
-        console.log(`✅ [DYNAMIC-MODULES] Fallback BD retornó ${modules.length} módulos`);
+
+        // 3. Filtrar: CORE siempre + contratados
+        const filteredModules = allModules.filter(m => {
+          // CORE siempre se incluye
+          if (m.isCore) return true;
+          // No-CORE solo si está contratado
+          return contractedKeys.has(m.moduleKey);
+        });
+
+        console.log(`✅ [DYNAMIC-MODULES] Fallback BD: ${filteredModules.length} módulos (${allModules.filter(m => m.isCore).length} CORE + ${contractedKeys.size} contratados)`);
+
         return res.json({
           success: true,
           company_id,
           panel,
           role,
-          total_modules: modules.length,
-          modules: modules.map(m => ({
+          total_modules: filteredModules.length,
+          modules: filteredModules.map(m => ({
             module_key: m.moduleKey,
             name: m.name,
             icon: m.icon,
@@ -122,9 +150,13 @@ module.exports = (database) => {
             description: m.description,
             frontend_file: (m.metadata?.frontend_file) || `/js/modules/${m.moduleKey}.js`,
             init_function: (m.metadata?.init_function) || `show${capitalize(m.moduleKey)}Content`,
-            available_in: m.availableIn
+            available_in: m.availableIn,
+            isOperational: true,
+            activo: true,
+            isContracted: true,
+            isActive: true
           })),
-          source: 'fallback_system_module'
+          source: 'fallback_company_modules'
         });
       }
 
