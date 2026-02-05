@@ -524,9 +524,9 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
     }
 
     // Contraseña: usa la enviada o default admin123
+    // NO hashear aquí - el hook beforeCreate del modelo User lo hace automáticamente
     const defaultPassword = 'admin123';
     const finalPassword = password || defaultPassword;
-    const hashedPassword = await bcrypt.hash(finalPassword, parseInt(process.env.BCRYPT_ROUNDS || 12));
 
     // AUTOGENERAR USERNAME del firstName (lowercase, sin acentos)
     // Si ya existe, agrega número: alberto, alberto2, alberto3...
@@ -563,7 +563,7 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       firstName: firstName,
       lastName: lastName,
       email,
-      password: hashedPassword,
+      password: finalPassword,
       role,
       phone,
       departmentId: department,
@@ -906,10 +906,8 @@ router.put('/:id', auth, async (req, res) => {
         }, {});
     }
 
-    // Si se está actualizando la contraseña, hashearla
-    if (updateData.password) {
-      updateData.password = await bcrypt.hash(updateData.password, parseInt(process.env.BCRYPT_ROUNDS));
-    }
+    // Password: el hook beforeUpdate del modelo User hashea automáticamente
+    // NO hashear aquí para evitar doble hash
 
     // ⚠️ FIX: Manejar turnos (shiftIds) en tabla junction user_shifts
     let shiftIds = null;
@@ -1167,12 +1165,10 @@ router.post('/:id/reset-password', auth, supervisorOrAdmin, async (req, res) => 
     console.log('🔑 [RESET-PASSWORD] Nueva contraseña recibida:', newPassword);
     console.log('🔑 [RESET-PASSWORD] BCRYPT_ROUNDS:', process.env.BCRYPT_ROUNDS);
 
-    const hashedPassword = await bcrypt.hash(newPassword, parseInt(process.env.BCRYPT_ROUNDS));
-    console.log('🔑 [RESET-PASSWORD] Nueva contraseña hasheada:', hashedPassword.substring(0, 30) + '...');
-    
+    // NO hashear aquí - el hook beforeUpdate del modelo User lo hace automáticamente
     console.log('🔑 [RESET-PASSWORD] Ejecutando update en base de datos...');
     const updateResult = await user.update({
-      password: hashedPassword,
+      password: newPassword,
       loginAttempts: 0,
       lockedUntil: null
     });

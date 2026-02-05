@@ -1031,16 +1031,16 @@ router.post('/companies', async (req, res) => {
     try {
       const bcrypt = require('bcryptjs');
       const adminPassword = 'admin123';
-      const hashedPassword = await bcrypt.hash(adminPassword, 12);
 
       // 1. Usuario ADMIN - Para el cliente
+      // NO hashear aquí - el hook beforeCreate del modelo User lo hace automáticamente
       const adminUser = await User.create({
         employeeId: 'ADM-' + String(newCompany.company_id).padStart(3, '0'),
         usuario: 'admin',
         firstName: 'Administrador',
         lastName: 'Principal',
         email: contactEmail,
-        password: hashedPassword,
+        password: adminPassword,
         role: 'admin',
         company_id: newCompany.company_id,
         isActive: true
@@ -1055,7 +1055,7 @@ router.post('/companies', async (req, res) => {
         firstName: 'Soporte',
         lastName: 'Técnico Sistema',
         email: 'soporte' + newCompany.company_id + '@sistema.local',
-        password: hashedPassword, // Misma contraseña: admin123
+        password: adminPassword,
         role: 'admin',
         company_id: newCompany.company_id,
         isActive: true
@@ -1849,7 +1849,6 @@ router.post('/companies', async (req, res) => {
     try {
       const bcrypt = require('bcryptjs');
       const adminPassword = '123456';
-      const hashedPassword = await bcrypt.hash(adminPassword, 12);
 
       const adminUser = await User.create({
         employeeId: 'ADM' + String(newCompany.id).padStart(3, '0'),
@@ -1857,7 +1856,7 @@ router.post('/companies', async (req, res) => {
         firstName: 'Administrador',
         lastName: 'Sistema',
         email: companyData.contactEmail,
-        password: hashedPassword,
+        password: adminPassword,
         role: 'admin',
         companyId: newCompany.id,
         isActive: true
@@ -3042,7 +3041,6 @@ router.post('/users', async (req, res) => {
     // Crear usuario
     const bcrypt = require('bcryptjs');
     const defaultPassword = 'temporal123';
-    const hashedPassword = await bcrypt.hash(defaultPassword, 12);
 
     const newUser = await User.create({
       firstName,
@@ -3050,7 +3048,7 @@ router.post('/users', async (req, res) => {
       email,
       employeeId,
       usuario,
-      password: hashedPassword,
+      password: defaultPassword,
       role,
       companyId: parseInt(companyId),
       departmentId: departmentId ? parseInt(departmentId) : null,
@@ -3284,9 +3282,8 @@ router.post('/users/:id/reset-password', async (req, res) => {
     }
 
     const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-    await user.update({ password: hashedPassword });
+    // El hook beforeUpdate del modelo User hashea automáticamente
+    await user.update({ password: newPassword });
 
     console.log(`🔑 Contraseña reseteada para usuario: ${user.firstName} ${user.lastName}`);
 

@@ -386,12 +386,9 @@ router.post('/change-password', auth, async (req, res) => {
       });
     }
 
-    // Hash de la nueva contraseña
-    const hashedPassword = await bcrypt.hash(newPassword, parseInt(process.env.BCRYPT_ROUNDS) || 10);
-
-    // Actualizar contraseña
+    // Actualizar contraseña (el hook beforeUpdate del modelo User hashea automáticamente)
     await user.update({
-      password: hashedPassword
+      password: newPassword
     });
 
     res.json({
