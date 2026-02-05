@@ -259,16 +259,68 @@ router.post('/', auth, requireRole(['super_admin']), async (req, res) => {
       console.log(`✅ Company ${name} created with schema ${databaseSchema}`);
     } catch (schemaError) {
       console.error('Error creating company schema:', schemaError);
-      
+
       // Rollback: delete company record
       await company.destroy();
-      
+
       return res.status(500).json({
         success: false,
         error: 'Error creando esquema de base de datos para la empresa'
       });
     }
-    
+
+    // Create default "Casa Matriz" branch for the company
+    try {
+      const companyConn = await multiTenantDB.getCompanyConnection(company.company_id);
+      const { Pool } = require('pg');
+
+      // Get database config for this company
+      const dbConfig = {
+        host: process.env.POSTGRES_HOST || 'localhost',
+        port: process.env.POSTGRES_PORT || 5432,
+        user: process.env.POSTGRES_USER || 'postgres',
+        password: process.env.POSTGRES_PASSWORD,
+        database: process.env.POSTGRES_DB || 'attendance_system'
+      };
+
+      const pool = new Pool(dbConfig);
+
+      await pool.query(`
+        INSERT INTO branches (
+          id,
+          company_id,
+          name,
+          code,
+          address,
+          is_main,
+          is_active,
+          country,
+          created_at,
+          updated_at
+        )
+        VALUES (
+          gen_random_uuid(),
+          $1,
+          'Casa Matriz',
+          'CM-001',
+          'Dirección de casa matriz',
+          true,
+          true,
+          'Argentina',
+          NOW(),
+          NOW()
+        )
+      `, [company.company_id]);
+
+      await pool.end();
+
+      console.log(`✅ Casa Matriz creada para empresa ${name}`);
+    } catch (branchError) {
+      console.error('⚠️ Error creando Casa Matriz (no crítico):', branchError.message);
+      // No hacemos rollback porque la empresa y schema ya están creados
+      // La sucursal se puede crear manualmente después
+    }
+
     res.status(201).json({
       success: true,
       message: 'Empresa creada exitosamente',
@@ -892,6 +944,36 @@ router.post("/:id/onboarding/activate", async (req, res) => {
       console.error('⚠️ [COMPANY ACTIVATION] Error enviando email de activación (no bloqueante):', emailError.message);
     }
 
+    // ════════════════════════════════════════════════════════════════════════════
+    // 🏛️ VERIFICAR Y CREAR "CASA MATRIZ" SI NO EXISTE
+    // ════════════════════════════════════════════════════════════════════════════
+    try {
+      const branchCheckResult = await client.query(
+        `SELECT id FROM branches
+         WHERE company_id = $1 AND (is_main = true OR LOWER(name) LIKE '%casa matriz%')
+         LIMIT 1`,
+        [id]
+      );
+
+      if (branchCheckResult.rows.length === 0) {
+        await client.query(`
+          INSERT INTO branches (
+            id, company_id, name, code, address, is_main, is_active, country, created_at, updated_at
+          )
+          VALUES (
+            gen_random_uuid(), $1, 'Casa Matriz', 'CM-001', 'Dirección de casa matriz',
+            true, true, 'Argentina', NOW(), NOW()
+          )
+        `, [id]);
+
+        console.log(`✅ [ACTIVATION] Casa Matriz creada para empresa ${company.name}`);
+      } else {
+        console.log(`✅ [ACTIVATION] Casa Matriz ya existe para empresa ${company.name}`);
+      }
+    } catch (branchError) {
+      console.error('⚠️ [ACTIVATION] Error verificando/creando Casa Matriz (no crítico):', branchError.message);
+    }
+
     res.json({
       success: true,
       message: "Empresa activada exitosamente",
@@ -1035,6 +1117,33 @@ router.post('/:id/manual-onboarding', auth, async (req, res) => {
       } catch (notifError) {
         console.error('⚠️ [MANUAL] Error enviando email de bienvenida:', notifError.message);
         // No fallar el alta por error en notificación
+      }
+
+      // 🏛️ VERIFICAR Y CREAR "CASA MATRIZ" SI NO EXISTE
+      try {
+        const [existingBranch] = await sequelize.query(`
+          SELECT id FROM branches
+          WHERE company_id = :id AND (is_main = true OR LOWER(name) LIKE '%casa matriz%')
+          LIMIT 1
+        `, { replacements: { id }, type: sequelize.QueryTypes.SELECT });
+
+        if (!existingBranch) {
+          await sequelize.query(`
+            INSERT INTO branches (
+              id, company_id, name, code, address, is_main, is_active, country, created_at, updated_at
+            )
+            VALUES (
+              gen_random_uuid(), :id, 'Casa Matriz', 'CM-001', 'Dirección de casa matriz',
+              true, true, 'Argentina', NOW(), NOW()
+            )
+          `, { replacements: { id }, type: sequelize.QueryTypes.INSERT });
+
+          console.log(`✅ [MANUAL] Casa Matriz creada para empresa ${company.name}`);
+        } else {
+          console.log(`✅ [MANUAL] Casa Matriz ya existe para empresa ${company.name}`);
+        }
+      } catch (branchError) {
+        console.error('⚠️ [MANUAL] Error verificando/creando Casa Matriz (no crítico):', branchError.message);
       }
 
       console.log(`✅ [MANUAL] Alta de empresa "${company.name}" por staff ${staffId}. Motivo: ${reason}`);

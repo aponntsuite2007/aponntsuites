@@ -2675,10 +2675,15 @@ const OrgEngine = {
         const branches = await this.loadBranchesForDepartment();
         OrgState.branches = branches;
 
-        // Auto-seleccionar CENTRAL si no hay branch_id seleccionado
-        const mainBranch = branches.find(b => b.is_main || b.isMain || b.name === 'Central' || b.name === 'CENTRAL');
+        // Auto-seleccionar sucursal principal si no hay branch_id seleccionado
+        const mainBranch = branches.find(b => b.is_main || b.isMain);
         if (!shift.branch_id && mainBranch) {
             shift.branch_id = mainBranch.id;
+            console.log('🏛️ [SHIFT-MODAL] Auto-seleccionando sucursal principal:', mainBranch.name, 'ID:', mainBranch.id);
+        } else if (!shift.branch_id && branches.length > 0) {
+            // Fallback: si no hay is_main, usar la primera sucursal
+            shift.branch_id = branches[0].id;
+            console.log('🏛️ [SHIFT-MODAL] Usando primera sucursal como fallback:', branches[0].name, 'ID:', branches[0].id);
         }
 
         const modal = document.createElement('div');
@@ -2873,6 +2878,8 @@ const OrgEngine = {
         const form = event.target;
         const formData = new FormData(form);
 
+        console.log('🕐 [SHIFT-SAVE] Iniciando guardado de turno...');
+
         // Recoger días laborables
         const workDays = [];
         form.querySelectorAll('input[name="work_days"]:checked').forEach(cb => {
@@ -2890,14 +2897,27 @@ const OrgEngine = {
             exit_tolerance: parseInt(formData.get('exit_tolerance')) || 10,
             break_duration: parseInt(formData.get('break_duration')) || 60,
             work_days: workDays,
-            respect_national_holidays: form.querySelector('input[name="respect_national_holidays"]').checked,
-            respect_provincial_holidays: form.querySelector('input[name="respect_provincial_holidays"]').checked,
-            is_active: form.querySelector('input[name="is_active"]').checked,
-            is_flexible: form.querySelector('input[name="is_flexible"]').checked,
-            requires_overtime_approval: form.querySelector('input[name="requires_overtime_approval"]').checked,
-            color: formData.get('color'),
+            respect_national_holidays: form.querySelector('input[name="respect_national_holidays"]')?.checked || false,
+            respect_provincial_holidays: form.querySelector('input[name="respect_provincial_holidays"]')?.checked || false,
+            is_active: form.querySelector('input[name="is_active"]')?.checked !== false, // true por defecto
+            is_flexible: form.querySelector('input[name="is_flexible"]')?.checked || false,
+            requires_overtime_approval: form.querySelector('input[name="requires_overtime_approval"]')?.checked || false,
+            color: formData.get('color') || '#007bff',
             company_id: getCompanyId()
         };
+
+        // VALIDACIÓN CRÍTICA
+        if (!data.name || !data.start_time || !data.end_time) {
+            console.error('🕐 [SHIFT-SAVE] ERROR: Campos requeridos faltantes:', {
+                name: data.name,
+                start_time: data.start_time,
+                end_time: data.end_time
+            });
+            this.showToast('Error: Nombre, hora de inicio y fin son requeridos', 'error');
+            return;
+        }
+
+        console.log('🕐 [SHIFT-SAVE] Datos a enviar:', data);
 
         try {
             const url = shiftId ? `/api/v1/shifts/${shiftId}` : '/api/v1/shifts';
@@ -2913,15 +2933,23 @@ const OrgEngine = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Error guardando turno');
+                const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+                console.error('🕐 [SHIFT-SAVE] Error del servidor:', {
+                    status: response.status,
+                    error: errorData
+                });
+                throw new Error(errorData.error || errorData.message || `Error ${response.status}: ${response.statusText}`);
             }
+
+            const result = await response.json();
+            console.log('🕐 [SHIFT-SAVE] Turno guardado exitosamente:', result);
 
             this.closeModal();
             this.showToast(shiftId ? 'Turno actualizado' : 'Turno creado exitosamente', 'success');
             await this.renderShifts();
         } catch (error) {
-            this.showToast(error.message, 'error');
+            console.error('🕐 [SHIFT-SAVE] Error capturado:', error);
+            this.showToast(`Error: ${error.message}`, 'error');
         }
     },
 
