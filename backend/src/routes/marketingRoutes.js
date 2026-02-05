@@ -542,6 +542,8 @@ router.post('/leads/:id/send-flyer', verifyStaffToken, async (req, res) => {
             // ENVIAR EMAIL VIA NCE (con tracking, BCC automático, etc.)
             // ═══════════════════════════════════════════════════════════
             try {
+                console.log('[MARKETING] 📧 Intentando enviar flyer via NCE...');
+                console.log('[MARKETING] Lead:', lead.full_name, '-', lead.email);
                 await NCE.send({
                     companyId: null, // Email comercial externo (pre-venta)
                     module: 'marketing',
@@ -567,7 +569,8 @@ router.post('/leads/:id/send-flyer', verifyStaffToken, async (req, res) => {
                 console.log(`✅ [MARKETING FLYER] Email enviado via NCE a: ${lead.email}`);
 
             } catch (emailError) {
-                console.error('[MARKETING] Error enviando email via NCE:', emailError.message);
+                console.error('[MARKETING] ❌ Error enviando email via NCE:', emailError.message);
+                console.error('[MARKETING] ❌ Stack:', emailError.stack);
                 sendResult = { success: false, error: emailError.message };
             }
 
