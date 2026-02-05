@@ -471,11 +471,24 @@ class NotificationCentralExchange {
      */
     _validateRequiredParams(params) {
         // companyId es opcional para workflows scope 'aponnt' (emails globales de Aponnt)
-        const required = ['module', 'workflowKey', 'recipientType', 'recipientId', 'title', 'message'];
+        // recipientId es opcional si recipientType === 'external' (leads, clientes potenciales)
+        const required = ['module', 'workflowKey', 'recipientType', 'title', 'message'];
 
         for (const field of required) {
             if (!params[field]) {
                 throw new Error(`Parámetro obligatorio faltante: ${field}`);
+            }
+        }
+
+        // Para destinatarios externos, requerir recipientEmail en lugar de recipientId
+        if (params.recipientType === 'external') {
+            if (!params.recipientEmail) {
+                throw new Error('Parámetro obligatorio faltante: recipientEmail (requerido para recipientType=external)');
+            }
+        } else {
+            // Para destinatarios internos, requerir recipientId
+            if (!params.recipientId) {
+                throw new Error('Parámetro obligatorio faltante: recipientId');
             }
         }
     }
