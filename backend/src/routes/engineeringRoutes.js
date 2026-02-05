@@ -244,19 +244,29 @@ router.get('/modules', async (req, res) => {
 
 /**
  * GET /api/engineering/commercial-modules
- * Retorna catálogo comercial racionalizado desde v_modules_by_panel + APKs
- * Esta es la API que deben usar: tab Módulos Comerciales, presupuestos
+ * ============================================================================
+ * SSOT ABSOLUTO - 36 MÓDULOS COMERCIALES
+ * ============================================================================
  *
- * Estructura:
- * - CORE: Módulos base (9 de panel-empresa + 3 APKs) - Se venden como paquete
- * - OPCIONALES: Módulos adicionales (27 de panel-empresa)
+ * Esta es la ÚNICA FUENTE DE VERDAD para módulos comerciales en TODO el ecosistema:
+ * - Tab "Módulos Comerciales" en Engineering Dashboard
+ * - Modal de presupuestos (company-workflow.js)
+ * - Tarjetas del dashboard de empresa
+ * - Cualquier otro componente que necesite módulos comerciales
+ *
+ * Estructura FIJA (36 módulos):
+ * - CORE: 9 módulos incluidos en paquete base
+ * - OPCIONALES: 27 módulos con precio adicional
+ *
+ * NOTA: Las APKs (apk-kiosk, web-kiosk, apk-employee) son COMPLEMENTOS del paquete,
+ * NO módulos comerciales separados. No se cuentan en los 36.
  */
 router.get('/commercial-modules', async (req, res) => {
   try {
     const database = req.app.get('database') || require('../config/database');
 
-    // 1. Obtener módulos de panel-empresa (tarjetas)
-    const [panelModules] = await database.sequelize.query(`
+    // SSOT: Obtener EXACTAMENTE los 36 módulos que aparecen como tarjetas
+    const [commercialModules] = await database.sequelize.query(`
       SELECT
         module_key as key,
         name,
@@ -265,53 +275,37 @@ router.get('/commercial-modules', async (req, res) => {
         category,
         is_core as "isCore",
         commercial_type as "commercialType",
-        COALESCE((SELECT base_price FROM system_modules sm WHERE sm.module_key = v.module_key), 0) as "basePrice"
+        COALESCE((SELECT base_price FROM system_modules sm WHERE sm.module_key = v.module_key), 0) as "basePrice",
+        display_order as "displayOrder"
       FROM v_modules_by_panel v
       WHERE target_panel = 'panel-empresa'
         AND show_as_card = true
       ORDER BY is_core DESC, display_order, name
     `);
 
-    // 2. Obtener APKs (CORE pero no aparecen como tarjetas)
-    const [apkModules] = await database.sequelize.query(`
-      SELECT
-        module_key as key,
-        name,
-        description,
-        icon,
-        category,
-        is_core as "isCore",
-        'apk-complementaria' as "commercialType",
-        base_price as "basePrice",
-        module_type as "moduleType"
-      FROM system_modules
-      WHERE module_key IN ('apk-kiosk', 'web-kiosk', 'apk-employee')
-        AND is_active = true
-      ORDER BY display_order
-    `);
+    // Separar CORE y OPCIONALES
+    const coreModules = commercialModules.filter(m => m.isCore);
+    const optionalModules = commercialModules.filter(m => !m.isCore);
 
-    // 3. Combinar: CORE = módulos core de panel + APKs
-    const coreModules = [
-      ...panelModules.filter(m => m.isCore),
-      ...apkModules
-    ];
-
-    const optionalModules = panelModules.filter(m => !m.isCore);
-
-    // 4. Agrupar por categoría para el frontend
+    // Agrupar por categoría para el frontend
     const byCategory = {
       core: { name: 'Paquete Base (CORE)', modules: coreModules },
       optional: { name: 'Módulos Opcionales', modules: optionalModules }
     };
 
-    // 5. Stats
+    // Stats
     const stats = {
       totalCore: coreModules.length,
       totalOptional: optionalModules.length,
-      total: coreModules.length + optionalModules.length
+      total: commercialModules.length
     };
 
-    // 6. Obtener precio del paquete CORE desde system_settings
+    // Validar que sean exactamente 36
+    if (commercialModules.length !== 36) {
+      console.warn(`⚠️ [COMMERCIAL-SSOT] Esperados 36 módulos, encontrados ${commercialModules.length}`);
+    }
+
+    // Obtener precio del paquete CORE desde system_settings
     let corePricePerEmployee = 15.00; // Default
     try {
       const [settings] = await database.sequelize.query(`
@@ -324,20 +318,22 @@ router.get('/commercial-modules', async (req, res) => {
       console.log('[COMMERCIAL] system_settings no disponible, usando precio default');
     }
 
-    console.log(`📦 [COMMERCIAL] Catálogo: ${stats.totalCore} CORE + ${stats.totalOptional} OPCIONALES = ${stats.total} total`);
+    console.log(`📦 [COMMERCIAL-SSOT] ${stats.totalCore} CORE + ${stats.totalOptional} OPCIONALES = ${stats.total} módulos comerciales`);
 
     res.json({
       success: true,
       source: 'DATABASE_SSOT',
+      ssotVersion: '2.0.0',
       data: {
-        modules: [...coreModules, ...optionalModules],
+        modules: commercialModules,
         coreModules,
         optionalModules,
         byCategory,
         stats,
         corePricePerEmployee,
         bundles: metadata?.commercialModules?.bundles || {},
-        lastSync: new Date().toISOString()
+        lastSync: new Date().toISOString(),
+        _note: 'SSOT ABSOLUTO: Estos 36 módulos son la única fuente de verdad para todo el ecosistema'
       }
     });
 
@@ -553,24 +549,22 @@ router.get('/commercial-modules/category/:category', (req, res) => {
 
 /**
  * PUT /api/engineering/commercial-modules/:moduleKey/pricing
- * Actualiza los precios por tier de un módulo comercial específico
+ * ============================================================================
+ * ACTUALIZA PRECIOS EN BD (SSOT) - NO EN ARCHIVO
+ * ============================================================================
+ *
  * Body: { pricing: { tier1: number, tier2: number, tier3: number } }
+ *
+ * - base_price: Se actualiza con tier1 (precio base por defecto)
+ * - metadata.pricingTiers: Se guardan los 3 tiers en JSONB
  */
-router.put('/commercial-modules/:moduleKey/pricing', (req, res) => {
+router.put('/commercial-modules/:moduleKey/pricing', async (req, res) => {
   try {
     const { moduleKey } = req.params;
     const { pricing } = req.body;
+    const database = req.app.get('database') || require('../config/database');
 
-    console.log(`💰 [ENGINEERING] Actualizando precios del módulo: ${moduleKey}`);
-
-    // Validar que el módulo existe
-    if (!metadata.commercialModules || !metadata.commercialModules.modules || !metadata.commercialModules.modules[moduleKey]) {
-      return res.status(404).json({
-        success: false,
-        error: `Módulo "${moduleKey}" no encontrado`,
-        availableModules: metadata.commercialModules?.modules ? Object.keys(metadata.commercialModules.modules) : []
-      });
-    }
+    console.log(`💰 [PRICING-SSOT] Actualizando precios en BD para: ${moduleKey}`);
 
     // Validar que se enviaron los precios
     if (!pricing || typeof pricing !== 'object') {
@@ -597,67 +591,57 @@ router.put('/commercial-modules/:moduleKey/pricing', (req, res) => {
       });
     }
 
-    // Actualizar precios en el metadata en memoria
-    const module = metadata.commercialModules.modules[moduleKey];
+    // Construir objeto de tiers para guardar en metadata
+    const pricingTiers = {
+      tier1: { range: "1-50", price: tier1 },
+      tier2: { range: "51-100", price: tier2 },
+      tier3: { range: "101+", price: tier3 }
+    };
 
-    if (!module.pricingTiers) {
-      module.pricingTiers = {
-        tier1: { range: "1-50", price: 0 },
-        tier2: { range: "51-100", price: 0 },
-        tier3: { range: "101+", price: 0 }
-      };
-    }
+    // ============================================================
+    // GUARDAR EN BD (SSOT) - NO EN ARCHIVO
+    // ============================================================
+    const [result] = await database.sequelize.query(`
+      UPDATE system_modules
+      SET
+        base_price = $1,
+        metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('pricingTiers', $2::jsonb),
+        updated_at = NOW()
+      WHERE module_key = $3
+      RETURNING module_key, name, base_price, metadata
+    `, {
+      bind: [tier1, JSON.stringify(pricingTiers), moduleKey]
+    });
 
-    module.pricingTiers.tier1.price = tier1;
-    module.pricingTiers.tier2.price = tier2;
-    module.pricingTiers.tier3.price = tier3;
-
-    // Actualizar basePrice con el tier1 (precio base por defecto)
-    module.basePrice = tier1;
-
-    // Guardar el archivo metadata actualizado
-    const fs = require('fs');
-    const metadataPath = path.join(__dirname, '../../engineering-metadata.js');
-
-    const content = `/**
- * ENGINEERING METADATA - AUTO-UPDATED
- * Last update: ${new Date().toISOString()}
- */
-
-module.exports = ${JSON.stringify(metadata, null, 2)};
-`;
-
-    fs.writeFileSync(metadataPath, content, 'utf8');
-    console.log(`✅ [ENGINEERING] Archivo engineering-metadata.js actualizado`);
-
-    // Recargar metadata desde disco
-    const reloaded = reloadMetadata();
-
-    if (!reloaded) {
-      return res.status(500).json({
+    if (result.length === 0) {
+      return res.status(404).json({
         success: false,
-        error: 'Error recargando metadata después de actualización'
+        error: `Módulo "${moduleKey}" no encontrado en system_modules`
       });
     }
 
-    console.log(`✅ [ENGINEERING] Precios actualizados para módulo: ${moduleKey}`);
+    const updatedModule = result[0];
+
+    console.log(`✅ [PRICING-SSOT] Precios guardados en BD para: ${moduleKey}`);
+    console.log(`   - base_price: $${tier1}`);
     console.log(`   - Tier 1 (1-50): $${tier1}`);
     console.log(`   - Tier 2 (51-100): $${tier2}`);
     console.log(`   - Tier 3 (101+): $${tier3}`);
 
     res.json({
       success: true,
-      message: `Precios actualizados correctamente para módulo "${module.name}"`,
+      message: `Precios actualizados en BD para módulo "${updatedModule.name}"`,
+      source: 'DATABASE_SSOT',
       module: {
         key: moduleKey,
-        name: module.name,
-        pricingTiers: module.pricingTiers,
-        basePrice: module.basePrice
+        name: updatedModule.name,
+        basePrice: updatedModule.base_price,
+        pricingTiers: pricingTiers
       }
     });
 
   } catch (error) {
-    console.error('❌ [ENGINEERING] Error actualizando precios:', error);
+    console.error('❌ [PRICING-SSOT] Error actualizando precios:', error);
     res.status(500).json({
       success: false,
       error: error.message

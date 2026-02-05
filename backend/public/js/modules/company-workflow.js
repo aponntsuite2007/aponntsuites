@@ -53,24 +53,27 @@
 
         async getModules() {
             try {
-                // SSOT: Usar /api/engineering/commercial-modules (misma fuente que Engineering Dashboard)
+                // ============================================================
+                // SSOT ABSOLUTO: /api/engineering/commercial-modules
+                // Esta es la ÚNICA fuente de verdad para los 36 módulos comerciales
+                // NO HAY FALLBACK - Si falla, se muestra error (no datos incorrectos)
+                // ============================================================
                 const res = await fetch('/api/engineering/commercial-modules', { headers: this.getHeaders() });
                 if (!res.ok) {
-                    console.warn('[WORKFLOW] Engineering API failed, trying fallback...');
-                    // Fallback: cargar desde modules-pricing
-                    const fallbackRes = await fetch(`${this.baseUrl}/modules-pricing`, { headers: this.getHeaders() });
-                    if (fallbackRes.ok) {
-                        return await fallbackRes.json();
-                    }
-                    return [];
+                    console.error('[WORKFLOW-SSOT] ❌ Error cargando módulos comerciales:', res.status);
+                    throw new Error(`Error ${res.status}: No se pudieron cargar los módulos comerciales`);
                 }
                 const data = await res.json();
                 if (!data.success) {
-                    console.error('[WORKFLOW] Engineering API returned error:', data.error);
-                    return [];
+                    console.error('[WORKFLOW-SSOT] ❌ API retornó error:', data.error);
+                    throw new Error(data.error || 'Error en API de módulos comerciales');
                 }
+
+                const modules = data.data?.modules || [];
+                console.log(`[WORKFLOW-SSOT] ✅ ${modules.length} módulos comerciales cargados (SSOT v${data.ssotVersion})`);
+
                 // Transformar al formato esperado por el workflow
-                return (data.data?.modules || []).map(m => ({
+                return modules.map(m => ({
                     module_key: m.key,
                     key: m.key,
                     name: m.name,
@@ -78,12 +81,16 @@
                     category: m.category || 'general',
                     is_core: m.isCore || false,
                     base_price: parseFloat(m.basePrice) || 0,
-                    price_per_employee: 0, // Se calcula por tier
+                    price_per_employee: 0, // Se calcula por tier en el frontend
                     description: m.description || '',
                     commercial_type: m.commercialType || 'opcional'
                 }));
             } catch (e) {
-                console.error('[WORKFLOW] Error loading modules:', e);
+                console.error('[WORKFLOW-SSOT] ❌ Error crítico cargando módulos:', e);
+                // Mostrar alerta al usuario en lugar de fallar silenciosamente
+                if (typeof showNotification === 'function') {
+                    showNotification('Error cargando módulos comerciales. Contacte soporte.', 'error');
+                }
                 return [];
             }
         },
