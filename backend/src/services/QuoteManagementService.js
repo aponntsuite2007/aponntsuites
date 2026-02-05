@@ -639,7 +639,7 @@ class QuoteManagementService {
         sequelize.fn('EXTRACT', sequelize.literal('YEAR FROM created_at')),
         year
       ),
-      order: [['id', 'DESC']],
+      order: [['created_at', 'DESC']],
       transaction
     });
 
