@@ -2,6 +2,7 @@ const { sequelize } = require('../config/database');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const PrivacyRegulationService = require('./PrivacyRegulationService');
+const { getBaseUrl } = require('../utils/urlHelper');
 // 🔥 NCE: Central Telefónica de Notificaciones (SSOT)
 const NCE = require('./NotificationCentralExchange');
 // 🔥 EmailService: Para fallback multi-tenant cuando NCE falla
@@ -393,8 +394,8 @@ Al aceptar este consentimiento mediante el enlace recibido por email, usted decl
 
             const company = (companies && companies.length > 0) ? companies[0] : { company_id: companyId, name: 'Empresa', email: null };
 
-            // Enviar email
-            const consentUrl = `${process.env.FRONTEND_URL || 'https://aponntsuites.onrender.com'}/consent/${token}`;
+            // Enviar email con URL de consentimiento (auto-detecta local vs producción)
+            const consentUrl = `${getBaseUrl()}/consent/${token}`;
 
             await this.sendConsentRequestEmail(user, company, legalDoc, consentUrl, token);
 

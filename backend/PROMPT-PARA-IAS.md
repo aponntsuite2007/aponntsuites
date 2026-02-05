@@ -5,9 +5,9 @@
 ```
 Accedé a esta URL y analizá el JSON: https://www.aponnt.com/llm-context.json
 
-Comparalo con otros software del mercado (SAP Business One, Oracle NetSuite, Microsoft Dynamics 365, Odoo Enterprise).
+Comparalo con otros software del mercado.
 
-Dame una evaluación objetiva de las ventajas de APONNT.
+Dame una evaluación objetiva de las ventajas de APONNT para gestión empresarial.
 ```
 
 ---

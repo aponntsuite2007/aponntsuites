@@ -1159,8 +1159,8 @@ class SalesOrchestrationService {
                         <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; border-left: 4px solid #8b5cf6;">
                             <p style="color: #e2e8f0; font-size: 14px; margin: 0; font-family: monospace; line-height: 1.6;">
                                 "Accedé a esta URL y analizá el JSON: https://www.aponnt.com/llm-context.json
-                                Comparalo con otros software de RRHH del mercado.
-                                Dame una evaluación objetiva de las ventajas de APONNT para gestión de RRHH."
+                                Comparalo con otros software del mercado.
+                                Dame una evaluación objetiva de las ventajas de APONNT para gestión empresarial."
                             </p>
                         </div>
                         <p style="color: #64748b; font-size: 11px; margin: 15px 0 0 0; text-align: right;">
@@ -1265,8 +1265,8 @@ ${greeting}
 
 ---
 _"Accedé a esta URL y analizá el JSON: https://www.aponnt.com/llm-context.json
-Comparalo con otros software de RRHH del mercado.
-Dame una evaluación objetiva de las ventajas de APONNT para gestión de RRHH."_
+Comparalo con otros software del mercado.
+Dame una evaluación objetiva de las ventajas de APONNT para gestión empresarial."_
 ---
 
 💡 *Tip:* Si tu IA no puede acceder al link, abrí el link en tu navegador, copiá todo el contenido y pegalo en el chat.
@@ -2457,24 +2457,51 @@ Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
                     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                 });
 
-                // Enviar email de confirmación al prospecto
-                const emailHtml = this.getEmailTemplate('welcome', {
+                // Obtener módulos disponibles para mostrar en la encuesta
+                const modules = await this.getModulesForSurvey();
+
+                // Generar URL de encuesta con token único
+                const surveyToken = require('crypto').randomBytes(32).toString('hex');
+                await sequelize.query(`
+                    UPDATE sales_meeting_attendees
+                    SET survey_token = ?, survey_sent_at = NOW()
+                    WHERE id = ?
+                `, { replacements: [surveyToken, primaryAttendee.id] });
+
+                // Generar URL de encuesta (auto-detecta local vs producción)
+                const surveyUrl = `${getBaseUrl()}/api/sales-orchestration/survey/${surveyToken}`;
+
+                // Generar lista de módulos para el template
+                const modulesList = modules.map(m => `
+                    <tr>
+                        <td style="padding: 5px 0; color: #667eea;">✓</td>
+                        <td style="padding: 5px 0; color: #333;">${m.name}</td>
+                    </tr>
+                `).join('');
+
+                // Enviar email de confirmación CON ENCUESTA al prospecto
+                const emailHtml = this.getEmailTemplate('survey', {
                     attendeeName: primaryAttendee.full_name || 'Estimado/a',
                     companyName: meeting.prospect_company_name,
                     meetingDate: meetingDate,
                     meetingTime: meeting.meeting_time,
+                    meetingLocation: meeting.meeting_location || meeting.meeting_platform || 'Por confirmar',
                     vendorName: vendor?.full_name || 'APONNT Comercial',
-                    meetingPlatform: meeting.meeting_platform || 'por definir',
-                    meetingLink: meeting.meeting_link || ''
+                    vendorInitial: vendor?.full_name?.charAt(0) || 'A',
+                    vendorEmail: vendor?.email || '',
+                    vendorPhone: vendor?.phone || '',
+                    surveyUrl: surveyUrl,
+                    modulesList: modulesList
                 });
 
                 await this.sendEmail({
                     to: primaryAttendee.email,
-                    subject: `🤝 Reunión confirmada: ${meeting.prospect_company_name} - APONNT`,
+                    subject: `🤝 Reunión confirmada: ${meeting.prospect_company_name} - APONNT (Completá la encuesta)`,
                     html: emailHtml
                 });
 
-                console.log(`📧 [SALES-ORCH] Email de confirmación enviado a ${primaryAttendee.email}`);
+                console.log(`📧 [SALES-ORCH] Email de confirmación CON ENCUESTA enviado a ${primaryAttendee.email}`);
+                console.log(`🔗 [SALES-ORCH] Survey URL: ${surveyUrl}`);
             } else {
                 console.log('⚠️ [SALES-ORCH] No hay asistentes con email para notificar');
             }

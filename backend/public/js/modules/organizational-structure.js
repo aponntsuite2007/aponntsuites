@@ -2100,7 +2100,8 @@ const OrgEngine = {
         const role = id ? OrgState.roles.find(r => r.id === id) : null;
         const isEdit = !!role;
 
-        const categories = ['seguridad', 'emergencias', 'capacitacion', 'representacion', 'supervision', 'tecnico', 'otros'];
+        // Valores sincronizados con ENUM role_category_enum de PostgreSQL
+        const categories = ['seguridad', 'salud', 'capacitacion', 'auditoria', 'supervision', 'representacion', 'otros'];
 
         const modal = document.createElement('div');
         modal.className = 'org-modal-overlay';
@@ -2746,11 +2747,11 @@ const OrgEngine = {
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                 <div class="org-form-group">
                                     <label class="org-form-label">Hora de Entrada *</label>
-                                    <input type="time" class="org-form-input" name="start_time" value="${shift.start_time || shift.startTime || '08:00'}" required>
+                                    <input type="time" class="org-form-input" name="start_time" value="${shift.start_time || shift.startTime || '08:00'}">
                                 </div>
                                 <div class="org-form-group">
                                     <label class="org-form-label">Hora de Salida *</label>
-                                    <input type="time" class="org-form-input" name="end_time" value="${shift.end_time || shift.endTime || '17:00'}" required>
+                                    <input type="time" class="org-form-input" name="end_time" value="${shift.end_time || shift.endTime || '17:00'}">
                                 </div>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
@@ -2876,7 +2877,6 @@ const OrgEngine = {
     async saveShift(event, shiftId) {
         event.preventDefault();
         const form = event.target;
-        const formData = new FormData(form);
 
         console.log('🕐 [SHIFT-SAVE] Iniciando guardado de turno...');
 
@@ -2886,38 +2886,61 @@ const OrgEngine = {
             workDays.push(parseInt(cb.value));
         });
 
+        // Capturar valores DIRECTAMENTE del form (sin FormData para evitar problemas con tabs ocultos)
+        const nameInput = form.querySelector('input[name="name"]');
+        const codeInput = form.querySelector('input[name="code"]');
+        const descriptionInput = form.querySelector('textarea[name="description"]');
+        const branchSelect = form.querySelector('select[name="branch_id"]');
+        const startTimeInput = form.querySelector('input[name="start_time"]');
+        const endTimeInput = form.querySelector('input[name="end_time"]');
+        const entryToleranceInput = form.querySelector('input[name="entry_tolerance"]');
+        const exitToleranceInput = form.querySelector('input[name="exit_tolerance"]');
+        const breakDurationInput = form.querySelector('input[name="break_duration"]');
+        const colorInput = form.querySelector('input[name="color"]');
+
+        // DEBUG: Ver valores capturados (UNO POR UNO para debugging)
+        console.log('🕐 [SHIFT-SAVE] === VALORES CAPTURADOS ===');
+        console.log('  name:', nameInput?.value);
+        console.log('  start_time:', startTimeInput?.value);
+        console.log('  end_time:', endTimeInput?.value);
+        console.log('  branch_id:', branchSelect?.value);
+
         const data = {
-            name: formData.get('name'),
-            code: formData.get('code') || null,
-            description: formData.get('description') || null,
-            branch_id: formData.get('branch_id') || null,
-            start_time: formData.get('start_time'),
-            end_time: formData.get('end_time'),
-            entry_tolerance: parseInt(formData.get('entry_tolerance')) || 10,
-            exit_tolerance: parseInt(formData.get('exit_tolerance')) || 10,
-            break_duration: parseInt(formData.get('break_duration')) || 60,
+            name: nameInput?.value || null,
+            code: codeInput?.value || null,
+            description: descriptionInput?.value || null,
+            branch_id: branchSelect?.value || null,
+            start_time: startTimeInput?.value || null,
+            end_time: endTimeInput?.value || null,
+            entry_tolerance: parseInt(entryToleranceInput?.value) || 10,
+            exit_tolerance: parseInt(exitToleranceInput?.value) || 10,
+            break_duration: parseInt(breakDurationInput?.value) || 60,
             work_days: workDays,
             respect_national_holidays: form.querySelector('input[name="respect_national_holidays"]')?.checked || false,
             respect_provincial_holidays: form.querySelector('input[name="respect_provincial_holidays"]')?.checked || false,
-            is_active: form.querySelector('input[name="is_active"]')?.checked !== false, // true por defecto
+            is_active: form.querySelector('input[name="is_active"]')?.checked !== false,
             is_flexible: form.querySelector('input[name="is_flexible"]')?.checked || false,
             requires_overtime_approval: form.querySelector('input[name="requires_overtime_approval"]')?.checked || false,
-            color: formData.get('color') || '#007bff',
+            color: colorInput?.value || '#007bff',
             company_id: getCompanyId()
         };
 
         // VALIDACIÓN CRÍTICA
         if (!data.name || !data.start_time || !data.end_time) {
-            console.error('🕐 [SHIFT-SAVE] ERROR: Campos requeridos faltantes:', {
-                name: data.name,
-                start_time: data.start_time,
-                end_time: data.end_time
-            });
+            console.error('🕐 [SHIFT-SAVE] ERROR: Campos requeridos faltantes:');
+            console.error('  name:', data.name, '(vacío?', !data.name, ')');
+            console.error('  start_time:', data.start_time, '(vacío?', !data.start_time, ')');
+            console.error('  end_time:', data.end_time, '(vacío?', !data.end_time, ')');
             this.showToast('Error: Nombre, hora de inicio y fin son requeridos', 'error');
             return;
         }
 
-        console.log('🕐 [SHIFT-SAVE] Datos a enviar:', data);
+        console.log('🕐 [SHIFT-SAVE] === DATOS A ENVIAR AL SERVIDOR ===');
+        console.log('  name:', data.name);
+        console.log('  start_time:', data.start_time);
+        console.log('  end_time:', data.end_time);
+        console.log('  branch_id:', data.branch_id);
+        console.log('  Objeto completo:', JSON.stringify(data, null, 2));
 
         try {
             const url = shiftId ? `/api/v1/shifts/${shiftId}` : '/api/v1/shifts';

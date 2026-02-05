@@ -10,6 +10,7 @@ const RedisStore = require('connect-redis')(session);
 const rateLimit = require('express-rate-limit');
 const Boom = require('@hapi/boom');
 const { dbManager } = require('../config/database-next-gen');
+const { getBaseUrl } = require('../utils/urlHelper');
 
 // 🔐 SERVICIO DE AUTENTICACIÓN NEXT-GEN
 class NextGenAuthService {
@@ -376,7 +377,7 @@ class NextGenAuthService {
       async (req, res) => {
         try {
           const tokens = await this.generateTokens(req.user, req.user.tenant_id);
-          res.redirect(`${process.env.FRONTEND_URL}/dashboard?token=${tokens.accessToken}`);
+          res.redirect(`${getBaseUrl()}/dashboard?token=${tokens.accessToken}`);
         } catch (error) {
           res.redirect('/auth/login?error=token_generation');
         }

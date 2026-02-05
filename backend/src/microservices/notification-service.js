@@ -5,6 +5,7 @@ const { EventEmitter } = require('events');
 const Bull = require('bull');
 const nodemailer = require('nodemailer');
 const { dbManager } = require('../config/database-next-gen');
+const { getBaseUrl } = require('../utils/urlHelper');
 
 // 📡 SERVICIO DE NOTIFICACIONES NEXT-GEN
 class NextGenNotificationService extends EventEmitter {
@@ -777,7 +778,7 @@ ${JSON.stringify(metadata.biometricData, null, 2)}
               </div>
             ` : ''}
             <div style="margin-top: 20px; text-align: center;">
-              <a href="${process.env.FRONTEND_URL}/dashboard"
+              <a href="${getBaseUrl()}/dashboard"
                  style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
                 Ver Dashboard
               </a>

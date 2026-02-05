@@ -185,12 +185,26 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       requires_overtime_approval
     } = req.body;
 
+    // DEBUG: Ver qué valores se capturaron del destructuring
+    console.log('🕐 [SHIFT-API] Valores destructurados:');
+    console.log('  _startTime:', _startTime);
+    console.log('  start_time:', start_time);
+    console.log('  _endTime:', _endTime);
+    console.log('  end_time:', end_time);
+    console.log('  name:', name);
+
     // Normalizar: aceptar tanto camelCase como snake_case
     const startTime = _startTime || start_time;
     const endTime = _endTime || end_time;
     const toleranceMinutesEntry = _tolEntry || entry_tolerance || 10;
     const toleranceMinutesExit = _tolExit || exit_tolerance || 15;
     const isActive = _isActive !== undefined ? _isActive : (is_active !== undefined ? is_active : true);
+
+    // DEBUG: Ver valores normalizados
+    console.log('🕐 [SHIFT-API] Valores normalizados:');
+    console.log('  startTime:', startTime);
+    console.log('  endTime:', endTime);
+    console.log('  name:', name);
 
     // Si no se proporciona branch_id, asignar automáticamente la sucursal CENTRAL
     let finalBranchId = branch_id;
