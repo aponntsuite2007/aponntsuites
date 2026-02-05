@@ -1043,6 +1043,7 @@ const MarketingLeadsModule = {
      * Env\u00eda el flyer al lead
      */
     async sendFlyer(leadId, via) {
+        console.log('[MARKETING] sendFlyer llamado - leadId:', leadId, 'via:', via);
         try {
             const response = await fetch(`/api/marketing/leads/${leadId}/send-flyer`, {
                 method: 'POST',
@@ -1054,6 +1055,7 @@ const MarketingLeadsModule = {
             });
 
             const result = await response.json();
+            console.log('[MARKETING] sendFlyer response:', response.status, JSON.stringify(result));
 
             this.closeModal('sendModal');
 
