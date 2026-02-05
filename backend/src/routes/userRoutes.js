@@ -21,6 +21,8 @@ const path = require('path');
 const fs = require('fs');
 const EmailVerificationService = require('../services/EmailVerificationService');
 const ConsentService = require('../services/ConsentService');
+const NCE = require('../services/NotificationCentralExchange');
+const { getBaseUrl, getPanelEmpresaUrl } = require('../utils/urlHelper');
 
 // ==============================================
 // 📄 INTEGRACIÓN DMS - SSOT DOCUMENTAL
@@ -494,10 +496,10 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       preferences
     } = req.body;
 
-    // Validaciones básicas
-    if (!employeeId || !firstName || !lastName || !email || !password) {
+    // Validaciones básicas (password es opcional, default: admin123)
+    if (!employeeId || !firstName || !lastName || !email) {
       return res.status(400).json({
-        error: 'Campos obligatorios faltantes: employeeId, firstName, lastName, email, password'
+        error: 'Campos obligatorios faltantes: employeeId, firstName, lastName, email'
       });
     }
 
@@ -517,8 +519,10 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       });
     }
 
-    // Hash de la contraseña
-    const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_ROUNDS || 12));
+    // Contraseña: usa la enviada o default admin123
+    const defaultPassword = 'admin123';
+    const finalPassword = password || defaultPassword;
+    const hashedPassword = await bcrypt.hash(finalPassword, parseInt(process.env.BCRYPT_ROUNDS || 12));
 
     // Generate usuario from email if not provided
     const usuario = req.body.usuario || email.split('@')[0] || employeeId;
@@ -596,13 +600,130 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       // NO FALLAR la creación del usuario, solo loguear el error
     }
 
+    // ENVIAR EMAIL DE BIENVENIDA CON CREDENCIALES E INSTRUCCIONES
+    try {
+      // Obtener datos de la empresa para el email
+      const [companyData] = await sequelize.query(
+        `SELECT name, slug FROM companies WHERE company_id = ?`,
+        { replacements: [req.user.companyId], type: sequelize.QueryTypes.SELECT }
+      );
+      const companyName = companyData?.name || 'Tu Empresa';
+      const companySlug = companyData?.slug || '';
+      const loginUrl = getPanelEmpresaUrl(companySlug);
+
+      const welcomeBody = `
+══════════════════════════════════════════════════════════════
+¡BIENVENIDO/A A APONNT, ${firstName.toUpperCase()} ${lastName.toUpperCase()}!
+══════════════════════════════════════════════════════════════
+
+Has sido registrado/a como ${role === 'admin' ? 'Administrador' : role === 'supervisor' ? 'Supervisor' : role === 'hr' ? 'RRHH' : 'Empleado'} en ${companyName}.
+
+Tu cuenta está lista para comenzar a operar.
+
+CREDENCIALES DE ACCESO
+═══════════════════════════════════════
+  URL de acceso: ${loginUrl}
+
+  Empresa: ${companyName}
+  Usuario: ${usuario}
+  Contraseña: ${finalPassword}
+
+  IMPORTANTE: Por seguridad, cambiá tu contraseña
+  en el primer inicio de sesión.
+
+CÓMO INGRESAR AL SISTEMA
+═══════════════════════════════════════
+  1. Abrí el navegador e ingresá a: ${loginUrl}
+  2. En el campo "Empresa", seleccioná "${companyName}"
+  3. En "Usuario", ingresá: ${usuario}
+     (también podés usar tu email: ${email})
+  4. En "Contraseña", ingresá: ${finalPassword}
+  5. Hacé click en "Iniciar Sesión"
+
+CÓMO CAMBIAR TU CONTRASEÑA
+═══════════════════════════════════════
+  1. Una vez dentro del sistema, ingresá al módulo "Mi Espacio"
+  2. Hacé click en la tarjeta "Cambiar Contraseña"
+  3. Ingresá tu contraseña actual (${finalPassword})
+  4. Elegí una nueva contraseña (mínimo 6 caracteres)
+  5. Confirmá la nueva contraseña y guardá
+
+QUÉ PODÉS HACER EN "MI ESPACIO"
+═══════════════════════════════════════
+  Mi Espacio es tu panel personal dentro del sistema.
+  Desde ahí podés:
+
+  - Mis Documentos: Ver y subir documentación personal
+    (recibos, certificados, contratos, etc.)
+
+  - Mi Asistencia: Consultar tu historial de asistencia,
+    horarios asignados y marcaciones realizadas.
+
+  - Mis Vacaciones: Solicitar días de vacaciones,
+    ver tu saldo disponible y el estado de tus solicitudes.
+
+  - Mis Notificaciones: Recibir comunicados de RRHH,
+    avisos importantes y mensajes del sistema.
+
+  - Mi Perfil 360°: Ver y actualizar tus datos personales,
+    información laboral y evaluaciones.
+
+  - Mi Salud: Gestionar documentos médicos como
+    certificados, recetas y estudios solicitados.
+
+  - Cambiar Contraseña: Actualizar tu clave de acceso
+    en cualquier momento.
+
+SOPORTE TÉCNICO
+═══════════════════════════════════════
+  Si tenés alguna duda o problema para ingresar:
+  Email: soporte@aponnt.com
+  Consultá con el administrador de tu empresa.
+
+¡Bienvenido/a al equipo!
+
+El equipo de Aponnt
+══════════════════════════════════════════════════════════════
+      `.trim();
+
+      await NCE.send({
+        companyId: req.user.companyId,
+        module: 'users',
+        workflowKey: 'users.welcome_employee',
+        originType: 'user',
+        originId: String(newUser.user_id),
+        recipientType: 'external',
+        recipientEmail: email,
+        title: `¡Bienvenido/a a ${companyName}! - Tus credenciales de acceso`,
+        message: welcomeBody,
+        metadata: {
+          user_id: newUser.user_id,
+          username: usuario,
+          company_name: companyName,
+          role: role
+        },
+        priority: 'high',
+        channels: ['email']
+      });
+
+      console.log(`✅ [USER-CREATION] Email de bienvenida enviado a: ${email}`);
+    } catch (welcomeError) {
+      console.error(`⚠️ [USER-CREATION] Error enviando email de bienvenida (no bloqueante):`, welcomeError.message);
+    }
+
     // Format user for frontend response
     const formattedUser = formatUserForFrontend(newUser);
 
     res.status(201).json({
-      message: 'Usuario creado. DEBE verificar su email para activar la cuenta.',
+      message: 'Usuario creado exitosamente. Se enviaron credenciales por email.',
       user: formattedUser,
+      credentials: {
+        usuario: usuario,
+        password_is_default: !password,
+        email: newUser.email
+      },
       verification_sent: true,
+      welcome_email_sent: true,
       verification_email: newUser.email,
       status: 'pending_verification'
     });
