@@ -592,7 +592,7 @@ class OnboardingService {
     const adminUser = await User.create({
       employeeId: adminEmployeeId,
       usuario: 'administrador',
-      password: await bcrypt.hash('admin123', 12),
+      password: 'admin123',
       firstName: 'Administrador',
       lastName: company.name || 'Principal',
       email: company.contact_email,
@@ -614,7 +614,7 @@ class OnboardingService {
       const supportUser = await User.create({
         employeeId: supportEmployeeId,
         usuario: 'soporte',
-        password: await bcrypt.hash('admin123', 12),
+        password: 'admin123',
         firstName: 'Soporte',
         lastName: 'Técnico',
         email: `soporte+${company.slug || company.company_id}@aponnt.com`,
@@ -938,14 +938,13 @@ El equipo de Aponnt
         });
 
         if (!existingAdmin) {
-          const hashedPassword = await bcrypt.hash('admin123', 12);
           const adminEmployeeId = `ADM-${quote.company_id}-${Date.now()}`;
           const adminDni = `ADM${quote.company_id}${Date.now().toString().slice(-6)}`;
 
           await User.create({
             employeeId: adminEmployeeId,
             usuario: 'administrador',
-            password: hashedPassword,
+            password: 'admin123',
             firstName: 'Administrador',
             lastName: company.name || 'Principal',
             email: company.contact_email,
@@ -966,7 +965,7 @@ El equipo de Aponnt
             await User.create({
               employeeId: supportEmployeeId,
               usuario: 'soporte',
-              password: hashedPassword,
+              password: 'admin123',
               firstName: 'Soporte',
               lastName: 'Técnico',
               email: `soporte+${company.slug || quote.company_id}@aponnt.com`,
@@ -1390,7 +1389,7 @@ El equipo de Aponnt
         adminUser = await User.create({
           employeeId: adminEmployeeId,
           usuario: 'administrador',
-          password: await bcrypt.hash('admin123', 12),
+          password: 'admin123',
           firstName: 'Administrador',
           lastName: company.name || 'Principal',
           email: company.contact_email,
@@ -1411,7 +1410,7 @@ El equipo de Aponnt
           await User.create({
             employeeId: supportEmployeeId,
             usuario: 'soporte',
-            password: await bcrypt.hash('admin123', 12),
+            password: 'admin123',
             firstName: 'Soporte',
             lastName: 'Técnico',
             email: `soporte+${company.slug || company.company_id}@aponnt.com`,
